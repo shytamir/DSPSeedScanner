@@ -1,6 +1,6 @@
 # Product Specification Roadmap
 
-**Status:** Draft. SPEC-01 through SPEC-03 are accepted; SPEC-04 execution is
+**Status:** Draft. SPEC-01 through SPEC-04 are accepted; SPEC-05 execution is
 complete and pending acceptance.
 
 **Active user story:** None.
@@ -138,7 +138,7 @@ implementing profiles.
 
 ### SPEC-04: Cross player value with reproducible evidence
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player choosing among seeds, I want only characteristics that are both
 trustworthy and relevant to my intended run so that the result reduces a real
@@ -149,7 +149,7 @@ Every candidate characteristic was assessed for supported contexts, player
 decision, evidence source and cost, direction and tradeoffs, settings
 sensitivity, confidence, and defensible conclusion boundary.
 
-**Produced:** A candidate [context-to-evidence decision
+**Produced:** The accepted [context-to-evidence decision
 matrix](../specification/DECISION-EVIDENCE-MATRIX.md) marking candidates to
 advance into SPEC-05, retain for further research or diagnostics, or reject.
 It also established separate immediate-preview and on-demand evidence surfaces.
@@ -160,35 +160,38 @@ and optional scoring. Atomic predicates and evidence separation were retained
 as useful patterns; universal weighted scoring was rejected because preference
 direction changed by context, settings, horizon, and system role.
 
-**Excluded:** Activating SPEC-05, global seed scores, arbitrary weighting,
-presentation copy, and implementation estimates.
+**Excluded:** Global seed scores, arbitrary weighting, presentation copy, and
+implementation estimates.
 
 ## Phase 4 - Define the first conclusion contract
 
 ### SPEC-05: Specify bounded seed conclusions
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a player in New Game selection, I want a small set of justified conclusions
 and decisive tradeoffs so that I can accept, reject, or compare a seed without
 interpreting a wall of statistics.
 
-Define the first supported contexts, the questions answered for each context,
-the evidence and confidence required, the allowed conclusion forms, and cases
-that must remain unknown. Prefer explainable categorical conclusions over a
-single opaque score.
+The first supported contexts, questions, evidence requirements, comparison
+rules, allowed outcomes, tradeoff behavior, and mandatory unknown cases were
+defined. The contract selected explainable categorical conclusions and
+explicitly rejected a single opaque score.
 
-**Produces:** A versioned conclusion contract with context inputs, conclusion
-semantics, evidence dependencies, conflicts, unknown behavior, and explicit
-non-goals.
+**Produced:** Candidate [seed conclusion
+contract](../specification/CONCLUSION-CONTRACT.md)
+`0.1.0-candidate.1`, containing twelve conclusion families across six supported
+contexts, explicit miss/unknown/not-applicable behavior, comparison semantics,
+declined claims, and validation obligations.
 
-**Prior-art targets:** Review DSP-Seed-Finder's match rules and
-DSPSeedSearch's single-purpose largest-sphere result as contrasting conclusion
-models. Define what our product can conclude from runtime evidence without
-inheriting either tool's criteria or presenting a match as universally good.
+**Prior-art used:** DSP-Seed-Finder's configurable match rules and
+DSPSeedSearch's single-purpose largest-sphere result were treated as contrasting
+conclusion models. The contract retained explicit predicates and declared
+comparisons without inheriting either tool's criteria or treating a match as
+universally good.
 
-**Excludes:** Panel layout, visual design, interaction behavior, and scan
-orchestration.
+**Excluded:** Activating SPEC-06, panel layout, presentation copy, visual
+design, result serialization, interaction behavior, and scan orchestration.
 
 ## Phase 5 - Validate that the specification discriminates usefully
 

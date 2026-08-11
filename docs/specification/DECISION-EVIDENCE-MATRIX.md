@@ -1,6 +1,6 @@
 # Context-to-Evidence Decision Matrix
 
-**Status:** Candidate matrix produced by SPEC-04; pending product acceptance.
+**Status:** Accepted on 2026-08-11.
 
 This matrix crosses the accepted [player seed-decision
 taxonomy](PLAYER-DECISION-TAXONOMY.md) with the accepted [runtime evidence
@@ -169,5 +169,6 @@ The strongest initial surface is deliberately asymmetric:
 - after-start performance, subjective quality, universal viability, and global
   quality scores remain outside the product's truthful boundary.
 
-No final conclusion wording, threshold, profile, or implementation priority
-was selected in SPEC-04.
+SPEC-05 used this accepted boundary to define the candidate [seed conclusion
+contract](CONCLUSION-CONTRACT.md). No final presentation wording, threshold,
+profile, or implementation priority was selected in SPEC-04.
