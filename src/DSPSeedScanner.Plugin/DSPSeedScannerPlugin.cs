@@ -25,6 +25,7 @@ namespace DSPSeedScanner.Plugin
         private RawPlanetCoordinator? rawCoordinator;
         private BirthSystemRawCoordinator? birthSystemCoordinator;
         private CompleteClusterRawCoordinator? completeClusterCoordinator;
+        private CompleteClusterResultCache? completeClusterCache;
         private DspRawPlanetGateway? rawGateway;
         private bool probeAttempted;
         private CompleteClusterRawOperation? cooperativeProbeOperation;
@@ -47,6 +48,8 @@ namespace DSPSeedScanner.Plugin
             completeClusterCoordinator = new CompleteClusterRawCoordinator(
                 rawGateway,
                 operationGate);
+            completeClusterCache = new CompleteClusterResultCache(
+                Path.Combine(Paths.ConfigPath, "DSPSeedScanner", "cache"));
             Logger.LogInfo("Runtime boundary initialized on managed thread " +
                 Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture) + ".");
         }
@@ -281,6 +284,32 @@ namespace DSPSeedScanner.Plugin
                 request,
                 cancellationToken,
                 reportProgress);
+        }
+
+        public bool TryGetCachedCompleteCluster(
+            PreviewGenerationIdentity identity,
+            RuntimeFingerprint fingerprint,
+            out CompleteClusterRawResult? result)
+        {
+            if (completeClusterCache == null)
+                throw new InvalidOperationException("The plugin has not completed Awake.");
+            return completeClusterCache.TryRead(identity, fingerprint, out result);
+        }
+
+        public bool TryStoreCompleteCluster(
+            PreviewGenerationIdentity identity,
+            CompleteClusterRawResult result)
+        {
+            if (completeClusterCache == null)
+                throw new InvalidOperationException("The plugin has not completed Awake.");
+            return completeClusterCache.TryStore(identity, result);
+        }
+
+        public bool ClearCompleteClusterCache()
+        {
+            if (completeClusterCache == null)
+                throw new InvalidOperationException("The plugin has not completed Awake.");
+            return completeClusterCache.Clear();
         }
 
         private void WriteConformanceProbe(string path)

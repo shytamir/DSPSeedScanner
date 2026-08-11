@@ -83,10 +83,13 @@ After BepInEx loads `DSPSeedScannerPlugin`, an integration may obtain the
 plugin instance through its GUID `io.github.shytamir.dspseedscanner` and call
 the public `ScanPreview`, `GenerateRawPlanet`,
 `GenerateBirthSystemResources`, `GenerateCompleteClusterResources`, or
-`StartCompleteClusterResources` methods. The start method returns a disposable
-presentation-neutral operation; each `Advance` call completes at most one
-solid planet and restores shared DSP state before returning. Inputs and
-outputs are presentation-neutral Core and Runtime contracts. The approved New
-Game presentation roadmap consumes these reports without moving presentation
-policy into the scanner core. The currently accepted scanner-core package
-contains no panel, hooks, controls, or presentation copy.
+`StartCompleteClusterResources` methods. Complete results may be read, stored,
+or cleared through `TryGetCachedCompleteCluster`,
+`TryStoreCompleteCluster`, and `ClearCompleteClusterCache`. The start method
+returns a disposable presentation-neutral operation; each `Advance` call
+completes at most one solid planet and restores shared DSP state before
+returning. Inputs and outputs are presentation-neutral Core and Runtime
+contracts. The approved New Game presentation roadmap consumes these reports
+without moving presentation policy into the scanner core. The currently
+accepted scanner-core package contains no panel, hooks, controls, or
+presentation copy.

@@ -37,6 +37,8 @@ current status; the active roadmap owns story state and history.
 
 ## Delivery
 
+- [Complete-cluster cache](CACHE.md): Local cache trust boundary, retention,
+  failure behavior, and manual clearing instructions.
 - [Thunderstore package contract](THUNDERSTORE-PACKAGE.md): Real plugin build,
   semantic versioning, package construction, validation, and integration
   boundary.

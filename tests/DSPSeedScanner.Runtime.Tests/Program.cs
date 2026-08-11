@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading;
 using DSPSeedScanner.Core;
 using DSPSeedScanner.Runtime;
@@ -45,6 +47,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("incremental cluster matches synchronous execution and yields", IncrementalClusterMatchesSynchronousExecution),
                 ("incremental cluster cancellation and failure restore state", IncrementalClusterExitPathsRestoreState),
                 ("incremental cluster keeps serialization between yields", IncrementalClusterKeepsSerializationBetweenYields),
+                ("complete cache keys cover the full supported identity", CompleteCacheKeysCoverSupportedIdentity),
+                ("complete cache round trips and replaces atomically", CompleteCacheRoundTripsAndReplacesAtomically),
+                ("complete cache bounds retention and clears manually", CompleteCacheBoundsRetentionAndClears),
+                ("complete cache rejects unsafe and obsolete entries", CompleteCacheRejectsUnsafeEntries),
                 ("completed keyboard paste and random loads create one session each", CompletedInputLoadsCreateOneSessionEach),
                 ("duplicate callbacks coalesce while same identity reloads", DuplicateCallbacksCoalesceAndReloadsReplace),
                 ("replacement rejects stale publication and late loads", ReplacementRejectsStalePublication),
@@ -787,6 +793,209 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(1, previewGateway.GenerateCalls);
         }
 
+        private static void CompleteCacheKeysCoverSupportedIdentity()
+        {
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224, 1.0m),
+                Fingerprint(),
+                out CompleteClusterCacheKey? first));
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224, 1.00m),
+                Fingerprint(),
+                out CompleteClusterCacheKey? equivalent));
+            Equal(first, equivalent);
+            Equal(first?.Hash, equivalent?.Hash);
+            Equal(first?.CanonicalValue, equivalent?.CanonicalValue);
+
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224, 0.5m),
+                Fingerprint(),
+                out CompleteClusterCacheKey? differentResources));
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(73_339_583),
+                Fingerprint(),
+                out CompleteClusterCacheKey? differentSeed));
+            False(first!.Equals(differentResources));
+            False(first.Equals(differentSeed));
+            False(String.Equals(first?.Hash, differentResources?.Hash, StringComparison.Ordinal));
+            False(String.Equals(first?.Hash, differentSeed?.Hash, StringComparison.Ordinal));
+
+            False(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224),
+                Fingerprint(methodIl: "obsolete"),
+                out _));
+            False(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224),
+                Fingerprint(mods: new[] { "generation-mod" }),
+                out _));
+        }
+
+        private static void CompleteCacheRoundTripsAndReplacesAtomically()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var cache = new CompleteClusterResultCache(path, maximumEntries: 3);
+                PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
+                RuntimeFingerprint fingerprint = Fingerprint();
+                CompleteClusterRawResult source = CompleteResult();
+                False(cache.TryRead(identity, fingerprint, out _));
+                True(cache.TryStore(identity, source));
+
+                True(CompleteClusterCacheKey.TryCreate(identity, fingerprint, out CompleteClusterCacheKey? key));
+                string entry = Path.Combine(path, key!.FileName);
+                True(File.Exists(entry));
+                File.WriteAllText(entry, "incomplete replacement fixture");
+                True(cache.TryStore(identity, source));
+                Equal(1, Directory.GetFiles(path, "*.dspseedscan").Length);
+                Equal(0, Directory.GetFiles(path, ".*.tmp").Length);
+
+                var reopened = new CompleteClusterResultCache(path, maximumEntries: 3);
+                True(reopened.TryRead(
+                    identity,
+                    fingerprint,
+                    out CompleteClusterRawResult? restored));
+                Equal(RuntimeScanStatus.Success, restored?.Status);
+                Equal("cache-hit", restored?.Code);
+                Equal(source.Coverage, restored?.Coverage);
+                True(source.RareResources.SequenceEqual(restored!.RareResources));
+                True(source.Reports.SequenceEqual(restored.Reports));
+                Equal(0, restored.Progress.Count);
+                Equal("cache:hit", restored.Trace.Single());
+                True(restored.StateRestored);
+            });
+        }
+
+        private static void CompleteCacheBoundsRetentionAndClears()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var cache = new CompleteClusterResultCache(path, maximumEntries: 2);
+                PreviewGenerationIdentity firstIdentity = PreviewIdentity(16_315_224, 1m);
+                PreviewGenerationIdentity secondIdentity = PreviewIdentity(16_315_224, 0.5m);
+                PreviewGenerationIdentity thirdIdentity = PreviewIdentity(16_315_224, 2m);
+                True(cache.TryStore(firstIdentity, CompleteResult(1m)));
+                True(cache.TryStore(secondIdentity, CompleteResult(0.5m)));
+                True(cache.TryStore(thirdIdentity, CompleteResult(2m)));
+
+                Equal(2, Directory.GetFiles(path, "*.dspseedscan").Length);
+                False(cache.TryRead(firstIdentity, Fingerprint(), out _));
+                True(cache.TryRead(secondIdentity, Fingerprint(), out _));
+                True(cache.TryRead(thirdIdentity, Fingerprint(), out _));
+                True(cache.Clear());
+                Equal(0, Directory.GetFiles(path).Length);
+                False(cache.TryRead(secondIdentity, Fingerprint(), out _));
+                True(cache.Clear());
+            });
+        }
+
+        private static void CompleteCacheRejectsUnsafeEntries()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var cache = new CompleteClusterResultCache(path);
+                PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
+                CompleteClusterRawResult source = CompleteResult();
+                var partial = new CompleteClusterRawResult(
+                    RuntimeScanStatus.Success,
+                    source.GalaxySeed,
+                    "partial",
+                    "partial fixture",
+                    source.Fingerprint,
+                    new CompleteClusterRawCoverage(CoverageState.Partial, 3, 1),
+                    source.Progress,
+                    source.RareResources,
+                    source.Reports,
+                    source.Trace,
+                    true,
+                    0,
+                    0);
+                var failed = new CompleteClusterRawResult(
+                    RuntimeScanStatus.Failed,
+                    source.GalaxySeed,
+                    "failed",
+                    "failed fixture",
+                    source.Fingerprint,
+                    source.Coverage,
+                    source.Progress,
+                    source.RareResources,
+                    source.Reports,
+                    source.Trace,
+                    true,
+                    0,
+                    0);
+                var cancelled = new CompleteClusterRawResult(
+                    RuntimeScanStatus.Cancelled,
+                    source.GalaxySeed,
+                    "cancelled",
+                    "cancelled fixture",
+                    source.Fingerprint,
+                    source.Coverage,
+                    source.Progress,
+                    source.RareResources,
+                    source.Reports,
+                    source.Trace,
+                    true,
+                    0,
+                    0);
+                var incompatible = new CompleteClusterRawResult(
+                    RuntimeScanStatus.Success,
+                    source.GalaxySeed,
+                    "success",
+                    "incompatible fixture",
+                    Fingerprint(methodIl: "obsolete"),
+                    source.Coverage,
+                    source.Progress,
+                    source.RareResources,
+                    source.Reports,
+                    source.Trace,
+                    true,
+                    0,
+                    0);
+
+                False(cache.TryStore(identity, partial));
+                False(cache.TryStore(identity, failed));
+                False(cache.TryStore(identity, cancelled));
+                False(cache.TryStore(identity, incompatible));
+                False(cache.TryRead(identity, Fingerprint(), out _));
+                Equal(0, Directory.Exists(path) ? Directory.GetFiles(path).Length : 0);
+
+                True(cache.TryStore(identity, source));
+                string entry = Directory.GetFiles(path, "*.dspseedscan").Single();
+                using (var stream = new FileStream(entry, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                {
+                    using (var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true))
+                        reader.ReadString();
+                    using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+                    writer.Write(999);
+                }
+                byte[] obsoleteEntry = File.ReadAllBytes(entry);
+                using (SHA256 sha = SHA256.Create())
+                {
+                    byte[] digest = sha.ComputeHash(
+                        obsoleteEntry,
+                        0,
+                        obsoleteEntry.Length - 32);
+                    Buffer.BlockCopy(
+                        digest,
+                        0,
+                        obsoleteEntry,
+                        obsoleteEntry.Length - digest.Length,
+                        digest.Length);
+                }
+                File.WriteAllBytes(entry, obsoleteEntry);
+                False(cache.TryRead(identity, Fingerprint(), out _));
+                False(File.Exists(entry));
+
+                True(cache.TryStore(identity, source));
+                entry = Directory.GetFiles(path, "*.dspseedscan").Single();
+                byte[] corruptEntry = File.ReadAllBytes(entry);
+                corruptEntry[10] ^= 0x01;
+                File.WriteAllBytes(entry, corruptEntry);
+                False(cache.TryRead(identity, Fingerprint(), out _));
+                False(File.Exists(entry));
+            });
+        }
+
         private static void CompletedInputLoadsCreateOneSessionEach()
         {
             var lifecycle = new PreviewSessionLifecycle();
@@ -925,6 +1134,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(CompleteClusterRawResult),
                 typeof(CompleteClusterRawProgress),
                 typeof(CompleteClusterRawOperation),
+                typeof(CompleteClusterCacheKey),
+                typeof(CompleteClusterResultCache),
                 typeof(PreviewGenerationIdentity),
                 typeof(PreviewSession),
                 typeof(PreviewLoadTransition),
@@ -946,15 +1157,43 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(0, gateway.RestoreCalls);
         }
 
-        private static PreviewScanRequest Request()
+        private static PreviewScanRequest Request(
+            decimal resourceMultiplier = 1m,
+            CombatMode combatMode = CombatMode.Combat,
+            decimal initialColonize = 1m,
+            decimal maxDensity = 1m)
         {
             return new PreviewScanRequest(
                 16_315_224,
                 ConclusionDefinition.ReferenceStarCount,
                 ConclusionDefinition.ReferenceGameVersion,
-                1m,
-                CombatMode.Combat,
-                ConclusionDefinition.ReferenceCombatSettingsKey);
+                resourceMultiplier,
+                combatMode,
+                PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
+                initialColonize,
+                maxDensity);
+        }
+
+        private static CompleteClusterRawResult CompleteResult(decimal resourceMultiplier = 1m) =>
+            new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway())
+                .TryGenerate(Request(resourceMultiplier), CancellationToken.None);
+
+        private static void WithTemporaryDirectory(Action<string> action)
+        {
+            string path = Path.Combine(
+                Path.GetTempPath(),
+                "DSPSeedScanner.Runtime.Tests",
+                Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(path);
+            try
+            {
+                action(path);
+            }
+            finally
+            {
+                if (Directory.Exists(path))
+                    Directory.Delete(path, recursive: true);
+            }
         }
 
         private static PreviewGenerationIdentity PreviewIdentity(

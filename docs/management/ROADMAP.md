@@ -1,10 +1,10 @@
 # New Game Presentation Roadmap
 
-**Status:** In progress. PRES-01 is accepted; PRES-02 is implemented and
-pending acceptance.
+**Status:** In progress. PRES-01 and PRES-02 are accepted; PRES-03 is
+implemented and pending acceptance.
 
-**Active user story:** PRES-02 is at its acceptance gate. PRES-03 remains
-inactive until PRES-02 is accepted.
+**Active user story:** PRES-03 is at its acceptance gate. PRES-04 remains
+inactive until PRES-03 is accepted.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -129,7 +129,7 @@ validation policy, no human in-game validation was performed or required.
 
 ### PRES-02: Keep the full scan responsive
 
-**State:** Implemented on 2026-08-12; pending acceptance.
+**State:** Accepted on 2026-08-12.
 
 As a player waiting on exact conclusions, I want the long scan to yield between
 safe units so that the New Game interface and its activity indicator can remain
@@ -195,7 +195,7 @@ performed or required by this story.
 
 ### PRES-03: Reuse trustworthy local results
 
-**State:** Approved; inactive.
+**State:** Implemented on 2026-08-12; pending acceptance.
 
 As a player revisiting a preview, I want an already completed local scan reused
 so that I do not repeatedly wait for identical evidence.
@@ -212,6 +212,54 @@ entries. A documented manual clear operation removes cached scanner results.
 **Out of scope:** Shared or cross-machine caches, cloud storage, databases,
 cache browsing UI, migration promises, incomplete-result resumption, and
 changes to conclusion semantics.
+
+**Delivered:** Successful complete-cluster reports can now be reused from a
+bounded local cache only when the current supported runtime, full generation
+identity, complete evidence stage, and scanner contracts match exactly.
+
+**Implemented:**
+
+- a deterministic canonical key and SHA-256 filename covering the DSP build,
+  generation implementation, ordered themes, seed and star count, creation and
+  resource settings, pre-play combat identity, complete-cluster stage, and
+  applicable scanner contract versions;
+- one checksummed, dependency-free versioned binary entry per identity,
+  limited to 8 MiB and written through a flushed same-directory temporary file
+  and atomic replace;
+- successful-complete-only admission with report identity, settings, version,
+  coverage, fingerprint, and restored-state validation before persistence and
+  again after reconstruction;
+- fail-closed reads that treat absent, partial, failed, cancelled,
+  incompatible, corrupt, oversized, or obsolete material as a miss and remove
+  an invalid file encountered at the current key;
+- most-recently-used retention bounded to 128 entries by default, plus a
+  presentation-neutral clear operation; and
+- plugin integration rooted at `BepInEx/config/DSPSeedScanner/cache`, without
+  invoking the cache automatically or adding player-facing controls.
+
+**Acceptance evidence:**
+
+- equivalent identities with differently scaled decimals produced the same
+  canonical key, while seed and resource-setting changes produced different
+  keys and unsupported fingerprints could not create keys;
+- a successful complete result round-tripped with identical rare-resource
+  evidence, conclusion reports, and coverage, and atomically replaced an
+  existing invalid destination without leaving a temporary file;
+- a two-entry fixture deterministically evicted the least-recent entry, kept
+  the two current identities readable, and the clear operation removed every
+  cache entry and remained idempotent;
+- partial, failed, cancelled, and incompatible results were not written;
+  absent, obsolete-schema, and checksum-corrupt entries returned misses, and
+  invalid current-key files were removed; and
+- the Release solution, game-linked plugin, and hosted-CI reference build
+  completed with zero warnings; all 14 conclusion and 40 runtime-boundary
+  checks passed; and the semantic-versioned DLL and Thunderstore package
+  validators accepted the resulting three-assembly package.
+
+**Produced:** `CompleteClusterCacheKey`, `CompleteClusterResultCache`, four
+focused storage fixtures, the BepInEx configuration-path adapter, and the
+[cache operation record](../CACHE.md). Cache-or-scan orchestration, cache UI,
+migration, and human in-game validation remained outside this story.
 
 ## Phase 2 - Deliver the hands-off workflow
 
