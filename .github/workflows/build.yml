@@ -1,0 +1,117 @@
+name: Build and validate Thunderstore package
+
+run-name: Build ${{ github.run_number }} from ${{ github.sha }}
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dsp-seed-scanner-main
+  cancel-in-progress: false
+
+jobs:
+  build-test-package:
+    name: Build and validate dummy package
+    runs-on: windows-latest
+
+    steps:
+      - name: Pull source
+        id: checkout
+        uses: actions/checkout@v5
+
+      - name: Confirm triggering commit
+        shell: pwsh
+        run: |
+          $checkedOut = (git rev-parse HEAD).Trim()
+          if ($checkedOut -cne '${{ github.sha }}') {
+            throw "Checkout mismatch: expected ${{ github.sha }}, found $checkedOut."
+          }
+
+      - name: Prepare build version
+        id: version
+        shell: pwsh
+        run: |
+          ./scripts/Set-BuildVersion.ps1 `
+            -Sequence ${{ github.run_number }} `
+            -Commit '${{ github.sha }}'
+
+      - name: Build placeholder DLL
+        id: build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force `
+            -Path 'artifacts/build/public' | Out-Null
+          Copy-Item -LiteralPath 'packaging/DSPSeedScanner.dll' `
+            -Destination 'artifacts/build/public/DSPSeedScanner.dll'
+
+      - name: Build Thunderstore package
+        id: package
+        shell: pwsh
+        run: |
+          ./scripts/New-ThunderstorePackage.ps1 `
+            -DllPath 'artifacts/build/public/DSPSeedScanner.dll' `
+            -VersionNumber $env:PACKAGE_VERSION
+
+      - name: Validate Thunderstore package
+        id: package_test
+        shell: pwsh
+        run: |
+          ./scripts/Test-ThunderstorePackage.ps1 `
+            -PackagePath "artifacts/packages/DSPSeedScanner-$env:PACKAGE_VERSION.zip" `
+            -ExpectedVersion $env:PACKAGE_VERSION `
+            -ExpectedDllPath 'artifacts/build/public/DSPSeedScanner.dll'
+
+      - name: Upload package and reports
+        id: upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: DSPSeedScanner-${{ steps.version.outputs.package_version }}
+          path: |
+            artifacts/packages/DSPSeedScanner-${{ steps.version.outputs.package_version }}.zip
+            artifacts/BUILD-INFO.txt
+            artifacts/PACKAGE-REPORT.md
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Report status
+        if: always()
+        shell: pwsh
+        env:
+          CHECKOUT_STATUS: ${{ steps.checkout.outcome }}
+          VERSION_STATUS: ${{ steps.version.outcome }}
+          BUILD_STATUS: ${{ steps.build.outcome }}
+          PACKAGE_STATUS: ${{ steps.package.outcome }}
+          PACKAGE_TEST_STATUS: ${{ steps.package_test.outcome }}
+          UPLOAD_STATUS: ${{ steps.upload.outcome }}
+          RELEASE_LABEL_VALUE: ${{ steps.version.outputs.release_label }}
+          PACKAGE_VERSION_VALUE: ${{ steps.version.outputs.package_version }}
+          SEMANTIC_VERSION_VALUE: ${{ steps.version.outputs.semantic_version }}
+          ASSEMBLY_VERSION_VALUE: ${{ steps.version.outputs.assembly_version }}
+        run: |
+          @"
+          # DSP Seed Scanner build status
+
+          | Field | Value |
+          | --- | --- |
+          | Source commit | `${{ github.sha }}` |
+          | Workflow sequence | `${{ github.run_number }}` |
+          | Release label | `$env:RELEASE_LABEL_VALUE` |
+          | Package/plugin version | `$env:PACKAGE_VERSION_VALUE` |
+          | Semantic version | `$env:SEMANTIC_VERSION_VALUE` |
+          | Assembly/file version | `$env:ASSEMBLY_VERSION_VALUE` |
+
+          | Stage | Status |
+          | --- | --- |
+          | Pull source | $env:CHECKOUT_STATUS |
+          | Generate version | $env:VERSION_STATUS |
+          | Stage placeholder DLL | $env:BUILD_STATUS |
+          | Build package | $env:PACKAGE_STATUS |
+          | Validate package | $env:PACKAGE_TEST_STATUS |
+          | Upload artifacts | $env:UPLOAD_STATUS |
+          "@ >> $env:GITHUB_STEP_SUMMARY

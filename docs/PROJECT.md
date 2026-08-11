@@ -12,7 +12,7 @@ a focused implementation task:
 - the user-facing way to start, stop, and configure a scan;
 - the persisted result format and schema;
 - batching, concurrency, and performance targets;
-- packaging and release automation.
+- final package identity, copy, and release publishing.
 
 Open decisions are not implemented behavior.
 
@@ -161,6 +161,13 @@ not from committed binaries.
 Exact project files, build commands, dependency versions, and output layout
 will be defined with the executable skeleton and then documented in
 `README.md`.
+
+The placeholder CI pipeline already establishes the release version mapping:
+`VERSION` supplies major and minor, the GitHub Actions run number supplies the
+patch, assembly/file versions append `.0`, and diagnostic labels append the
+short commit. It also validates the generic Thunderstore archive contract.
+See [THUNDERSTORE-PACKAGE.md](THUNDERSTORE-PACKAGE.md). These build artifacts
+remain non-installable until a compiled plugin replaces the empty DLL.
 
 ## Contracts to establish
 

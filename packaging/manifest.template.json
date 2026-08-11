@@ -1,0 +1,9 @@
+{
+  "name": "DSPSeedScanner",
+  "version_number": "{{VERSION_NUMBER}}",
+  "website_url": "https://github.com/shytamir/DSPSeedScanner",
+  "description": "Lorem ipsum placeholder package for the DSP Seed Scanner project skeleton.",
+  "dependencies": [
+    "xiaoye97-BepInEx-5.4.17"
+  ]
+}

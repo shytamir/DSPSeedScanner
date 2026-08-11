@@ -1,0 +1,23 @@
+# Build and package output
+artifacts/
+bin/
+obj/
+
+# IDE and user state
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# Local game references and compiled output
+lib/
+*.dll
+*.pdb
+!packaging/DSPSeedScanner.dll
+
+# Operating system files
+Thumbs.db
+Desktop.ini
+.DS_Store

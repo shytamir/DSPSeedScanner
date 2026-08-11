@@ -13,8 +13,9 @@ matching seeds without modifying player saves or factory state.
 ## Project status
 
 The repository is in its bootstrap phase. The product contract and engineering
-boundaries are documented, but the mod, scan criteria, command surface, result
-format, and packaging workflow have not yet been implemented.
+boundaries are documented, and a placeholder package pipeline establishes the
+version and Thunderstore archive contracts. The mod, scan criteria, command
+surface, and result format have not yet been implemented.
 
 See [docs/PROJECT.md](docs/PROJECT.md) for the current scope and architecture.
 
@@ -35,8 +36,11 @@ local runtime or build dependencies; they will not be redistributed here.
 ## Development
 
 Development and build instructions will be added with the first executable
-project skeleton. Until then, contributors should read [AGENTS.md](AGENTS.md)
-and [docs/PROJECT.md](docs/PROJECT.md) before making structural or behavioral
+project skeleton. The current GitHub Actions workflow packages an intentionally
+empty DLL solely to validate release plumbing; it does not produce a usable
+mod. See [docs/THUNDERSTORE-PACKAGE.md](docs/THUNDERSTORE-PACKAGE.md) for that
+contract. Contributors should read [AGENTS.md](AGENTS.md) and
+[docs/PROJECT.md](docs/PROJECT.md) before making structural or behavioral
 changes.
 
 ## Repository layout
@@ -44,8 +48,13 @@ changes.
 ```text
 .
 |-- AGENTS.md
+|-- .github/workflows/build.yml
 |-- docs/
-|   `-- PROJECT.md
+|   |-- PROJECT.md
+|   `-- THUNDERSTORE-PACKAGE.md
+|-- packaging/
+|-- scripts/
+|-- VERSION
 |-- LICENSE
 `-- README.md
 ```
