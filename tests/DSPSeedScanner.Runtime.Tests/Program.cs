@@ -36,6 +36,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("birth resource settings preserve facts but decline ranges", BirthResourceSettingsAreBounded),
                 ("birth resource cancellation and failure retain diagnostics", BirthResourceExitPathsRetainDiagnostics),
                 ("birth request shares serialization and preserves preview report", BirthRequestPreservesPreviewReport),
+                ("complete cluster aggregates rare access and deferred strength", CompleteClusterAggregatesRareAccess),
+                ("complete cluster partial exits expose no evidence", CompleteClusterPartialExitsExposeNoEvidence),
+                ("complete cluster incompatibility remains explicit", CompleteClusterIncompatibilityIsExplicit),
+                ("complete cluster shares runtime serialization", CompleteClusterSharesSerialization),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -501,6 +505,114 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(1, previewGateway.GenerateCalls);
         }
 
+        private static void CompleteClusterAggregatesRareAccess()
+        {
+            var gateway = new FakeCompleteClusterGateway();
+            CompleteClusterRawResult result = new CompleteClusterRawCoordinator(gateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, result.Status);
+            True(result.Coverage.IsComplete);
+            Equal(3, result.Coverage.ExpectedPlanets);
+            Equal(3, result.Coverage.CompletedPlanets);
+            Equal(7, result.RareResources.Count);
+            NormalizedRareResourceEvidence kimberlite = result.RareResources.Single(
+                resource => resource.ResourceId == "kimberlite");
+            Equal(true, kimberlite.IsPresent);
+            Equal(2m, kimberlite.DistanceFromBirthLy);
+            Equal(200L, kimberlite.Amount);
+            Equal(1, kimberlite.VeinGroups);
+            NormalizedRareResourceEvidence absent = result.RareResources.Single(
+                resource => resource.ResourceId == "fractal-silicon");
+            Equal(false, absent.IsPresent);
+
+            AssertReport(result, "RR-ACCESS.distance:kimberlite", ComponentOutcome.Supports);
+            AssertReport(result, "RR-ACCESS.distance:unipolar-magnet", ComponentOutcome.DoesNotSupport);
+            AssertReport(result, "RR-ACCESS.distance:fractal-silicon", ComponentOutcome.DoesNotSupport);
+            ConclusionReport amount = result.Reports.Single(report =>
+                report.ConclusionId == "RR-ACCESS.amount:kimberlite");
+            Equal(ComponentOutcome.Unknown, amount.Outcome);
+            Equal("200", amount.DecisiveFact?.Value);
+            ConclusionReport cluster = result.Reports.Single(report =>
+                report.ConclusionId == "MF-RESOURCE-SCOPE.strength");
+            Equal(ComponentOutcome.Unknown, cluster.Outcome);
+            Equal("30000", cluster.DecisiveFact?.Value);
+            True(result.Reports.Any(report => report.ConclusionId ==
+                "MF-SYSTEM-ROLE.role:rare-access"));
+            True(result.Reports.Any(report => report.ConclusionId ==
+                "TRAIT-SUMMARY.registry:close-rare-access:kimberlite"));
+            Equal(1, gateway.RestoreCalls);
+            Equal("original", gateway.StateMarker);
+        }
+
+        private static void CompleteClusterPartialExitsExposeNoEvidence()
+        {
+            var cancellationGateway = new FakeCompleteClusterGateway();
+            using (var source = new CancellationTokenSource())
+            {
+                CompleteClusterRawResult cancelled =
+                    new CompleteClusterRawCoordinator(cancellationGateway).TryGenerate(
+                        Request(),
+                        source.Token,
+                        progress =>
+                        {
+                            if (progress.State == CompleteClusterProgressState.PlanetCompleted)
+                                source.Cancel();
+                        });
+                Equal(RuntimeScanStatus.Cancelled, cancelled.Status);
+                Equal(CoverageState.Partial, cancelled.Coverage.State);
+                Equal(1, cancelled.Coverage.CompletedPlanets);
+                Equal(0, cancelled.RareResources.Count);
+                Equal(0, cancelled.Reports.Count);
+                Equal(101, cancelled.AffectedPlanetId);
+                Equal(1, cancellationGateway.RestoreCalls);
+            }
+
+            var failureGateway = new FakeCompleteClusterGateway { FailingPlanetId = 102 };
+            CompleteClusterRawResult failed = new CompleteClusterRawCoordinator(failureGateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Failed, failed.Status);
+            Equal(CoverageState.Partial, failed.Coverage.State);
+            Equal(1, failed.Coverage.CompletedPlanets);
+            Equal(0, failed.RareResources.Count);
+            Equal(0, failed.Reports.Count);
+            Equal(102, failed.AffectedPlanetId);
+            Equal(1, failureGateway.RestoreCalls);
+        }
+
+        private static void CompleteClusterIncompatibilityIsExplicit()
+        {
+            var gateway = new FakeCompleteClusterGateway
+            {
+                GenerationFailure = new RawCompatibilityException(
+                    "unknown-raw-resource-type",
+                    "unsupported resource",
+                    "EVeinType=99")
+            };
+            CompleteClusterRawResult result = new CompleteClusterRawCoordinator(gateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Incompatible, result.Status);
+            Equal("unknown-raw-resource-type", result.Code);
+            Equal("EVeinType=99", result.RawDiagnostic);
+            Equal(CoverageState.Unavailable, result.Coverage.State);
+            Equal(0, result.Reports.Count);
+            Equal(1, gateway.RestoreCalls);
+        }
+
+        private static void CompleteClusterSharesSerialization()
+        {
+            var gate = new RuntimeOperationGate();
+            var previewGateway = new FakeGateway();
+            var preview = new PreviewScanCoordinator(previewGateway, gate);
+            var gateway = new FakeCompleteClusterGateway();
+            RuntimeScanResult? nested = null;
+            gateway.OnPlanet = () => nested ??= preview.TryScan(Request(), CancellationToken.None);
+            CompleteClusterRawResult result = new CompleteClusterRawCoordinator(gateway, gate)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, result.Status);
+            Equal(RuntimeScanStatus.Busy, nested?.Status);
+            Equal(0, previewGateway.GenerateCalls);
+        }
+
         private static void RuntimeBoundaryExposesNoGameObjects()
         {
             Assembly assembly = typeof(PreviewScanCoordinator).Assembly;
@@ -518,7 +630,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(NormalizedRawVeinNode),
                 typeof(NormalizedRawVeinGroup),
                 typeof(BirthSystemRawResult),
-                typeof(BirthSystemRawProgress)
+                typeof(BirthSystemRawProgress),
+                typeof(CompleteClusterRawResult),
+                typeof(CompleteClusterRawProgress)
             })
             {
                 foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -661,6 +775,19 @@ namespace DSPSeedScanner.Runtime.Tests
 
         private static void AssertReport(
             RuntimeScanResult result,
+            string conclusionId,
+            ComponentOutcome outcome)
+        {
+            if (!result.Reports.Any(report =>
+                report.ConclusionId == conclusionId && report.Outcome == outcome))
+            {
+                throw new InvalidOperationException(
+                    "Expected " + conclusionId + " to include " + outcome + ".");
+            }
+        }
+
+        private static void AssertReport(
+            CompleteClusterRawResult result,
             string conclusionId,
             ComponentOutcome outcome)
         {
@@ -852,6 +979,151 @@ namespace DSPSeedScanner.Runtime.Tests
                 private bool restored;
 
                 public Lease(FakeBirthGateway owner, string original)
+                {
+                    this.owner = owner;
+                    this.original = original;
+                }
+
+                public override bool Restored => restored;
+
+                public override void Dispose()
+                {
+                    owner.StateMarker = original;
+                    owner.RestoreCalls++;
+                    restored = true;
+                }
+            }
+        }
+
+        private sealed class FakeCompleteClusterGateway : IRuntimeCompleteClusterRawGateway
+        {
+            public int? FailingPlanetId { get; set; }
+            public Exception? GenerationFailure { get; set; }
+            public Action? OnPlanet { get; set; }
+            public int RestoreCalls { get; private set; }
+            public string StateMarker { get; set; } = "original";
+            public int MainThreadId => Thread.CurrentThread.ManagedThreadId;
+
+            public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) => Fingerprint();
+
+            public RuntimeStateLease CaptureState()
+            {
+                string original = StateMarker;
+                StateMarker = "leased";
+                return new Lease(this, original);
+            }
+
+            public BirthSystemRawPlan DiscoverBirthSystem(
+                PreviewScanRequest request,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace) =>
+                throw new NotSupportedException();
+
+            public NormalizedRawPlanetEvidence GenerateRawPlanet(
+                RawPlanetRequest request,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace) =>
+                throw new NotSupportedException();
+
+            public CompleteClusterRawPlan DiscoverCompleteCluster(
+                PreviewScanRequest request,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace)
+            {
+                recordTrace("cluster-plan:declared=3");
+                return new CompleteClusterRawPlan(
+                    Snapshot(),
+                    new[]
+                    {
+                        new CompleteClusterPlanetTarget(
+                            101, 1,
+                            new ConclusionSubject(SubjectKind.BirthSystem, "1"),
+                            0m),
+                        new CompleteClusterPlanetTarget(
+                            102, 2,
+                            new ConclusionSubject(SubjectKind.StarSystem, "2"),
+                            2m),
+                        new CompleteClusterPlanetTarget(
+                            103, 3,
+                            new ConclusionSubject(SubjectKind.StarSystem, "3"),
+                            20m)
+                    });
+            }
+
+            public void GenerateCompleteCluster(
+                PreviewScanRequest request,
+                CompleteClusterRawPlan plan,
+                CancellationToken cancellationToken,
+                Action<CompleteClusterPlanetTarget> planetStarted,
+                Action<CompleteClusterPlanetTarget, NormalizedRawPlanetEvidence> planetCompleted,
+                Action<string> recordTrace)
+            {
+                if (GenerationFailure != null)
+                    throw GenerationFailure;
+                foreach (CompleteClusterPlanetTarget target in plan.Targets)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    planetStarted(target);
+                    OnPlanet?.Invoke();
+                    if (FailingPlanetId == target.PlanetId)
+                        throw new InvalidOperationException("injected cluster planet failure");
+                    NormalizedRawPlanetEvidence evidence = target.PlanetId switch
+                    {
+                        102 => ClusterSnapshot(target, "kimberlite", 9, 1128, 200),
+                        103 => ClusterSnapshot(target, "unipolar-magnet", 14, 1016, 300),
+                        _ => ClusterSnapshot(target, null, 0, 0, 0)
+                    };
+                    planetCompleted(target, evidence);
+                }
+                recordTrace("cluster-raw:candidate:released");
+            }
+
+            private static NormalizedRawPlanetEvidence ClusterSnapshot(
+                CompleteClusterPlanetTarget target,
+                string? rareId,
+                int rareType,
+                int rareProduct,
+                long rareAmount)
+            {
+                var nodes = new List<NormalizedRawVeinNode>
+                {
+                    new NormalizedRawVeinNode(
+                        1, 1, 1, "iron", 1001, RawResourceSemantics.FiniteDeposit,
+                        10_000, 1, 0.1m, 0.2m, 0.3m, null)
+                };
+                var groups = new List<NormalizedRawVeinGroup>
+                {
+                    new NormalizedRawVeinGroup(
+                        1, 1, "iron", RawResourceSemantics.FiniteDeposit,
+                        1, 10_000, 0.1m, 0.2m, 0.3m)
+                };
+                if (rareId != null)
+                {
+                    nodes.Add(new NormalizedRawVeinNode(
+                        2, 2, rareType, rareId, rareProduct,
+                        RawResourceSemantics.FiniteDeposit,
+                        rareAmount, 2, 0.4m, 0.5m, 0.6m, null));
+                    groups.Add(new NormalizedRawVeinGroup(
+                        2, rareType, rareId, RawResourceSemantics.FiniteDeposit,
+                        1, rareAmount, 0.4m, 0.5m, 0.6m));
+                }
+                return new NormalizedRawPlanetEvidence(
+                    16_315_224,
+                    target.PlanetId,
+                    1,
+                    target.AlgorithmId,
+                    RawPlanetCoverage.Complete(),
+                    nodes,
+                    groups);
+            }
+
+            private sealed class Lease : RuntimeStateLease
+            {
+                private readonly FakeCompleteClusterGateway owner;
+                private readonly string original;
+                private bool restored;
+
+                public Lease(FakeCompleteClusterGateway owner, string original)
                 {
                     this.owner = owner;
                     this.original = original;

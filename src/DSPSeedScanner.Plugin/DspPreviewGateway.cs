@@ -236,7 +236,7 @@ namespace DSPSeedScanner.Plugin
                 : "item-" + itemId.ToString(CultureInfo.InvariantCulture);
         }
 
-        private static string SystemIdentifier(int seed, StarData star, bool isBirth)
+        internal static string SystemIdentifier(int seed, StarData star, bool isBirth)
         {
             return seed.ToString(CultureInfo.InvariantCulture) + ":star:" +
                 star.id.ToString(CultureInfo.InvariantCulture) +

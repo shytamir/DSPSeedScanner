@@ -371,7 +371,7 @@ terrain or buildable-area interpretation.
 
 ### IMPL-06: Return exact starter-resource conclusions
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player judging a fresh start, I want exact birth-system resources on
 explicit request so that starter conclusions use generated deposits rather
@@ -463,7 +463,7 @@ Their release constraints and IMPL-08 closure gate remain unchanged.
 
 ### IMPL-07: Return exact rare-resource access
 
-**State:** Proposed; depends on IMPL-06 acceptance.
+**State:** Completed; pending acceptance.
 
 As a player planning expansion, I want an explicit complete-cluster scan for
 rare-resource distance so that nearby access is based on actual deposits and
@@ -501,6 +501,71 @@ eligible roles, grouping, and traits.
 **Out of scope:** Rare-abundance ranges, cluster resource scoring, parallelism,
 exhaustive search, unattended queues, travel time, logistics throughput,
 databases, exports, UI, and performance optimization.
+
+**Delivered:** An explicit developer-invoked complete-cluster operation
+generated every solid planet in one owned candidate galaxy and returned a new
+complete report with exact rare-resource access, eligible derived roles,
+grouping, and traits.
+
+**Implemented:**
+
+- immutable complete-cluster plan, target, progress, coverage, evidence, and
+  result contracts without game, Unity, or BepInEx types;
+- one serialized main-thread operation with compatibility checks, a declared
+  maximum of 256 solid planets, safe-boundary cancellation, affected-planet
+  attribution, and complete-only result publication;
+- one retained candidate galaxy per raw operation, reusing the certified raw
+  preparation, atomic generation, normalization, and shared-state lease while
+  streaming normalized evidence into bounded aggregation;
+- exact supported rare-resource presence, nearest system and birth distance,
+  amount, and group diagnostics, plus the exact finite common-resource cluster
+  total;
+- complete-cluster coverage for `RR-ACCESS` and `MF-RESOURCE-SCOPE`, preserving
+  unknown abundance and strength outcomes while reevaluating eligible roles,
+  grouping conclusions, and registered traits; and
+- a developer-only acceptance mode covering exact fixtures, cancellation,
+  injected incompatibility, release/restoration traces, elapsed time, managed
+  allocation pressure, and post-collection retained memory.
+
+**Acceptance evidence:**
+
+- seeds `73339583`, `96178012`, and `45772` completed exact raw coverage of
+  218, 196, and 216 solid planets respectively in each of two independent DSP
+  processes;
+- all accepted rare amounts, groups, finite common totals, and coverage counts
+  matched the earlier runtime catalogue with zero fact mismatches;
+- kimberlite at `2.02785704789118` light-years supported close access,
+  unipolar magnets at `7.35336482256494` light-years were
+  preference-sensitive, and unipolar magnets at `38.4949468921654`
+  light-years did not support close access;
+- normalized results, rare evidence, reports, and release/restoration traces
+  from both processes were byte-identical after excluding observations, with
+  SHA-256
+  `B67A4D824DD784A8D0FE53156E6172FD76974147FDA8C26E17A1B44CE94C8936`;
+- cancellation stopped at `3/218` planets and injected incompatibility at
+  `1/218`; both retained partial coverage and the affected planet, exposed no
+  rare evidence or conclusions, released both plan and raw candidates, and
+  restored shared state;
+- all five operations per process recorded plan-candidate release,
+  raw-candidate release, and successful state restoration; absent and runtime
+  incompatibility cases also passed the focused boundary suite; and
+- all 14 conclusion checks and all 27 runtime-boundary checks passed, and the
+  Release solution and game-linked plugin builds completed with zero warnings.
+
+**Proposed single-operation bound:** One serialized 64-star cluster request may
+declare at most 256 solid planets. The six complete fixture observations took
+23,670 to 28,143 ms and showed at most 1,295,376,384 bytes of temporary managed
+heap growth. Developer-only post-collection checks retained at most 2,510,848
+bytes, including the returned report and progress, with no candidate planet or
+galaxy exposed. These observations bound the current operation; they are not a
+performance guarantee or authorization for queues or parallel scans.
+
+**Produced:** The exact complete-cluster rare-access boundary and its
+repeatable developer acceptance harness. Generated evidence, observations,
+and game-linked artifacts remained outside the repository.
+
+**Retained debt:** IMPL-07 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
+Their release constraints and IMPL-08 closure gate remain unchanged.
 
 ## Phase 4 - Prove conformance and package the core
 

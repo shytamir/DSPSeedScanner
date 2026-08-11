@@ -11,7 +11,11 @@ namespace DSPSeedScanner.Runtime
             RuntimeFingerprint fingerprint,
             RuntimePreviewSnapshot snapshot,
             NormalizedStarterResourceEvidence? starterResources = null,
-            EvidenceCoverage? starterCoverage = null)
+            EvidenceCoverage? starterCoverage = null,
+            IEnumerable<NormalizedRareResourceEvidence>? rareResources = null,
+            EvidenceCoverage? rareCoverage = null,
+            long? clusterCommonResourceTotal = null,
+            EvidenceCoverage? clusterResourceCoverage = null)
         {
             var identity = new GenerationIdentity(
                 fingerprint.GameVersion,
@@ -41,6 +45,10 @@ namespace DSPSeedScanner.Runtime
             };
             if (starterCoverage != null)
                 coverages.Add(starterCoverage);
+            if (rareCoverage != null)
+                coverages.Add(rareCoverage);
+            if (clusterResourceCoverage != null)
+                coverages.Add(clusterResourceCoverage);
 
             var evidence = new NormalizedClusterEvidence(
                 identity,
@@ -50,7 +58,9 @@ namespace DSPSeedScanner.Runtime
                 coverages,
                 snapshot.Systems,
                 starterResources,
-                systemDistances: snapshot.SystemDistances);
+                rareResources,
+                systemDistances: snapshot.SystemDistances,
+                clusterCommonResourceTotal: clusterCommonResourceTotal);
             return ConclusionEngine.Evaluate(evidence);
         }
 

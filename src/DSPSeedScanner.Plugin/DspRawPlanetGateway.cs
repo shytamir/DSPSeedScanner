@@ -9,7 +9,7 @@ using DSPSeedScanner.Runtime;
 
 namespace DSPSeedScanner.Plugin
 {
-    internal sealed class DspRawPlanetGateway : IRuntimeBirthSystemRawGateway
+    internal sealed class DspRawPlanetGateway : IRuntimeCompleteClusterRawGateway
     {
         private static readonly IReadOnlyDictionary<int, string> ResourceIds =
             new Dictionary<int, string>
@@ -132,6 +132,156 @@ namespace DSPSeedScanner.Plugin
                 {
                     galaxy.Free();
                     recordTrace("birth-plan:candidate:released");
+                }
+            }
+        }
+
+        public CompleteClusterRawPlan DiscoverCompleteCluster(
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<string> recordTrace)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            GameDesc descriptor = DspPreviewGateway.CreateDescriptor(request);
+            GalaxyData? galaxy = null;
+            try
+            {
+                recordTrace("UniverseGen.CreateGalaxy:cluster-plan:thread=" +
+                    Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture));
+                galaxy = UniverseGen.CreateGalaxy(descriptor);
+                RuntimePreviewSnapshot preview = DspPreviewGateway.NormalizePreview(
+                    request,
+                    galaxy,
+                    recordTrace);
+                StarData birthStar = galaxy.StarById(galaxy.birthStarId);
+                var targets = new List<CompleteClusterPlanetTarget>();
+                foreach (StarData star in galaxy.stars)
+                {
+                    bool isBirth = star.id == birthStar.id;
+                    string systemId = DspPreviewGateway.SystemIdentifier(
+                        request.GalaxySeed,
+                        star,
+                        isBirth);
+                    decimal distance = isBirth
+                        ? 0m
+                        : preview.SystemDistances.Single(item => item.Connects(
+                            preview.BirthSystemIdentifier,
+                            systemId)).LightYears;
+                    var subject = new ConclusionSubject(
+                        isBirth ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                        systemId);
+                    targets.AddRange(star.planets
+                        .Where(planet => planet.type != EPlanetType.Gas)
+                        .Select(planet => new CompleteClusterPlanetTarget(
+                            planet.id,
+                            planet.algoId,
+                            subject,
+                            distance)));
+                }
+                recordTrace("cluster-plan:declared=" +
+                    targets.Count.ToString(CultureInfo.InvariantCulture));
+                return new CompleteClusterRawPlan(preview, targets);
+            }
+            finally
+            {
+                if (galaxy != null)
+                {
+                    galaxy.Free();
+                    recordTrace("cluster-plan:candidate:released");
+                }
+            }
+        }
+
+        public void GenerateCompleteCluster(
+            PreviewScanRequest request,
+            CompleteClusterRawPlan plan,
+            CancellationToken cancellationToken,
+            Action<CompleteClusterPlanetTarget> planetStarted,
+            Action<CompleteClusterPlanetTarget, NormalizedRawPlanetEvidence> planetCompleted,
+            Action<string> recordTrace)
+        {
+            string? missingMember = FindMissingRawMember();
+            if (missingMember != null)
+            {
+                throw new RawCompatibilityException(
+                    "missing-raw-runtime-member",
+                    "A required raw-generation member is unavailable.",
+                    missingMember);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            GameDesc descriptor = DspPreviewGateway.CreateDescriptor(request);
+            GalaxyData? galaxy = null;
+            try
+            {
+                recordTrace("UniverseGen.CreateGalaxy:cluster-raw:thread=" +
+                    Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture));
+                galaxy = UniverseGen.CreateGalaxy(descriptor);
+                if (galaxy.starCount != plan.Preview.GeneratedStarCount)
+                    throw new InvalidOperationException("The raw candidate cluster changed star count.");
+
+                var planets = galaxy.stars
+                    .SelectMany(star => star.planets.Select(planet => new { star, planet }))
+                    .ToDictionary(item => item.planet.id);
+                int solidPlanetCount = planets.Values.Count(
+                    item => item.planet.type != EPlanetType.Gas);
+                if (solidPlanetCount != plan.Targets.Count)
+                {
+                    throw new RawCompatibilityException(
+                        "raw-target-count-mismatch",
+                        "The raw candidate cluster changed its solid-planet count.",
+                        "expected=" + plan.Targets.Count.ToString(CultureInfo.InvariantCulture) +
+                        ";actual=" + solidPlanetCount.ToString(CultureInfo.InvariantCulture));
+                }
+                var candidateData = new GameData
+                {
+                    gameDesc = descriptor,
+                    galaxy = galaxy
+                };
+                GameMain.data = candidateData;
+                DSPGame.GameDesc = descriptor;
+                PrepareRawGeneration(recordTrace);
+
+                foreach (CompleteClusterPlanetTarget target in plan.Targets)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!planets.TryGetValue(target.PlanetId, out var item))
+                        throw new RawCompatibilityException("raw-target-missing", "A declared cluster planet was not generated.");
+                    PlanetData planet = item.planet;
+                    string systemId = DspPreviewGateway.SystemIdentifier(
+                        request.GalaxySeed,
+                        item.star,
+                        item.star.id == galaxy.birthStarId);
+                    if (planet.type == EPlanetType.Gas ||
+                        planet.algoId != target.AlgorithmId ||
+                        !String.Equals(systemId, target.System.Identifier, StringComparison.Ordinal))
+                    {
+                        throw new RawCompatibilityException(
+                            "raw-target-mismatch",
+                            "A generated planet no longer matches its complete-cluster plan.",
+                            "planet=" + target.PlanetId.ToString(CultureInfo.InvariantCulture));
+                    }
+
+                    planetStarted(target);
+                    recordTrace("raw:atomic:start:planet=" +
+                        planet.id.ToString(CultureInfo.InvariantCulture) +
+                        ":algorithm=" + planet.algoId.ToString(CultureInfo.InvariantCulture));
+                    planet.RegenerateRawDataImmediately();
+                    recordTrace("raw:atomic:complete");
+                    AtomicCompletedForProbe?.Invoke();
+                    cancellationToken.ThrowIfCancellationRequested();
+                    NormalizedRawPlanetEvidence evidence = Normalize(
+                        request.GalaxySeed,
+                        planet);
+                    planetCompleted(target, evidence);
+                }
+            }
+            finally
+            {
+                if (galaxy != null)
+                {
+                    galaxy.Free();
+                    recordTrace("cluster-raw:candidate:released");
                 }
             }
         }

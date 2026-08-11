@@ -22,6 +22,7 @@ namespace DSPSeedScanner.Plugin
         private PreviewScanCoordinator? coordinator;
         private RawPlanetCoordinator? rawCoordinator;
         private BirthSystemRawCoordinator? birthSystemCoordinator;
+        private CompleteClusterRawCoordinator? completeClusterCoordinator;
         private DspRawPlanetGateway? rawGateway;
         private bool probeAttempted;
 
@@ -35,6 +36,9 @@ namespace DSPSeedScanner.Plugin
             coordinator = new PreviewScanCoordinator(previewGateway, operationGate);
             rawCoordinator = new RawPlanetCoordinator(rawGateway, operationGate);
             birthSystemCoordinator = new BirthSystemRawCoordinator(rawGateway, operationGate);
+            completeClusterCoordinator = new CompleteClusterRawCoordinator(
+                rawGateway,
+                operationGate);
             Logger.LogInfo("Runtime boundary initialized on managed thread " +
                 Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture) + ".");
         }
@@ -52,7 +56,12 @@ namespace DSPSeedScanner.Plugin
             try
             {
                 string? mode = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_MODE");
-                if (String.Equals(mode, "birth-resources", StringComparison.Ordinal))
+                if (String.Equals(mode, "rare-access", StringComparison.Ordinal))
+                {
+                    WriteRareAccessProbe(output);
+                    Logger.LogInfo("IMPL-07 rare-access probe completed: " + output);
+                }
+                else if (String.Equals(mode, "birth-resources", StringComparison.Ordinal))
                 {
                     WriteBirthResourceProbe(output);
                     Logger.LogInfo("IMPL-06 birth-resource probe completed: " + output);
@@ -108,6 +117,158 @@ namespace DSPSeedScanner.Plugin
             if (birthSystemCoordinator == null)
                 throw new InvalidOperationException("The plugin has not completed Awake.");
             return birthSystemCoordinator.TryGenerate(request, cancellationToken, reportProgress);
+        }
+
+        public CompleteClusterRawResult GenerateCompleteClusterResources(
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<CompleteClusterRawProgress>? reportProgress = null)
+        {
+            if (completeClusterCoordinator == null)
+                throw new InvalidOperationException("The plugin has not completed Awake.");
+            return completeClusterCoordinator.TryGenerate(
+                request,
+                cancellationToken,
+                reportProgress);
+        }
+
+        private void WriteRareAccessProbe(string path)
+        {
+            if (rawGateway == null)
+                throw new InvalidOperationException("The raw gateway is unavailable.");
+
+            int[] seeds = ParseSeeds().ToArray();
+            var results = new List<(CompleteClusterRawResult Result, long RetainedBytes)>();
+            foreach (int seed in seeds)
+            {
+                results.Add(MeasureCompleteCluster(
+                    Request(seed),
+                    CancellationToken.None));
+            }
+
+            using (var cancellation = new CancellationTokenSource())
+            {
+                results.Add(MeasureCompleteCluster(
+                    Request(seeds[0]),
+                    cancellation.Token,
+                    progress =>
+                    {
+                        if (progress.State == CompleteClusterProgressState.PlanetCompleted &&
+                            progress.CompletedPlanets == 3)
+                        {
+                            cancellation.Cancel();
+                        }
+                    }));
+            }
+
+            int atomicCompletions = 0;
+            try
+            {
+                rawGateway.AtomicCompletedForProbe = () =>
+                {
+                    atomicCompletions++;
+                    if (atomicCompletions == 2)
+                    {
+                        throw new RawCompatibilityException(
+                            "injected-rare-incompatibility",
+                            "Injected complete-cluster compatibility failure.",
+                            "EVeinType=99");
+                    }
+                };
+                results.Add(MeasureCompleteCluster(
+                    Request(seeds[0]),
+                    CancellationToken.None));
+            }
+            finally
+            {
+                rawGateway.AtomicCompletedForProbe = null;
+            }
+            WriteRareProbe(path, results);
+        }
+
+        private (CompleteClusterRawResult Result, long RetainedBytes) MeasureCompleteCluster(
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<CompleteClusterRawProgress>? reportProgress = null)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            long before = GC.GetTotalMemory(true);
+            CompleteClusterRawResult result = GenerateCompleteClusterResources(
+                request,
+                cancellationToken,
+                reportProgress);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            return (result, GC.GetTotalMemory(true) - before);
+        }
+
+        private static void WriteRareProbe(
+            string path,
+            IEnumerable<(CompleteClusterRawResult Result, long RetainedBytes)> results)
+        {
+            var lines = new StringBuilder();
+            foreach ((CompleteClusterRawResult result, long retainedBytes) in results)
+            {
+                string seed = result.GalaxySeed.ToString(CultureInfo.InvariantCulture);
+                lines.Append("cluster-result\t").Append(seed).Append('\t')
+                    .Append(result.Status).Append('\t').Append(result.Code).Append('\t')
+                    .Append(result.StateRestored).Append('\t')
+                    .Append(result.Coverage.State).Append('\t')
+                    .Append(result.Coverage.ExpectedPlanets).Append('\t')
+                    .Append(result.Coverage.CompletedPlanets).Append('\t')
+                    .Append(result.AffectedPlanetId).Append('\t')
+                    .Append(result.RawDiagnostic).AppendLine();
+                lines.Append("cluster-observation\t").Append(seed).Append('\t')
+                    .Append(result.ElapsedMilliseconds.ToString(CultureInfo.InvariantCulture))
+                    .Append('\t')
+                    .Append(result.ManagedMemoryDeltaBytes.ToString(CultureInfo.InvariantCulture))
+                    .AppendLine();
+                lines.Append("cluster-retained\t").Append(seed).Append('\t')
+                    .Append(retainedBytes.ToString(CultureInfo.InvariantCulture))
+                    .AppendLine();
+                foreach (NormalizedRareResourceEvidence rare in result.RareResources)
+                {
+                    lines.Append("cluster-rare\t").Append(seed).Append('\t')
+                        .Append(rare.ResourceId).Append('\t')
+                        .Append(rare.IsPresent).Append('\t')
+                        .Append(rare.NearestSystem?.Identifier).Append('\t')
+                        .Append(rare.DistanceFromBirthLy?.ToString(
+                            "0.############################",
+                            CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(rare.Amount).Append('\t')
+                        .Append(rare.VeinGroups).AppendLine();
+                }
+                foreach (ConclusionReport report in result.Reports.Where(report =>
+                    report.ConclusionId.StartsWith("RR-ACCESS.", StringComparison.Ordinal) ||
+                    report.ConclusionId.StartsWith("MF-RESOURCE-SCOPE.", StringComparison.Ordinal) ||
+                    report.SourceConclusionId?.StartsWith("RR-ACCESS.", StringComparison.Ordinal) == true))
+                {
+                    lines.Append("cluster-report\t").Append(seed).Append('\t')
+                        .Append(report.ConclusionId).Append('\t')
+                        .Append(report.Outcome).Append('\t')
+                        .Append(report.Subject.Identifier).Append('\t')
+                        .Append(report.DecisiveFact?.Value).Append('\t')
+                        .Append(report.DecisiveFact?.Unit).Append('\t')
+                        .Append(report.DiagnosticCause?.Code).Append('\t')
+                        .Append(report.SourceConclusionId).AppendLine();
+                }
+                for (int index = 0; index < result.Trace.Count; index++)
+                {
+                    string trace = result.Trace[index];
+                    if (trace == "cluster-plan:candidate:released" ||
+                        trace == "cluster-raw:candidate:released" ||
+                        trace.StartsWith("state:restore=", StringComparison.Ordinal))
+                    {
+                        lines.Append("cluster-trace\t").Append(seed).Append('\t')
+                            .Append(index.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(trace).AppendLine();
+                    }
+                }
+            }
+            File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
         }
 
         private void WriteBirthResourceProbe(string path)
