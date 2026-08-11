@@ -1,6 +1,6 @@
 # Player Seed-Decision Taxonomy
 
-**Status:** Candidate taxonomy produced by SPEC-03; pending product acceptance.
+**Status:** Accepted on 2026-08-11.
 
 This taxonomy records why players inspect Dyson Sphere Program seeds and which
 cluster characteristics they use when making those decisions. It establishes
@@ -237,6 +237,7 @@ viability versus convenience, nearby convenience versus distant abundance,
 concentration versus distribution, farming opportunity versus combat risk, and
 optimization versus discovery as explicit conflicts.
 
-SPEC-04 may now cross these player decisions with accepted runtime evidence.
-It must not infer that a measurable characteristic is valuable, adopt the
-reported thresholds above, or collapse contexts into a universal seed score.
+SPEC-04 crossed these player decisions with accepted runtime evidence in the
+[context-to-evidence decision matrix](DECISION-EVIDENCE-MATRIX.md). It did not
+infer that every measurable characteristic was valuable, adopt the reported
+thresholds above, or collapse contexts into a universal seed score.

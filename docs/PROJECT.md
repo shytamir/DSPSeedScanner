@@ -1,7 +1,8 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** SPEC-01 and SPEC-02 are accepted. SPEC-03 execution is complete and
-its player decision taxonomy is pending acceptance. No user story is active.
+**Status:** SPEC-01 through SPEC-03 are accepted. SPEC-04 execution is complete
+and its context-to-evidence decision matrix is pending acceptance. No user
+story is active.
 
 The current roadmap is [docs/management/ROADMAP.md](management/ROADMAP.md).
 It governs the remaining investigation that must precede implementation
@@ -9,9 +10,11 @@ planning. SPEC-01 produced the accepted
 [generation-identity contract](specification/GENERATION-IDENTITY.md) and
 [experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced the
 accepted [runtime evidence feasibility
-matrix](specification/RUNTIME-EVIDENCE-FEASIBILITY.md). SPEC-03 produced a
-candidate [player seed-decision
-taxonomy](specification/PLAYER-DECISION-TAXONOMY.md), which remains pending
+matrix](specification/RUNTIME-EVIDENCE-FEASIBILITY.md). SPEC-03 produced the
+accepted [player seed-decision
+taxonomy](specification/PLAYER-DECISION-TAXONOMY.md). SPEC-04 produced a
+candidate [context-to-evidence decision
+matrix](specification/DECISION-EVIDENCE-MATRIX.md), which remains pending
 acceptance.
 
 ## Purpose
@@ -28,9 +31,10 @@ or present one universal definition of a good seed.
 
 Before selecting features or implementation stories, the project must answer
 three questions. SPEC-01 established the accepted identity required to answer
-the first, SPEC-02 established the accepted evidence boundary, and SPEC-03
-documented how players describe the second. The remaining roadmap must cross
-those accepted inputs and define supported conclusions.
+the first, SPEC-02 established the accepted evidence boundary, SPEC-03
+documented how players describe the second, and SPEC-04 identified the
+decision-worthy intersection. The remaining roadmap must define and validate
+supported conclusions.
 
 1. Which cluster facts can the available DSP runtime reproduce reliably from
    the seed and all generation-affecting settings?
@@ -132,6 +136,10 @@ The product should retain a candidate characteristic only when:
 Raw availability is insufficient. A reproducible number with no material
 player decision is diagnostic data, not a product feature. A popular heuristic
 without reproducible evidence is research context, not a scanner conclusion.
+
+SPEC-04 advanced bounded preview and on-demand candidate families while
+rejecting unsupported predictions, subjective judgments, universal viability,
+and a global seed score. Its dispositions remain pending acceptance.
 
 ## Product invariants
 

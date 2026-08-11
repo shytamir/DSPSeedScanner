@@ -1,6 +1,6 @@
 # Product Specification Roadmap
 
-**Status:** Draft. SPEC-01 and SPEC-02 are accepted; SPEC-03 execution is
+**Status:** Draft. SPEC-01 through SPEC-03 are accepted; SPEC-04 execution is
 complete and pending acceptance.
 
 **Active user story:** None.
@@ -108,7 +108,7 @@ activating SPEC-03, scoring, profiles, UI, and implementation design.
 
 ### SPEC-03: Build the player decision taxonomy
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player choosing a seed, I want the scanner to understand the kind of run I
 intend so that it evaluates relevant tradeoffs instead of applying a universal
@@ -121,7 +121,7 @@ decision, including speedrunning, scarce-resource or maximum-difficulty play,
 compact expansion, sphere showcases, themed challenges, and discovery-first
 play.
 
-**Produced:** A candidate [player seed-decision
+**Produced:** The accepted [player seed-decision
 taxonomy](../specification/PLAYER-DECISION-TAXONOMY.md) of contexts and
 characteristics, with the affected player decisions, claimed benefits,
 threshold language, tradeoffs, and contrary preferences retained.
@@ -131,34 +131,37 @@ dsp_search_seed, and the requested seed lists in DSPSeedScanner, supplied
 candidate player vocabulary. Important criteria were traced to player
 discussions; tool support was not treated as proof of demand.
 
-**Excluded:** Treating popularity as correctness, fixing thresholds,
-activating SPEC-04, or implementing profiles.
+**Excluded:** Treating popularity as correctness, fixing thresholds, or
+implementing profiles.
 
 ## Phase 3 - Find the decision-worthy intersection
 
 ### SPEC-04: Cross player value with reproducible evidence
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a player choosing among seeds, I want only characteristics that are both
 trustworthy and relevant to my intended run so that the result reduces a real
 decision rather than displaying trivia.
 
-Cross the player taxonomy with the runtime feasibility matrix. For every
-candidate characteristic, record the supported contexts, required evidence,
-direction of preference, material tradeoffs, settings sensitivity, confidence,
-and whether a defensible conclusion is possible.
+The accepted player taxonomy was crossed with the runtime feasibility matrix.
+Every candidate characteristic was assessed for supported contexts, player
+decision, evidence source and cost, direction and tradeoffs, settings
+sensitivity, confidence, and defensible conclusion boundary.
 
-**Produces:** A context-to-evidence decision matrix with candidates marked for
-adoption, further research, diagnostic-only retention, or rejection.
+**Produced:** A candidate [context-to-evidence decision
+matrix](../specification/DECISION-EVIDENCE-MATRIX.md) marking candidates to
+advance into SPEC-05, retain for further research or diagnostics, or reject.
+It also established separate immediate-preview and on-demand evidence surfaces.
 
-**Prior-art targets:** Compare the rule composition in DSP-Seed-Finder and
-dsp_search_seed with DSPSeedDatabase's separation of stored evidence, queries,
-and weighted scoring. Retain explainable context-specific decisions while
-recording why opaque or universal scoring approaches are accepted or rejected.
+**Prior-art used:** The rule composition in DSP-Seed-Finder and dsp_search_seed
+was compared with DSPSeedDatabase's separation of stored evidence, queries,
+and optional scoring. Atomic predicates and evidence separation were retained
+as useful patterns; universal weighted scoring was rejected because preference
+direction changed by context, settings, horizon, and system role.
 
-**Excludes:** Global seed scores, arbitrary weighting, presentation copy, and
-implementation estimates.
+**Excluded:** Activating SPEC-05, global seed scores, arbitrary weighting,
+presentation copy, and implementation estimates.
 
 ## Phase 4 - Define the first conclusion contract
 
