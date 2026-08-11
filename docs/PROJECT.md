@@ -1,16 +1,17 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** The SPEC-01 generation-identity contract is accepted. SPEC-02
-execution is complete and its evidence matrix is pending acceptance. No user
-story is active.
+**Status:** SPEC-01 and SPEC-02 are accepted. SPEC-03 execution is complete and
+its player decision taxonomy is pending acceptance. No user story is active.
 
 The current roadmap is [docs/management/ROADMAP.md](management/ROADMAP.md).
 It governs the remaining investigation that must precede implementation
 planning. SPEC-01 produced the accepted
 [generation-identity contract](specification/GENERATION-IDENTITY.md) and
-[experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced a
-candidate [runtime evidence feasibility
-matrix](specification/RUNTIME-EVIDENCE-FEASIBILITY.md), which remains pending
+[experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced the
+accepted [runtime evidence feasibility
+matrix](specification/RUNTIME-EVIDENCE-FEASIBILITY.md). SPEC-03 produced a
+candidate [player seed-decision
+taxonomy](specification/PLAYER-DECISION-TAXONOMY.md), which remains pending
 acceptance.
 
 ## Purpose
@@ -27,8 +28,9 @@ or present one universal definition of a good seed.
 
 Before selecting features or implementation stories, the project must answer
 three questions. SPEC-01 established the accepted identity required to answer
-the first, and SPEC-02 produced its candidate evidence boundary. The remaining
-roadmap must connect accepted evidence to the other two questions.
+the first, SPEC-02 established the accepted evidence boundary, and SPEC-03
+documented how players describe the second. The remaining roadmap must cross
+those accepted inputs and define supported conclusions.
 
 1. Which cluster facts can the available DSP runtime reproduce reliably from
    the seed and all generation-affecting settings?
@@ -75,43 +77,45 @@ A fact is eligible for the product only when the investigation establishes:
 
 Seed alone does not identify a cluster. SPEC-01 established the required
 layered generation identity, and SPEC-02 mapped which galaxy, resource, and
-Dark Fog facts were available at each runtime stage. The evidence matrix
-remains pending acceptance.
+Dark Fog facts were available at each runtime stage. The accepted delivery
+boundary supports immediate low-cost preview evidence and reserves exact,
+execution-heavy terrain and resource generation for an explicit on-demand
+control.
 
 ## Player decision contexts
 
-The research begins with four context families. They are hypotheses to test,
-not implemented profiles.
+SPEC-03 established three primary context families and admitted materially
+distinct alternatives. They remain research classifications, not implemented
+profiles.
 
 ### Fresh start
 
 Concerned with the quality and convenience of progression from landing through
-early interstellar expansion. Candidate themes include starter-system topology,
-travel friction, usable early resources, power opportunities, nearby expansion,
-and the interaction with chosen resource and combat settings.
+early interstellar expansion. Players compare starter-system topology, travel
+friction, usable early resources, power opportunities, nearby expansion, and
+the interaction with chosen resource and combat settings.
 
 ### Megafactory
 
-Concerned with sustained late-game scale. Candidate themes include stellar
-energy potential, suitable planets and systems, rare-resource availability,
-transport geometry, construction capacity, and performance-aware concentration
-or distribution of production.
+Concerned with sustained late-game scale. Players compare stellar energy
+potential, suitable planets and systems, rare-resource availability, transport
+geometry, construction capacity, and performance-aware concentration or
+distribution of production.
 
 ### Dark Fog farming
 
-Concerned with establishing and sustaining deliberate combat farms. Candidate
-themes include initial occupation, hive and planetary-base opportunity,
-farmable planet and system topology, defensibility, replenishment, and access
-to Dark Fog-exclusive drops. The research must separate seed-derived facts from
-combat settings and state that develops only after play begins.
+Concerned with establishing and sustaining deliberate combat farms. Players
+compare initial occupation, hive opportunity, farmable system topology,
+defensibility, and access to Dark Fog-exclusive drops. SPEC-03 separated those
+seed-selection concerns from planetary bases, replenishment, yield, and other
+state that develops only after play begins.
 
 ### Valid alternatives
 
-The investigation will admit other materially distinct goals when evidence
-supports them, such as speedrunning, scarce-resource play, high-difficulty
-survival, compact exploration, visual or thematic preferences, and relaxed
-first playthroughs. A preference does not become a first-class context merely
-because it is measurable.
+The taxonomy admitted speedrunning, scarce-resource or maximum-difficulty play,
+compact expansion, sphere showcases, themed challenges, and discovery-first
+play because each changes a recognizable decision. A preference did not become
+a first-class context merely because it was measurable.
 
 ## Decision-value standard
 
@@ -181,8 +185,10 @@ Future New Game presentation
 ```
 
 The eventual New Game panel should present conclusions and decisive tradeoffs,
-not a dump of cluster statistics. Its user story is deliberately inactive in
-the roadmap until the evidence and conclusion contracts are settled.
+not a dump of cluster statistics. It should show low-cost preview conclusions
+immediately and place execution-heavy evidence behind an on-demand control.
+Its user story is deliberately inactive in the roadmap until the evidence and
+conclusion contracts are settled.
 
 ## Existing delivery infrastructure
 

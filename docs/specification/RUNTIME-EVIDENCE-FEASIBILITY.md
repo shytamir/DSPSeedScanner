@@ -1,6 +1,6 @@
 # Runtime Evidence Feasibility Matrix
 
-**Status:** Candidate matrix produced by SPEC-02; pending product acceptance.
+**Status:** Accepted on 2026-08-11.
 
 This matrix records what the installed Dyson Sphere Program runtime can
 faithfully provide before a player starts a game. It establishes evidence
@@ -150,6 +150,12 @@ That support has constraints:
   failure, not partial results.
 
 These are implementation constraints, not blockers to the accepted contract.
+
+The accepted delivery boundary separates the low-cost preview layer from the
+high-cost raw-generation layer. Preview evidence can support an immediate
+summary during seed selection. Exact terrain and resource evidence must be
+requested on demand through an explicit control; it is not part of the
+automatic preview path.
 
 ## SPEC-02 conclusion
 

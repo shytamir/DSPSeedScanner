@@ -1,7 +1,7 @@
 # Product Specification Roadmap
 
-**Status:** Draft. SPEC-01 is accepted; SPEC-02 execution is complete and
-pending acceptance.
+**Status:** Draft. SPEC-01 and SPEC-02 are accepted; SPEC-03 execution is
+complete and pending acceptance.
 
 **Active user story:** None.
 
@@ -76,7 +76,7 @@ the installed runtime did.
 
 ### SPEC-02: Map reproducible runtime facts
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player evaluating a cluster, I want recommendations limited to facts the
 installed game can reproduce before play begins so that the scanner never
@@ -87,10 +87,14 @@ rare-resource, distance, sphere-geometry, and Dark Fog facts. It identified
 their runtime sources, availability stages, settings dependencies, derivation
 boundaries, collection costs, repeatability evidence, and compatibility risks.
 
-**Produced:** A candidate
+**Produced:** The accepted
 [runtime evidence feasibility matrix](../specification/RUNTIME-EVIDENCE-FEASIBILITY.md)
 classifying facts as direct preview evidence, direct raw-generation evidence,
 deterministic derivations, after-start state, or unsupported claims.
+
+**Accepted delivery constraint:** Low-cost preview evidence can be presented
+immediately. Exact terrain and resource evidence uses DSP's execution-heavy raw
+generation path and must be initiated on demand through an explicit control.
 
 **Prior-art used:** dsp-csv-gen supplied the primary runtime-extraction prompt.
 dsp_search_seed, DSPSeedCalc, and DSPSeedScanner broadened the candidate fact
@@ -104,30 +108,31 @@ activating SPEC-03, scoring, profiles, UI, and implementation design.
 
 ### SPEC-03: Build the player decision taxonomy
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a player choosing a seed, I want the scanner to understand the kind of run I
 intend so that it evaluates relevant tradeoffs instead of applying a universal
 definition of good.
 
-Research seed-selection language, claimed benefits, thresholds, tradeoffs, and
-disagreements for fresh starts, megafactories, and Dark Fog farming. Admit
-additional contexts only when they represent a distinct decision, such as
-speedrunning, scarce-resource or maximum-difficulty play, compact exploration,
-or aesthetic goals.
+The research examined seed-selection language, claimed benefits, thresholds,
+tradeoffs, and disagreements for fresh starts, megafactories, and Dark Fog
+farming. It admitted alternatives only when they represented a distinct
+decision, including speedrunning, scarce-resource or maximum-difficulty play,
+compact expansion, sphere showcases, themed challenges, and discovery-first
+play.
 
-**Produces:** A sourced taxonomy of contexts and candidate characteristics,
-with the player decision each characteristic changes and contrary evidence or
-preferences retained.
+**Produced:** A candidate [player seed-decision
+taxonomy](../specification/PLAYER-DECISION-TAXONOMY.md) of contexts and
+characteristics, with the affected player decisions, claimed benefits,
+threshold language, tradeoffs, and contrary preferences retained.
 
-**Prior-art targets:** Treat the configurable rules in DSP-Seed-Finder and
-dsp_search_seed, and the requested seed lists in DSPSeedScanner, as candidate
-player vocabulary. Trace important criteria back to player discussions and
-preserve missing contexts and disagreements rather than treating tool support
-as proof of demand.
+**Prior-art used:** The configurable rules in DSP-Seed-Finder and
+dsp_search_seed, and the requested seed lists in DSPSeedScanner, supplied
+candidate player vocabulary. Important criteria were traced to player
+discussions; tool support was not treated as proof of demand.
 
-**Excludes:** Treating popularity as correctness, fixing thresholds, or
-implementing profiles.
+**Excluded:** Treating popularity as correctness, fixing thresholds,
+activating SPEC-04, or implementing profiles.
 
 ## Phase 3 - Find the decision-worthy intersection
 
