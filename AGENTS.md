@@ -22,23 +22,28 @@ A specific instruction overrides a general one.
 
 ## 3. Product contract
 
-DSP Seed Scanner is a BepInEx-dependent mod that uses the Dyson Sphere Program
-runtime to generate and inspect procedurally generated star clusters.
+DSP Seed Scanner is a planned BepInEx-dependent mod that uses the Dyson Sphere
+Program runtime to help players decide whether a generated star cluster suits
+the run they intend to play.
 
 Preserve these invariants unless a task explicitly changes one:
 
-- scanning is deterministic for the same seed, game version, and generation
-  settings;
+- scanning is deterministic for the same complete generation identity and
+  supported game version;
 - scanning does not modify the player's factory, progression, or save data;
 - game runtime data is treated as authoritative;
-- generation, extraction, evaluation, and reporting remain separate concerns;
+- generation, extraction, normalization, interpretation, and presentation
+  remain separate concerns;
+- conclusions are tied to a stated player context and never imply a universal
+  best seed;
 - long-running scans remain bounded, observable, and interruptible;
 - failures identify the affected seed and stage without fabricating results;
 - game, Unity, and BepInEx assemblies are dependencies and are never
   redistributed from this repository.
 
 Read `docs/PROJECT.md` before changing scan behavior, result contracts,
-runtime integration, or project scope.
+runtime integration, or project scope. Read `docs/management/ROADMAP.md` before
+starting or changing product-specification work.
 
 ## 4. Scope discipline
 
@@ -62,15 +67,17 @@ cannot be safely retained, stop and ask for direction.
 Keep these responsibilities separate as the implementation develops:
 
 ```text
-Scan request
+Complete generation identity
     |
 DSP runtime generation
     |
-Normalized cluster model
+Normalized cluster evidence
     |
-Criteria evaluation
+Context-specific interpretation
     |
-Result reporting
+Decision conclusions
+    |
+Future New Game presentation
 ```
 
 Use the installed game and its assemblies as read-only development inputs.

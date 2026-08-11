@@ -2,31 +2,35 @@
 
 DSP Seed Scanner is an upcoming mod for
 [Dyson Sphere Program](https://store.steampowered.com/app/1366540/Dyson_Sphere_Program/)
-that will use the game's own runtime to generate and inspect procedurally
-generated star clusters.
+that will help players decide whether a procedurally generated star cluster
+suits the run they intend to play.
 
-The project is intended for repeatable, automated searches across many galaxy
-seeds. Runtime generation remains the source of truth; the scanner will
-normalize relevant cluster data, evaluate explicit criteria, and report
-matching seeds without modifying player saves or factory state.
+The installed game runtime will remain the source of truth. The scanner will
+generate candidate clusters, normalize faithfully reproducible evidence, and
+draw context-specific conclusions without modifying player saves or factory
+state. It will not claim that one seed is universally best.
 
 ## Project status
 
-The repository is in its bootstrap phase. The product contract and engineering
-boundaries are documented, and a placeholder package pipeline establishes the
-version and Thunderstore archive contracts. The mod, scan criteria, command
-surface, and result format have not yet been implemented.
+The project is in product specification. The roadmap is still being worked on,
+no user story is active, and implementation has not begun. The immediate work
+will establish which facts the runtime can reproduce, how players judge seeds
+for different kinds of runs, and which intersections support meaningful
+decisions.
 
-See [docs/PROJECT.md](docs/PROJECT.md) for the current scope and architecture.
+See [docs/PROJECT.md](docs/PROJECT.md) for the product definition and
+[docs/management/ROADMAP.md](docs/management/ROADMAP.md) for the specification
+roadmap.
 
 ## Planned shape
 
 ```text
-Scan request
+Complete generation identity
     -> DSP runtime generation
-    -> normalized cluster data
-    -> criteria evaluation
-    -> scan results
+    -> normalized cluster evidence
+    -> context-specific interpretation
+    -> decision conclusions
+    -> future New Game presentation
 ```
 
 The initial implementation is expected to be a BepInEx-dependent C# plugin.
@@ -35,13 +39,16 @@ local runtime or build dependencies; they will not be redistributed here.
 
 ## Development
 
-Development and build instructions will be added with the first executable
-project skeleton. The current GitHub Actions workflow packages an intentionally
-empty DLL solely to validate release plumbing; it does not produce a usable
-mod. See [docs/THUNDERSTORE-PACKAGE.md](docs/THUNDERSTORE-PACKAGE.md) for that
-contract. Contributors should read [AGENTS.md](AGENTS.md) and
-[docs/PROJECT.md](docs/PROJECT.md) before making structural or behavioral
-changes.
+Current work is governed by the product-specification roadmap. Development and
+build instructions will be added only when an approved specification supports
+an executable project skeleton.
+
+The existing GitHub Actions workflow packages an intentionally empty DLL solely
+to validate release plumbing; it does not produce a usable mod. See
+[docs/THUNDERSTORE-PACKAGE.md](docs/THUNDERSTORE-PACKAGE.md) for that contract.
+Contributors should read [AGENTS.md](AGENTS.md),
+[docs/PROJECT.md](docs/PROJECT.md), and the current roadmap before changing
+scope or behavior.
 
 ## Repository layout
 
@@ -50,6 +57,7 @@ changes.
 |-- AGENTS.md
 |-- .github/workflows/build.yml
 |-- docs/
+|   |-- management/ROADMAP.md
 |   |-- PROJECT.md
 |   `-- THUNDERSTORE-PACKAGE.md
 |-- packaging/
