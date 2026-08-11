@@ -1,11 +1,13 @@
 # Implementation-Planning Boundary
 
-**Status:** Accepted on 2026-08-11.
+**Status:** Accepted on 2026-08-11 and fulfilled by the completed scanner-core
+roadmap. This is a historical implementation handoff, not current delivery
+steering.
 
 This handoff prepared closure of product specification without creating
 implementation stories. It identified the smallest useful product contract,
-the constraints engineering must preserve, and the evidence required before
-runtime-dependent code can be treated as production-ready.
+the constraints engineering had to preserve, and the evidence required before
+runtime-dependent code could be treated as production-ready.
 
 ## Readiness decision
 
@@ -15,12 +17,12 @@ generate the required preview and raw evidence. The accepted contracts define
 deterministic identity, evidence stages, neutral outcomes, predicates, ranges,
 validation fixtures, and declined claims.
 
-This completed specification roadmap did not approve implementation. A
-separately accepted implementation roadmap remains required.
+This completed specification roadmap did not itself approve implementation.
+The scanner-core roadmap was subsequently accepted and completed.
 
-## Normative baseline
+## Historical normative baseline
 
-Implementation planning must use these artifacts together:
+Scanner-core implementation planning used these artifacts together:
 
 | Authority | Accepted artifact | Governs |
 | --- | --- | --- |
@@ -66,22 +68,24 @@ These components must be evaluated independently. A family may return several
 component outcomes; no score, grade, hidden weight, or context-free verdict is
 permitted.
 
-### Explicit on-demand surface
+### Historical raw-generation surface
 
-Only an explicit request may start raw planet generation. The first on-demand
-scope contains:
+The scanner-core roadmap initially exposed raw planet generation through an
+explicit developer request while runtime safety was being established. That
+historical implementation surface contained:
 
 - `FS-RESOURCES`: birth-system common totals, per-resource amounts and groups,
   and fire-ice presence; and
 - `RR-ACCESS.distance`: complete-cluster rare-resource presence and distance
   from the birth system.
 
-The request declares its raw coverage before work begins. Progress and
-cancellation occur at safe runtime boundaries, at minimum between planets.
-Partial coverage never produces a complete-scope conclusion.
-Roles, grouping, and trait summaries are evaluated again in a new attributed
-report after eligible on-demand evidence becomes complete; raw evidence never
-silently changes an earlier preview report.
+The request declared its raw coverage before work began. Progress and
+cancellation occurred at safe runtime boundaries, at minimum between planets.
+Partial coverage did not produce a complete-scope conclusion. Roles, grouping,
+and trait summaries were evaluated again in a new attributed report after
+eligible raw evidence became complete; raw evidence did not silently change an
+earlier preview report. The current automatic New Game delivery policy is
+owned by [project steering](../PROJECT.md).
 
 ### Required unknowns and setting limits
 
@@ -107,19 +111,19 @@ quantitative range under different settings.
 | Apparent tension | Planning resolution |
 | --- | --- |
 | Twelve semantic families versus deferred components | Retain the semantic family and explicit unknown state; implement only accepted active predicates. |
-| Immediate New Game value versus expensive exact resources | Preview evaluation is automatic; raw generation is a separate on-demand operation. |
+| Immediate New Game value versus expensive exact resources | The scanner core separated preview evaluation from explicit raw generation while establishing the safe boundary. Current New Game delivery is governed by project steering. |
 | Automatic context evaluation versus optional player preferences | Evaluate every applicable active component neutrally. Preferences may later filter or explain but never create or reverse an outcome. |
 | Cluster scanning versus bounded initial scope | Process one requested identity per operation. Batch search and parallel generation require later planning. |
 | Supported raw facts versus unsafe runtime mutation | Generate only isolated candidate objects, serialize access to DSP generation state, and restore shared state on every exit path. |
 | Accepted predicates versus other star counts or settings | Preserve exact facts and identity, but return unknown for a quantitative conclusion without a matching accepted range. |
 | Cross-machine reproducibility not established | Make no shared-cache or byte-identical cross-machine guarantee. Initial results are local and carry full provenance. |
-| Future panel versus current core contract | Produce presentation-neutral conclusions and diagnostics. No UI hook, layout, or copy is part of this handoff. |
+| Presentation versus the scanner-core contract | The core produced presentation-neutral conclusions and diagnostics; UI hooks, layout, and copy were deferred from this handoff. |
 
 No contradiction requires reopening an accepted specification artifact.
 
 ## Required architecture boundaries
 
-Implementation planning must keep these responsibilities independently
+Scanner-core implementation kept these responsibilities independently
 testable:
 
 ```text
@@ -128,7 +132,7 @@ Generation identity and compatibility gate
     -> immutable normalized evidence with coverage
     -> versioned predicate evaluation
     -> context-attributed conclusion report
-    -> future presentation
+    -> presentation
 ```
 
 - The compatibility gate rejects an unsupported runtime before evaluation.
@@ -150,29 +154,29 @@ informed bounded operational control, and
 runtime extraction boundary. No independent generator, database architecture,
 UI behavior, or third-party threshold is adopted from them.
 
-## Runtime probes required during implementation
+## Runtime probes required during scanner-core implementation
 
-Pure identity, evidence, outcome, and evaluator models can be implemented from
-the accepted contracts. The following gates must pass before their associated
-runtime path is considered production-ready:
+Pure identity, evidence, outcome, and evaluator models could be implemented
+from the accepted contracts. The following gates had to pass before their
+associated runtime path was considered production-ready:
 
 | Gate | Required evidence | Blocks |
 | --- | --- | --- |
 | Compatibility fingerprint | Capture the full DSP version, galaxy algorithm, assembly identity, ordered theme IDs, scanner contract versions, and loaded-mod compatibility status; reject a deliberate mismatch or uncertain generation-altering patch | Any non-unknown runtime result |
 | Lifecycle and thread affinity | From the intended BepInEx lifecycle, prove the supported generation call sequence and thread, serialize generation, restore shared `GameDesc` and related state after success, failure, and cancellation, and show active save/factory state is untouched | Preview and raw runtime adapters |
-| Reachable raw algorithms | For every solid-planet `algoId` reachable through the supported ordered theme catalogue, exercise DSP's selected raw path with required initialization, including `RandomTable.Init()`, and record explicit failures | On-demand raw evidence |
+| Reachable raw algorithms | For every solid-planet `algoId` reachable through the supported ordered theme catalogue, exercise DSP's selected raw path with required initialization, including `RandomTable.Init()`, and record explicit failures | Complete raw evidence |
 | Full-cluster repeat and cleanup | Repeat at least one complete rare-access fixture in independent game processes; compare normalized evidence exactly, cancel a second run between planets, and verify no partial result or retained candidate objects cross the operation boundary | Complete-cluster `RR-ACCESS` |
 | Derivation parity | Reconfirm light-year conversion and maximum-shell rounding against the supported runtime using accepted boundary fixtures | Distance and sphere conclusions |
 | Compatibility failure paths | Simulate unavailable members, unknown enum values, changed catalogue identity, and raw-stage failure; confirm dependent unknowns and seed/stage diagnostics | Release readiness |
 
 These are focused compatibility and safety probes, not exhaustive benchmarks.
-Broader performance tuning begins only after the runtime path is correct. The
-implementation roadmap should nevertheless set measured per-operation bounds
-before enabling raw generation for users.
+Broader performance tuning followed runtime correctness. The implementation
+roadmap nevertheless had to set measured per-operation bounds before enabling
+raw generation for users.
 
-## Validation obligations
+## Scanner-core validation obligations
 
-An implementation is not conformant until it demonstrates:
+Scanner-core conformance required:
 
 1. exact identity equality and stage-specific cache keys;
 2. pure evaluator tests for every accepted SPEC-06 positive, negative,
@@ -188,14 +192,14 @@ An implementation is not conformant until it demonstrates:
 8. successful build and generic package validation without redistributing DSP,
    Unity, or BepInEx assemblies.
 
-Compilation and pure tests do not replace the in-game runtime checks. Raw
+Compilation and pure tests did not replace the in-game runtime checks. Raw
 probe output, copied assemblies, scan dumps, and generated package contents
-remain outside source control except for the existing intentional dummy
-packaging fixture until a later implementation story replaces it.
+remained outside source control. The temporary dummy packaging fixture was
+later replaced by the real plugin in IMPL-09.
 
-## Deferred planning inputs
+## Inputs deferred from scanner-core implementation
 
-The implementation roadmap must not silently absorb:
+The scanner-core roadmap did not silently absorb:
 
 - New Game panel design or hooking, presentation copy, styling, or interaction;
 - batch seed search, parallel generation, unattended databases, or exports;
@@ -207,24 +211,24 @@ The implementation roadmap must not silently absorb:
   output, Dark Fog farm yield, aesthetics, novelty, or universal ranking; or
 - generalized compatibility with generation-altering mods.
 
-Each deferred item requires an explicit later story and, where it changes a
-conclusion, the contract versioning process.
+Each deferred item required an explicit later decision and, where it would
+change a conclusion, the contract versioning process.
 
-## Inputs for the implementation roadmap
+## Historical inputs for the scanner-core roadmap
 
-A separate roadmap should order work by dependency, without treating this list
-as pre-approved stories:
+The scanner-core roadmap ordered this work by dependency without treating the
+list as pre-approved stories:
 
 1. contract models and pure predicate evaluation;
 2. compatibility identity and normalized preview extraction;
 3. serialized preview orchestration and conclusion reporting;
-4. isolated on-demand raw generation with progress, cancellation, and cleanup;
+4. isolated raw generation with progress, cancellation, and cleanup;
 5. runtime conformance and package replacement; and
-6. only then a separate presentation roadmap for the inactive New Game story.
+6. a separately reviewed presentation roadmap after the core was complete.
 
-The first vertical proof should use one accepted preview fixture end to end.
-The first raw proof should remain a developer-invoked harness until the raw
-runtime gates pass. This sequencing limits risk without prescribing classes,
+The first vertical proof used one accepted preview fixture end to end. The
+first raw proof remained a developer-invoked harness until the raw runtime
+gates passed. This sequencing limited risk without prescribing classes,
 frameworks, schedules, or estimates.
 
 ## Accepted SPEC-07 resolution
@@ -236,7 +240,8 @@ Acceptance confirmed that:
 3. the architecture and runtime gates are sufficient implementation
    constraints;
 4. the deferred list is outside the initial implementation plan; and
-5. implementation work would be planned in a separate roadmap.
+5. implementation work would be planned in a separate roadmap, which was later
+   completed and archived.
 
 Acceptance without semantic change closed the product-specification phase on
 2026-08-11.

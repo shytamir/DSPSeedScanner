@@ -7,8 +7,8 @@ current status; the active roadmap owns story state and history.
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [Scanner core roadmap](management/ROADMAP.md): Active implementation stories,
-  acceptance evidence, sequencing, and story history.
+- [New Game presentation roadmap](management/ROADMAP.md): Approved hands-off
+  panel stories, acceptance gates, sequencing, and story history.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
@@ -31,9 +31,9 @@ current status; the active roadmap owns story state and history.
 - [Predicate and validation catalogue](specification/PREDICATE-RANGE-VALIDATION.md):
   Accepted definition `0.1.0`, thresholds, settings scopes, and validation
   cases.
-- [Implementation boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md):
-  Minimum implementation scope, runtime gates, deferrals, and validation
-  obligations.
+- [Scanner-core implementation boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md):
+  Historical planning boundary, runtime gates, deferrals, and validation
+  obligations that governed the completed scanner core.
 
 ## Delivery
 
@@ -46,4 +46,7 @@ current status; the active roadmap owns story state and history.
 - [Archive index](archive/INDEX.md): Navigation for completed or superseded
   planning documents.
 - [Product specification planning roadmap](archive/PLANNING-ROADMAP.md):
-  Completed SPEC-01 through SPEC-07 story record and future presentation note.
+  Completed SPEC-01 through SPEC-07 story record and the presentation work it
+  deferred at that time.
+- [Scanner core roadmap](archive/CORE-ROADMAP.md): Completed IMPL-01 through
+  IMPL-09 implementation and acceptance record.

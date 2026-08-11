@@ -130,8 +130,8 @@ other players eradicate or disable Dark Fog entirely. Turret choice, damage,
 shielding, signal towers, combat settings, and player activity materially shape
 the result.
 
-This context must therefore present preview opportunity separately from an
-on-demand deeper scan, and both separately from after-start farm performance.
+This context must therefore present preview opportunity separately from a
+complete raw scan, and both separately from after-start farm performance.
 It cannot conclude expected yield, base layout, or attack timing from the seed.
 
 ## Materially distinct alternatives
@@ -146,7 +146,7 @@ merely because a tool can measure it.
 | Compact or low-travel expansion | Decide whether useful roles can remain geographically close | Distances among birth, rare-resource, mining, sphere, and special-star systems; starter satellite topology | Geometric distance is supportable; travel time and logistics throughput require progression assumptions. |
 | Sphere showcase or energy-focused run | Choose a visually or energetically attractive sphere system rather than a production optimum | Star type and luminosity, maximum shell geometry, planets inside the shell, orbital arrangement, and planet themes | Factual geometry can support the choice; attractiveness and the player's sphere design remain subjective. |
 | Themed, novelty, or self-imposed challenge | Choose a rare arrangement because the arrangement itself defines the run | Unusual star/planet combinations, giant colors, tidal-lock combinations, moon-heavy systems, or deliberately restrictive clusters | The scanner may describe rarity or facts only when defensible; it must not declare them beautiful or fun. |
-| Relaxed or discovery-first play | Decide whether to inspect the seed at all | At most, severe setting-sensitive anomalies or a factual summary the player elects to reveal | “Any seed is fine” is a legitimate preference; disclosure controls belong to future presentation planning. |
+| Relaxed or discovery-first play | Decide whether to inspect the seed at all | At most, severe setting-sensitive anomalies or a factual summary the player elects to reveal | “Any seed is fine” is a legitimate preference; disclosure controls remain outside the approved presentation roadmap. |
 
 Achievement-specific goals may later qualify as contexts if they create a
 repeatable seed-selection decision. They are not admitted merely because an

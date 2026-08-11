@@ -169,7 +169,7 @@ The strongest initial surface is deliberately asymmetric:
 
 - immediate evidence can explain structure, power opportunity, stellar and
   sphere geometry, distance, factual themes, and initial Dark Fog opportunity;
-- on-demand generation can add exact resource presence, amount, distribution,
+- a complete raw scan can add exact resource presence, amount, distribution,
   and declared coverage; and
 - after-start performance, subjective quality, universal viability, and global
   quality scores remain outside the product's truthful boundary.

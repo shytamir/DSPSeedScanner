@@ -84,6 +84,7 @@ plugin instance through its GUID `io.github.shytamir.dspseedscanner` and call
 the public `ScanPreview`, `GenerateRawPlanet`,
 `GenerateBirthSystemResources`, or `GenerateCompleteClusterResources`
 methods. Inputs and outputs are presentation-neutral Core and Runtime
-contracts. The future New Game panel must consume these reports through a
-separately reviewed presentation roadmap; this package contains no panel,
-hooks, controls, or presentation copy.
+contracts. The approved New Game presentation roadmap consumes these reports
+without moving presentation policy into the scanner core. The currently
+accepted scanner-core package contains no panel, hooks, controls, or
+presentation copy.

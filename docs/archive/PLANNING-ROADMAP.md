@@ -151,7 +151,8 @@ sensitivity, confidence, and defensible conclusion boundary.
 **Produced:** The accepted [context-to-evidence decision
 matrix](../specification/DECISION-EVIDENCE-MATRIX.md) marking candidates to
 advance into SPEC-05, retain for further research or diagnostics, or reject.
-It also established separate immediate-preview and on-demand evidence surfaces.
+It also established separate immediate-preview and raw-evidence surfaces for
+the scanner-core implementation phase.
 
 **Prior-art used:** The rule composition in DSP-Seed-Finder and dsp_search_seed
 was compared with DSPSeedDatabase's separation of stored evidence, queries,
@@ -251,7 +252,7 @@ implementation planning were recorded.
 
 **Produced:** The accepted [implementation-planning
 boundary](../specification/IMPLEMENTATION-PLANNING-BOUNDARY.md), containing the
-normative baseline, single-request initial scope, immediate and on-demand
+normative baseline, single-request initial scope, immediate and raw-evidence
 surfaces, required unknowns, runtime integration gates, conformance checks,
 deferrals, and dependency-ordered inputs for a separate implementation roadmap.
 
@@ -261,29 +262,30 @@ were retained as architecture-review prompts. No independent generator,
 database architecture, UI behavior, or third-party threshold was adopted.
 
 **Excluded:** Creating implementation stories inside this roadmap, activating
-the future presentation story, and beginning product code.
+the then-future presentation story, and beginning product code.
 
-## Future planning - deliberately inactive
+## Presentation work deferred at completion
 
 ### FUTURE-UI-01: Present conclusions in New Game selection
 
-**State:** Inactive; outside this completed roadmap.
+**State:** This story remained inactive when the specification roadmap closed.
+Its subject was later replanned in the approved New Game presentation roadmap.
 
 As a player considering a generated seed, I want concise context-aware
 conclusions integrated into the New Game seed-selection flow so that I can make
 a decision without leaving the game or decoding raw statistics.
 
-A separate future roadmap may address panel placement, context selection,
-comparison, refresh behavior, accessibility, and failure states. This completed
-roadmap does not authorize that work.
+A separate roadmap was required to select presentation scope. This completed
+roadmap did not authorize that work.
 
-**Prior-art targets:** A future presentation roadmap should review
-DSP-Seed-Finder's interactive exploration and DSPSeedSearch's New Game hook for
-workflow lessons. They are not presentation requirements, and no UI research
-was authorized by this roadmap.
+**Prior-art targets recorded at the time:** DSP-Seed-Finder's interactive
+exploration and DSPSeedSearch's New Game hook were possible workflow inputs.
+They were not presentation requirements, and this roadmap authorized no UI
+research.
 
-**Activation prerequisite:** SPEC-01 through SPEC-07 are complete. Adoption of
-a separate presentation roadmap remains required.
+**Historical activation prerequisite:** SPEC-01 through SPEC-07 had to be
+complete before separate presentation planning. That prerequisite was later
+satisfied and the New Game presentation roadmap was approved on 2026-08-12.
 
-**Explicitly excluded now:** UI implementation, mockups, input interception,
+**Excluded from this roadmap:** UI implementation, mockups, input interception,
 New Game patches, styling, and presentation-specific telemetry.

@@ -5,10 +5,11 @@ tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core roadmap was completed and accepted on
-2026-08-11. The installable presentation-neutral core package exists, but no
-player-facing panel or invocation is implemented. Presentation planning has
-not started and no user story is active. One packaging refinement remains
-tracked as non-blocking technical debt.
+2026-08-11. The New Game presentation roadmap was approved on 2026-08-12, but
+no presentation story is active and no player-facing panel is implemented.
+The panel's fixed anchor remains a product-owner decision required before
+PRES-05. One packaging refinement remains tracked as non-blocking technical
+debt.
 
 ## Product decision
 
@@ -57,13 +58,21 @@ The accepted semantics and thresholds are maintained in the
 
 ### Delivery boundary
 
-- Low-cost preview conclusions are eligible for immediate evaluation.
-- Exact terrain and resource conclusions require explicit on-demand work.
-- Reports remain presentation-neutral. A New Game selection panel is future
-  planning work and is not part of the active scanner-core roadmap.
-- The project evaluates one explicitly requested generation identity at a time.
-  Batch search, parallel generation, unattended databases, and exports require
-  later steering decisions.
+- Each completed New Game cluster-preview load creates exactly one resolution
+  attempt for its complete generation identity.
+- A valid local cache hit resolves without a new scan. Otherwise the mod
+  evaluates immediate preview evidence and automatically runs at most one
+  bounded full raw scan for that preview load.
+- Replaced or exited previews cancel obsolete work at a safe boundary, and a
+  stale result can never update the current panel.
+- Only successful complete results are persisted in a versioned, bounded local
+  cache under the mod configuration area.
+- The panel presents immediate and complete neutral conclusions without
+  requiring player input. It uses a product-owner-selected fixed anchor and
+  shows visible activity and terminal failure states.
+- The project resolves one current generation identity at a time. Batch search,
+  parallel generation, unattended databases, shared caches, and exports
+  require later steering decisions.
 
 ### Safety and responsibility boundaries
 
@@ -80,16 +89,18 @@ The accepted semantics and thresholds are maintained in the
 
 The active product scope does not include an independent galaxy generator,
 universal seed ranking, subjective quality claims, post-start guarantees,
-player-facing UI, broad compatibility promises, or publication to an external
-service. New scope requires an explicit steering decision and corresponding
-roadmap change.
+adaptive panel placement, player scoring or required preferences, manual scan
+or retry controls, seed comparison, broad compatibility promises, telemetry,
+or publication to an external service. New scope requires an explicit steering
+decision and corresponding roadmap change.
 
 ## Management and documentation
 
-The active [scanner core roadmap](management/ROADMAP.md) owns story scope,
-acceptance evidence, sequencing, and history. The
+The active [New Game presentation roadmap](management/ROADMAP.md) owns story
+scope, acceptance evidence, sequencing, and history. The
 [technical debt register](management/TECHNICAL-DEBT.md) owns explicitly
 deferred obligations and their closure gates; recording debt does not weaken
-the accepted safety contract. The completed product planning roadmap is
-retained in the [archive](archive/PLANNING-ROADMAP.md). The [documentation
-index](INDEX.md) lists all current and archived documents with their purpose.
+the accepted safety contract. The completed scanner-core and product-planning
+roadmaps are retained in the [archive](archive/INDEX.md). The
+[documentation index](INDEX.md) lists all current and archived documents with
+their purpose.
