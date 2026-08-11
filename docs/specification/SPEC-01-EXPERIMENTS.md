@@ -1,6 +1,6 @@
 # SPEC-01 Evidence and Experiment Record
 
-**Status:** Completed investigation record; findings pending acceptance.
+**Status:** Completed investigation record supporting the accepted contract.
 
 ## Question
 
@@ -101,7 +101,8 @@ the baseline preview hash was
 
 ## Outcome
 
-The investigation produced the candidate
+The investigation produced the
 [generation identity contract](GENERATION-IDENTITY.md). The story reached its
-defined evidence deliverables, but neither the contract nor any downstream
-product behavior was accepted by completing the investigation.
+defined evidence deliverables without assuming acceptance. The contract was
+subsequently accepted on 2026-08-11 under its documented limitations after
+SPEC-02 confirmed that the intended BepInEx boundary could support it.

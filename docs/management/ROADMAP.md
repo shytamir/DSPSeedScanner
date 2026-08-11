@@ -1,6 +1,7 @@
 # Product Specification Roadmap
 
-**Status:** Draft. SPEC-01 execution is complete and pending acceptance.
+**Status:** Draft. SPEC-01 is accepted; SPEC-02 execution is complete and
+pending acceptance.
 
 **Active user story:** None.
 
@@ -49,7 +50,7 @@ against the installed DSP runtime.
 
 ### SPEC-01: Identify the complete generation identity
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player comparing seeds, I want every result tied to all inputs that shape
 the cluster so that repeating the same selection produces the same evidence.
@@ -60,7 +61,7 @@ catalogue affected generated output. It confirmed the identity boundary
 through assembly inspection and repeated, controlled runtime generation in two
 independent game processes.
 
-**Produced:** A candidate
+**Produced:** The accepted
 [generation-identity contract](../specification/GENERATION-IDENTITY.md) and
 [experiment record](../specification/SPEC-01-EXPERIMENTS.md), including inputs
 confirmed relevant to each generation stage, inputs that did not affect the
@@ -71,32 +72,33 @@ DSP-Seed-Finder, dsp_search_seed, DSPSeedCalc, and DSPSeedSearch were used to
 broaden the candidate input list. Their outputs did not settle the contract;
 the installed runtime did.
 
-**Excluded:** Performance optimization, batch scanning, scoring, UI, and
-acceptance of the candidate contract.
+**Excluded:** Performance optimization, batch scanning, scoring, and UI.
 
 ### SPEC-02: Map reproducible runtime facts
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a player evaluating a cluster, I want recommendations limited to facts the
 installed game can reproduce before play begins so that the scanner never
 overstates what the seed guarantees.
 
-Inventory candidate star, system, planet, orbit, resource, rare-resource,
-distance, sphere-geometry, and Dark Fog facts. For each fact, identify its
-runtime source, availability point, settings dependency, derivation, collection
-cost, repeatability, and compatibility risk.
+The investigation inventoried candidate star, system, planet, orbit, resource,
+rare-resource, distance, sphere-geometry, and Dark Fog facts. It identified
+their runtime sources, availability stages, settings dependencies, derivation
+boundaries, collection costs, repeatability evidence, and compatibility risks.
 
-**Produces:** A runtime evidence feasibility matrix classifying each candidate
-as directly supported, deterministically derived, available only after play,
-unreliable, or unavailable.
+**Produced:** A candidate
+[runtime evidence feasibility matrix](../specification/RUNTIME-EVIDENCE-FEASIBILITY.md)
+classifying facts as direct preview evidence, direct raw-generation evidence,
+deterministic derivations, after-start state, or unsupported claims.
 
-**Prior-art targets:** Use dsp-csv-gen as the primary inventory prompt for
-runtime-extractable facts. Use dsp_search_seed, DSPSeedCalc, and DSPSeedScanner
-to identify additional claims, precision levels, and expensive generation
-stages that require runtime confirmation.
+**Prior-art used:** dsp-csv-gen supplied the primary runtime-extraction prompt.
+dsp_search_seed, DSPSeedCalc, and DSPSeedScanner broadened the candidate fact
+list and highlighted precision and generation-cost distinctions. The installed
+runtime remained authoritative.
 
-**Excludes:** Choosing which supported facts are valuable to players.
+**Excluded:** Choosing which supported facts are valuable to players,
+activating SPEC-03, scoring, profiles, UI, and implementation design.
 
 ## Phase 2 - Understand how players judge seeds
 

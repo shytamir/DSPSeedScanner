@@ -1,14 +1,17 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** SPEC-01 execution is complete and its candidate generation-identity
-contract is pending acceptance. No user story is active.
+**Status:** The SPEC-01 generation-identity contract is accepted. SPEC-02
+execution is complete and its evidence matrix is pending acceptance. No user
+story is active.
 
 The current roadmap is [docs/management/ROADMAP.md](management/ROADMAP.md).
 It governs the remaining investigation that must precede implementation
-planning. SPEC-01 produced a candidate
+planning. SPEC-01 produced the accepted
 [generation-identity contract](specification/GENERATION-IDENTITY.md) and
-[experiment record](specification/SPEC-01-EXPERIMENTS.md); neither has been
-accepted as product scope merely because the work was completed.
+[experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced a
+candidate [runtime evidence feasibility
+matrix](specification/RUNTIME-EVIDENCE-FEASIBILITY.md), which remains pending
+acceptance.
 
 ## Purpose
 
@@ -23,8 +26,9 @@ or present one universal definition of a good seed.
 ## Current specification objective
 
 Before selecting features or implementation stories, the project must answer
-three questions. SPEC-01 established a candidate answer to the first; the
-remaining roadmap must test and connect it to the other two.
+three questions. SPEC-01 established the accepted identity required to answer
+the first, and SPEC-02 produced its candidate evidence boundary. The remaining
+roadmap must connect accepted evidence to the other two questions.
 
 1. Which cluster facts can the available DSP runtime reproduce reliably from
    the seed and all generation-affecting settings?
@@ -69,9 +73,10 @@ A fact is eligible for the product only when the investigation establishes:
 - explicit behavior when the source is unavailable or changes in a later game
   version.
 
-Seed alone must not be assumed to identify a cluster. The investigation will
-determine the full generation identity and record which settings affect galaxy,
-resource, and Dark Fog outcomes.
+Seed alone does not identify a cluster. SPEC-01 established the required
+layered generation identity, and SPEC-02 mapped which galaxy, resource, and
+Dark Fog facts were available at each runtime stage. The evidence matrix
+remains pending acceptance.
 
 ## Player decision contexts
 

@@ -1,11 +1,11 @@
 # Generation Identity Contract
 
-**Status:** Candidate contract produced by SPEC-01; pending product acceptance.
+**Status:** Accepted on 2026-08-11 under the documented limits.
 
 This contract defines the inputs that DSP Seed Scanner must retain when it
 claims that generated evidence can be reproduced. It describes the installed
-Dyson Sphere Program runtime examined on 2026-08-11; it is not yet an accepted
-product requirement.
+Dyson Sphere Program runtime examined on 2026-08-11 and was accepted because
+the intended BepInEx mod can obtain the required identity from that runtime.
 
 ## Contract
 
@@ -143,9 +143,11 @@ Generation must be rejected as unsupported rather than silently reused when:
 
 ## Unresolved boundaries
 
-SPEC-01 did not establish cross-machine floating-point equivalence, exact raw
-terrain and vein repeatability, post-start ground-base placement, or a durable
-fingerprint for all generation-relevant LDB content. Those questions remain
-inputs to SPEC-02 and implementation planning. They do not invalidate the
-confirmed identity fields, but they prevent acceptance of a broader claim that
-all seed-derived data is already reproducible.
+SPEC-01 did not establish cross-machine floating-point equivalence, post-start
+ground-base placement, or a durable fingerprint for all generation-relevant
+LDB content. SPEC-02 subsequently confirmed representative exact raw terrain
+and vein repeatability through the mod's intended runtime boundary and
+classified post-start ground-base placement as ineligible pre-play evidence.
+The remaining questions belong to compatibility and implementation planning.
+They do not invalidate the accepted identity fields or broaden the contract
+beyond its stated limits.
