@@ -12,7 +12,9 @@ universal definition of a good seed.
 The contract depends on the accepted [generation identity](GENERATION-IDENTITY.md),
 [runtime evidence boundary](RUNTIME-EVIDENCE-FEASIBILITY.md), [player decision
 taxonomy](PLAYER-DECISION-TAXONOMY.md), and [context-to-evidence
-matrix](DECISION-EVIDENCE-MATRIX.md).
+matrix](DECISION-EVIDENCE-MATRIX.md). Its accepted predicates, ranges, and
+validation cases are defined by the [predicate, range, and validation
+catalogue](PREDICATE-RANGE-VALIDATION.md) `0.1.0`.
 
 It specifies conclusion meaning, not interface copy, storage layout, visual
 priority, or implementation design.
@@ -268,9 +270,9 @@ identified. Complete but preference-dependent evidence resolves to
 
 ## Validation obligations addressed by SPEC-06
 
-This contract becomes an implementation baseline only with an accepted matching
-predicate and preference-range definition. SPEC-06 produced a candidate that
-addressed these required cases:
+This contract became an implementation baseline with the accepted matching
+predicate and preference-range definition. SPEC-06 addressed these required
+cases:
 
 - stable positive evidence across the full accepted range;
 - stable negative or caution evidence where that outcome is allowed;
@@ -290,8 +292,9 @@ settings applicability, research basis, runtime-confirmed boundary examples,
 and compatibility with the contract version. On-demand entries also require
 complete-versus-partial coverage and deterministic repetition.
 
-SPEC-06 may narrow or remove a family that cannot obtain a defensible range or
-discriminate usefully. Symmetry is not a reason to preserve it.
+SPEC-06 was allowed to narrow or remove a family that could not obtain a
+defensible range or discriminate usefully. Symmetry was not a reason to
+preserve it.
 
 ## Contract evolution
 

@@ -1,7 +1,7 @@
 # Product Specification Roadmap
 
-**Status:** Draft. SPEC-01 through SPEC-05 are accepted; SPEC-06 is completed
-and pending acceptance.
+**Status:** Final review. SPEC-01 through SPEC-06 are accepted; SPEC-07 is
+completed and pending acceptance.
 
 **Active user story:** None.
 
@@ -201,7 +201,7 @@ result serialization, interaction behavior, and scan orchestration.
 
 ### SPEC-06: Establish predicates, ranges, and the validation seed set
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player relying on a neutral conclusion, I want its predicate and preference
 range challenged by representative robust, sensitive, and mixed seeds so that
@@ -215,14 +215,14 @@ endpoint cases, conflicting strengths, settings-sensitive cases, and incomplete
 evidence. Expected conclusions were recorded without turning named seeds into
 permanent special cases.
 
-**Produced:** Candidate [predicate, range, and validation
+**Produced:** The accepted [predicate, range, and validation
 catalogue](../specification/PREDICATE-RANGE-VALIDATION.md)
-`0.1.0-candidate.1`. It established deterministic fixed predicates,
+`0.1.0`. It established deterministic fixed predicates,
 setting-scoped cohort ranges, a research-anchored compact-distance range,
 runtime-confirmed validation seeds, unknown/not-applicable cases, and an
-acceptance procedure. Gas-rate, cluster-resource-strength, and rare-abundance
-claims were purposefully left unknown because the evidence did not support
-neutral ranges.
+accepted review resolution. Gas-rate, cluster-resource-strength, and
+rare-abundance claims were purposefully left unknown because the evidence did
+not support neutral ranges.
 
 **Prior-art used:** Candidate cases were drawn from DSPSeedScanner's published
 lists and regenerated with the supported DSP runtime. Seed `1369` confirmed a
@@ -232,34 +232,37 @@ boundaries. Prior-art labels remained hypotheses until runtime confirmation;
 DSPSeedSearch's single largest-sphere model informed the separate geometry
 components without supplying their thresholds.
 
-**Excluded:** Activating SPEC-07, exhaustive seed searches, performance
-benchmarking, automated test implementation, and product code.
+**Excluded at completion:** Exhaustive seed searches, performance benchmarking,
+automated test implementation, and product code.
 
 ## Phase 6 - Close product specification
 
 ### SPEC-07: Prepare the implementation-planning boundary
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a maintainer planning implementation, I want the accepted product contract,
 remaining uncertainties, and required technical probes in one bounded handoff
 so that engineering work begins from evidence rather than rediscovering scope.
 
-Review the prior artifacts, resolve or explicitly defer contradictions, select
-the minimum supported context and conclusion set, and identify runtime probes
-that must precede production code.
+The prior artifacts were reconciled without reopening their product semantics.
+The minimum active and explicitly unknown conclusion set was selected, and the
+architecture, runtime probes, validation gates, and deferred work required for
+implementation planning were recorded.
 
-**Produces:** An approved specification baseline, implementation constraints,
-validation obligations, deferred questions, and inputs for a separate
-implementation roadmap.
+**Produced:** Candidate [implementation-planning
+boundary](../specification/IMPLEMENTATION-PLANNING-BOUNDARY.md), containing the
+normative baseline, single-request initial scope, immediate and on-demand
+surfaces, required unknowns, runtime integration gates, conformance checks,
+deferrals, and dependency-ordered inputs for a separate implementation roadmap.
 
-**Prior-art targets:** Use DSPSeedDatabase's pipeline separation,
-DSPSeedSearch's operational controls, and dsp-csv-gen's runtime boundary as
-architecture-review prompts. Record any borrowed constraint explicitly and
-reject generator-reimplementation assumptions that conflict with the product
-contract.
+**Prior-art used:** DSPSeedDatabase's pipeline separation, DSPSeedSearch's
+bounded operational controls, and dsp-csv-gen's runtime extraction boundary
+were retained as architecture-review prompts. No independent generator,
+database architecture, UI behavior, or third-party threshold was adopted.
 
-**Excludes:** Creating implementation stories inside this roadmap.
+**Excluded:** Creating implementation stories inside this roadmap, activating
+the future presentation story, and beginning product code.
 
 ## Future planning - deliberately inactive
 

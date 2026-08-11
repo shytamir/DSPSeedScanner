@@ -1,8 +1,8 @@
 # Predicate, Range, and Validation Catalogue
 
-**Status:** Candidate produced by SPEC-06; pending product acceptance.
+**Status:** Accepted on 2026-08-11.
 
-**Definition version:** `0.1.0-candidate.1`
+**Definition version:** `0.1.0`
 
 **Compatible conclusion contract:**
 [Seed Conclusion Contract](CONCLUSION-CONTRACT.md) `0.1.0`
@@ -226,9 +226,9 @@ The validation set must fail an implementation that:
 - replaces a missing raw planet with partial totals; or
 - converts **unknown** or **not applicable** into a negative result.
 
-## Acceptance procedure
+## Accepted resolution
 
-Acceptance of this candidate requires review of four points:
+The product review accepted these four points without semantic change:
 
 1. the fixed predicates answer recognizable decisions without prohibited
    inference;
@@ -239,15 +239,16 @@ Acceptance of this candidate requires review of four points:
 4. the three deferred strength components remain **unknown** until later
    evidence establishes defensible ranges.
 
-If accepted without semantic change, this definition becomes `0.1.0`. A
-changed endpoint, direction, predicate, role, or outcome requires a new minor
-candidate. Editorial corrections alone increment the patch candidate.
+This definition is therefore version `0.1.0`. A changed endpoint, direction,
+predicate, role, or outcome requires a new minor candidate. Editorial
+corrections alone increment the patch candidate.
 
 ## SPEC-06 conclusion
 
-The candidate establishes deterministic fixed predicates, setting-scoped
-reference ranges, endpoint semantics, representative runtime-confirmed seeds,
-and explicit failure behavior for the first implementation baseline. It
+The accepted definition establishes deterministic fixed predicates,
+setting-scoped reference ranges, endpoint semantics, representative
+runtime-confirmed seeds, and explicit failure behavior for the first
+implementation baseline. It
 narrows unsupported rate and abundance claims to **unknown**, keeps component
 results separate, and demonstrates positive, negative, preference-sensitive,
 tradeoff, not-applicable, and unknown behavior without requiring player input.

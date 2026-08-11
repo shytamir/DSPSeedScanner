@@ -12,15 +12,15 @@ state. It will not claim that one seed is universally best.
 
 ## Project status
 
-The project is in product specification. The roadmap is still being worked on,
-no user story is active, and implementation has not begun. The immediate work
-will establish which facts the runtime can reproduce, how players judge seeds
-for different kinds of runs, and which intersections support meaningful
-decisions.
+The product specification has reached its final review. SPEC-01 through SPEC-06
+are accepted, the SPEC-07 implementation-planning handoff is pending
+acceptance, no user story is active, and implementation has not begun.
 
 See [docs/PROJECT.md](docs/PROJECT.md) for the product definition and
 [docs/management/ROADMAP.md](docs/management/ROADMAP.md) for the specification
-roadmap.
+roadmap. The candidate
+[implementation-planning boundary](docs/specification/IMPLEMENTATION-PLANNING-BOUNDARY.md)
+records the initial scope, runtime gates, validation obligations, and deferrals.
 
 ## Planned shape
 
@@ -39,9 +39,10 @@ local runtime or build dependencies; they will not be redistributed here.
 
 ## Development
 
-Current work is governed by the product-specification roadmap. Development and
-build instructions will be added only when an approved specification supports
-an executable project skeleton.
+Current work remains governed by the product-specification roadmap until the
+final handoff is accepted. Implementation work must then be authorized and
+ordered by a separate roadmap; this repository does not yet contain a usable
+plugin.
 
 The existing GitHub Actions workflow packages an intentionally empty DLL solely
 to validate release plumbing; it does not produce a usable mod. See
@@ -58,6 +59,7 @@ scope or behavior.
 |-- .github/workflows/build.yml
 |-- docs/
 |   |-- management/ROADMAP.md
+|   |-- specification/
 |   |-- PROJECT.md
 |   `-- THUNDERSTORE-PACKAGE.md
 |-- packaging/
