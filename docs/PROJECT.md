@@ -1,11 +1,12 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** Product specification is complete and accepted. A candidate scanner
-core implementation roadmap is pending review. No user story is active.
+**Status:** Product specification is complete. The scanner core implementation
+roadmap is active; IMPL-01 is completed and pending acceptance. No user story
+is active.
 
-The candidate [scanner core implementation
-roadmap](management/IMPLEMENTATION-ROADMAP.md) will govern implementation if it
-is accepted. The completed [product specification
+The [scanner core implementation
+roadmap](management/IMPLEMENTATION-ROADMAP.md) governs implementation. The
+completed [product specification
 roadmap](management/ROADMAP.md) produced the accepted
 [generation-identity contract](specification/GENERATION-IDENTITY.md) and
 [experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced the
@@ -242,6 +243,6 @@ The roadmap produced:
 The accepted [implementation-planning
 boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md) records the
 normative baseline, minimum product contract, runtime gates, validation
-obligations, and deferred work. Product specification is closed. The candidate
-[scanner core implementation roadmap](management/IMPLEMENTATION-ROADMAP.md)
-must be accepted before any implementation story is activated.
+obligations, and deferred work. Product specification is closed. IMPL-01
+produced the first runtime-independent normalized conclusion vertical slice;
+later implementation stories remain inactive pending its acceptance.

@@ -12,12 +12,12 @@ state. It will not claim that one seed is universally best.
 
 ## Project status
 
-The product specification is complete and accepted. A candidate scanner core
-implementation roadmap is pending review, no user story is active, and
-implementation has not begun.
+The product specification is complete. The scanner core implementation roadmap
+is active; IMPL-01 is completed and pending acceptance, and no user story is
+currently active.
 
 See [docs/PROJECT.md](docs/PROJECT.md) for the product definition, the completed
-[specification roadmap](docs/management/ROADMAP.md), and the candidate
+[specification roadmap](docs/management/ROADMAP.md), and the active
 [implementation roadmap](docs/management/IMPLEMENTATION-ROADMAP.md). The
 accepted [implementation-planning
 boundary](docs/specification/IMPLEMENTATION-PLANNING-BOUNDARY.md) records the
@@ -40,8 +40,17 @@ local runtime or build dependencies; they will not be redistributed here.
 
 ## Development
 
-Implementation work must be authorized and ordered by the candidate scanner
-core roadmap; this repository does not yet contain a usable plugin.
+Implementation work is ordered by the scanner core roadmap. IMPL-01 established
+a runtime-independent normalized evidence and conclusion-report boundary for
+the shared-satellite predicate. The repository does not yet contain a usable
+plugin or any DSP/BepInEx runtime integration.
+
+Build and run the focused core checks with:
+
+```powershell
+dotnet build DSPSeedScanner.sln --configuration Release
+dotnet run --project tests/DSPSeedScanner.Core.Tests/DSPSeedScanner.Core.Tests.csproj --configuration Release --no-build
+```
 
 The existing GitHub Actions workflow packages an intentionally empty DLL solely
 to validate release plumbing; it does not produce a usable mod. See
@@ -56,6 +65,7 @@ scope or behavior.
 .
 |-- AGENTS.md
 |-- .github/workflows/build.yml
+|-- DSPSeedScanner.sln
 |-- docs/
 |   |-- management/IMPLEMENTATION-ROADMAP.md
 |   |-- management/ROADMAP.md
@@ -64,6 +74,8 @@ scope or behavior.
 |   `-- THUNDERSTORE-PACKAGE.md
 |-- packaging/
 |-- scripts/
+|-- src/DSPSeedScanner.Core/
+|-- tests/DSPSeedScanner.Core.Tests/
 |-- VERSION
 |-- LICENSE
 `-- README.md

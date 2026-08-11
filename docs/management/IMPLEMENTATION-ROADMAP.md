@@ -1,8 +1,8 @@
 # Scanner Core Implementation Roadmap
 
-**Status:** Candidate; pending review and acceptance.
+**Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None.
+**Active user story:** None. IMPL-01 is completed and pending acceptance.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -71,17 +71,17 @@ be revised before activation rather than widening the active story silently.
 
 ### IMPL-01: Prove the normalized conclusion boundary
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a maintainer building decision support, I want one accepted conclusion to
 flow through normalized evidence into an attributed report so that the core
 architecture is proven before the full rule catalogue is implemented.
 
-**Return:** A runtime-independent vertical slice evaluates
-`FS-TOPOLOGY.shared-satellites` from fixtures and returns deterministic
+**Delivered:** A runtime-independent vertical slice evaluated
+`FS-TOPOLOGY.shared-satellites` from fixtures and returned deterministic
 positive, negative, and unknown reports.
 
-**In scope:**
+**Implemented:**
 
 - buildable core and test projects without DSP or BepInEx references;
 - immutable models for generation identity, evidence stage and coverage,
@@ -92,17 +92,24 @@ positive, negative, and unknown reports.
 - the shared-satellite predicate only; and
 - focused equality, coverage, deterministic-report, and predicate tests.
 
-**Acceptance:**
+**Acceptance evidence:**
 
-- the accepted supporting and non-supporting topology fixtures produce the
-  expected reports;
-- missing topology coverage produces unknown with its cause;
-- equal inputs produce equal reports and unequal stages produce unequal keys;
-- the report carries identity, stage, coverage, subject, decisive evidence,
-  outcome, and contract versions; and
-- the core builds and tests without loading or referencing game assemblies.
+- accepted supporting seed `16315224` and non-supporting seed `73339583`
+  produced the expected reports;
+- missing topology coverage produced unknown with its cause;
+- equal inputs produced equal reports and unequal stages produced unequal keys;
+- reports carried identity, stage, coverage, subject, decisive evidence,
+  outcome, and contract versions;
+- reflection confirmed that the core assembly referenced no DSP, Unity, or
+  BepInEx assembly; and
+- the Release build completed with zero warnings and all seven focused checks
+  passed.
 
-**Out of scope:** Every other predicate, tradeoff composition, role and trait
+**Produced:** `DSPSeedScanner.Core`, a dependency-free executable test harness,
+and CI build/test steps. No in-game probe was required for this
+runtime-independent story.
+
+**Excluded:** Every other predicate, tradeoff composition, role and trait
 derivation, DSP runtime access, orchestration, persistence, UI, and packaging.
 
 ### IMPL-02: Complete the accepted conclusion engine

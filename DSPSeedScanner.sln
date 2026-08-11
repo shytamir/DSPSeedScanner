@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPSeedScanner.Core", "src\DSPSeedScanner.Core\DSPSeedScanner.Core.csproj", "{A7B4F51D-0E73-46A1-9E86-42C204FE7024}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPSeedScanner.Core.Tests", "tests\DSPSeedScanner.Core.Tests\DSPSeedScanner.Core.Tests.csproj", "{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7B4F51D-0E73-46A1-9E86-42C204FE7024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7B4F51D-0E73-46A1-9E86-42C204FE7024}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7B4F51D-0E73-46A1-9E86-42C204FE7024}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7B4F51D-0E73-46A1-9E86-42C204FE7024}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
