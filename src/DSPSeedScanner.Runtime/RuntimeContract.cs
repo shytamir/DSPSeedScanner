@@ -14,7 +14,9 @@ namespace DSPSeedScanner.Runtime
             string creationVersion,
             decimal resourceMultiplier,
             CombatMode combatMode,
-            string combatSettingsKey)
+            string combatSettingsKey,
+            decimal initialColonize = 1m,
+            decimal maxDensity = 1m)
         {
             if (galaxySeed < 0 || galaxySeed > 99_999_999)
                 throw new ArgumentOutOfRangeException(nameof(galaxySeed));
@@ -26,6 +28,15 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentOutOfRangeException(nameof(resourceMultiplier));
             if (String.IsNullOrWhiteSpace(combatSettingsKey))
                 throw new ArgumentException("Combat settings key is required.", nameof(combatSettingsKey));
+            if (initialColonize < 0)
+                throw new ArgumentOutOfRangeException(nameof(initialColonize));
+            if (maxDensity < 0)
+                throw new ArgumentOutOfRangeException(nameof(maxDensity));
+            string expectedCombatKey = CombatSettingsKeyFor(initialColonize, maxDensity);
+            if (!String.Equals(combatSettingsKey, expectedCombatKey, StringComparison.Ordinal))
+                throw new ArgumentException(
+                    "Combat settings key does not match the supplied preview settings.",
+                    nameof(combatSettingsKey));
 
             GalaxySeed = galaxySeed;
             RequestedStarCount = requestedStarCount;
@@ -33,6 +44,8 @@ namespace DSPSeedScanner.Runtime
             ResourceMultiplier = resourceMultiplier;
             CombatMode = combatMode;
             CombatSettingsKey = combatSettingsKey;
+            InitialColonize = initialColonize;
+            MaxDensity = maxDensity;
         }
 
         public int GalaxySeed { get; }
@@ -41,6 +54,20 @@ namespace DSPSeedScanner.Runtime
         public decimal ResourceMultiplier { get; }
         public CombatMode CombatMode { get; }
         public string CombatSettingsKey { get; }
+        public decimal InitialColonize { get; }
+        public decimal MaxDensity { get; }
+
+        public static string CombatSettingsKeyFor(
+            decimal initialColonize,
+            decimal maxDensity)
+        {
+            if (initialColonize == 1m && maxDensity == 1m)
+                return ConclusionDefinition.ReferenceCombatSettingsKey;
+            return "preview-combat:initialColonize=" +
+                initialColonize.ToString(System.Globalization.CultureInfo.InvariantCulture) +
+                ";maxDensity=" +
+                maxDensity.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
     }
 
     public sealed class RuntimeFingerprint
@@ -104,34 +131,47 @@ namespace DSPSeedScanner.Runtime
         }
     }
 
-    public sealed class RuntimeTopologySnapshot
+    public sealed class RuntimePreviewSnapshot
     {
-        public RuntimeTopologySnapshot(
+        private readonly NormalizedSystemEvidence[] systems;
+        private readonly NormalizedSystemDistance[] systemDistances;
+
+        public RuntimePreviewSnapshot(
             string birthSystemIdentifier,
-            int sharedBirthGiantBodies,
             int generatedStarCount,
+            IEnumerable<NormalizedSystemEvidence> systems,
+            IEnumerable<NormalizedSystemDistance> systemDistances,
             string? unknownEnumType = null,
             int? unknownEnumValue = null)
         {
             if (String.IsNullOrWhiteSpace(birthSystemIdentifier))
                 throw new ArgumentException("Birth system identifier is required.", nameof(birthSystemIdentifier));
-            if (sharedBirthGiantBodies < 1)
-                throw new ArgumentOutOfRangeException(nameof(sharedBirthGiantBodies));
             if (generatedStarCount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(generatedStarCount));
+            if (systems == null)
+                throw new ArgumentNullException(nameof(systems));
+            if (systemDistances == null)
+                throw new ArgumentNullException(nameof(systemDistances));
             if ((unknownEnumType == null) != (!unknownEnumValue.HasValue))
                 throw new ArgumentException("Unknown enum type and raw value must be supplied together.");
 
+            this.systems = systems.ToArray();
+            this.systemDistances = systemDistances.ToArray();
+            if (this.systems.Length == 0 && unknownEnumType == null)
+                throw new ArgumentException("At least one generated system is required.", nameof(systems));
+
             BirthSystemIdentifier = birthSystemIdentifier;
-            SharedBirthGiantBodies = sharedBirthGiantBodies;
             GeneratedStarCount = generatedStarCount;
             UnknownEnumType = unknownEnumType;
             UnknownEnumValue = unknownEnumValue;
         }
 
         public string BirthSystemIdentifier { get; }
-        public int SharedBirthGiantBodies { get; }
         public int GeneratedStarCount { get; }
+        public IReadOnlyList<NormalizedSystemEvidence> Systems =>
+            Array.AsReadOnly((NormalizedSystemEvidence[])systems.Clone());
+        public IReadOnlyList<NormalizedSystemDistance> SystemDistances =>
+            Array.AsReadOnly((NormalizedSystemDistance[])systemDistances.Clone());
         public string? UnknownEnumType { get; }
         public int? UnknownEnumValue { get; }
     }
@@ -147,7 +187,7 @@ namespace DSPSeedScanner.Runtime
         int MainThreadId { get; }
         RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request);
         RuntimeStateLease CaptureState();
-        RuntimeTopologySnapshot GeneratePreview(
+        RuntimePreviewSnapshot GeneratePreview(
             PreviewScanRequest request,
             CancellationToken cancellationToken,
             Action<string> recordTrace);

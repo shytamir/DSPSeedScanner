@@ -48,15 +48,14 @@ namespace DSPSeedScanner.Runtime
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-            if (request.RequestedStarCount != ConclusionDefinition.ReferenceStarCount ||
-                !String.Equals(
-                    request.CreationVersion,
-                    ConclusionDefinition.ReferenceGameVersion,
-                    StringComparison.Ordinal))
+            if (!String.Equals(
+                request.CreationVersion,
+                ConclusionDefinition.ReferenceGameVersion,
+                StringComparison.Ordinal))
             {
                 return Reject(
                     "request-identity-unsupported",
-                    "Only the accepted star count and creation version are supported.");
+                    "Only the accepted creation version is supported.");
             }
             return new CompatibilityDecision(true, "supported", "The requested identity is supported.");
         }

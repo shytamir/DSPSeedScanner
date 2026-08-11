@@ -23,9 +23,10 @@ namespace DSPSeedScanner.Runtime
             string code,
             string message,
             RuntimeFingerprint? fingerprint,
-            ConclusionReport? conclusion,
+            IEnumerable<ConclusionReport>? reports,
             IEnumerable<string> trace,
             bool stateRestored,
+            int? generatedStarCount = null,
             string? rawDiagnostic = null)
         {
             Status = status;
@@ -34,9 +35,13 @@ namespace DSPSeedScanner.Runtime
             Code = code;
             Message = message;
             Fingerprint = fingerprint;
-            Conclusion = conclusion;
+            Reports = Array.AsReadOnly(
+                reports == null
+                    ? Array.Empty<ConclusionReport>()
+                    : new List<ConclusionReport>(reports).ToArray());
             Trace = Array.AsReadOnly(new List<string>(trace).ToArray());
             StateRestored = stateRestored;
+            GeneratedStarCount = generatedStarCount;
             RawDiagnostic = rawDiagnostic;
         }
 
@@ -46,9 +51,27 @@ namespace DSPSeedScanner.Runtime
         public string Code { get; }
         public string Message { get; }
         public RuntimeFingerprint? Fingerprint { get; }
-        public ConclusionReport? Conclusion { get; }
+        public IReadOnlyList<ConclusionReport> Reports { get; }
+        public ConclusionReport? Conclusion
+        {
+            get
+            {
+                foreach (ConclusionReport report in Reports)
+                {
+                    if (String.Equals(
+                        report.ConclusionId,
+                        SharedSatelliteEvaluator.ConclusionId,
+                        StringComparison.Ordinal))
+                    {
+                        return report;
+                    }
+                }
+                return null;
+            }
+        }
         public IReadOnlyList<string> Trace { get; }
         public bool StateRestored { get; }
+        public int? GeneratedStarCount { get; }
         public string? RawDiagnostic { get; }
     }
 
@@ -77,7 +100,8 @@ namespace DSPSeedScanner.Runtime
             string code = "runtime-failure";
             string message = "The runtime request failed.";
             string? rawDiagnostic = null;
-            ConclusionReport? conclusion = null;
+            IReadOnlyList<ConclusionReport>? reports = null;
+            int? generatedStarCount = null;
             bool restored = true;
 
             try
@@ -116,7 +140,8 @@ namespace DSPSeedScanner.Runtime
                             lease = gateway.CaptureState();
                             trace.Add("state:capture");
                             cancellationToken.ThrowIfCancellationRequested();
-                            RuntimeTopologySnapshot snapshot = gateway.GeneratePreview(request, cancellationToken, trace.Add);
+                            RuntimePreviewSnapshot snapshot = gateway.GeneratePreview(request, cancellationToken, trace.Add);
+                            generatedStarCount = snapshot.GeneratedStarCount;
                             cancellationToken.ThrowIfCancellationRequested();
 
                             if (snapshot.UnknownEnumValue.HasValue)
@@ -132,12 +157,25 @@ namespace DSPSeedScanner.Runtime
                                 code = "generated-star-count-mismatch";
                                 message = "The generated cluster did not contain the requested star count.";
                             }
+                            else if (snapshot.Systems.Count != snapshot.GeneratedStarCount)
+                            {
+                                status = RuntimeScanStatus.Failed;
+                                code = "normalized-system-count-mismatch";
+                                message = "Normalized preview coverage omitted one or more generated systems.";
+                            }
+                            else if (snapshot.SystemDistances.Count !=
+                                snapshot.GeneratedStarCount * (snapshot.GeneratedStarCount - 1) / 2)
+                            {
+                                status = RuntimeScanStatus.Failed;
+                                code = "normalized-distance-coverage-mismatch";
+                                message = "Normalized preview coverage omitted one or more system distances.";
+                            }
                             else
                             {
-                                conclusion = Evaluate(request, fingerprint, snapshot);
+                                reports = Evaluate(request, fingerprint, snapshot);
                                 status = RuntimeScanStatus.Success;
                                 code = "success";
-                                message = "Compatible preview topology was evaluated.";
+                                message = "The complete compatible preview was evaluated.";
                                 trace.Add("evaluation:complete");
                             }
                         }
@@ -177,19 +215,29 @@ namespace DSPSeedScanner.Runtime
                     {
                         status = RuntimeScanStatus.Failed;
                         code = "state-restoration-failed";
-                        conclusion = null;
+                        reports = null;
                     }
                 }
                 Volatile.Write(ref active, 0);
             }
 
-            return Result(status, request, code, message, fingerprint, conclusion, trace, restored, rawDiagnostic);
+            return Result(
+                status,
+                request,
+                code,
+                message,
+                fingerprint,
+                reports,
+                trace,
+                restored,
+                generatedStarCount,
+                rawDiagnostic);
         }
 
-        private static ConclusionReport Evaluate(
+        private static IReadOnlyList<ConclusionReport> Evaluate(
             PreviewScanRequest request,
             RuntimeFingerprint fingerprint,
-            RuntimeTopologySnapshot snapshot)
+            RuntimePreviewSnapshot snapshot)
         {
             var identity = new GenerationIdentity(
                 fingerprint.GameVersion,
@@ -204,19 +252,40 @@ namespace DSPSeedScanner.Runtime
                 request.ResourceMultiplier,
                 request.CombatMode,
                 request.CombatSettingsKey);
-            var coverage = new EvidenceCoverage(
-                EvidenceStage.GalaxyPreview,
-                EvidenceScope.BirthSystemTopology,
-                CoverageState.Complete,
-                1,
-                1);
-            var evidence = new NormalizedBirthTopologyEvidence(
+            int systemCount = snapshot.Systems.Count;
+            int distanceCount = snapshot.SystemDistances.Count;
+            var coverages = new[]
+            {
+                Complete(EvidenceScope.BirthSystemTopology, 1),
+                Complete(EvidenceScope.BirthSystemRotation, 1),
+                Complete(EvidenceScope.BirthSystemPower, 1),
+                Complete(EvidenceScope.BirthSystemGasProducts, 1),
+                Complete(EvidenceScope.ClusterEnergy, systemCount),
+                Complete(EvidenceScope.ClusterSphereGeometry, systemCount),
+                Complete(EvidenceScope.ClusterOccupation, systemCount),
+                Complete(EvidenceScope.SystemDistances, Math.Max(1, distanceCount))
+            };
+            var evidence = new NormalizedClusterEvidence(
                 identity,
                 settings,
-                coverage,
-                new ConclusionSubject(SubjectKind.BirthSystem, snapshot.BirthSystemIdentifier),
-                snapshot.SharedBirthGiantBodies);
-            return SharedSatelliteEvaluator.Evaluate(evidence);
+                new ConclusionSubject(
+                    SubjectKind.Cluster,
+                    request.GalaxySeed + ":cluster"),
+                snapshot.BirthSystemIdentifier,
+                coverages,
+                snapshot.Systems,
+                systemDistances: snapshot.SystemDistances);
+            return ConclusionEngine.Evaluate(evidence);
+        }
+
+        private static EvidenceCoverage Complete(EvidenceScope scope, int subjects)
+        {
+            return new EvidenceCoverage(
+                EvidenceStage.GalaxyPreview,
+                scope,
+                CoverageState.Complete,
+                subjects,
+                subjects);
         }
 
         private static RuntimeScanResult Result(
@@ -225,9 +294,10 @@ namespace DSPSeedScanner.Runtime
             string code,
             string message,
             RuntimeFingerprint? fingerprint,
-            ConclusionReport? conclusion,
+            IEnumerable<ConclusionReport>? reports,
             IEnumerable<string> trace,
             bool restored,
+            int? generatedStarCount = null,
             string? rawDiagnostic = null)
         {
             return new RuntimeScanResult(
@@ -237,9 +307,10 @@ namespace DSPSeedScanner.Runtime
                 code,
                 message,
                 fingerprint,
-                conclusion,
+                reports,
                 trace,
                 restored,
+                generatedStarCount,
                 rawDiagnostic);
         }
     }

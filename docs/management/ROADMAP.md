@@ -2,9 +2,9 @@
 
 **Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None. IMPL-01 through IMPL-03 are accepted. IMPL-03
-carried two explicit runtime-validation debts into the IMPL-08 conformance
-gate.
+**Active user story:** None. IMPL-01 through IMPL-03 are accepted; IMPL-04 is
+completed and pending acceptance. IMPL-03 carried two explicit
+runtime-validation debts into the IMPL-08 conformance gate.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -231,42 +231,67 @@ player-facing invocation, persistence, and packaging replacement.
 
 ### IMPL-04: Return all immediate preview conclusions
 
-**State:** Proposed; depends on IMPL-03 acceptance.
+**State:** Completed; pending acceptance.
 
 As a player considering a generated cluster, I want all supported immediate
 conclusions from one safe preview request so that I receive useful decision
 evidence without starting expensive raw generation.
 
-**Return:** The developer-invoked operation captures a complete compatible
-preview and returns every applicable accepted preview conclusion in one
-attributed report.
+**Delivered:** The developer-invoked BepInEx operation captured a complete
+compatible 64-system preview and returned every applicable definition `0.1.0`
+preview conclusion in one deterministic attributed report.
 
-**In scope:**
+**Implemented:**
 
-- normalized galaxy, star, planet, orbit, gas-product, sphere, distance, and
-  generated Dark Fog preview evidence;
-- accepted light-year conversion and maximum-shell derivations;
-- all applicable preview components of `FS-TOPOLOGY`, `FS-POWER`,
-  `FS-GAS-ROUTE`, `MF-ENERGY-SYSTEM`, `MF-SPHERE-GEOMETRY`,
-  `MF-SYSTEM-ROLE`, `DF-OCCUPATION`, `CX-GROUPING`, and `TRAIT-SUMMARY`;
-- explicit unknowns outside accepted quantitative settings and not-applicable
-  Dark Fog behavior in peace mode; and
-- independent-process runtime checks for the accepted preview fixtures.
+- immutable normalized system evidence for birth topology, tidal locking,
+  solar and wind ratios, gas products and diagnostic rates, Dyson luminosity,
+  maximum shell radius, orbit containment, and initial hive counts;
+- complete normalized pairwise system distances using `GalaxyData.LY`, plus
+  the accepted runtime shell-radius rounding formula;
+- actual generated-star-count output and fail-closed checks for omitted systems
+  or pairwise distances;
+- complete preview evaluation through the existing neutral engine, including
+  roles, grouping, traits, Dark Fog caution and tradeoff, and deferred raw
+  unknowns without a preview proxy;
+- faithful resource multiplier, peace mode, initial-colonization, and maximum-
+  density request settings, with non-reference quantitative settings retained
+  as explicit unknowns; and
+- deterministic multi-seed probe output containing fingerprint, result,
+  report attribution, and ordered call trace records.
 
-**Acceptance:**
+**Acceptance evidence:**
 
-- every accepted representative preview fixture matches its normalized
-  evidence and conclusion outcomes across independent game processes;
-- distance and sphere boundary fixtures confirm derivation parity;
-- preview evaluation never starts raw planet generation;
-- a complete report identifies every subject, decisive fact, setting, stage,
-  coverage scope, and contract version; and
-- state-isolation, serialization, compatibility, and live-object boundaries
-  established by IMPL-03 remain satisfied.
+- two independent isolated DSP processes evaluated the 20 unique accepted
+  preview fixture seeds and produced byte-identical output with SHA-256
+  `CDD47CDF2142FBBD494EB19DE108A93142FEA38E0667712873492233EB59A969`;
+- all requests returned success, 64 generated systems, restored state, and
+  13,223 deterministic report rows across the fixture set;
+- the accepted topology, tidal, solar, gas-product, energy output and
+  separation, sphere radius and containment, Dark Fog opportunity and
+  tradeoff, grouping, role, and trait expectations all matched;
+- shell fixtures reproduced `76,200`, `191,400`, and `234,200` radius units,
+  while the starter-to-energy distances rounded to the accepted `2.274181`,
+  `4.621132`, and `19.521508` light-year fixtures;
+- traces contained `UniverseGen.CreateGalaxy`, preview extraction,
+  normalization, `GalaxyData.Free`, evaluation, and restoration, with no raw
+  planet-generation call;
+- focused settings checks preserved fixed results and returned quantitative
+  unknowns for another star count and altered combat settings, while peace
+  mode returned Dark Fog not applicable; and
+- the Release solution and local plugin builds completed with zero warnings,
+  all 14 conclusion checks passed, and all 14 runtime-boundary checks passed.
 
-**Out of scope:** Raw evidence, starter or rare-resource conclusions, batch
-search, persistent caching, New Game hooks, player controls, layout, and
-presentation copy.
+**Produced:** A complete presentation-neutral preview report boundary and a
+repeatable multi-seed developer probe. No scan output or external game
+assembly entered the repository, and the real plugin is still not the package
+artifact.
+
+**Retained debt:** IMPL-04 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
+Their temporary constraints and IMPL-08 closure gate remain unchanged.
+
+**Excluded:** Raw evidence, starter or rare-resource conclusions, batch search,
+persistent caching, New Game hooks, player controls, layout, and presentation
+copy.
 
 ## Phase 3 - Establish and use the on-demand raw boundary
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -41,18 +42,21 @@ namespace DSPSeedScanner.Plugin
             probeAttempted = true;
             try
             {
-                int seed = ParseSeed(Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_SEED"));
-                RuntimeScanResult result = ScanPreview(
-                    new PreviewScanRequest(
-                        seed,
-                        ConclusionDefinition.ReferenceStarCount,
-                        ConclusionDefinition.ReferenceGameVersion,
-                        1m,
-                        CombatMode.Combat,
-                        ConclusionDefinition.ReferenceCombatSettingsKey),
-                    CancellationToken.None);
-                WriteProbe(output, result);
-                Logger.LogInfo("IMPL-03 probe completed: " + output);
+                var results = new List<RuntimeScanResult>();
+                foreach (int seed in ParseSeeds())
+                {
+                    results.Add(ScanPreview(
+                        new PreviewScanRequest(
+                            seed,
+                            ConclusionDefinition.ReferenceStarCount,
+                            ConclusionDefinition.ReferenceGameVersion,
+                            1m,
+                            CombatMode.Combat,
+                            ConclusionDefinition.ReferenceCombatSettingsKey),
+                        CancellationToken.None));
+                }
+                WriteProbe(output, results);
+                Logger.LogInfo("IMPL-04 preview probe completed: " + output);
             }
             catch (Exception exception)
             {
@@ -74,37 +78,77 @@ namespace DSPSeedScanner.Plugin
             return coordinator.TryScan(request, cancellationToken);
         }
 
-        private static int ParseSeed(string? value)
+        private static IEnumerable<int> ParseSeeds()
         {
-            return Int32.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int seed)
-                ? seed
-                : 16_315_224;
+            string? values = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_SEEDS");
+            if (String.IsNullOrWhiteSpace(values))
+                values = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_SEED");
+            if (!String.IsNullOrWhiteSpace(values))
+            {
+                foreach (string value in values.Split(','))
+                {
+                    if (Int32.TryParse(
+                        value.Trim(),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out int seed))
+                    {
+                        yield return seed;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Invalid probe seed: " + value);
+                    }
+                }
+                yield break;
+            }
+            yield return 16_315_224;
         }
 
-        private static void WriteProbe(string path, RuntimeScanResult result)
+        private static void WriteProbe(string path, IEnumerable<RuntimeScanResult> results)
         {
             var lines = new StringBuilder();
-            lines.Append("status\t").Append(result.Status).AppendLine();
-            lines.Append("seed\t").Append(result.GalaxySeed.ToString(CultureInfo.InvariantCulture)).AppendLine();
-            lines.Append("stage\t").Append(result.Stage).AppendLine();
-            lines.Append("code\t").Append(result.Code).AppendLine();
-            lines.Append("stateRestored\t").Append(result.StateRestored).AppendLine();
-            if (result.Fingerprint != null)
+            foreach (RuntimeScanResult result in results)
             {
-                lines.Append("gameVersion\t").Append(result.Fingerprint.GameVersion).AppendLine();
-                lines.Append("galaxyAlgorithm\t").Append(result.Fingerprint.GalaxyAlgorithm.ToString(CultureInfo.InvariantCulture)).AppendLine();
-                lines.Append("assemblySha256\t").Append(result.Fingerprint.AssemblySha256).AppendLine();
-                lines.Append("orderedThemeIds\t").Append(result.Fingerprint.OrderedThemeIdsKey).AppendLine();
-                lines.Append("loadedGenerationMods\t").Append(String.Join(",", result.Fingerprint.LoadedGenerationModIds)).AppendLine();
+                string seed = result.GalaxySeed.ToString(CultureInfo.InvariantCulture);
+                lines.Append("result\t").Append(seed).Append('\t')
+                    .Append(result.Status).Append('\t').Append(result.Code).Append('\t')
+                    .Append(result.StateRestored).Append('\t')
+                    .Append(result.GeneratedStarCount?.ToString(CultureInfo.InvariantCulture))
+                    .AppendLine();
+                if (result.Fingerprint != null)
+                {
+                    lines.Append("fingerprint\t").Append(seed).Append('\t')
+                        .Append(result.Fingerprint.GameVersion).Append('\t')
+                        .Append(result.Fingerprint.GalaxyAlgorithm.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(result.Fingerprint.AssemblySha256).Append('\t')
+                        .Append(result.Fingerprint.OrderedThemeIdsKey).Append('\t')
+                        .Append(String.Join(",", result.Fingerprint.LoadedGenerationModIds))
+                        .AppendLine();
+                }
+                foreach (ConclusionReport report in result.Reports)
+                {
+                    lines.Append("report\t").Append(seed).Append('\t')
+                        .Append(report.ConclusionId).Append('\t')
+                        .Append(report.Subject.Identifier).Append('\t')
+                        .Append(report.Outcome).Append('\t')
+                        .Append(report.DecisiveFact?.FactId).Append('\t')
+                        .Append(report.DecisiveFact?.Value).Append('\t')
+                        .Append(report.DecisiveFact?.Unit).Append('\t')
+                        .Append(report.DiagnosticCause?.Code).Append('\t')
+                        .Append(report.SourceConclusionId).Append('\t')
+                        .Append(report.Stage).Append('\t')
+                        .Append(report.Coverage.Scope).Append('\t')
+                        .Append(report.Settings.ResourceMultiplier.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(report.Settings.CombatMode).Append('\t')
+                        .Append(report.Settings.CombatSettingsKey).Append('\t')
+                        .Append(report.ContractVersion).Append('\t')
+                        .Append(report.DefinitionVersion).AppendLine();
+                }
+                for (int index = 0; index < result.Trace.Count; index++)
+                    lines.Append("trace\t").Append(seed).Append('\t').Append(index)
+                        .Append('\t').Append(result.Trace[index]).AppendLine();
             }
-            if (result.Conclusion != null)
-            {
-                lines.Append("conclusion\t").Append(result.Conclusion.ConclusionId).AppendLine();
-                lines.Append("outcome\t").Append(result.Conclusion.Outcome).AppendLine();
-                lines.Append("fact\t").Append(result.Conclusion.DecisiveFact?.Value).AppendLine();
-            }
-            for (int index = 0; index < result.Trace.Count; index++)
-                lines.Append("trace\t").Append(index).Append('\t').Append(result.Trace[index]).AppendLine();
             File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
         }
     }
