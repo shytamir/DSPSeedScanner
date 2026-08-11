@@ -2,7 +2,8 @@
 
 **Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None. IMPL-01 is completed and pending acceptance.
+**Active user story:** None. IMPL-01 is accepted; IMPL-02 is completed and
+pending acceptance.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -71,7 +72,7 @@ be revised before activation rather than widening the active story silently.
 
 ### IMPL-01: Prove the normalized conclusion boundary
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a maintainer building decision support, I want one accepted conclusion to
 flow through normalized evidence into an attributed report so that the core
@@ -114,38 +115,52 @@ derivation, DSP runtime access, orchestration, persistence, UI, and packaging.
 
 ### IMPL-02: Complete the accepted conclusion engine
 
-**State:** Proposed; depends on IMPL-01 acceptance.
+**State:** Completed; pending acceptance.
 
 As a maintainer extending the proven decision boundary, I want the complete
 accepted predicate catalogue executable against normalized fixtures so that
 runtime integration cannot introduce policy or hidden scoring.
 
-**Return:** The pure engine evaluates every active definition `0.1.0` component
-and every mandatory unknown or not-applicable case without loading DSP.
+**Delivered:** A pure engine evaluated every active definition `0.1.0`
+component and every mandatory unknown or not-applicable case without loading
+DSP.
 
-**In scope:**
+**Implemented:**
 
-- all remaining fixed and quantitative predicates, endpoint directions, and
-  settings scopes;
-- independent component outcomes, caution and tradeoff composition, role
-  derivation, grouping, and the accepted trait registry;
-- mandatory unknown and not-applicable propagation;
-- deterministic reports retaining units, settings, subjects, coverage, and
-  versions; and
-- every accepted SPEC-06 fixture and prohibited-proxy counterexample.
+- immutable normalized cluster, system, gas, starter-resource, rare-resource,
+  distance, settings, compatibility, and coverage inputs;
+- every fixed and quantitative predicate, endpoint direction, starter amount
+  and group range, and definition `0.1.0` settings boundary;
+- independent component outcomes, Dark Fog caution and tradeoff composition,
+  supported-role derivation, compact grouping, and the accepted trait registry;
+- explicit dependent unknowns, peace-mode not-applicable results, and retained
+  diagnostic facts outside an accepted range; and
+- deterministic context-attributed reports carrying identity, settings, stage,
+  coverage, subject, units, source conclusion, and contract versions.
 
-**Acceptance:**
+**Acceptance evidence:**
 
-- every expected SPEC-06 positive, negative, endpoint,
-  preference-sensitive, caution, tradeoff, unknown, and not-applicable outcome
-  passes from normalized fixtures;
-- missing evidence and unsupported settings affect only dependent components;
-- sensitive or unknown evidence cannot create a supported role or trait;
-- no component cancels another or participates in a weight or aggregate score;
-  and
-- repeated evaluation of equal inputs produces equal complete reports.
+- all named SPEC-06 fixtures and every range direction and endpoint produced
+  the expected positive, negative, preference-sensitive, caution, tradeoff,
+  unknown, or not-applicable outcome;
+- resource-multiplier, combat-setting, star-count, partial-coverage, and
+  compatibility cases preserved exact facts and affected only dependent
+  components;
+- sensitive and unknown evidence created no supported role or trait, while all
+  accepted supported roles and traits retained their source conclusions;
+- separate resource amount and group results demonstrated that components did
+  not cancel, rank, weight, or aggregate one another;
+- equal complete normalized inputs produced equal ordered reports; and
+- the Release build completed with zero warnings and all 14 focused checks
+  passed, including reflection checks for scoring APIs and DSP, Unity, or
+  BepInEx references.
 
-**Out of scope:** DSP or BepInEx references, runtime extraction, threading,
+**Produced:** The complete runtime-independent conclusion definition, immutable
+normalized evidence contract, pure conclusion engine, and expanded executable
+fixture suite. No in-game probe was required for this runtime-independent
+story.
+
+**Excluded:** DSP or BepInEx references, runtime extraction, threading,
 progress, persistent storage, package replacement, and predicates or ranges
 outside definition `0.1.0`.
 

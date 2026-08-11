@@ -13,8 +13,8 @@ state. It will not claim that one seed is universally best.
 ## Project status
 
 The product specification is complete. The scanner core roadmap is active;
-IMPL-01 is completed and pending acceptance, and no user story is currently
-active.
+IMPL-01 is accepted, IMPL-02 is completed and pending acceptance, and no user
+story is currently active.
 
 See [docs/PROJECT.md](docs/PROJECT.md) for the product definition, the completed
 [specification planning roadmap](docs/archive/PLANNING-ROADMAP.md), and the
@@ -40,10 +40,12 @@ local runtime or build dependencies; they will not be redistributed here.
 
 ## Development
 
-Implementation work is ordered by the scanner core roadmap. IMPL-01 established
-a runtime-independent normalized evidence and conclusion-report boundary for
-the shared-satellite predicate. The repository does not yet contain a usable
-plugin or any DSP/BepInEx runtime integration.
+Implementation work is ordered by the scanner core roadmap. The
+runtime-independent core now evaluates the complete accepted conclusion
+definition `0.1.0` from immutable normalized evidence, including bounded
+quantitative outcomes, roles, grouping, traits, tradeoffs, and explicit unknown
+or not-applicable states. The repository does not yet contain a usable plugin
+or any DSP/BepInEx runtime integration.
 
 Build and run the focused core checks with:
 

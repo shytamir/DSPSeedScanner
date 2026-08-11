@@ -11,7 +11,17 @@ namespace DSPSeedScanner.Core
 
     public enum EvidenceScope
     {
-        BirthSystemTopology
+        BirthSystemTopology,
+        BirthSystemRotation,
+        BirthSystemPower,
+        BirthSystemGasProducts,
+        BirthSystemResources,
+        ClusterEnergy,
+        ClusterSphereGeometry,
+        ClusterOccupation,
+        SystemDistances,
+        CompleteClusterRareResources,
+        CompleteClusterResources
     }
 
     public enum CoverageState
@@ -92,11 +102,13 @@ namespace DSPSeedScanner.Core
     {
         public NormalizedBirthTopologyEvidence(
             GenerationIdentity identity,
+            EvaluationSettings settings,
             EvidenceCoverage coverage,
             ConclusionSubject subject,
             int? sharedBirthGiantBodies)
         {
             Identity = identity ?? throw new ArgumentNullException(nameof(identity));
+            Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             Coverage = coverage ?? throw new ArgumentNullException(nameof(coverage));
             Subject = subject ?? throw new ArgumentNullException(nameof(subject));
 
@@ -123,6 +135,8 @@ namespace DSPSeedScanner.Core
         }
 
         public GenerationIdentity Identity { get; }
+
+        public EvaluationSettings Settings { get; }
 
         public EvidenceCoverage Coverage { get; }
 

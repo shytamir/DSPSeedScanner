@@ -41,12 +41,12 @@ jobs:
             -Sequence ${{ github.run_number }} `
             -Commit '${{ github.sha }}'
 
-      - name: Build normalized conclusion boundary
+      - name: Build conclusion engine
         id: core_build
         shell: pwsh
         run: dotnet build DSPSeedScanner.sln --configuration Release --nologo
 
-      - name: Test normalized conclusion boundary
+      - name: Test conclusion engine
         id: core_test
         shell: pwsh
         run: >-
@@ -126,8 +126,8 @@ jobs:
           | --- | --- |
           | Pull source | $env:CHECKOUT_STATUS |
           | Generate version | $env:VERSION_STATUS |
-          | Build normalized conclusion boundary | $env:CORE_BUILD_STATUS |
-          | Test normalized conclusion boundary | $env:CORE_TEST_STATUS |
+          | Build conclusion engine | $env:CORE_BUILD_STATUS |
+          | Test conclusion engine | $env:CORE_TEST_STATUS |
           | Stage placeholder DLL | $env:BUILD_STATUS |
           | Build package | $env:PACKAGE_STATUS |
           | Validate package | $env:PACKAGE_TEST_STATUS |

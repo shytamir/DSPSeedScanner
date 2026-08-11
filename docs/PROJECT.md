@@ -1,7 +1,8 @@
 # DSP Seed Scanner - Project Definition
 
 **Status:** Product specification is complete. The scanner core roadmap is
-active; IMPL-01 is completed and pending acceptance. No user story is active.
+active; IMPL-01 is accepted, and IMPL-02 is completed and pending acceptance.
+No user story is active.
 
 The active [scanner core roadmap](management/ROADMAP.md) governs
 implementation. The archived [product specification planning
@@ -243,5 +244,6 @@ The accepted [implementation-planning
 boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md) records the
 normative baseline, minimum product contract, runtime gates, validation
 obligations, and deferred work. Product specification is closed. IMPL-01
-produced the first runtime-independent normalized conclusion vertical slice;
-later implementation stories remain inactive pending its acceptance.
+established the runtime-independent normalized conclusion boundary. IMPL-02
+implemented the complete definition `0.1.0` pure conclusion engine and is
+pending acceptance; later implementation stories remain inactive.

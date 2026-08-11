@@ -20,8 +20,10 @@ namespace DSPSeedScanner.Core
             {
                 return new ConclusionReport(
                     evidence.Identity,
+                    evidence.Settings,
                     evidence.Coverage,
                     ConclusionId,
+                    ConclusionContext.FreshStart,
                     ContractVersion,
                     DefinitionVersion,
                     evidence.Subject,
@@ -35,8 +37,10 @@ namespace DSPSeedScanner.Core
             int count = evidence.SharedBirthGiantBodies.Value;
             return new ConclusionReport(
                 evidence.Identity,
+                evidence.Settings,
                 evidence.Coverage,
                 ConclusionId,
+                ConclusionContext.FreshStart,
                 ContractVersion,
                 DefinitionVersion,
                 evidence.Subject,

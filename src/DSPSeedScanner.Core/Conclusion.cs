@@ -4,7 +4,22 @@ namespace DSPSeedScanner.Core
 {
     public enum SubjectKind
     {
-        BirthSystem
+        BirthSystem,
+        StarSystem,
+        Cluster,
+        Resource,
+        SystemPair,
+        Trait
+    }
+
+    public enum ConclusionContext
+    {
+        FreshStart,
+        Megafactory,
+        DarkFogFarming,
+        CompactExpansion,
+        SphereShowcase,
+        DecisionRelevantTraits
     }
 
     public enum ComponentOutcome
@@ -80,33 +95,57 @@ namespace DSPSeedScanner.Core
     {
         public ConclusionReport(
             GenerationIdentity identity,
+            EvaluationSettings settings,
             EvidenceCoverage coverage,
             string conclusionId,
+            ConclusionContext context,
             string contractVersion,
             string definitionVersion,
             ConclusionSubject subject,
             ComponentOutcome outcome,
             DecisiveFact? decisiveFact,
-            DiagnosticCause? diagnosticCause)
+            DiagnosticCause? diagnosticCause,
+            string? sourceConclusionId = null)
         {
             Identity = identity ?? throw new ArgumentNullException(nameof(identity));
+            Settings = settings ?? throw new ArgumentNullException(nameof(settings));
             Coverage = coverage ?? throw new ArgumentNullException(nameof(coverage));
             ConclusionId = Required(conclusionId, nameof(conclusionId));
+            Context = context;
             ContractVersion = Required(contractVersion, nameof(contractVersion));
             DefinitionVersion = Required(definitionVersion, nameof(definitionVersion));
             Subject = subject ?? throw new ArgumentNullException(nameof(subject));
             Outcome = outcome;
+            if ((outcome == ComponentOutcome.Unknown ||
+                 outcome == ComponentOutcome.NotApplicable) && diagnosticCause == null)
+            {
+                throw new ArgumentException(
+                    "Unknown and not-applicable outcomes require a diagnostic cause.",
+                    nameof(diagnosticCause));
+            }
+            if (outcome != ComponentOutcome.Unknown &&
+                outcome != ComponentOutcome.NotApplicable && diagnosticCause != null)
+            {
+                throw new ArgumentException(
+                    "Resolved outcomes cannot carry a diagnostic cause.",
+                    nameof(diagnosticCause));
+            }
             DecisiveFact = decisiveFact;
             DiagnosticCause = diagnosticCause;
+            SourceConclusionId = Optional(sourceConclusionId, nameof(sourceConclusionId));
         }
 
         public GenerationIdentity Identity { get; }
 
         public EvidenceStage Stage => Coverage.Stage;
 
+        public EvaluationSettings Settings { get; }
+
         public EvidenceCoverage Coverage { get; }
 
         public string ConclusionId { get; }
+
+        public ConclusionContext Context { get; }
 
         public string ContractVersion { get; }
 
@@ -120,10 +159,20 @@ namespace DSPSeedScanner.Core
 
         public DiagnosticCause? DiagnosticCause { get; }
 
+        public string? SourceConclusionId { get; }
+
         private static string Required(string value, string parameterName)
         {
             if (String.IsNullOrWhiteSpace(value))
                 throw new ArgumentException("Value is required.", parameterName);
+
+            return value;
+        }
+
+        private static string? Optional(string? value, string parameterName)
+        {
+            if (value != null && String.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Value cannot be blank.", parameterName);
 
             return value;
         }
