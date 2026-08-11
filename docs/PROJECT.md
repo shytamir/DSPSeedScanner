@@ -5,11 +5,12 @@ tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core roadmap was completed and accepted on
-2026-08-11. The New Game presentation roadmap was approved on 2026-08-12, but
-no presentation story is active and no player-facing panel is implemented.
-The panel's fixed anchor remains a product-owner decision required before
-PRES-05. One packaging refinement remains tracked as non-blocking technical
-debt.
+2026-08-11. The New Game presentation roadmap was approved on 2026-08-12.
+PRES-01 implemented the presentation-neutral preview-session lifecycle and is
+at its acceptance gate; no player-facing panel or automatic scan invocation is
+implemented. The panel's fixed anchor remains a product-owner decision required
+before PRES-05. One packaging refinement remains tracked as non-blocking
+technical debt.
 
 ## Product decision
 

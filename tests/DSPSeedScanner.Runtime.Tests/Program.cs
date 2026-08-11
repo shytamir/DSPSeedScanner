@@ -42,6 +42,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete cluster incompatibility remains explicit", CompleteClusterIncompatibilityIsExplicit),
                 ("complete cluster bound rejects before raw generation", CompleteClusterBoundRejectsBeforeGeneration),
                 ("complete cluster shares runtime serialization", CompleteClusterSharesSerialization),
+                ("completed keyboard paste and random loads create one session each", CompletedInputLoadsCreateOneSessionEach),
+                ("duplicate callbacks coalesce while same identity reloads", DuplicateCallbacksCoalesceAndReloadsReplace),
+                ("replacement rejects stale publication and late loads", ReplacementRejectsStalePublication),
+                ("preview exit retires once and blocks resurrection", PreviewExitRetiresAndBlocksResurrection),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -645,6 +649,123 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(0, previewGateway.GenerateCalls);
         }
 
+        private static void CompletedInputLoadsCreateOneSessionEach()
+        {
+            var lifecycle = new PreviewSessionLifecycle();
+            PreviewGenerationIdentity keyboardIdentity = PreviewIdentity(11_111_111);
+            PreviewGenerationIdentity pasteIdentity = PreviewIdentity(
+                22_222_222,
+                0.5m,
+                CombatMode.Peace,
+                0.75m,
+                1.25m);
+            PreviewGenerationIdentity randomIdentity = PreviewIdentity(33_333_333);
+
+            True(lifecycle.CurrentSession == null);
+
+            PreviewLoadTransition keyboard = lifecycle.ObserveCompletedLoad(1, keyboardIdentity);
+            Equal(PreviewLoadDisposition.SessionCreated, keyboard.Disposition);
+            Equal(1L, keyboard.CurrentSession?.SessionId);
+            True(ReferenceEquals(keyboardIdentity, keyboard.CurrentSession?.Identity));
+
+            PreviewLoadTransition paste = lifecycle.ObserveCompletedLoad(2, pasteIdentity);
+            Equal(PreviewLoadDisposition.SessionCreated, paste.Disposition);
+            Equal(2L, paste.CurrentSession?.SessionId);
+            Equal(22_222_222, paste.CurrentSession?.Identity.GalaxyIdentity.GalaxySeed);
+            Equal(0.5m, paste.CurrentSession?.Identity.ResourceMultiplier);
+            Equal(CombatMode.Peace, paste.CurrentSession?.Identity.CombatMode);
+            Equal(0.75m, paste.CurrentSession?.Identity.InitialColonize);
+            Equal(1.25m, paste.CurrentSession?.Identity.MaxDensity);
+            Equal(
+                PreviewScanRequest.CombatSettingsKeyFor(0.75m, 1.25m),
+                paste.CurrentSession?.Identity.CombatSettingsKey);
+
+            PreviewLoadTransition random = lifecycle.ObserveCompletedLoad(3, randomIdentity);
+            Equal(PreviewLoadDisposition.SessionCreated, random.Disposition);
+            Equal(3L, random.CurrentSession?.SessionId);
+            Equal(3L, lifecycle.CurrentSession?.SessionId);
+        }
+
+        private static void DuplicateCallbacksCoalesceAndReloadsReplace()
+        {
+            var lifecycle = new PreviewSessionLifecycle();
+            PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
+            PreviewSession first = lifecycle.ObserveCompletedLoad(10, identity).CurrentSession!;
+
+            PreviewLoadTransition duplicate = lifecycle.ObserveCompletedLoad(
+                10,
+                PreviewIdentity(16_315_224));
+            Equal(PreviewLoadDisposition.DuplicateCoalesced, duplicate.Disposition);
+            True(ReferenceEquals(first, duplicate.CurrentSession));
+            False(first.IsRetired);
+
+            bool reusedSequenceRejected = false;
+            try
+            {
+                lifecycle.ObserveCompletedLoad(10, PreviewIdentity(73_339_583));
+            }
+            catch (InvalidOperationException)
+            {
+                reusedSequenceRejected = true;
+            }
+            True(reusedSequenceRejected);
+            True(ReferenceEquals(first, lifecycle.CurrentSession));
+
+            PreviewLoadTransition reload = lifecycle.ObserveCompletedLoad(
+                11,
+                PreviewIdentity(16_315_224));
+            Equal(PreviewLoadDisposition.SessionCreated, reload.Disposition);
+            False(ReferenceEquals(first, reload.CurrentSession));
+            True(ReferenceEquals(first, reload.RetiredSession));
+            True(first.IsRetired);
+            True(first.Lifetime.IsCancellationRequested);
+            Equal(PreviewSessionRetirementReason.Replaced, first.RetirementReason);
+            True(lifecycle.CanPublish(reload.CurrentSession!));
+        }
+
+        private static void ReplacementRejectsStalePublication()
+        {
+            var lifecycle = new PreviewSessionLifecycle();
+            PreviewSession first = lifecycle.ObserveCompletedLoad(
+                20,
+                PreviewIdentity(16_315_224)).CurrentSession!;
+            True(lifecycle.CanPublish(first));
+
+            PreviewSession replacement = lifecycle.ObserveCompletedLoad(
+                21,
+                PreviewIdentity(73_339_583)).CurrentSession!;
+            False(lifecycle.CanPublish(first));
+            True(lifecycle.CanPublish(replacement));
+
+            PreviewLoadTransition late = lifecycle.ObserveCompletedLoad(
+                20,
+                PreviewIdentity(16_315_224));
+            Equal(PreviewLoadDisposition.StaleLoadIgnored, late.Disposition);
+            True(ReferenceEquals(replacement, late.CurrentSession));
+            True(ReferenceEquals(replacement, lifecycle.CurrentSession));
+        }
+
+        private static void PreviewExitRetiresAndBlocksResurrection()
+        {
+            var lifecycle = new PreviewSessionLifecycle();
+            PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
+            PreviewSession active = lifecycle.ObserveCompletedLoad(30, identity).CurrentSession!;
+
+            PreviewSession? retired = lifecycle.ExitPreview();
+            True(ReferenceEquals(active, retired));
+            True(active.IsRetired);
+            True(active.Lifetime.IsCancellationRequested);
+            Equal(PreviewSessionRetirementReason.PreviewExited, active.RetirementReason);
+            False(lifecycle.CanPublish(active));
+            True(lifecycle.CurrentSession == null);
+            True(lifecycle.ExitPreview() == null);
+
+            PreviewLoadTransition duplicate = lifecycle.ObserveCompletedLoad(30, identity);
+            Equal(PreviewLoadDisposition.RetiredLoadIgnored, duplicate.Disposition);
+            True(duplicate.CurrentSession == null);
+            True(lifecycle.CurrentSession == null);
+        }
+
         private static void RuntimeBoundaryExposesNoGameObjects()
         {
             Assembly assembly = typeof(PreviewScanCoordinator).Assembly;
@@ -664,7 +785,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(BirthSystemRawResult),
                 typeof(BirthSystemRawProgress),
                 typeof(CompleteClusterRawResult),
-                typeof(CompleteClusterRawProgress)
+                typeof(CompleteClusterRawProgress),
+                typeof(PreviewGenerationIdentity),
+                typeof(PreviewSession),
+                typeof(PreviewLoadTransition),
+                typeof(PreviewSessionLifecycle)
             })
             {
                 foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -691,6 +816,31 @@ namespace DSPSeedScanner.Runtime.Tests
                 1m,
                 CombatMode.Combat,
                 ConclusionDefinition.ReferenceCombatSettingsKey);
+        }
+
+        private static PreviewGenerationIdentity PreviewIdentity(
+            int seed,
+            decimal resourceMultiplier = 1m,
+            CombatMode combatMode = CombatMode.Combat,
+            decimal initialColonize = 1m,
+            decimal maxDensity = 1m)
+        {
+            var galaxy = new GenerationIdentity(
+                ConclusionDefinition.ReferenceGameVersion,
+                ConclusionDefinition.ReferenceGalaxyAlgorithm,
+                ConclusionDefinition.ReferenceAssemblySha256,
+                ConclusionDefinition.ReferenceOrderedThemeIds,
+                ConclusionDefinition.DefinitionVersion,
+                seed,
+                ConclusionDefinition.ReferenceStarCount,
+                ConclusionDefinition.ReferenceGameVersion);
+            return new PreviewGenerationIdentity(
+                galaxy,
+                resourceMultiplier,
+                combatMode,
+                PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
+                initialColonize,
+                maxDensity);
         }
 
         private static RawPlanetRequest RawRequest()

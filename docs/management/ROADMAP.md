@@ -1,6 +1,9 @@
 # New Game Presentation Roadmap
 
-**Status:** Approved on 2026-08-12. No story is active.
+**Status:** In progress. PRES-01 is implemented and pending acceptance.
+
+**Active user story:** PRES-01 is at its acceptance gate. PRES-02 remains
+inactive until PRES-01 is accepted.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -65,7 +68,7 @@ authorize new product behavior.
 
 ### PRES-01: Recognize one current preview session
 
-**State:** Approved; inactive.
+**State:** Implemented on 2026-08-12; pending acceptance.
 
 As a player changing New Game seeds, I want the scanner to respond to the
 cluster that DSP actually loaded so that edits and duplicate callbacks cannot
@@ -83,6 +86,43 @@ publication behavior without starting a scan.
 
 **Out of scope:** Scanning, caching, panel creation, conclusion copy, placement,
 retry, and changes to DSP's seed controls.
+
+**Delivered:** A presentation-neutral lifecycle boundary now creates one
+current session from each completed preview-load sequence and retains the full
+layered galaxy, resource, and pre-play combat identity for later resolution.
+
+**Implemented:**
+
+- a monotonic load-sequence contract that coalesces repeated callbacks while
+  treating a later sequence as a new session even when its identity is equal;
+- exact preview identity equality across the accepted galaxy identity,
+  resource multiplier, combat mode, initial colonization, maximum density, and
+  canonical combat-settings key;
+- replacement and preview-exit retirement with a cancellable session lifetime;
+- rejection of an inconsistent identity reused with one load sequence, plus
+  suppression of late and already-retired load callbacks; and
+- a current-session publication gate that makes replaced and exited sessions
+  ineligible to update later presentation state.
+
+**Acceptance evidence:**
+
+- completed keyboard-entry, paste, and randomization fixtures created exactly
+  one session each, and no input-specific trigger entered the lifecycle API;
+- a duplicate callback reused its session, while a later load of the same
+  identity created a new session and retired the earlier lifetime;
+- different-identity replacement cancelled the old lifetime, rejected its
+  publication, and ignored its late completion without replacing the current
+  session;
+- preview exit retired once, cancelled the session lifetime, rejected stale
+  publication, and prevented a repeated completion from resurrecting it;
+- the runtime assembly remained free of DSP, Unity, and BepInEx references;
+  and
+- the Release solution and game-linked plugin built with zero warnings, all 14
+  conclusion checks passed, and all 33 runtime-boundary checks passed.
+
+**Produced:** `PreviewSessionLifecycle`, its immutable identity and transition
+contracts, and four focused automated lifecycle fixtures. Per the roadmap's
+validation policy, no human in-game validation was performed or required.
 
 ### PRES-02: Keep the full scan responsive
 
