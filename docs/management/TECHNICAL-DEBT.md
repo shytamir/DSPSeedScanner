@@ -38,7 +38,6 @@ state, and precise seed-and-stage results for every case.
 
 **Required by:** IMPL-08 acceptance. It also blocks player-facing invocation
 and replacement of the dummy package.
-
 ## TD-002: Detect preloader and in-memory generation patch uncertainty
 
 **Introduced:** IMPL-03 acceptance review, 2026-08-11.
@@ -67,4 +66,3 @@ supported-runtime case.
 
 **Required by:** IMPL-08 acceptance. It also blocks player-facing invocation
 and replacement of the dummy package.
-
