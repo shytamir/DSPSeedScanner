@@ -1,9 +1,10 @@
 # New Game Presentation Roadmap
 
-**Status:** In progress. PRES-01 is implemented and pending acceptance.
+**Status:** In progress. PRES-01 is accepted; PRES-02 is implemented and
+pending acceptance.
 
-**Active user story:** PRES-01 is at its acceptance gate. PRES-02 remains
-inactive until PRES-01 is accepted.
+**Active user story:** PRES-02 is at its acceptance gate. PRES-03 remains
+inactive until PRES-02 is accepted.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -70,7 +71,7 @@ authorize new product behavior.
 
 ### PRES-01: Recognize one current preview session
 
-**State:** Implemented on 2026-08-12; pending acceptance.
+**State:** Accepted on 2026-08-12.
 
 As a player changing New Game seeds, I want the scanner to respond to the
 cluster that DSP actually loaded so that edits and duplicate callbacks cannot
@@ -128,7 +129,7 @@ validation policy, no human in-game validation was performed or required.
 
 ### PRES-02: Keep the full scan responsive
 
-**State:** Approved; inactive.
+**State:** Implemented on 2026-08-12; pending acceptance.
 
 As a player waiting on exact conclusions, I want the long scan to yield between
 safe units so that the New Game interface and its activity indicator can remain
@@ -147,6 +148,50 @@ enough for presentation updates between completed planets.
 
 **Out of scope:** Background DSP generation, parallelism, throughput tuning,
 automatic invocation, cache storage, panel code, and new scan bounds.
+
+**Delivered:** Complete-cluster raw generation now exposes a cooperative
+game-thread operation that completes at most one solid planet per explicit
+advance. The established synchronous entry point remains available and drives
+the same operation to completion without changing its result contract.
+
+**Implemented:**
+
+- a disposable operation with explicit ready and completed states, bounded
+  planet progress, one-planet advances, and a result only at a terminal state;
+- cancellation checks before the next planet and immediately after DSP's
+  indivisible raw-generation call, with no complete conclusions from partial
+  coverage;
+- a retained, scanner-owned candidate galaxy whose DSP global pointers and
+  raw-preparation static references are restored before every yield and freed
+  on success, cancellation, failure, or disposal;
+- one shared runtime-operation lease held for the operation lifetime, keeping
+  preview and raw generation serialized across frame boundaries; and
+- a developer-only probe mode that advances the cooperative operation once
+  per Unity update and compares it with the synchronous entry point.
+
+**Acceptance evidence:**
+
+- deterministic fixtures returned identical rare-resource evidence and
+  conclusion reports through synchronous and cooperative execution, with one
+  completed planet per advance and monotonic planned, started, and completed
+  progress;
+- cancellation after `1/3`, injected failure on the second planet, and early
+  disposal all restored the simulated runtime state and exposed no complete
+  evidence or conclusions;
+- competing preview requests remained busy before and between cooperative
+  advances, then succeeded after the terminal step released serialization;
+- an isolated supported DSP/BepInEx probe for seed `73339583` returned equal
+  successful synchronous and cooperative evidence and reports, advanced all
+  `218/218` solid planets on 218 distinct Unity frames, preserved monotonic
+  progress, and passed every per-yield and final state-restoration check; and
+- the Release solution and game-linked plugin built with zero warnings, all 14
+  conclusion checks passed, and all 36 runtime-boundary checks passed.
+
+**Produced:** `CompleteClusterRawOperation`, its incremental runtime-session
+boundary, the synchronous compatibility wrapper, three focused automated
+fixtures, and the cooperative game-linked probe. No automatic invocation,
+cache, or panel behavior was introduced, and no human in-game validation was
+performed or required by this story.
 
 ### PRES-03: Reuse trustworthy local results
 

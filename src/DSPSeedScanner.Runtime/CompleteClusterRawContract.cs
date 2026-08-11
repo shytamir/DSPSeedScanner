@@ -188,12 +188,20 @@ namespace DSPSeedScanner.Runtime
             CancellationToken cancellationToken,
             Action<string> recordTrace);
 
-        void GenerateCompleteCluster(
+        IRuntimeCompleteClusterRawSession OpenCompleteCluster(
             PreviewScanRequest request,
             CompleteClusterRawPlan plan,
             CancellationToken cancellationToken,
-            Action<CompleteClusterPlanetTarget> planetStarted,
-            Action<CompleteClusterPlanetTarget, NormalizedRawPlanetEvidence> planetCompleted,
+            Action<string> recordTrace);
+    }
+
+    public interface IRuntimeCompleteClusterRawSession : IDisposable
+    {
+        bool StateRestored { get; }
+
+        NormalizedRawPlanetEvidence GeneratePlanet(
+            CompleteClusterPlanetTarget target,
+            CancellationToken cancellationToken,
             Action<string> recordTrace);
     }
 }

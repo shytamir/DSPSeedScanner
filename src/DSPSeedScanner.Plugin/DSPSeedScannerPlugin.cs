@@ -27,6 +27,12 @@ namespace DSPSeedScanner.Plugin
         private CompleteClusterRawCoordinator? completeClusterCoordinator;
         private DspRawPlanetGateway? rawGateway;
         private bool probeAttempted;
+        private CompleteClusterRawOperation? cooperativeProbeOperation;
+        private CompleteClusterRawResult? cooperativeProbeReference;
+        private DspStateSnapshot? cooperativeProbeInitialState;
+        private readonly List<int> cooperativeProbeFrames = new List<int>();
+        private bool cooperativeProbeYieldsRestored = true;
+        private bool cooperativeReferenceRestored;
 
         private void Awake()
         {
@@ -48,16 +54,24 @@ namespace DSPSeedScanner.Plugin
         private void Update()
         {
             string? output = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_OUTPUT");
-            if (probeAttempted || String.IsNullOrWhiteSpace(output) ||
+            if (String.IsNullOrWhiteSpace(output) ||
                 LDB.themes == null || LDB.themes.Length == 0)
             {
                 return;
             }
 
+            string? mode = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_MODE");
+            if (String.Equals(mode, "cooperative-cluster", StringComparison.Ordinal))
+            {
+                AdvanceCooperativeProbe(output);
+                return;
+            }
+            if (probeAttempted)
+                return;
+
             probeAttempted = true;
             try
             {
-                string? mode = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_MODE");
                 if (String.Equals(mode, "conformance", StringComparison.Ordinal))
                 {
                     WriteConformanceProbe(output);
@@ -98,6 +112,123 @@ namespace DSPSeedScanner.Plugin
             }
         }
 
+        private void AdvanceCooperativeProbe(string path)
+        {
+            try
+            {
+                if (!probeAttempted)
+                {
+                    probeAttempted = true;
+                    PreviewScanRequest request = Request(ParseSeeds().First());
+                    cooperativeProbeInitialState = DspStateSnapshot.Capture();
+                    cooperativeProbeReference = GenerateCompleteClusterResources(
+                        request,
+                        CancellationToken.None);
+                    cooperativeReferenceRestored =
+                        cooperativeProbeInitialState.CompareCurrent().All(check => check.Value);
+                    cooperativeProbeOperation = StartCompleteClusterResources(
+                        request,
+                        CancellationToken.None);
+                    cooperativeProbeYieldsRestored &=
+                        cooperativeProbeOperation.IsYieldStateRestored;
+                    return;
+                }
+
+                if (cooperativeProbeOperation == null ||
+                    cooperativeProbeReference == null ||
+                    cooperativeProbeInitialState == null)
+                {
+                    throw new InvalidOperationException(
+                        "The cooperative probe was not initialized.");
+                }
+                if (cooperativeProbeOperation.State == CompleteClusterRawOperationState.Ready)
+                {
+                    cooperativeProbeFrames.Add(Time.frameCount);
+                    cooperativeProbeOperation.Advance();
+                    cooperativeProbeYieldsRestored &=
+                        cooperativeProbeOperation.IsYieldStateRestored;
+                    if (cooperativeProbeOperation.State == CompleteClusterRawOperationState.Ready)
+                        return;
+                }
+
+                CompleteClusterRawResult incremental =
+                    cooperativeProbeOperation.Result ?? throw new InvalidOperationException(
+                        "The cooperative probe completed without a result.");
+                bool finalStateRestored = cooperativeProbeInitialState.CompareCurrent()
+                    .All(check => check.Value);
+                bool progressMonotonic = HasMonotonicPlanetProgress(incremental.Progress);
+                bool distinctFrames = cooperativeProbeFrames.Distinct().Count() ==
+                    cooperativeProbeFrames.Count;
+                bool rareEquivalent = cooperativeProbeReference.RareResources
+                    .SequenceEqual(incremental.RareResources);
+                bool reportsEquivalent = cooperativeProbeReference.Reports
+                    .SequenceEqual(incremental.Reports);
+
+                var lines = new StringBuilder();
+                lines.Append("cooperative-result\t")
+                    .Append(incremental.GalaxySeed).Append('\t')
+                    .Append(cooperativeProbeReference.Status).Append('\t')
+                    .Append(incremental.Status).Append('\t')
+                    .Append(reportsEquivalent).Append('\t')
+                    .Append(rareEquivalent).Append('\t')
+                    .Append(progressMonotonic).Append('\t')
+                    .Append(distinctFrames).Append('\t')
+                    .Append(cooperativeProbeYieldsRestored).Append('\t')
+                    .Append(cooperativeReferenceRestored).Append('\t')
+                    .Append(finalStateRestored).Append('\t')
+                    .Append(cooperativeProbeFrames.Count).Append('\t')
+                    .Append(incremental.Coverage.ExpectedPlanets).AppendLine();
+                foreach (KeyValuePair<string, bool> check in
+                    cooperativeProbeInitialState.CompareCurrent())
+                {
+                    lines.Append("cooperative-state\t")
+                        .Append(check.Key).Append('\t').Append(check.Value).AppendLine();
+                }
+                File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
+                Logger.LogInfo("PRES-02 cooperative-cluster probe completed: " + path);
+                cooperativeProbeOperation.Dispose();
+                cooperativeProbeOperation = null;
+                Application.Quit();
+            }
+            catch (Exception exception)
+            {
+                cooperativeProbeOperation?.Dispose();
+                cooperativeProbeOperation = null;
+                File.WriteAllText(path, "probe-error\t" + exception, new UTF8Encoding(false));
+                Logger.LogError(exception);
+                Application.Quit();
+            }
+        }
+
+        private static bool HasMonotonicPlanetProgress(
+            IReadOnlyList<CompleteClusterRawProgress> progress)
+        {
+            if (progress.Count == 0 ||
+                progress[0].State != CompleteClusterProgressState.Planned ||
+                progress[0].CompletedPlanets != 0)
+            {
+                return false;
+            }
+            int completed = 0;
+            for (int index = 1; index < progress.Count; index += 2)
+            {
+                if (index + 1 >= progress.Count)
+                    return false;
+                CompleteClusterRawProgress started = progress[index];
+                CompleteClusterRawProgress finished = progress[index + 1];
+                if (started.State != CompleteClusterProgressState.PlanetStarted ||
+                    started.CompletedPlanets != completed ||
+                    finished.State != CompleteClusterProgressState.PlanetCompleted ||
+                    finished.CompletedPlanets != completed + 1 ||
+                    started.PlanetId != finished.PlanetId)
+                {
+                    return false;
+                }
+                completed++;
+            }
+            return completed == progress[0].ExpectedPlanets;
+        }
+
         public RuntimeScanResult ScanPreview(
             PreviewScanRequest request,
             CancellationToken cancellationToken)
@@ -134,6 +265,19 @@ namespace DSPSeedScanner.Plugin
             if (completeClusterCoordinator == null)
                 throw new InvalidOperationException("The plugin has not completed Awake.");
             return completeClusterCoordinator.TryGenerate(
+                request,
+                cancellationToken,
+                reportProgress);
+        }
+
+        public CompleteClusterRawOperation StartCompleteClusterResources(
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<CompleteClusterRawProgress>? reportProgress = null)
+        {
+            if (completeClusterCoordinator == null)
+                throw new InvalidOperationException("The plugin has not completed Awake.");
+            return completeClusterCoordinator.TryStart(
                 request,
                 cancellationToken,
                 reportProgress);

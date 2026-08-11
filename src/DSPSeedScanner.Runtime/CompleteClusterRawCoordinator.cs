@@ -7,6 +7,12 @@ using DSPSeedScanner.Core;
 
 namespace DSPSeedScanner.Runtime
 {
+    public enum CompleteClusterRawOperationState
+    {
+        Ready,
+        Completed
+    }
+
     public sealed class CompleteClusterRawCoordinator
     {
         public const string Stage = "complete-cluster-raw";
@@ -23,49 +29,201 @@ namespace DSPSeedScanner.Runtime
             this.operationGate = operationGate ?? new RuntimeOperationGate();
         }
 
-        public CompleteClusterRawResult TryGenerate(
+        public CompleteClusterRawOperation TryStart(
             PreviewScanRequest request,
             CancellationToken cancellationToken,
             Action<CompleteClusterRawProgress>? reportProgress = null)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
+            return CompleteClusterRawOperation.Start(
+                gateway,
+                operationGate,
+                request,
+                cancellationToken,
+                reportProgress);
+        }
 
-            var stopwatch = Stopwatch.StartNew();
-            long initialMemory = GC.GetTotalMemory(false);
-            var trace = new List<string>();
-            var progress = new List<CompleteClusterRawProgress>();
+        public CompleteClusterRawResult TryGenerate(
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<CompleteClusterRawProgress>? reportProgress = null)
+        {
+            using CompleteClusterRawOperation operation = TryStart(
+                request,
+                cancellationToken,
+                reportProgress);
+            while (operation.State == CompleteClusterRawOperationState.Ready)
+                operation.Advance();
+            return operation.Result ?? throw new InvalidOperationException(
+                "A completed raw operation must expose its result.");
+        }
+    }
+
+    public sealed class CompleteClusterRawOperation : IDisposable
+    {
+        private readonly IRuntimeCompleteClusterRawGateway gateway;
+        private readonly RuntimeOperationGate operationGate;
+        private readonly PreviewScanRequest request;
+        private readonly CancellationToken cancellationToken;
+        private readonly Action<CompleteClusterRawProgress>? reportProgress;
+        private readonly Stopwatch stopwatch = Stopwatch.StartNew();
+        private readonly long initialMemory = GC.GetTotalMemory(false);
+        private readonly List<string> trace = new List<string>();
+        private readonly List<CompleteClusterRawProgress> progress =
+            new List<CompleteClusterRawProgress>();
+        private readonly ClusterAggregate aggregate = new ClusterAggregate();
+
+        private bool ownsGate;
+        private RuntimeFingerprint? fingerprint;
+        private RuntimeStateLease? lease;
+        private IRuntimeCompleteClusterRawSession? runtimeSession;
+        private CompleteClusterRawPlan? plan;
+        private int expected;
+        private int completed;
+        private int? affectedPlanet;
+        private string? rawDiagnostic;
+        private bool advancing;
+
+        private CompleteClusterRawOperation(
+            IRuntimeCompleteClusterRawGateway gateway,
+            RuntimeOperationGate operationGate,
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<CompleteClusterRawProgress>? reportProgress)
+        {
+            this.gateway = gateway;
+            this.operationGate = operationGate;
+            this.request = request;
+            this.cancellationToken = cancellationToken;
+            this.reportProgress = reportProgress;
+        }
+
+        public CompleteClusterRawOperationState State { get; private set; }
+        public CompleteClusterRawResult? Result { get; private set; }
+        public int ExpectedPlanets => expected;
+        public int CompletedPlanets => completed;
+        public bool IsYieldStateRestored { get; private set; } = true;
+
+        internal static CompleteClusterRawOperation Start(
+            IRuntimeCompleteClusterRawGateway gateway,
+            RuntimeOperationGate operationGate,
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<CompleteClusterRawProgress>? reportProgress)
+        {
+            var operation = new CompleteClusterRawOperation(
+                gateway,
+                operationGate,
+                request,
+                cancellationToken,
+                reportProgress);
+            operation.Initialize();
+            return operation;
+        }
+
+        public void Advance()
+        {
+            if (State != CompleteClusterRawOperationState.Ready)
+                throw new InvalidOperationException("The complete-cluster operation is already complete.");
+            if (plan == null || runtimeSession == null)
+                throw new InvalidOperationException("The complete-cluster operation was not initialized.");
+            if (advancing)
+                throw new InvalidOperationException("A complete-cluster step cannot be re-entered.");
+
+            advancing = true;
+            try
+            {
+                if (Thread.CurrentThread.ManagedThreadId != gateway.MainThreadId)
+                {
+                    Finish(
+                        RuntimeScanStatus.Incompatible,
+                        "thread-affinity-mismatch",
+                        "Runtime generation must execute on the captured Unity main thread.");
+                    return;
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+                CompleteClusterPlanetTarget target = plan.Targets[completed];
+                affectedPlanet = target.PlanetId;
+                Publish(new CompleteClusterRawProgress(
+                    CompleteClusterProgressState.PlanetStarted,
+                    expected,
+                    completed,
+                    target.PlanetId));
+
+                NormalizedRawPlanetEvidence evidence = runtimeSession.GeneratePlanet(
+                    target,
+                    cancellationToken,
+                    trace.Add);
+                IsYieldStateRestored = runtimeSession.StateRestored;
+                if (!IsYieldStateRestored)
+                    throw new InvalidOperationException("Runtime state was not restored after a planet step.");
+
+                ValidatePlanet(request, target, evidence);
+                aggregate.Add(target, evidence);
+                completed++;
+                Publish(new CompleteClusterRawProgress(
+                    CompleteClusterProgressState.PlanetCompleted,
+                    expected,
+                    completed,
+                    target.PlanetId));
+                trace.Add("cluster-step:yield:completed=" + completed);
+
+                if (completed == expected)
+                    CompleteSuccessfully(plan);
+            }
+            catch (OperationCanceledException)
+            {
+                trace.Add("request:cancelled");
+                Finish(
+                    RuntimeScanStatus.Cancelled,
+                    "cancelled",
+                    "The complete-cluster raw request was cancelled at a planet boundary.");
+            }
+            catch (RawCompatibilityException exception)
+            {
+                rawDiagnostic = exception.RawDiagnostic;
+                trace.Add("request:incompatible");
+                Finish(RuntimeScanStatus.Incompatible, exception.Code, exception.Message);
+            }
+            catch (Exception exception)
+            {
+                trace.Add("request:failed");
+                Finish(
+                    RuntimeScanStatus.Failed,
+                    "runtime-exception",
+                    exception.GetType().Name + ": " + exception.Message);
+            }
+            finally
+            {
+                advancing = false;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (State == CompleteClusterRawOperationState.Ready)
+            {
+                trace.Add("request:disposed");
+                Finish(
+                    RuntimeScanStatus.Cancelled,
+                    "cancelled",
+                    "The complete-cluster raw request was cancelled before completion.");
+            }
+        }
+
+        private void Initialize()
+        {
             if (!operationGate.TryEnter())
             {
-                return Result(
+                Finish(
                     RuntimeScanStatus.Busy,
-                    request,
                     "busy",
-                    "Another runtime request is active.",
-                    null,
-                    0,
-                    0,
-                    progress,
-                    null,
-                    null,
-                    trace,
-                    true,
-                    stopwatch.ElapsedMilliseconds,
-                    GC.GetTotalMemory(false) - initialMemory);
+                    "Another runtime request is active.");
+                return;
             }
-
-            RuntimeFingerprint? fingerprint = null;
-            RuntimeStateLease? lease = null;
-            RuntimeScanStatus status = RuntimeScanStatus.Failed;
-            string code = "runtime-failure";
-            string message = "The complete-cluster raw request failed.";
-            string? rawDiagnostic = null;
-            IReadOnlyList<NormalizedRareResourceEvidence>? rareResources = null;
-            IReadOnlyList<ConclusionReport>? reports = null;
-            int expected = 0;
-            int completed = 0;
-            int? affectedPlanet = null;
-            bool restored = true;
+            ownsGate = true;
 
             try
             {
@@ -73,166 +231,212 @@ namespace DSPSeedScanner.Runtime
                 trace.Add("request:thread=" + threadId);
                 if (threadId != gateway.MainThreadId)
                 {
-                    status = RuntimeScanStatus.Incompatible;
-                    code = "thread-affinity-mismatch";
-                    message = "Runtime generation must execute on the captured Unity main thread.";
+                    Finish(
+                        RuntimeScanStatus.Incompatible,
+                        "thread-affinity-mismatch",
+                        "Runtime generation must execute on the captured Unity main thread.");
+                    return;
                 }
-                else
+
+                fingerprint = gateway.CaptureFingerprint(request);
+                trace.Add("fingerprint:capture");
+                CompatibilityDecision compatibility = CompatibilityPolicy.Evaluate(fingerprint);
+                CompatibilityDecision requestCompatibility =
+                    CompatibilityPolicy.EvaluateRequest(request);
+                if (!compatibility.Supported)
                 {
-                    fingerprint = gateway.CaptureFingerprint(request);
-                    trace.Add("fingerprint:capture");
-                    CompatibilityDecision compatibility = CompatibilityPolicy.Evaluate(fingerprint);
-                    CompatibilityDecision requestCompatibility =
-                        CompatibilityPolicy.EvaluateRequest(request);
-                    if (!compatibility.Supported)
-                    {
-                        status = RuntimeScanStatus.Incompatible;
-                        code = compatibility.Code;
-                        message = compatibility.Message;
-                    }
-                    else if (!requestCompatibility.Supported)
-                    {
-                        status = RuntimeScanStatus.Incompatible;
-                        code = requestCompatibility.Code;
-                        message = requestCompatibility.Message;
-                    }
-                    else
-                    {
-                        lease = gateway.CaptureState();
-                        trace.Add("state:capture");
-                        cancellationToken.ThrowIfCancellationRequested();
-                        CompleteClusterRawPlan plan = gateway.DiscoverCompleteCluster(
-                            request,
-                            cancellationToken,
-                            trace.Add);
-                        ValidatePreview(request, plan.Preview);
-                        expected = plan.Targets.Count;
-                        if (expected > MaximumSolidPlanets)
-                        {
-                            throw new RawCompatibilityException(
-                                "complete-cluster-planet-bound-exceeded",
-                                "The generated cluster exceeds the certified single-operation planet bound.",
-                                "expected=" + expected);
-                        }
-
-                        Publish(new CompleteClusterRawProgress(
-                            CompleteClusterProgressState.Planned,
-                            expected,
-                            0,
-                            null));
-                        var aggregate = new ClusterAggregate();
-                        gateway.GenerateCompleteCluster(
-                            request,
-                            plan,
-                            cancellationToken,
-                            target =>
-                            {
-                                affectedPlanet = target.PlanetId;
-                                Publish(new CompleteClusterRawProgress(
-                                    CompleteClusterProgressState.PlanetStarted,
-                                    expected,
-                                    completed,
-                                    target.PlanetId));
-                            },
-                            (target, evidence) =>
-                            {
-                                ValidatePlanet(request, target, evidence);
-                                aggregate.Add(target, evidence);
-                                completed++;
-                                Publish(new CompleteClusterRawProgress(
-                                    CompleteClusterProgressState.PlanetCompleted,
-                                    expected,
-                                    completed,
-                                    target.PlanetId));
-                            },
-                            trace.Add);
-
-                        if (completed != expected)
-                            throw new InvalidOperationException("Complete-cluster generation omitted declared planets.");
-
-                        rareResources = aggregate.RareResources();
-                        var rareCoverage = Complete(
-                            EvidenceScope.CompleteClusterRareResources,
-                            expected);
-                        var resourceCoverage = Complete(
-                            EvidenceScope.CompleteClusterResources,
-                            expected);
-                        reports = RuntimeConclusionEvaluator.Evaluate(
-                            request,
-                            fingerprint,
-                            plan.Preview,
-                            rareResources: rareResources,
-                            rareCoverage: rareCoverage,
-                            clusterCommonResourceTotal: aggregate.CommonTotal,
-                            clusterResourceCoverage: resourceCoverage);
-                        status = RuntimeScanStatus.Success;
-                        code = "success";
-                        message = "Every solid planet was generated and exact rare access was evaluated.";
-                        affectedPlanet = null;
-                        trace.Add("evaluation:complete");
-                    }
+                    Finish(RuntimeScanStatus.Incompatible, compatibility.Code, compatibility.Message);
+                    return;
                 }
+                if (!requestCompatibility.Supported)
+                {
+                    Finish(
+                        RuntimeScanStatus.Incompatible,
+                        requestCompatibility.Code,
+                        requestCompatibility.Message);
+                    return;
+                }
+
+                lease = gateway.CaptureState();
+                trace.Add("state:capture");
+                cancellationToken.ThrowIfCancellationRequested();
+                plan = gateway.DiscoverCompleteCluster(
+                    request,
+                    cancellationToken,
+                    trace.Add);
+                ValidatePreview(request, plan.Preview);
+                expected = plan.Targets.Count;
+                if (expected > CompleteClusterRawCoordinator.MaximumSolidPlanets)
+                {
+                    throw new RawCompatibilityException(
+                        "complete-cluster-planet-bound-exceeded",
+                        "The generated cluster exceeds the certified single-operation planet bound.",
+                        "expected=" + expected);
+                }
+
+                Publish(new CompleteClusterRawProgress(
+                    CompleteClusterProgressState.Planned,
+                    expected,
+                    0,
+                    null));
+                runtimeSession = gateway.OpenCompleteCluster(
+                    request,
+                    plan,
+                    cancellationToken,
+                    trace.Add);
+                IsYieldStateRestored = runtimeSession.StateRestored;
+                if (!IsYieldStateRestored)
+                    throw new InvalidOperationException("Runtime state was not restored after raw-session setup.");
+                State = CompleteClusterRawOperationState.Ready;
             }
             catch (OperationCanceledException)
             {
-                status = RuntimeScanStatus.Cancelled;
-                code = "cancelled";
-                message = "The complete-cluster raw request was cancelled at a planet boundary.";
                 trace.Add("request:cancelled");
+                Finish(
+                    RuntimeScanStatus.Cancelled,
+                    "cancelled",
+                    "The complete-cluster raw request was cancelled at a planet boundary.");
             }
             catch (RawCompatibilityException exception)
             {
-                status = RuntimeScanStatus.Incompatible;
-                code = exception.Code;
-                message = exception.Message;
                 rawDiagnostic = exception.RawDiagnostic;
                 trace.Add("request:incompatible");
+                Finish(RuntimeScanStatus.Incompatible, exception.Code, exception.Message);
             }
             catch (Exception exception)
             {
-                status = RuntimeScanStatus.Failed;
-                code = "runtime-exception";
-                message = exception.GetType().Name + ": " + exception.Message;
                 trace.Add("request:failed");
+                Finish(
+                    RuntimeScanStatus.Failed,
+                    "runtime-exception",
+                    exception.GetType().Name + ": " + exception.Message);
             }
-            finally
+        }
+
+        private void CompleteSuccessfully(CompleteClusterRawPlan completedPlan)
+        {
+            if (completed != expected)
+                throw new InvalidOperationException("Complete-cluster generation omitted declared planets.");
+
+            IReadOnlyList<NormalizedRareResourceEvidence> rareResources =
+                aggregate.RareResources();
+            EvidenceCoverage rareCoverage = Complete(
+                EvidenceScope.CompleteClusterRareResources,
+                expected);
+            EvidenceCoverage resourceCoverage = Complete(
+                EvidenceScope.CompleteClusterResources,
+                expected);
+            IReadOnlyList<ConclusionReport> reports = RuntimeConclusionEvaluator.Evaluate(
+                request,
+                fingerprint ?? throw new InvalidOperationException("A successful scan requires a fingerprint."),
+                completedPlan.Preview,
+                rareResources: rareResources,
+                rareCoverage: rareCoverage,
+                clusterCommonResourceTotal: aggregate.CommonTotal,
+                clusterResourceCoverage: resourceCoverage);
+            affectedPlanet = null;
+            trace.Add("evaluation:complete");
+            Finish(
+                RuntimeScanStatus.Success,
+                "success",
+                "Every solid planet was generated and exact rare access was evaluated.",
+                rareResources,
+                reports);
+        }
+
+        private void Finish(
+            RuntimeScanStatus status,
+            string code,
+            string message,
+            IReadOnlyList<NormalizedRareResourceEvidence>? rareResources = null,
+            IReadOnlyList<ConclusionReport>? reports = null)
+        {
+            if (State == CompleteClusterRawOperationState.Completed)
+                return;
+
+            bool restored = true;
+            Exception? restorationFailure = null;
+            if (runtimeSession != null)
             {
-                if (lease != null)
+                try
                 {
-                    try
-                    {
-                        lease.Dispose();
-                        restored = lease.Restored;
-                    }
-                    catch (Exception exception)
-                    {
-                        restored = false;
-                        message = exception.GetType().Name + ": " + exception.Message;
-                    }
-                    trace.Add("state:restore=" + restored);
-                    if (!restored)
-                    {
-                        status = RuntimeScanStatus.Failed;
-                        code = "state-restoration-failed";
-                    }
+                    runtimeSession.Dispose();
+                    restored &= runtimeSession.StateRestored;
                 }
-                operationGate.Exit();
-                stopwatch.Stop();
+                catch (Exception exception)
+                {
+                    restored = false;
+                    restorationFailure = exception;
+                }
+                runtimeSession = null;
             }
 
+            if (lease != null)
+            {
+                try
+                {
+                    lease.Dispose();
+                    restored &= lease.Restored;
+                }
+                catch (Exception exception)
+                {
+                    restored = false;
+                    if (restorationFailure == null)
+                        restorationFailure = exception;
+                }
+                trace.Add("state:restore=" + restored);
+                lease = null;
+            }
+
+            if (ownsGate)
+            {
+                operationGate.Exit();
+                ownsGate = false;
+            }
+            stopwatch.Stop();
+
+            if (!restored)
+            {
+                status = RuntimeScanStatus.Failed;
+                code = "state-restoration-failed";
+                message = restorationFailure == null
+                    ? "Runtime state restoration failed."
+                    : restorationFailure.GetType().Name + ": " + restorationFailure.Message;
+            }
             if (status != RuntimeScanStatus.Success)
             {
                 rareResources = null;
                 reports = null;
             }
-            return Result(
+
+            Result = BuildResult(
                 status,
-                request,
+                code,
+                message,
+                restored,
+                rareResources,
+                reports);
+            State = CompleteClusterRawOperationState.Completed;
+        }
+
+        private CompleteClusterRawResult BuildResult(
+            RuntimeScanStatus status,
+            string code,
+            string message,
+            bool restored,
+            IEnumerable<NormalizedRareResourceEvidence>? rareResources,
+            IEnumerable<ConclusionReport>? reports)
+        {
+            CoverageState coverageState = expected > 0 && completed == expected
+                ? CoverageState.Complete
+                : completed > 0 ? CoverageState.Partial : CoverageState.Unavailable;
+            return new CompleteClusterRawResult(
+                status,
+                request.GalaxySeed,
                 code,
                 message,
                 fingerprint,
-                expected,
-                completed,
+                new CompleteClusterRawCoverage(coverageState, expected, completed),
                 progress,
                 rareResources,
                 reports,
@@ -242,12 +446,12 @@ namespace DSPSeedScanner.Runtime
                 GC.GetTotalMemory(false) - initialMemory,
                 affectedPlanet,
                 rawDiagnostic);
+        }
 
-            void Publish(CompleteClusterRawProgress value)
-            {
-                progress.Add(value);
-                reportProgress?.Invoke(value);
-            }
+        private void Publish(CompleteClusterRawProgress value)
+        {
+            progress.Add(value);
+            reportProgress?.Invoke(value);
         }
 
         private static void ValidatePreview(
@@ -293,45 +497,6 @@ namespace DSPSeedScanner.Runtime
                 CoverageState.Complete,
                 subjects,
                 subjects);
-
-        private static CompleteClusterRawResult Result(
-            RuntimeScanStatus status,
-            PreviewScanRequest request,
-            string code,
-            string message,
-            RuntimeFingerprint? fingerprint,
-            int expected,
-            int completed,
-            IEnumerable<CompleteClusterRawProgress> progress,
-            IEnumerable<NormalizedRareResourceEvidence>? rareResources,
-            IEnumerable<ConclusionReport>? reports,
-            IEnumerable<string> trace,
-            bool restored,
-            long elapsedMilliseconds,
-            long memoryDelta,
-            int? affectedPlanet = null,
-            string? rawDiagnostic = null)
-        {
-            CoverageState state = expected > 0 && completed == expected
-                ? CoverageState.Complete
-                : completed > 0 ? CoverageState.Partial : CoverageState.Unavailable;
-            return new CompleteClusterRawResult(
-                status,
-                request.GalaxySeed,
-                code,
-                message,
-                fingerprint,
-                new CompleteClusterRawCoverage(state, expected, completed),
-                progress,
-                rareResources,
-                reports,
-                trace,
-                restored,
-                elapsedMilliseconds,
-                memoryDelta,
-                affectedPlanet,
-                rawDiagnostic);
-        }
 
         private sealed class ClusterAggregate
         {

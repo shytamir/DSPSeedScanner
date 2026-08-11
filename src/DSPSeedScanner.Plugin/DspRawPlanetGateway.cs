@@ -192,12 +192,10 @@ namespace DSPSeedScanner.Plugin
             }
         }
 
-        public void GenerateCompleteCluster(
+        public IRuntimeCompleteClusterRawSession OpenCompleteCluster(
             PreviewScanRequest request,
             CompleteClusterRawPlan plan,
             CancellationToken cancellationToken,
-            Action<CompleteClusterPlanetTarget> planetStarted,
-            Action<CompleteClusterPlanetTarget, NormalizedRawPlanetEvidence> planetCompleted,
             Action<string> recordTrace)
         {
             string? missingMember = FindMissingRawMember();
@@ -222,9 +220,11 @@ namespace DSPSeedScanner.Plugin
 
                 var planets = galaxy.stars
                     .SelectMany(star => star.planets.Select(planet => new { star, planet }))
-                    .ToDictionary(item => item.planet.id);
+                    .ToDictionary(
+                        item => item.planet.id,
+                        item => (Star: item.star, Planet: item.planet));
                 int solidPlanetCount = planets.Values.Count(
-                    item => item.planet.type != EPlanetType.Gas);
+                    item => item.Planet.type != EPlanetType.Gas);
                 if (solidPlanetCount != plan.Targets.Count)
                 {
                     throw new RawCompatibilityException(
@@ -238,51 +238,26 @@ namespace DSPSeedScanner.Plugin
                     gameDesc = descriptor,
                     galaxy = galaxy
                 };
-                GameMain.data = candidateData;
-                DSPGame.GameDesc = descriptor;
-                PrepareRawGeneration(recordTrace);
-
-                foreach (CompleteClusterPlanetTarget target in plan.Targets)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (!planets.TryGetValue(target.PlanetId, out var item))
-                        throw new RawCompatibilityException("raw-target-missing", "A declared cluster planet was not generated.");
-                    PlanetData planet = item.planet;
-                    string systemId = DspPreviewGateway.SystemIdentifier(
+                IRuntimeCompleteClusterRawSession session =
+                    new DspCompleteClusterRawSession(
                         request.GalaxySeed,
-                        item.star,
-                        item.star.id == galaxy.birthStarId);
-                    if (planet.type == EPlanetType.Gas ||
-                        planet.algoId != target.AlgorithmId ||
-                        !String.Equals(systemId, target.System.Identifier, StringComparison.Ordinal))
-                    {
-                        throw new RawCompatibilityException(
-                            "raw-target-mismatch",
-                            "A generated planet no longer matches its complete-cluster plan.",
-                            "planet=" + target.PlanetId.ToString(CultureInfo.InvariantCulture));
-                    }
-
-                    planetStarted(target);
-                    recordTrace("raw:atomic:start:planet=" +
-                        planet.id.ToString(CultureInfo.InvariantCulture) +
-                        ":algorithm=" + planet.algoId.ToString(CultureInfo.InvariantCulture));
-                    planet.RegenerateRawDataImmediately();
-                    recordTrace("raw:atomic:complete");
-                    AtomicCompletedForProbe?.Invoke();
-                    cancellationToken.ThrowIfCancellationRequested();
-                    NormalizedRawPlanetEvidence evidence = Normalize(
-                        request.GalaxySeed,
-                        planet);
-                    planetCompleted(target, evidence);
-                }
+                        descriptor,
+                        galaxy,
+                        candidateData,
+                        planets,
+                        recordTrace,
+                        () => AtomicCompletedForProbe?.Invoke());
+                galaxy = null;
+                return session;
             }
-            finally
+            catch
             {
                 if (galaxy != null)
                 {
                     galaxy.Free();
                     recordTrace("cluster-raw:candidate:released");
                 }
+                throw;
             }
         }
 
@@ -349,6 +324,161 @@ namespace DSPSeedScanner.Plugin
                 {
                     galaxy.Free();
                     recordTrace("raw:candidate:released");
+                }
+            }
+        }
+
+        private sealed class DspCompleteClusterRawSession : IRuntimeCompleteClusterRawSession
+        {
+            private readonly int galaxySeed;
+            private readonly GameDesc descriptor;
+            private readonly GalaxyData galaxy;
+            private readonly GameData candidateData;
+            private readonly IReadOnlyDictionary<int, (StarData Star, PlanetData Planet)> planets;
+            private readonly Action<string> sessionTrace;
+            private readonly Action atomicCompleted;
+            private readonly GameData? ambientData;
+            private readonly GameDesc? ambientDescription;
+            private bool disposed;
+
+            public DspCompleteClusterRawSession(
+                int galaxySeed,
+                GameDesc descriptor,
+                GalaxyData galaxy,
+                GameData candidateData,
+                IReadOnlyDictionary<int, (StarData Star, PlanetData Planet)> planets,
+                Action<string> sessionTrace,
+                Action atomicCompleted)
+            {
+                this.galaxySeed = galaxySeed;
+                this.descriptor = descriptor;
+                this.galaxy = galaxy;
+                this.candidateData = candidateData;
+                this.planets = planets;
+                this.sessionTrace = sessionTrace;
+                this.atomicCompleted = atomicCompleted;
+                ambientData = GameMain.data;
+                ambientDescription = DSPGame.GameDesc;
+                StateRestored = true;
+            }
+
+            public bool StateRestored { get; private set; }
+
+            public NormalizedRawPlanetEvidence GeneratePlanet(
+                CompleteClusterPlanetTarget target,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace)
+            {
+                if (disposed)
+                    throw new ObjectDisposedException(nameof(DspCompleteClusterRawSession));
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(GameMain.data, ambientData) ||
+                    !ReferenceEquals(DSPGame.GameDesc, ambientDescription))
+                {
+                    StateRestored = false;
+                    throw new InvalidOperationException(
+                        "Ambient DSP state changed between complete-cluster steps.");
+                }
+                if (!planets.TryGetValue(target.PlanetId, out var item))
+                {
+                    throw new RawCompatibilityException(
+                        "raw-target-missing",
+                        "A declared cluster planet was not generated.");
+                }
+
+                PlanetData planet = item.Planet;
+                string systemId = DspPreviewGateway.SystemIdentifier(
+                    galaxySeed,
+                    item.Star,
+                    item.Star.id == galaxy.birthStarId);
+                if (planet.type == EPlanetType.Gas ||
+                    planet.algoId != target.AlgorithmId ||
+                    !String.Equals(systemId, target.System.Identifier, StringComparison.Ordinal))
+                {
+                    throw new RawCompatibilityException(
+                        "raw-target-mismatch",
+                        "A generated planet no longer matches its complete-cluster plan.",
+                        "planet=" + target.PlanetId.ToString(CultureInfo.InvariantCulture));
+                }
+
+                KeyValuePair<FieldInfo, object?>[] preparationState =
+                    CapturePreparationStaticState();
+                StateRestored = false;
+                Exception? restorationFailure = null;
+                try
+                {
+                    GameMain.data = candidateData;
+                    DSPGame.GameDesc = descriptor;
+                    PrepareRawGeneration(recordTrace);
+                    recordTrace("raw:atomic:start:planet=" +
+                        planet.id.ToString(CultureInfo.InvariantCulture) +
+                        ":algorithm=" + planet.algoId.ToString(CultureInfo.InvariantCulture));
+                    planet.RegenerateRawDataImmediately();
+                    recordTrace("raw:atomic:complete");
+                    atomicCompleted();
+                    cancellationToken.ThrowIfCancellationRequested();
+                    NormalizedRawPlanetEvidence evidence = Normalize(galaxySeed, planet);
+                    recordTrace("raw:normalized:nodes=" +
+                        evidence.Nodes.Count.ToString(CultureInfo.InvariantCulture) +
+                        ":groups=" + evidence.Groups.Count.ToString(CultureInfo.InvariantCulture));
+                    return evidence;
+                }
+                finally
+                {
+                    bool preparationRestored = restorationFailure == null;
+                    try
+                    {
+                        foreach (KeyValuePair<FieldInfo, object?> pair in preparationState)
+                            pair.Key.SetValue(null, pair.Value);
+                    }
+                    catch (Exception exception)
+                    {
+                        restorationFailure = exception;
+                        preparationRestored = false;
+                    }
+
+                    GameMain.data = ambientData;
+                    DSPGame.GameDesc = ambientDescription;
+                    try
+                    {
+                        preparationRestored &= preparationState.All(pair =>
+                            ReferenceEquals(pair.Key.GetValue(null), pair.Value));
+                    }
+                    catch (Exception exception)
+                    {
+                        preparationRestored = false;
+                        if (restorationFailure == null)
+                            restorationFailure = exception;
+                    }
+                    StateRestored = preparationRestored &&
+                        ReferenceEquals(GameMain.data, ambientData) &&
+                        ReferenceEquals(DSPGame.GameDesc, ambientDescription);
+                    if (restorationFailure != null || !StateRestored)
+                    {
+                        throw new InvalidOperationException(
+                            "Complete-cluster step state restoration failed.",
+                            restorationFailure);
+                    }
+                }
+            }
+
+            public void Dispose()
+            {
+                if (disposed)
+                    return;
+                disposed = true;
+                GameMain.data = ambientData;
+                DSPGame.GameDesc = ambientDescription;
+                try
+                {
+                    galaxy.Free();
+                }
+                finally
+                {
+                    sessionTrace("cluster-raw:candidate:released");
+                    StateRestored = StateRestored &&
+                        ReferenceEquals(GameMain.data, ambientData) &&
+                        ReferenceEquals(DSPGame.GameDesc, ambientDescription);
                 }
             }
         }

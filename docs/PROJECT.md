@@ -6,11 +6,11 @@ story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core roadmap was completed and accepted on
 2026-08-11. The New Game presentation roadmap was approved on 2026-08-12.
-PRES-01 implemented the presentation-neutral preview-session lifecycle and is
-at its acceptance gate; no player-facing panel or automatic scan invocation is
-implemented. Panel anchoring is resolved as a four-corner configuration with
-bottom-right as the default. One packaging refinement remains tracked as
-non-blocking technical debt.
+PRES-01 was accepted, and PRES-02 implemented cooperative complete-cluster
+execution and is at its acceptance gate. No player-facing panel or automatic
+scan invocation is implemented. Panel anchoring is resolved as a four-corner
+configuration with bottom-right as the default. One packaging refinement
+remains tracked as non-blocking technical debt.
 
 ## Product decision
 

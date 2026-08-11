@@ -82,9 +82,11 @@ not scanner feature claims. Runtime conformance remains governed by
 After BepInEx loads `DSPSeedScannerPlugin`, an integration may obtain the
 plugin instance through its GUID `io.github.shytamir.dspseedscanner` and call
 the public `ScanPreview`, `GenerateRawPlanet`,
-`GenerateBirthSystemResources`, or `GenerateCompleteClusterResources`
-methods. Inputs and outputs are presentation-neutral Core and Runtime
-contracts. The approved New Game presentation roadmap consumes these reports
-without moving presentation policy into the scanner core. The currently
-accepted scanner-core package contains no panel, hooks, controls, or
-presentation copy.
+`GenerateBirthSystemResources`, `GenerateCompleteClusterResources`, or
+`StartCompleteClusterResources` methods. The start method returns a disposable
+presentation-neutral operation; each `Advance` call completes at most one
+solid planet and restores shared DSP state before returning. Inputs and
+outputs are presentation-neutral Core and Runtime contracts. The approved New
+Game presentation roadmap consumes these reports without moving presentation
+policy into the scanner core. The currently accepted scanner-core package
+contains no panel, hooks, controls, or presentation copy.

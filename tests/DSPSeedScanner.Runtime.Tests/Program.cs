@@ -42,6 +42,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete cluster incompatibility remains explicit", CompleteClusterIncompatibilityIsExplicit),
                 ("complete cluster bound rejects before raw generation", CompleteClusterBoundRejectsBeforeGeneration),
                 ("complete cluster shares runtime serialization", CompleteClusterSharesSerialization),
+                ("incremental cluster matches synchronous execution and yields", IncrementalClusterMatchesSynchronousExecution),
+                ("incremental cluster cancellation and failure restore state", IncrementalClusterExitPathsRestoreState),
+                ("incremental cluster keeps serialization between yields", IncrementalClusterKeepsSerializationBetweenYields),
                 ("completed keyboard paste and random loads create one session each", CompletedInputLoadsCreateOneSessionEach),
                 ("duplicate callbacks coalesce while same identity reloads", DuplicateCallbacksCoalesceAndReloadsReplace),
                 ("replacement rejects stale publication and late loads", ReplacementRejectsStalePublication),
@@ -649,6 +652,141 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(0, previewGateway.GenerateCalls);
         }
 
+        private static void IncrementalClusterMatchesSynchronousExecution()
+        {
+            CompleteClusterRawResult synchronous =
+                new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway())
+                    .TryGenerate(Request(), CancellationToken.None);
+            var gateway = new FakeCompleteClusterGateway();
+            var observed = new List<CompleteClusterRawProgress>();
+            using CompleteClusterRawOperation operation =
+                new CompleteClusterRawCoordinator(gateway).TryStart(
+                    Request(),
+                    CancellationToken.None,
+                    observed.Add);
+
+            Equal(CompleteClusterRawOperationState.Ready, operation.State);
+            Equal(3, operation.ExpectedPlanets);
+            Equal(0, operation.CompletedPlanets);
+            int advances = 0;
+            while (operation.State == CompleteClusterRawOperationState.Ready)
+            {
+                operation.Advance();
+                advances++;
+                True(operation.IsYieldStateRestored);
+                Equal(
+                    operation.State == CompleteClusterRawOperationState.Ready
+                        ? "leased"
+                        : "original",
+                    gateway.StateMarker);
+            }
+
+            CompleteClusterRawResult incremental = operation.Result!;
+            Equal(3, advances);
+            Equal(RuntimeScanStatus.Success, incremental.Status);
+            Equal(synchronous.Coverage, incremental.Coverage);
+            True(synchronous.RareResources.SequenceEqual(incremental.RareResources));
+            True(synchronous.Reports.SequenceEqual(incremental.Reports));
+            Equal(7, observed.Count);
+            Equal(CompleteClusterProgressState.Planned, observed[0].State);
+            for (int planetIndex = 0; planetIndex < 3; planetIndex++)
+            {
+                CompleteClusterRawProgress started = observed[1 + (planetIndex * 2)];
+                CompleteClusterRawProgress completed = observed[2 + (planetIndex * 2)];
+                Equal(CompleteClusterProgressState.PlanetStarted, started.State);
+                Equal(planetIndex, started.CompletedPlanets);
+                Equal(CompleteClusterProgressState.PlanetCompleted, completed.State);
+                Equal(planetIndex + 1, completed.CompletedPlanets);
+                Equal(started.PlanetId, completed.PlanetId);
+            }
+            Equal(3, incremental.Trace.Count(value =>
+                value.StartsWith("cluster-step:yield:", StringComparison.Ordinal)));
+            Equal(3, gateway.YieldRestoreChecks);
+            Equal(1, gateway.SessionDisposeCalls);
+            Equal(1, gateway.RestoreCalls);
+        }
+
+        private static void IncrementalClusterExitPathsRestoreState()
+        {
+            var cancellationGateway = new FakeCompleteClusterGateway();
+            using (var source = new CancellationTokenSource())
+            using (CompleteClusterRawOperation operation =
+                new CompleteClusterRawCoordinator(cancellationGateway).TryStart(
+                    Request(), source.Token))
+            {
+                operation.Advance();
+                Equal(CompleteClusterRawOperationState.Ready, operation.State);
+                Equal("leased", cancellationGateway.StateMarker);
+                source.Cancel();
+                operation.Advance();
+                CompleteClusterRawResult cancelled = operation.Result!;
+                Equal(RuntimeScanStatus.Cancelled, cancelled.Status);
+                Equal(CoverageState.Partial, cancelled.Coverage.State);
+                Equal(1, cancelled.Coverage.CompletedPlanets);
+                Equal(0, cancelled.Reports.Count);
+                True(cancelled.StateRestored);
+                Equal("original", cancellationGateway.StateMarker);
+                Equal(1, cancellationGateway.SessionDisposeCalls);
+                Equal(1, cancellationGateway.RestoreCalls);
+            }
+
+            var failureGateway = new FakeCompleteClusterGateway { FailingPlanetId = 102 };
+            using (CompleteClusterRawOperation operation =
+                new CompleteClusterRawCoordinator(failureGateway).TryStart(
+                    Request(), CancellationToken.None))
+            {
+                operation.Advance();
+                Equal(CompleteClusterRawOperationState.Ready, operation.State);
+                operation.Advance();
+                CompleteClusterRawResult failed = operation.Result!;
+                Equal(RuntimeScanStatus.Failed, failed.Status);
+                Equal(CoverageState.Partial, failed.Coverage.State);
+                Equal(1, failed.Coverage.CompletedPlanets);
+                Equal(0, failed.RareResources.Count);
+                True(failed.StateRestored);
+                Equal("original", failureGateway.StateMarker);
+                Equal(2, failureGateway.YieldRestoreChecks);
+                Equal(1, failureGateway.SessionDisposeCalls);
+                Equal(1, failureGateway.RestoreCalls);
+            }
+
+            var disposalGateway = new FakeCompleteClusterGateway();
+            CompleteClusterRawOperation disposed =
+                new CompleteClusterRawCoordinator(disposalGateway).TryStart(
+                    Request(), CancellationToken.None);
+            disposed.Advance();
+            disposed.Dispose();
+            Equal(RuntimeScanStatus.Cancelled, disposed.Result?.Status);
+            Equal("original", disposalGateway.StateMarker);
+            Equal(1, disposalGateway.SessionDisposeCalls);
+            Equal(1, disposalGateway.RestoreCalls);
+        }
+
+        private static void IncrementalClusterKeepsSerializationBetweenYields()
+        {
+            var gate = new RuntimeOperationGate();
+            var previewGateway = new FakeGateway();
+            var preview = new PreviewScanCoordinator(previewGateway, gate);
+            var clusterGateway = new FakeCompleteClusterGateway();
+            using CompleteClusterRawOperation operation =
+                new CompleteClusterRawCoordinator(clusterGateway, gate).TryStart(
+                    Request(), CancellationToken.None);
+
+            Equal(RuntimeScanStatus.Busy,
+                preview.TryScan(Request(), CancellationToken.None).Status);
+            operation.Advance();
+            Equal(RuntimeScanStatus.Busy,
+                preview.TryScan(Request(), CancellationToken.None).Status);
+            operation.Advance();
+            Equal(RuntimeScanStatus.Busy,
+                preview.TryScan(Request(), CancellationToken.None).Status);
+            operation.Advance();
+            Equal(RuntimeScanStatus.Success, operation.Result?.Status);
+            Equal(RuntimeScanStatus.Success,
+                preview.TryScan(Request(), CancellationToken.None).Status);
+            Equal(1, previewGateway.GenerateCalls);
+        }
+
         private static void CompletedInputLoadsCreateOneSessionEach()
         {
             var lifecycle = new PreviewSessionLifecycle();
@@ -786,6 +924,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(BirthSystemRawProgress),
                 typeof(CompleteClusterRawResult),
                 typeof(CompleteClusterRawProgress),
+                typeof(CompleteClusterRawOperation),
                 typeof(PreviewGenerationIdentity),
                 typeof(PreviewSession),
                 typeof(PreviewLoadTransition),
@@ -1188,6 +1327,8 @@ namespace DSPSeedScanner.Runtime.Tests
             public Action? OnPlanet { get; set; }
             public int TargetCount { get; set; } = 3;
             public int GenerateCalls { get; private set; }
+            public int YieldRestoreChecks { get; private set; }
+            public int SessionDisposeCalls { get; private set; }
             public int RestoreCalls { get; private set; }
             public string StateMarker { get; set; } = "original";
             public int MainThreadId => Thread.CurrentThread.ManagedThreadId;
@@ -1236,33 +1377,74 @@ namespace DSPSeedScanner.Runtime.Tests
                     targets);
             }
 
-            public void GenerateCompleteCluster(
+            public IRuntimeCompleteClusterRawSession OpenCompleteCluster(
                 PreviewScanRequest request,
                 CompleteClusterRawPlan plan,
                 CancellationToken cancellationToken,
-                Action<CompleteClusterPlanetTarget> planetStarted,
-                Action<CompleteClusterPlanetTarget, NormalizedRawPlanetEvidence> planetCompleted,
                 Action<string> recordTrace)
             {
                 GenerateCalls++;
-                if (GenerationFailure != null)
-                    throw GenerationFailure;
-                foreach (CompleteClusterPlanetTarget target in plan.Targets)
+                cancellationToken.ThrowIfCancellationRequested();
+                return new Session(this, recordTrace);
+            }
+
+            private sealed class Session : IRuntimeCompleteClusterRawSession
+            {
+                private readonly FakeCompleteClusterGateway owner;
+                private readonly Action<string> recordTrace;
+                private bool disposed;
+
+                public Session(FakeCompleteClusterGateway owner, Action<string> recordTrace)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    planetStarted(target);
-                    OnPlanet?.Invoke();
-                    if (FailingPlanetId == target.PlanetId)
-                        throw new InvalidOperationException("injected cluster planet failure");
-                    NormalizedRawPlanetEvidence evidence = target.PlanetId switch
-                    {
-                        102 => ClusterSnapshot(target, "kimberlite", 9, 1128, 200),
-                        103 => ClusterSnapshot(target, "unipolar-magnet", 14, 1016, 300),
-                        _ => ClusterSnapshot(target, null, 0, 0, 0)
-                    };
-                    planetCompleted(target, evidence);
+                    this.owner = owner;
+                    this.recordTrace = recordTrace;
+                    StateRestored = true;
                 }
-                recordTrace("cluster-raw:candidate:released");
+
+                public bool StateRestored { get; private set; }
+
+                public NormalizedRawPlanetEvidence GeneratePlanet(
+                    CompleteClusterPlanetTarget target,
+                    CancellationToken cancellationToken,
+                    Action<string> stepTrace)
+                {
+                    if (disposed)
+                        throw new ObjectDisposedException(nameof(Session));
+                    cancellationToken.ThrowIfCancellationRequested();
+                    owner.StateMarker = "candidate";
+                    StateRestored = false;
+                    try
+                    {
+                        if (owner.GenerationFailure != null)
+                            throw owner.GenerationFailure;
+                        owner.OnPlanet?.Invoke();
+                        if (owner.FailingPlanetId == target.PlanetId)
+                            throw new InvalidOperationException("injected cluster planet failure");
+                        return target.PlanetId switch
+                        {
+                            102 => ClusterSnapshot(target, "kimberlite", 9, 1128, 200),
+                            103 => ClusterSnapshot(target, "unipolar-magnet", 14, 1016, 300),
+                            _ => ClusterSnapshot(target, null, 0, 0, 0)
+                        };
+                    }
+                    finally
+                    {
+                        owner.StateMarker = "leased";
+                        StateRestored = true;
+                        owner.YieldRestoreChecks++;
+                    }
+                }
+
+                public void Dispose()
+                {
+                    if (disposed)
+                        return;
+                    disposed = true;
+                    owner.StateMarker = "leased";
+                    StateRestored = true;
+                    owner.SessionDisposeCalls++;
+                    recordTrace("cluster-raw:candidate:released");
+                }
             }
 
             private static NormalizedRawPlanetEvidence ClusterSnapshot(
