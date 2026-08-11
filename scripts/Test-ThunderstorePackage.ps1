@@ -8,7 +8,7 @@ param(
     [string]$ExpectedVersion,
 
     [Parameter(Mandatory = $true)]
-    [string]$ExpectedDllPath,
+    [string[]]$ExpectedDllPaths,
 
     [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot),
 
@@ -47,12 +47,30 @@ function Read-ZipText {
 if (-not (Test-Path -LiteralPath $PackagePath -PathType Leaf)) {
     throw "Package was not found: $PackagePath"
 }
-if (-not (Test-Path -LiteralPath $ExpectedDllPath -PathType Leaf)) {
-    throw "Expected DLL was not found: $ExpectedDllPath"
+foreach ($expectedDllPath in $ExpectedDllPaths) {
+    if (-not (Test-Path -LiteralPath $expectedDllPath -PathType Leaf)) {
+        throw "Expected DLL was not found: $expectedDllPath"
+    }
+}
+$expectedDllNames = @(
+    'DSPSeedScanner.dll',
+    'DSPSeedScanner.Core.dll',
+    'DSPSeedScanner.Runtime.dll'
+)
+$actualDllNames = @($ExpectedDllPaths | ForEach-Object { Split-Path -Leaf $_ })
+if ($actualDllNames.Count -ne $expectedDllNames.Count -or
+    @($actualDllNames | Where-Object { $expectedDllNames -cnotcontains $_ }).Count -ne 0 -or
+    ($actualDllNames | Select-Object -Unique).Count -ne $actualDllNames.Count) {
+    throw 'Expected DLL inputs must be exactly the scanner plugin, core, and runtime assemblies.'
 }
 
 $requiredRootEntries = @('manifest.json', 'README.md', 'icon.png')
-$expectedDllEntry = 'BepInEx/plugins/DSPSeedScanner/DSPSeedScanner.dll'
+$expectedDllEntries = @(
+    'BepInEx/plugins/DSPSeedScanner/DSPSeedScanner.dll',
+    'BepInEx/plugins/DSPSeedScanner/DSPSeedScanner.Core.dll',
+    'BepInEx/plugins/DSPSeedScanner/DSPSeedScanner.Runtime.dll'
+)
+$expectedEntries = @($requiredRootEntries) + $expectedDllEntries
 $archive = [System.IO.Compression.ZipFile]::OpenRead(
     (Resolve-Path -LiteralPath $PackagePath)
 )
@@ -78,8 +96,9 @@ try {
             throw "Required root entry is missing or incorrectly cased: $requiredEntry"
         }
     }
-    if ($entryNames -cnotcontains $expectedDllEntry) {
-        throw "Packaged DLL is missing: $expectedDllEntry"
+    if ($entryNames.Count -ne $expectedEntries.Count -or
+        @($entryNames | Where-Object { $expectedEntries -cnotcontains $_ }).Count -ne 0) {
+        throw 'Package contains missing or unintended files.'
     }
 
     $manifestEntry = $fileEntries |
@@ -159,31 +178,41 @@ try {
         $iconStream.Dispose()
     }
 
-    $expectedDllHash = (
-        Get-FileHash -LiteralPath $ExpectedDllPath -Algorithm SHA256
-    ).Hash.ToLowerInvariant()
-    $dllEntry = $fileEntries |
-        Where-Object {
-            $_.FullName.Replace('\', '/') -ceq $expectedDllEntry
-        } |
-        Select-Object -First 1
-    $dllStream = $dllEntry.Open()
-    try {
-        $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    foreach ($expectedDllPath in $ExpectedDllPaths) {
+        if ((Get-Item -LiteralPath $expectedDllPath).Length -eq 0) {
+            throw "Expected DLL is empty: $expectedDllPath"
+        }
+        $expectedDllHash = (
+            Get-FileHash -LiteralPath $expectedDllPath -Algorithm SHA256
+        ).Hash.ToLowerInvariant()
+        $expectedDllEntry = 'BepInEx/plugins/DSPSeedScanner/' +
+            (Split-Path -Leaf $expectedDllPath)
+        $dllEntry = $fileEntries |
+            Where-Object {
+                $_.FullName.Replace('\', '/') -ceq $expectedDllEntry
+            } |
+            Select-Object -First 1
+        if ($null -eq $dllEntry) {
+            throw "Packaged DLL is missing: $expectedDllEntry"
+        }
+        $dllStream = $dllEntry.Open()
         try {
-            $packagedDllHash = [BitConverter]::ToString(
-                $sha256.ComputeHash($dllStream)
-            ).Replace('-', '').ToLowerInvariant()
+            $sha256 = [System.Security.Cryptography.SHA256]::Create()
+            try {
+                $packagedDllHash = [BitConverter]::ToString(
+                    $sha256.ComputeHash($dllStream)
+                ).Replace('-', '').ToLowerInvariant()
+            }
+            finally {
+                $sha256.Dispose()
+            }
         }
         finally {
-            $sha256.Dispose()
+            $dllStream.Dispose()
         }
-    }
-    finally {
-        $dllStream.Dispose()
-    }
-    if ($packagedDllHash -cne $expectedDllHash) {
-        throw 'Packaged DLL does not match the expected build input.'
+        if ($packagedDllHash -cne $expectedDllHash) {
+            throw "Packaged DLL does not match its build input: $expectedDllEntry"
+        }
     }
 }
 finally {
@@ -209,7 +238,8 @@ New-Item -ItemType Directory -Force -Path $reportDirectory | Out-Null
 | Semantic version | Passed |
 | README | Passed |
 | Icon format and dimensions | Passed |
-| Packaged DLL integrity | Passed |
+| Exact archive allowlist | Passed |
+| Packaged DLL integrity | Passed for all scanner assemblies |
 | Size | $packageLength bytes |
 | SHA-256 | ``$packageHash`` |
 "@ | Set-Content -LiteralPath $ReportPath -Encoding utf8

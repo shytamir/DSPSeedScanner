@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [string]$DllPath,
+    [string[]]$DllPaths,
 
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^\d+\.\d+\.\d+$')]
@@ -31,7 +31,7 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 foreach ($requiredPath in @(
-        $DllPath,
+        $DllPaths,
         $ManifestTemplatePath,
         $ReadmePath,
         $IconPath
@@ -39,6 +39,18 @@ foreach ($requiredPath in @(
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Required package input was not found: $requiredPath"
     }
+}
+
+$expectedDllNames = @(
+    'DSPSeedScanner.dll',
+    'DSPSeedScanner.Core.dll',
+    'DSPSeedScanner.Runtime.dll'
+)
+$actualDllNames = @($DllPaths | ForEach-Object { Split-Path -Leaf $_ })
+if ($actualDllNames.Count -ne $expectedDllNames.Count -or
+    @($actualDllNames | Where-Object { $expectedDllNames -cnotcontains $_ }).Count -ne 0 -or
+    ($actualDllNames | Select-Object -Unique).Count -ne $actualDllNames.Count) {
+    throw 'Package DLL inputs must be exactly the scanner plugin, core, and runtime assemblies.'
 }
 
 $template = Get-Content -Raw -LiteralPath $ManifestTemplatePath
@@ -102,12 +114,14 @@ try {
         'icon.png',
         [System.IO.Compression.CompressionLevel]::Optimal
     ) | Out-Null
-    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-        $archive,
-        $DllPath,
-        'BepInEx/plugins/DSPSeedScanner/DSPSeedScanner.dll',
-        [System.IO.Compression.CompressionLevel]::Optimal
-    ) | Out-Null
+    foreach ($dllPath in $DllPaths | Sort-Object { Split-Path -Leaf $_ }) {
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+            $archive,
+            $dllPath,
+            ('BepInEx/plugins/DSPSeedScanner/' + (Split-Path -Leaf $dllPath)),
+            [System.IO.Compression.CompressionLevel]::Optimal
+        ) | Out-Null
+    }
 }
 finally {
     $archive.Dispose()

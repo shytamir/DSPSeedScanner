@@ -2,7 +2,7 @@
   "name": "DSPSeedScanner",
   "version_number": "{{VERSION_NUMBER}}",
   "website_url": "https://github.com/shytamir/DSPSeedScanner",
-  "description": "Lorem ipsum placeholder package for the DSP Seed Scanner project skeleton.",
+  "description": "Presentation-neutral scanner core for evaluating one Dyson Sphere Program star-cluster seed at a time.",
   "dependencies": [
     "xiaoye97-BepInEx-5.4.17"
   ]

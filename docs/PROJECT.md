@@ -5,9 +5,9 @@ tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core roadmap is active. IMPL-01 through
-IMPL-07 are accepted; IMPL-08 is completed and pending acceptance. Its
-conformance work closed the two runtime-validation debts carried from
-IMPL-03. No user story is active.
+IMPL-08 are accepted; IMPL-09 is completed and pending acceptance. The
+installable presentation-neutral core package exists, but no player-facing
+panel or invocation is implemented. No user story is active.
 
 ## Product decision
 

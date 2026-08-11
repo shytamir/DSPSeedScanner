@@ -13,12 +13,12 @@ using UnityEngine;
 
 namespace DSPSeedScanner.Plugin
 {
-    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+    [BepInPlugin(PluginGuid, PluginName, BuildVersion.BepInPluginVersion)]
     public sealed class DSPSeedScannerPlugin : BaseUnityPlugin
     {
         public const string PluginGuid = "io.github.shytamir.dspseedscanner";
         public const string PluginName = "DSP Seed Scanner";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = BuildVersion.PluginVersion;
 
         private PreviewScanCoordinator? coordinator;
         private DspPreviewGateway? previewGateway;

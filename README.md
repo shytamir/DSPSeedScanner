@@ -27,12 +27,16 @@ dotnet run `
   --configuration Release --no-build
 ```
 
+Building the BepInEx plugin additionally requires the supported local Dyson
+Sphere Program installation and BepInEx under the `GameRoot` declared in the
+plugin project. Hosted CI uses a narrow compile-only API contract and does not
+redistribute game assemblies. Package construction, versioning, and the
+integration boundary are documented in the
+[Thunderstore package contract](docs/THUNDERSTORE-PACKAGE.md).
+
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
 [project steering document](docs/PROJECT.md), and the active
 [roadmap](docs/management/ROADMAP.md) before changing scope or behavior.
-
-Release plumbing is described by the separately maintained
-[Thunderstore package contract](docs/THUNDERSTORE-PACKAGE.md).
 
 ## License
 

@@ -1,4 +1,4 @@
-name: Build and validate Thunderstore package
+name: Build, test, and package scanner core
 
 run-name: Build ${{ github.run_number }} from ${{ github.sha }}
 
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-test-package:
-    name: Build and validate dummy package
+    name: Build, test, and package
     runs-on: windows-latest
 
     steps:
@@ -33,6 +33,12 @@ jobs:
             throw "Checkout mismatch: expected ${{ github.sha }}, found $checkedOut."
           }
 
+      - name: Install .NET SDK
+        id: setup_dotnet
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
       - name: Prepare build version
         id: version
         shell: pwsh
@@ -41,7 +47,30 @@ jobs:
             -Sequence ${{ github.run_number }} `
             -Commit '${{ github.sha }}'
 
-      - name: Build conclusion engine
+      - name: Download Thunderstore BepInEx 5.4.17 compile reference
+        id: bepinex
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP 'xiaoye97-BepInEx-5.4.17.zip'
+          $referenceRoot = Join-Path $env:RUNNER_TEMP 'bepinex-reference'
+          $uri = 'https://thunderstore.io/package/download/' +
+            'xiaoye97/BepInEx/5.4.17/'
+          Invoke-WebRequest -Uri $uri -OutFile $archive
+          Expand-Archive -LiteralPath $archive -DestinationPath $referenceRoot
+          $reference = Join-Path $referenceRoot `
+            'BepInExPack\BepInEx\core\BepInEx.dll'
+          if (-not (Test-Path -LiteralPath $reference -PathType Leaf)) {
+            throw "BepInEx compile reference was not found at $reference."
+          }
+          $referenceVersion = (
+            [Reflection.AssemblyName]::GetAssemblyName($reference)
+          ).Version.ToString()
+          if ($referenceVersion -cne '5.4.17.0') {
+            throw "BepInEx reference version is $referenceVersion; expected 5.4.17.0."
+          }
+          "CI_BEPINEX_PATH=$reference" >> $env:GITHUB_ENV
+
+      - name: Build scanner core
         id: core_build
         shell: pwsh
         run: dotnet build DSPSeedScanner.sln --configuration Release --nologo
@@ -64,31 +93,73 @@ jobs:
           --configuration Release
           --no-build
 
-      - name: Build placeholder DLL
-        id: build
+      - name: Restore hosted-runner plugin references
+        id: restore
         shell: pwsh
         run: |
+          dotnet restore `
+            src/DSPSeedScanner.Plugin/DSPSeedScanner.Plugin.csproj `
+            -p:UseCiReferences=true `
+            "-p:CiBepInExPath=$env:CI_BEPINEX_PATH"
+
+      - name: Build real plugin
+        id: plugin_build
+        shell: pwsh
+        run: |
+          dotnet build `
+            src/DSPSeedScanner.Plugin/DSPSeedScanner.Plugin.csproj `
+            --configuration Release `
+            --no-restore `
+            -p:UseCiReferences=true `
+            "-p:CiBepInExPath=$env:CI_BEPINEX_PATH" `
+            "-p:Version=$env:SEMANTIC_VERSION" `
+            "-p:AssemblyVersion=$env:ASSEMBLY_VERSION" `
+            "-p:FileVersion=$env:ASSEMBLY_VERSION" `
+            "-p:InformationalVersion=$env:RELEASE_LABEL" `
+            -p:IncludeSourceRevisionInInformationalVersion=false `
+            -p:ContinuousIntegrationBuild=true
           New-Item -ItemType Directory -Force `
             -Path 'artifacts/build/public' | Out-Null
-          Copy-Item -LiteralPath 'packaging/DSPSeedScanner.dll' `
-            -Destination 'artifacts/build/public/DSPSeedScanner.dll'
+          foreach ($name in @(
+              'DSPSeedScanner.dll',
+              'DSPSeedScanner.Core.dll',
+              'DSPSeedScanner.Runtime.dll'
+            )) {
+            Copy-Item -LiteralPath `
+              (Join-Path 'src/DSPSeedScanner.Plugin/bin/Release/netstandard2.1' $name) `
+              -Destination (Join-Path 'artifacts/build/public' $name)
+          }
+
+      - name: Validate real plugin artifacts
+        id: plugin_test
+        shell: pwsh
+        run: |
+          ./scripts/Test-BuildArtifact.ps1 `
+            -BuildDirectory 'artifacts/build/public' `
+            -ExpectedSemanticVersion $env:SEMANTIC_VERSION `
+            -ExpectedAssemblyVersion $env:ASSEMBLY_VERSION `
+            -ExpectedReleaseLabel $env:RELEASE_LABEL
 
       - name: Build Thunderstore package
         id: package
         shell: pwsh
         run: |
+          $dlls = Get-ChildItem 'artifacts/build/public' -Filter '*.dll' |
+            ForEach-Object FullName
           ./scripts/New-ThunderstorePackage.ps1 `
-            -DllPath 'artifacts/build/public/DSPSeedScanner.dll' `
+            -DllPaths $dlls `
             -VersionNumber $env:PACKAGE_VERSION
 
       - name: Validate Thunderstore package
         id: package_test
         shell: pwsh
         run: |
+          $dlls = Get-ChildItem 'artifacts/build/public' -Filter '*.dll' |
+            ForEach-Object FullName
           ./scripts/Test-ThunderstorePackage.ps1 `
             -PackagePath "artifacts/packages/DSPSeedScanner-$env:PACKAGE_VERSION.zip" `
             -ExpectedVersion $env:PACKAGE_VERSION `
-            -ExpectedDllPath 'artifacts/build/public/DSPSeedScanner.dll'
+            -ExpectedDllPaths $dlls
 
       - name: Upload package and reports
         id: upload
@@ -97,7 +168,11 @@ jobs:
           name: DSPSeedScanner-${{ steps.version.outputs.package_version }}
           path: |
             artifacts/packages/DSPSeedScanner-${{ steps.version.outputs.package_version }}.zip
+            artifacts/build/public/DSPSeedScanner.dll
+            artifacts/build/public/DSPSeedScanner.Core.dll
+            artifacts/build/public/DSPSeedScanner.Runtime.dll
             artifacts/BUILD-INFO.txt
+            artifacts/BUILD-TEST-REPORT.md
             artifacts/PACKAGE-REPORT.md
           if-no-files-found: error
           retention-days: 30
@@ -107,11 +182,15 @@ jobs:
         shell: pwsh
         env:
           CHECKOUT_STATUS: ${{ steps.checkout.outcome }}
+          SDK_STATUS: ${{ steps.setup_dotnet.outcome }}
           VERSION_STATUS: ${{ steps.version.outcome }}
+          BEPINEX_STATUS: ${{ steps.bepinex.outcome }}
           CORE_BUILD_STATUS: ${{ steps.core_build.outcome }}
           CORE_TEST_STATUS: ${{ steps.core_test.outcome }}
           RUNTIME_TEST_STATUS: ${{ steps.runtime_test.outcome }}
-          BUILD_STATUS: ${{ steps.build.outcome }}
+          RESTORE_STATUS: ${{ steps.restore.outcome }}
+          PLUGIN_BUILD_STATUS: ${{ steps.plugin_build.outcome }}
+          PLUGIN_TEST_STATUS: ${{ steps.plugin_test.outcome }}
           PACKAGE_STATUS: ${{ steps.package.outcome }}
           PACKAGE_TEST_STATUS: ${{ steps.package_test.outcome }}
           UPLOAD_STATUS: ${{ steps.upload.outcome }}
@@ -135,11 +214,15 @@ jobs:
           | Stage | Status |
           | --- | --- |
           | Pull source | $env:CHECKOUT_STATUS |
+          | Install SDK | $env:SDK_STATUS |
           | Generate version | $env:VERSION_STATUS |
-          | Build conclusion engine | $env:CORE_BUILD_STATUS |
+          | Acquire BepInEx reference | $env:BEPINEX_STATUS |
+          | Build scanner core | $env:CORE_BUILD_STATUS |
           | Test conclusion engine | $env:CORE_TEST_STATUS |
           | Test runtime boundary | $env:RUNTIME_TEST_STATUS |
-          | Stage placeholder DLL | $env:BUILD_STATUS |
+          | Restore hosted-runner references | $env:RESTORE_STATUS |
+          | Build real plugin | $env:PLUGIN_BUILD_STATUS |
+          | Validate real plugin artifacts | $env:PLUGIN_TEST_STATUS |
           | Build package | $env:PACKAGE_STATUS |
           | Validate package | $env:PACKAGE_TEST_STATUS |
           | Upload artifacts | $env:UPLOAD_STATUS |

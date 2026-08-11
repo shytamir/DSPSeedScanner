@@ -10,6 +10,10 @@ param(
 
     [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot),
 
+    [string]$BuildVersionPath = (
+        Join-Path $RepositoryRoot 'src\DSPSeedScanner.Plugin\BuildVersion.cs'
+    ),
+
     [string]$BuildInfoPath = (
         Join-Path $RepositoryRoot 'artifacts\BUILD-INFO.txt'
     )
@@ -51,7 +55,21 @@ $releaseLabel = '{0}.{1}.{2}.{3}' -f (
 )
 
 $buildInfoDirectory = Split-Path -Parent $BuildInfoPath
+$buildVersionDirectory = Split-Path -Parent $BuildVersionPath
 New-Item -ItemType Directory -Force -Path $buildInfoDirectory | Out-Null
+New-Item -ItemType Directory -Force -Path $buildVersionDirectory | Out-Null
+
+@"
+namespace DSPSeedScanner.Plugin
+{
+    internal static class BuildVersion
+    {
+        public const string BepInPluginVersion = "$packageVersion";
+        public const string PluginVersion = "$semanticVersion";
+        public const string ReleaseLabel = "$releaseLabel";
+    }
+}
+"@ | Set-Content -LiteralPath $BuildVersionPath -Encoding utf8
 
 @"
 Release label: $releaseLabel

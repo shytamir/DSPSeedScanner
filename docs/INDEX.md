@@ -37,8 +37,9 @@ current status; the active roadmap owns story state and history.
 
 ## Delivery
 
-- [Thunderstore package contract](THUNDERSTORE-PACKAGE.md): Placeholder
-  semantic versioning, package construction, and generic validation rules.
+- [Thunderstore package contract](THUNDERSTORE-PACKAGE.md): Real plugin build,
+  semantic versioning, package construction, validation, and integration
+  boundary.
 
 ## Archive
 

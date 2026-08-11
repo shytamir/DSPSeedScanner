@@ -9,10 +9,13 @@
     <AssemblyName>DSPSeedScanner</AssemblyName>
     <RootNamespace>DSPSeedScanner.Plugin</RootNamespace>
     <GameRoot Condition="'$(GameRoot)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Dyson Sphere Program</GameRoot>
+    <UseCiReferences Condition="'$(UseCiReferences)' == ''">false</UseCiReferences>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DSPSeedScanner.Core\DSPSeedScanner.Core.csproj" />
     <ProjectReference Include="..\DSPSeedScanner.Runtime\DSPSeedScanner.Runtime.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseCiReferences)' != 'true'">
     <Reference Include="BepInEx">
       <HintPath>$(GameRoot)\BepInEx\core\BepInEx.dll</HintPath>
       <Private>false</Private>
@@ -29,5 +32,17 @@
       <HintPath>$(GameRoot)\DSPGAME_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseCiReferences)' == 'true'">
+    <Reference Include="BepInEx">
+      <HintPath>$(CiBepInExPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <ProjectReference Include="..\..\ci\DSPGame.Reference\DSPGame.Reference.csproj"
+                      Private="false" />
+    <PackageReference Include="UnityEngine.Modules"
+                      Version="2021.3.33"
+                      PrivateAssets="all"
+                      ExcludeAssets="runtime" />
   </ItemGroup>
 </Project>

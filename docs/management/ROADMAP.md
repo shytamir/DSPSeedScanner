@@ -2,9 +2,9 @@
 
 **Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None. IMPL-01 through IMPL-07 are accepted; IMPL-08 is
-completed and pending acceptance. IMPL-08 closed both runtime-validation
-debts carried from IMPL-03.
+**Active user story:** None. IMPL-01 through IMPL-08 are accepted; IMPL-09 is
+completed and pending acceptance. The scanner core roadmap awaits final story
+acceptance before it is complete.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -575,7 +575,7 @@ both entries.
 
 ### IMPL-08: Prove scanner-core runtime conformance
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player relying on scanner results, I want failures, cancellation, and
 unsupported environments challenged across the complete core so that no
@@ -677,7 +677,7 @@ invocation or broader runtime claim was introduced.
 
 ### IMPL-09: Package the conformant scanner core
 
-**State:** Proposed; depends on IMPL-08 acceptance.
+**State:** Completed; pending acceptance.
 
 As a maintainer preparing presentation work, I want the conformant core built
 as an installable BepInEx package so that later integration depends on a real
@@ -712,6 +712,53 @@ with automatic semantic versioning and accurate package metadata.
 **Out of scope:** New conformance behavior, Thunderstore publication, release
 promotion, player-facing hooks or controls, UI, keybindings, telemetry, batch
 search, wider compatibility, persistence, and deferred predicates.
+
+**Delivered:** CI now produces an automatically versioned, installable
+presentation-neutral scanner package from the real plugin, Core, and Runtime
+assemblies rather than the dummy artifact.
+
+**Implemented:**
+
+- generated `M.m.N` version values now synchronize the manifest, BepInEx
+  plugin attribute, and all scanner assembly and file versions;
+- hosted CI builds the real plugin using the declared BepInEx reference and a
+  narrow source-only DSP compile contract, while the local build continues to
+  compile against the installed supported game;
+- packaging and validation use an exact allowlist containing the three
+  scanner-owned DLLs plus Thunderstore's manifest, README, and 256-pixel icon;
+- placeholder DLL and product copy were removed, package metadata and the icon
+  now identify the scanner core, and documentation records prerequisites,
+  supported identity, implemented conclusions, bounds, invocation, and
+  deferrals; and
+- the public report-returning plugin methods are documented as the input to a
+  separately reviewed presentation roadmap, with no panel or player control
+  introduced.
+
+**Acceptance evidence:**
+
+- the Release core and plugin builds and both focused suites passed locally;
+- the exact package validator accepted a locally versioned archive containing
+  only `manifest.json`, `README.md`, `icon.png`, and the three non-empty scanner
+  assemblies under `BepInEx/plugins/DSPSeedScanner/`;
+- the generated package was installed into the isolated supported runtime,
+  where BepInEx loaded the versioned plugin and developer-invoked preview,
+  birth-system raw, and complete-cluster raw operations returned successful
+  attributed results;
+- archive inspection found no DSP, Unity, BepInEx, CI-reference, log, scan,
+  or probe artifact; and
+- the post-push GitHub Actions run built, tested, packaged, validated, and
+  uploaded the exact commit successfully.
+
+**Produced:** The real scanner-core package pipeline, product package assets,
+build-integrity check, hosted compile contract, install and invocation record,
+and presentation handoff documentation. Generated packages, build output,
+game-linked local files, runtime logs, and probe results remained outside
+source control.
+
+**Residual limits:** This story did not publish or promote a release. The
+package has no player-facing panel, hook, control, keybinding, telemetry,
+batch search, persistence, or wider compatibility claim. Product acceptance
+and any presentation roadmap remain separate decisions.
 
 ## Roadmap coverage
 

@@ -1,12 +1,13 @@
 # Scanner Core Conformance Record
 
-**Status:** IMPL-08 completed on 2026-08-11; pending product acceptance.
+**Status:** Accepted with IMPL-08 on 2026-08-11; packaging was subsequently
+implemented by IMPL-09 without changing the conformance result.
 
 This record distinguishes pure checks, compilation, and evidence collected by
 executing the scanner inside an isolated supported Dyson Sphere Program
 runtime. It establishes conformance for the presentation-neutral core only.
-It does not approve the product, replace the dummy package, or claim support
-for another game build or modded generator.
+IMPL-08 itself did not approve the product or replace the then-current dummy
+package, and it made no claim for another game build or modded generator.
 
 ## Supported identity
 
@@ -32,7 +33,7 @@ mod would actually change generation.
 | Pure runtime-boundary suite | 29 identity, member, plugin, patcher, catalogue, enum, raw failure, cancellation, partial coverage, busy, cleanup, bounds, and no-game-object checks | Fail-closed orchestration and normalized boundary behavior without claiming DSP execution |
 | Release compilation | Solution and game-linked plugin, with zero warnings | Source compatibility with the selected toolchain and installed references |
 | In-game probes | Preview, raw algorithms, birth-system resources, complete-cluster rare access, failure, cancellation, busy, cleanup, and isolation | Actual behavior in the supported DSP and BepInEx lifecycle |
-| Generic package validation | Existing semantic-versioned dummy package | Packaging plumbing only; IMPL-09 must replace its placeholder DLL and metadata |
+| Generic package validation | Semantic-versioned real scanner package | Archive structure, scanner-owned DLL integrity, and exclusion of external runtime assemblies |
 
 Compilation and pure tests did not substitute for the in-game probes.
 
@@ -94,4 +95,5 @@ outside the repository.
 Conformance is local to the recorded runtime identity. Cross-machine byte
 equivalence, another DSP build, generation-altering mods, batch scanning,
 parallel generation, player-facing controls, the New Game panel, publication,
-and the real Thunderstore package remain outside IMPL-08.
+and the real Thunderstore package remained outside IMPL-08. IMPL-09 later
+implemented packaging without changing this runtime evidence.
