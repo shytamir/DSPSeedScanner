@@ -4,9 +4,9 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
-**Current status:** The scanner core roadmap is active. IMPL-02 was accepted
-on 2026-08-11. IMPL-03 is completed and pending acceptance. No user story is
-active.
+**Current status:** The scanner core roadmap is active. IMPL-03 was accepted
+on 2026-08-11 with two runtime-validation debts deferred to the IMPL-08
+conformance gate. No user story is active.
 
 ## Product decision
 
@@ -82,7 +82,9 @@ roadmap change.
 ## Management and documentation
 
 The active [scanner core roadmap](management/ROADMAP.md) owns story scope,
-acceptance evidence, sequencing, and history. The completed product planning
-roadmap is retained in the [archive](archive/PLANNING-ROADMAP.md). The
-[documentation index](INDEX.md) lists all current and archived documents with
-their purpose.
+acceptance evidence, sequencing, and history. The
+[technical debt register](management/TECHNICAL-DEBT.md) owns explicitly
+deferred obligations and their closure gates; recording debt does not weaken
+the accepted safety contract. The completed product planning roadmap is
+retained in the [archive](archive/PLANNING-ROADMAP.md). The [documentation
+index](INDEX.md) lists all current and archived documents with their purpose.

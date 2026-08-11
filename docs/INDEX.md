@@ -9,6 +9,8 @@ current status; the active roadmap owns story state and history.
   tracked project status.
 - [Scanner core roadmap](management/ROADMAP.md): Active implementation stories,
   acceptance evidence, sequencing, and story history.
+- [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
+  engineering obligations, temporary constraints, and mandatory closure gates.
 
 ## Accepted specification
 

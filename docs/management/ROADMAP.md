@@ -2,8 +2,9 @@
 
 **Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None. IMPL-01 and IMPL-02 are accepted; IMPL-03 is
-completed and pending acceptance.
+**Active user story:** None. IMPL-01 through IMPL-03 are accepted. IMPL-03
+carried two explicit runtime-validation debts into the IMPL-08 conformance
+gate.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -168,7 +169,7 @@ outside definition `0.1.0`.
 
 ### IMPL-03: Establish the compatible runtime boundary
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11 with deferred technical debt.
 
 As a player relying on generated evidence, I want the scanner to recognize its
 exact runtime and isolate a preview request from game state so that unsupported
@@ -216,6 +217,13 @@ objects.
 initial `DSPSeedScanner.Plugin` project, and CI coverage for the runtime-neutral
 boundary. The plugin still requires local DSP and BepInEx references and is not
 the packaged artifact.
+
+**Deferred debt:** Acceptance allowed implementation to proceed without more
+game execution at this stage. [TD-001](TECHNICAL-DEBT.md#td-001-complete-non-success-runtime-isolation-probes)
+retains the missing in-game failure, cancellation, and busy isolation proof;
+[TD-002](TECHNICAL-DEBT.md#td-002-detect-preloader-and-in-memory-generation-patch-uncertainty)
+retains conservative preloader and in-memory patch detection. Both debts are
+release-blocking and must close by IMPL-08 acceptance.
 
 **Excluded:** Broad preview extraction, quantitative derivations, raw planet
 generation, batch or parallel scanning, another runtime identity,
