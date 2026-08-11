@@ -1,13 +1,11 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** Product specification is complete. The scanner core implementation
-roadmap is active; IMPL-01 is completed and pending acceptance. No user story
-is active.
+**Status:** Product specification is complete. The scanner core roadmap is
+active; IMPL-01 is completed and pending acceptance. No user story is active.
 
-The [scanner core implementation
-roadmap](management/IMPLEMENTATION-ROADMAP.md) governs implementation. The
-completed [product specification
-roadmap](management/ROADMAP.md) produced the accepted
+The active [scanner core roadmap](management/ROADMAP.md) governs
+implementation. The archived [product specification planning
+roadmap](archive/PLANNING-ROADMAP.md) produced the accepted
 [generation-identity contract](specification/GENERATION-IDENTITY.md) and
 [experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced the
 accepted [runtime evidence feasibility
@@ -178,9 +176,9 @@ outcomes must survive the complete accepted preference range.
 - DSP, Unity, and BepInEx assemblies remain external dependencies and are not
   redistributed.
 
-## Scope of the specification roadmap
+## Scope of the completed specification planning roadmap
 
-The roadmap covers:
+The archived planning roadmap covered:
 
 - runtime-source and generation-input discovery;
 - reproducibility experiments and an evidence feasibility matrix;
@@ -224,11 +222,12 @@ the GitHub Actions run number supplies the patch, assembly and file versions
 append `.0`, and diagnostic labels append the short commit.
 
 See [THUNDERSTORE-PACKAGE.md](THUNDERSTORE-PACKAGE.md). The current package is
-intentionally non-installable and remains outside the specification roadmap.
+intentionally non-installable and remained outside the completed specification
+planning roadmap.
 
 ## Specification exit review
 
-The roadmap produced:
+The completed specification planning roadmap produced:
 
 - a verified generation-identity contract;
 - a runtime evidence feasibility matrix;

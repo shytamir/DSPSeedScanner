@@ -12,14 +12,14 @@ state. It will not claim that one seed is universally best.
 
 ## Project status
 
-The product specification is complete. The scanner core implementation roadmap
-is active; IMPL-01 is completed and pending acceptance, and no user story is
-currently active.
+The product specification is complete. The scanner core roadmap is active;
+IMPL-01 is completed and pending acceptance, and no user story is currently
+active.
 
 See [docs/PROJECT.md](docs/PROJECT.md) for the product definition, the completed
-[specification roadmap](docs/management/ROADMAP.md), and the active
-[implementation roadmap](docs/management/IMPLEMENTATION-ROADMAP.md). The
-accepted [implementation-planning
+[specification planning roadmap](docs/archive/PLANNING-ROADMAP.md), and the
+active [scanner core roadmap](docs/management/ROADMAP.md). The accepted
+[implementation-planning
 boundary](docs/specification/IMPLEMENTATION-PLANNING-BOUNDARY.md) records the
 initial scope, runtime gates, validation obligations, and deferrals.
 
@@ -56,8 +56,8 @@ The existing GitHub Actions workflow packages an intentionally empty DLL solely
 to validate release plumbing; it does not produce a usable mod. See
 [docs/THUNDERSTORE-PACKAGE.md](docs/THUNDERSTORE-PACKAGE.md) for that contract.
 Contributors should read [AGENTS.md](AGENTS.md),
-[docs/PROJECT.md](docs/PROJECT.md), and the current roadmap before changing
-scope or behavior.
+[docs/PROJECT.md](docs/PROJECT.md), and the current
+[roadmap](docs/management/ROADMAP.md) before changing scope or behavior.
 
 ## Repository layout
 
@@ -67,7 +67,7 @@ scope or behavior.
 |-- .github/workflows/build.yml
 |-- DSPSeedScanner.sln
 |-- docs/
-|   |-- management/IMPLEMENTATION-ROADMAP.md
+|   |-- archive/PLANNING-ROADMAP.md
 |   |-- management/ROADMAP.md
 |   |-- specification/
 |   |-- PROJECT.md
