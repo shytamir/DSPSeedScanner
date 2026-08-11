@@ -27,6 +27,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("thread affinity rejects before runtime access", ThreadAffinityRejectsBeforeRuntimeAccess),
                 ("success failure and cancellation restore state", ExitPathsRestoreState),
                 ("concurrent request receives busy rejection", ConcurrentRequestReceivesBusy),
+                ("raw planet evidence is complete deterministic and immutable", RawPlanetEvidenceIsComplete),
+                ("raw target mismatch fails closed", RawTargetMismatchFailsClosed),
+                ("raw failure and boundary cancellation restore state", RawExitPathsRestoreState),
+                ("raw compatibility diagnostics remain explicit", RawCompatibilityDiagnosticsRemainExplicit),
+                ("preview and raw operations share serialization", PreviewAndRawShareSerialization),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -276,6 +281,127 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(1, gateway.RestoreCalls);
         }
 
+        private static void RawPlanetEvidenceIsComplete()
+        {
+            var gateway = new FakeRawGateway();
+            RawPlanetResult result = new RawPlanetCoordinator(gateway)
+                .TryGenerate(RawRequest(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, result.Status);
+            Equal("success", result.Code);
+            Equal(RawPlanetCoordinator.Stage, result.Stage);
+            Equal(Request().ResourceMultiplier, result.Request.Identity.ResourceMultiplier);
+            Equal(ConclusionDefinition.ReferenceGameVersion, result.Fingerprint?.GameVersion);
+            True(result.Coverage.IsComplete);
+            Equal(1, result.Coverage.ExpectedSubjects);
+            Equal(1, result.Coverage.CompletedSubjects);
+            True(result.StateRestored);
+            Equal("original", gateway.StateMarker);
+            Equal(2, result.Evidence?.Nodes.Count);
+            Equal(1, result.Evidence?.Nodes[0].SourceIndex);
+            Equal("oil", result.Evidence?.Nodes[1].ResourceId);
+            Equal(RawResourceSemantics.OilFlow, result.Evidence?.Nodes[1].Semantics);
+            Equal(1.25m, result.Evidence?.Nodes[1].OilSpeedMultiplier);
+            Equal("runtime-oil-amount-units", result.Evidence?.Nodes[1].AmountUnit);
+            Equal("dsp-planet-local-units", result.Evidence?.Nodes[1].PositionUnit);
+            Equal(2, result.Evidence?.Groups.Count);
+            True(result.Trace.Contains("raw:atomic:start"));
+            True(result.Trace.Contains("raw:atomic:complete"));
+
+            NormalizedRawVeinNode[] copy = result.Evidence?.Nodes.ToArray() ??
+                Array.Empty<NormalizedRawVeinNode>();
+            copy[0] = copy[1];
+            Equal(1, result.Evidence?.Nodes[0].SourceIndex);
+        }
+
+        private static void RawTargetMismatchFailsClosed()
+        {
+            var gateway = new FakeRawGateway { Snapshot = RawSnapshot(planetId: 999) };
+            RawPlanetResult result = new RawPlanetCoordinator(gateway)
+                .TryGenerate(RawRequest(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Failed, result.Status);
+            Equal("raw-target-mismatch", result.Code);
+            Equal(null, result.Evidence);
+            Equal(CoverageState.Unavailable, result.Coverage.State);
+            True(result.StateRestored);
+        }
+
+        private static void RawExitPathsRestoreState()
+        {
+            var failure = new FakeRawGateway
+            {
+                GenerationFailure = new InvalidOperationException("injected raw failure")
+            };
+            RawPlanetResult failed = new RawPlanetCoordinator(failure)
+                .TryGenerate(RawRequest(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Failed, failed.Status);
+            Equal("raw-runtime-exception", failed.Code);
+            Equal(null, failed.Evidence);
+            Equal(CoverageState.Unavailable, failed.Coverage.State);
+            Equal("original", failure.StateMarker);
+            Equal(1, failure.RestoreCalls);
+
+            var before = new FakeRawGateway();
+            using (var source = new CancellationTokenSource())
+            {
+                source.Cancel();
+                RawPlanetResult cancelled = new RawPlanetCoordinator(before)
+                    .TryGenerate(RawRequest(), source.Token);
+                Equal(RuntimeScanStatus.Cancelled, cancelled.Status);
+                Equal(0, before.GenerateCalls);
+                Equal(null, cancelled.Evidence);
+                Equal(CoverageState.Unavailable, cancelled.Coverage.State);
+                Equal(1, before.RestoreCalls);
+            }
+
+            var after = new FakeRawGateway();
+            using (var source = new CancellationTokenSource())
+            {
+                after.OnAtomic = source.Cancel;
+                RawPlanetResult cancelled = new RawPlanetCoordinator(after)
+                    .TryGenerate(RawRequest(), source.Token);
+                Equal(RuntimeScanStatus.Cancelled, cancelled.Status);
+                Equal(1, after.GenerateCalls);
+                Equal(null, cancelled.Evidence);
+                Equal(CoverageState.Unavailable, cancelled.Coverage.State);
+                Equal("original", after.StateMarker);
+                Equal(1, after.RestoreCalls);
+            }
+        }
+
+        private static void RawCompatibilityDiagnosticsRemainExplicit()
+        {
+            var gateway = new FakeRawGateway
+            {
+                GenerationFailure = new RawCompatibilityException(
+                    "unknown-raw-resource-type",
+                    "unsupported resource",
+                    "EVeinType=99")
+            };
+            RawPlanetResult result = new RawPlanetCoordinator(gateway)
+                .TryGenerate(RawRequest(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Incompatible, result.Status);
+            Equal("unknown-raw-resource-type", result.Code);
+            Equal("EVeinType=99", result.RawDiagnostic);
+            Equal(null, result.Evidence);
+            True(result.StateRestored);
+        }
+
+        private static void PreviewAndRawShareSerialization()
+        {
+            var gate = new RuntimeOperationGate();
+            var previewGateway = new FakeGateway();
+            var preview = new PreviewScanCoordinator(previewGateway, gate);
+            var rawGateway = new FakeRawGateway();
+            RuntimeScanResult? nested = null;
+            rawGateway.OnAtomic = () => nested = preview.TryScan(Request(), CancellationToken.None);
+
+            RawPlanetResult raw = new RawPlanetCoordinator(rawGateway, gate)
+                .TryGenerate(RawRequest(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, raw.Status);
+            Equal(RuntimeScanStatus.Busy, nested?.Status);
+            Equal(0, previewGateway.GenerateCalls);
+        }
+
         private static void RuntimeBoundaryExposesNoGameObjects()
         {
             Assembly assembly = typeof(PreviewScanCoordinator).Assembly;
@@ -283,7 +409,16 @@ namespace DSPSeedScanner.Runtime.Tests
             foreach (AssemblyName reference in assembly.GetReferencedAssemblies())
                 False(forbidden.Any(value => reference.Name?.StartsWith(value, StringComparison.Ordinal) == true));
 
-            foreach (Type type in new[] { typeof(RuntimeScanResult), typeof(RuntimeFingerprint), typeof(RuntimePreviewSnapshot) })
+            foreach (Type type in new[]
+            {
+                typeof(RuntimeScanResult),
+                typeof(RuntimeFingerprint),
+                typeof(RuntimePreviewSnapshot),
+                typeof(RawPlanetResult),
+                typeof(NormalizedRawPlanetEvidence),
+                typeof(NormalizedRawVeinNode),
+                typeof(NormalizedRawVeinGroup)
+            })
             {
                 foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
                     False(forbidden.Any(value => property.PropertyType.Assembly.GetName().Name?.StartsWith(value, StringComparison.Ordinal) == true));
@@ -309,6 +444,43 @@ namespace DSPSeedScanner.Runtime.Tests
                 1m,
                 CombatMode.Combat,
                 ConclusionDefinition.ReferenceCombatSettingsKey);
+        }
+
+        private static RawPlanetRequest RawRequest()
+        {
+            return new RawPlanetRequest(Request(), 103, 1);
+        }
+
+        private static NormalizedRawPlanetEvidence RawSnapshot(
+            int planetId = 103,
+            int algorithmId = 1)
+        {
+            var nodes = new[]
+            {
+                new NormalizedRawVeinNode(
+                    2, 2, 7, "oil", 1007, RawResourceSemantics.OilFlow,
+                    1_000, 2, 0.4m, 0.5m, 0.6m, 1.25m),
+                new NormalizedRawVeinNode(
+                    1, 1, 1, "iron", 1001, RawResourceSemantics.FiniteDeposit,
+                    20_000, 1, 0.1m, 0.2m, 0.3m, null)
+            };
+            var groups = new[]
+            {
+                new NormalizedRawVeinGroup(
+                    2, 7, "oil", RawResourceSemantics.OilFlow,
+                    1, 1_000, 0.4m, 0.5m, 0.6m),
+                new NormalizedRawVeinGroup(
+                    1, 1, "iron", RawResourceSemantics.FiniteDeposit,
+                    1, 20_000, 0.1m, 0.2m, 0.3m)
+            };
+            return new NormalizedRawPlanetEvidence(
+                16_315_224,
+                planetId,
+                1,
+                algorithmId,
+                RawPlanetCoverage.Complete(),
+                nodes,
+                groups);
         }
 
         private static RuntimeFingerprint Fingerprint(
@@ -446,6 +618,66 @@ namespace DSPSeedScanner.Runtime.Tests
                 private bool restored;
 
                 public FakeLease(FakeGateway owner, string original)
+                {
+                    this.owner = owner;
+                    this.original = original;
+                }
+
+                public override bool Restored => restored;
+
+                public override void Dispose()
+                {
+                    owner.StateMarker = original;
+                    owner.RestoreCalls++;
+                    restored = true;
+                }
+            }
+        }
+
+        private sealed class FakeRawGateway : IRuntimeRawPlanetGateway
+        {
+            public RuntimeFingerprint Fingerprint { get; set; } = Program.Fingerprint();
+            public NormalizedRawPlanetEvidence Snapshot { get; set; } = Program.RawSnapshot();
+            public Exception? GenerationFailure { get; set; }
+            public Action? OnAtomic { get; set; }
+            public int? MainThreadIdOverride { get; set; }
+            public int GenerateCalls { get; private set; }
+            public int RestoreCalls { get; private set; }
+            public string StateMarker { get; set; } = "original";
+            public int MainThreadId => MainThreadIdOverride ?? Thread.CurrentThread.ManagedThreadId;
+
+            public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) => Fingerprint;
+
+            public RuntimeStateLease CaptureState()
+            {
+                string original = StateMarker;
+                StateMarker = "leased";
+                return new FakeRawLease(this, original);
+            }
+
+            public NormalizedRawPlanetEvidence GenerateRawPlanet(
+                RawPlanetRequest request,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace)
+            {
+                GenerateCalls++;
+                StateMarker = "raw-generated";
+                recordTrace("raw:atomic:start");
+                OnAtomic?.Invoke();
+                if (GenerationFailure != null)
+                    throw GenerationFailure;
+                recordTrace("raw:atomic:complete");
+                cancellationToken.ThrowIfCancellationRequested();
+                return Snapshot;
+            }
+
+            private sealed class FakeRawLease : RuntimeStateLease
+            {
+                private readonly FakeRawGateway owner;
+                private readonly string original;
+                private bool restored;
+
+                public FakeRawLease(FakeRawGateway owner, string original)
                 {
                     this.owner = owner;
                     this.original = original;

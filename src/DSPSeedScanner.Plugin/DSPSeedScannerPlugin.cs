@@ -20,12 +20,19 @@ namespace DSPSeedScanner.Plugin
         public const string PluginVersion = "0.1.0";
 
         private PreviewScanCoordinator? coordinator;
+        private RawPlanetCoordinator? rawCoordinator;
+        private DspRawPlanetGateway? rawGateway;
         private bool probeAttempted;
 
         private void Awake()
         {
-            coordinator = new PreviewScanCoordinator(
-                new DspPreviewGateway(Thread.CurrentThread.ManagedThreadId, PluginGuid));
+            var operationGate = new RuntimeOperationGate();
+            var previewGateway = new DspPreviewGateway(
+                Thread.CurrentThread.ManagedThreadId,
+                PluginGuid);
+            rawGateway = new DspRawPlanetGateway(previewGateway);
+            coordinator = new PreviewScanCoordinator(previewGateway, operationGate);
+            rawCoordinator = new RawPlanetCoordinator(rawGateway, operationGate);
             Logger.LogInfo("Runtime boundary initialized on managed thread " +
                 Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture) + ".");
         }
@@ -42,21 +49,20 @@ namespace DSPSeedScanner.Plugin
             probeAttempted = true;
             try
             {
-                var results = new List<RuntimeScanResult>();
-                foreach (int seed in ParseSeeds())
+                string? mode = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_MODE");
+                if (String.Equals(mode, "raw-certification", StringComparison.Ordinal))
                 {
-                    results.Add(ScanPreview(
-                        new PreviewScanRequest(
-                            seed,
-                            ConclusionDefinition.ReferenceStarCount,
-                            ConclusionDefinition.ReferenceGameVersion,
-                            1m,
-                            CombatMode.Combat,
-                            ConclusionDefinition.ReferenceCombatSettingsKey),
-                        CancellationToken.None));
+                    WriteRawCertificationProbe(output);
+                    Logger.LogInfo("IMPL-05 raw certification probe completed: " + output);
                 }
-                WriteProbe(output, results);
-                Logger.LogInfo("IMPL-04 preview probe completed: " + output);
+                else
+                {
+                    var results = new List<RuntimeScanResult>();
+                    foreach (int seed in ParseSeeds())
+                        results.Add(ScanPreview(Request(seed), CancellationToken.None));
+                    WriteProbe(output, results);
+                    Logger.LogInfo("IMPL-04 preview probe completed: " + output);
+                }
             }
             catch (Exception exception)
             {
@@ -76,6 +82,96 @@ namespace DSPSeedScanner.Plugin
             if (coordinator == null)
                 throw new InvalidOperationException("The plugin has not completed Awake.");
             return coordinator.TryScan(request, cancellationToken);
+        }
+
+        public RawPlanetResult GenerateRawPlanet(
+            RawPlanetRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (rawCoordinator == null)
+                throw new InvalidOperationException("The plugin has not completed Awake.");
+            return rawCoordinator.TryGenerate(request, cancellationToken);
+        }
+
+        private void WriteRawCertificationProbe(string path)
+        {
+            if (rawGateway == null)
+                throw new InvalidOperationException("The raw gateway is unavailable.");
+
+            int[] seeds = ParseSeeds().Distinct().ToArray();
+            var targets = new SortedDictionary<int, (PreviewScanRequest Request, int PlanetId)>();
+            int[] reachable = rawGateway.ReachableSolidAlgorithmIds(Request(seeds[0])).ToArray();
+            foreach (int seed in seeds)
+            {
+                PreviewScanRequest request = Request(seed);
+                foreach (KeyValuePair<int, int> pair in rawGateway.DiscoverCandidatePlanets(request))
+                {
+                    if (reachable.Contains(pair.Key) && !targets.ContainsKey(pair.Key))
+                        targets.Add(pair.Key, (request, pair.Value));
+                }
+                if (targets.Count == reachable.Length)
+                    break;
+            }
+
+            int[] missing = reachable.Where(algorithm => !targets.ContainsKey(algorithm)).ToArray();
+            if (missing.Length != 0)
+            {
+                throw new InvalidOperationException(
+                    "No certification candidate was found for algorithms: " +
+                    String.Join(",", missing));
+            }
+
+            var results = new List<RawPlanetResult>();
+            foreach (KeyValuePair<int, (PreviewScanRequest Request, int PlanetId)> target in targets)
+            {
+                results.Add(GenerateRawPlanet(
+                    new RawPlanetRequest(target.Value.Request, target.Value.PlanetId, target.Key),
+                    CancellationToken.None));
+            }
+            KeyValuePair<int, (PreviewScanRequest Request, int PlanetId)> exitTarget = targets.First();
+            var exitRequest = new RawPlanetRequest(
+                exitTarget.Value.Request,
+                exitTarget.Value.PlanetId,
+                exitTarget.Key);
+            try
+            {
+                rawGateway.AtomicCompletedForProbe = () =>
+                    throw new InvalidOperationException("injected post-atomic raw failure");
+                results.Add(GenerateRawPlanet(exitRequest, CancellationToken.None));
+            }
+            finally
+            {
+                rawGateway.AtomicCompletedForProbe = null;
+            }
+            using (var cancelledAfterAtomic = new CancellationTokenSource())
+            {
+                try
+                {
+                    rawGateway.AtomicCompletedForProbe = cancelledAfterAtomic.Cancel;
+                    results.Add(GenerateRawPlanet(exitRequest, cancelledAfterAtomic.Token));
+                }
+                finally
+                {
+                    rawGateway.AtomicCompletedForProbe = null;
+                }
+            }
+            using (var cancelledBeforeRaw = new CancellationTokenSource())
+            {
+                cancelledBeforeRaw.Cancel();
+                results.Add(GenerateRawPlanet(exitRequest, cancelledBeforeRaw.Token));
+            }
+            WriteRawProbe(path, reachable, results);
+        }
+
+        private static PreviewScanRequest Request(int seed)
+        {
+            return new PreviewScanRequest(
+                seed,
+                ConclusionDefinition.ReferenceStarCount,
+                ConclusionDefinition.ReferenceGameVersion,
+                1m,
+                CombatMode.Combat,
+                ConclusionDefinition.ReferenceCombatSettingsKey);
         }
 
         private static IEnumerable<int> ParseSeeds()
@@ -151,5 +247,92 @@ namespace DSPSeedScanner.Plugin
             }
             File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
         }
+
+        private static void WriteRawProbe(
+            string path,
+            IEnumerable<int> reachableAlgorithms,
+            IEnumerable<RawPlanetResult> results)
+        {
+            var lines = new StringBuilder();
+            lines.Append("catalogue\t").Append(String.Join(",", reachableAlgorithms)).AppendLine();
+            foreach (RawPlanetResult result in results)
+            {
+                lines.Append("raw-result\t")
+                    .Append(result.GalaxySeed.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                    .Append(result.PlanetId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                    .Append(result.Status).Append('\t').Append(result.Code).Append('\t')
+                    .Append(result.Coverage.State).Append('\t')
+                    .Append(result.Coverage.CompletedSubjects.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                    .Append(result.StateRestored).Append('\t').Append(result.Stage).Append('\t')
+                    .Append(result.Request.Identity.RequestedStarCount.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                    .Append(result.Request.Identity.CreationVersion).Append('\t')
+                    .Append(result.Request.Identity.ResourceMultiplier.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                    .Append(result.Request.Identity.CombatMode).Append('\t')
+                    .Append(result.Request.Identity.CombatSettingsKey).Append('\t')
+                    .Append(result.RawDiagnostic).AppendLine();
+                if (result.Fingerprint != null)
+                {
+                    lines.Append("raw-fingerprint\t")
+                        .Append(result.GalaxySeed.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(result.PlanetId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(result.Fingerprint.GameVersion).Append('\t')
+                        .Append(result.Fingerprint.GalaxyAlgorithm.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(result.Fingerprint.AssemblySha256).Append('\t')
+                        .Append(result.Fingerprint.OrderedThemeIdsKey).Append('\t')
+                        .Append(result.Fingerprint.ScannerCompatibilityVersion).Append('\t')
+                        .Append(result.Fingerprint.ScannerContractVersion).AppendLine();
+                }
+                NormalizedRawPlanetEvidence? evidence = result.Evidence;
+                if (evidence != null)
+                {
+                    lines.Append("raw-planet\t")
+                        .Append(evidence.GalaxySeed.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(evidence.PlanetId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(evidence.ThemeId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(evidence.AlgorithmId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(evidence.Nodes.Count.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(evidence.Groups.Count.ToString(CultureInfo.InvariantCulture)).AppendLine();
+                    foreach (NormalizedRawVeinNode node in evidence.Nodes)
+                    {
+                        lines.Append("raw-node\t")
+                            .Append(evidence.PlanetId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(node.SourceIndex.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(node.NodeId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(node.ResourceType.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(node.ResourceId).Append('\t')
+                            .Append(node.ProductItemId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(node.Semantics).Append('\t')
+                            .Append(node.Amount.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(node.AmountUnit).Append('\t')
+                            .Append(node.GroupIndex.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(F(node.PositionX)).Append('\t').Append(F(node.PositionY)).Append('\t')
+                            .Append(F(node.PositionZ)).Append('\t').Append(node.PositionUnit).Append('\t')
+                            .Append(node.OilSpeedMultiplier.HasValue
+                                ? F(node.OilSpeedMultiplier.Value)
+                                : String.Empty).AppendLine();
+                    }
+                    foreach (NormalizedRawVeinGroup group in evidence.Groups)
+                    {
+                        lines.Append("raw-group\t")
+                            .Append(evidence.PlanetId.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(group.GroupIndex.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(group.ResourceType.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(group.ResourceId).Append('\t').Append(group.Semantics).Append('\t')
+                            .Append(group.NodeCount.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(group.Amount.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                            .Append(group.AmountUnit).Append('\t')
+                            .Append(F(group.PositionX)).Append('\t').Append(F(group.PositionY)).Append('\t')
+                            .Append(F(group.PositionZ)).Append('\t').Append(group.PositionUnit).AppendLine();
+                    }
+                }
+                for (int index = 0; index < result.Trace.Count; index++)
+                    lines.Append("raw-trace\t").Append(result.PlanetId).Append('\t').Append(index)
+                        .Append('\t').Append(result.Trace[index]).AppendLine();
+            }
+            File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
+        }
+
+        private static string F(decimal value) =>
+            value.ToString("0.############################", CultureInfo.InvariantCulture);
     }
 }

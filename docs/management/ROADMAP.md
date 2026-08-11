@@ -2,7 +2,7 @@
 
 **Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None. IMPL-01 through IMPL-03 are accepted; IMPL-04 is
+**Active user story:** None. IMPL-01 through IMPL-04 are accepted; IMPL-05 is
 completed and pending acceptance. IMPL-03 carried two explicit
 runtime-validation debts into the IMPL-08 conformance gate.
 
@@ -231,7 +231,7 @@ player-facing invocation, persistence, and packaging replacement.
 
 ### IMPL-04: Return all immediate preview conclusions
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player considering a generated cluster, I want all supported immediate
 conclusions from one safe preview request so that I receive useful decision
@@ -297,42 +297,65 @@ copy.
 
 ### IMPL-05: Certify isolated raw planet generation
 
-**State:** Proposed; depends on IMPL-04 acceptance.
+**State:** Completed; pending acceptance.
 
 As a maintainer adding exact evidence, I want one safe normalized raw-planet
 boundary certified across the supported catalogue so that later on-demand
 features do not discover algorithm or cleanup failures in player operations.
 
-**Return:** A developer harness generates and releases one isolated candidate
-planet through every reachable solid-planet algorithm and reports exact
-normalized raw evidence or a compatibility failure.
+**Delivered:** A developer-invoked BepInEx operation generated and released one
+isolated candidate planet through every solid-planet algorithm reachable from
+the supported theme catalogue and returned exact normalized evidence or an
+explicit non-success result.
 
-**In scope:**
+**Implemented:**
 
-- focused probes of every solid-planet `algoId` reachable through the supported
-  ordered theme catalogue;
-- DSP's selected raw path and required preparation, including
-  `RandomTable.Init()`;
-- isolated candidate ownership, atomic-stage progress, seed/planet/stage
-  diagnostics, and cleanup;
-- normalized vein amounts, nodes, groups, positions, products, oil-specific
-  semantics, and raw coverage metadata; and
-- cancellation before or after, but not fabricated interruption within, an
-  atomic DSP planet-generation call.
+- an immutable single-planet request, coverage, node, group, evidence, result,
+  and compatibility-diagnostic boundary without DSP, Unity, or BepInEx types;
+- one shared operation gate serializing preview and raw work, plus main-thread,
+  fingerprint, request-identity, state-capture, and restoration checks;
+- isolated candidate galaxy ownership with exact target and algorithm checks,
+  `PlanetModelingManager.PrepareWorks`, `RandomTable.Init()`, DSP's selected
+  atomic raw call, deterministic normalization, and guaranteed release;
+- exact resource type, product, amount, group, and position evidence, with oil
+  represented separately as flow semantics and its runtime multiplier;
+- complete or unavailable single-planet coverage, seed/planet/stage errors,
+  explicit unknown runtime-value diagnostics, and no partial evidence escape;
+  and
+- a deterministic developer certification mode that derived the reachable
+  algorithms from the accepted ordered theme catalogue and selected one real
+  generated candidate for each.
 
-**Acceptance:**
+**Acceptance evidence:**
 
-- every reachable raw algorithm passes in the supported runtime or blocks raw
-  support with an explicit compatibility reason;
-- representative raw evidence repeats exactly after normalization in
-  independent game processes;
-- injected failure and cancellation produce incomplete coverage and no
-  complete-planet result;
-- runtime static state is restored and candidate raw data is not retained on
-  every exit path; and
-- raw generation remains developer-invoked and never runs during preview.
+- the supported catalogue exposed solid algorithms `1` through `13`, and each
+  completed through its runtime-selected raw path with complete coverage;
+- two independent isolated DSP processes produced byte-identical normalized
+  output with SHA-256
+  `47DC2C493A02FAB0E249E934C6E96D094520C427860029ED82484F43BBCE81E8`;
+- the repeated evidence contained 7,563 exact vein nodes and 487 groups;
+  full request and fingerprint provenance plus product, amount, group,
+  position, and unit fields matched, 81 oil nodes alone used oil-flow
+  semantics, and no finite deposit carried an oil multiplier;
+- every successful trace recorded raw preparation, `RandomTable.Init()`, one
+  atomic start and completion, normalization, candidate release, and restored
+  state;
+- an injected post-atomic failure and cancellation both before raw work and
+  after the atomic call returned unavailable coverage, no evidence, precise
+  seed/planet/stage results, and restored state; every created candidate was
+  released; and
+- the Release solution and local plugin builds completed with zero warnings,
+  all 14 conclusion checks passed, and all 19 runtime-boundary checks passed.
 
-**Out of scope:** Birth-system or cluster orchestration, resource conclusions,
+**Produced:** The certified developer-only single-planet raw boundary and its
+repeatable catalogue harness. Probe output, copied dependencies, and generated
+assemblies remained outside the repository; preview traces continued to prove
+that automatic preview evaluation never invoked raw generation.
+
+**Retained debt:** IMPL-05 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
+Their release constraints and IMPL-08 closure gate remain unchanged.
+
+**Excluded:** Birth-system or cluster orchestration, resource conclusions,
 per-planet queue progress, performance bounds, background work, UI, and broad
 terrain or buildable-area interpretation.
 

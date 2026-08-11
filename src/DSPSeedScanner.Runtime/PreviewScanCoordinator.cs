@@ -78,11 +78,14 @@ namespace DSPSeedScanner.Runtime
     public sealed class PreviewScanCoordinator
     {
         private readonly IRuntimePreviewGateway gateway;
-        private int active;
+        private readonly RuntimeOperationGate operationGate;
 
-        public PreviewScanCoordinator(IRuntimePreviewGateway gateway)
+        public PreviewScanCoordinator(
+            IRuntimePreviewGateway gateway,
+            RuntimeOperationGate? operationGate = null)
         {
             this.gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
+            this.operationGate = operationGate ?? new RuntimeOperationGate();
         }
 
         public RuntimeScanResult TryScan(PreviewScanRequest request, CancellationToken cancellationToken)
@@ -91,7 +94,7 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentNullException(nameof(request));
 
             var trace = new List<string>();
-            if (Interlocked.CompareExchange(ref active, 1, 0) != 0)
+            if (!operationGate.TryEnter())
                 return Result(RuntimeScanStatus.Busy, request, "busy", "Another runtime request is active.", null, null, trace, true);
 
             RuntimeFingerprint? fingerprint = null;
@@ -218,7 +221,7 @@ namespace DSPSeedScanner.Runtime
                         reports = null;
                     }
                 }
-                Volatile.Write(ref active, 0);
+                operationGate.Exit();
             }
 
             return Result(
