@@ -1,6 +1,6 @@
 # Product Specification Roadmap
 
-**Status:** Draft and still being worked on.
+**Status:** Draft. SPEC-01 execution is complete and pending acceptance.
 
 **Active user story:** None.
 
@@ -49,25 +49,30 @@ against the installed DSP runtime.
 
 ### SPEC-01: Identify the complete generation identity
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a player comparing seeds, I want every result tied to all inputs that shape
 the cluster so that repeating the same selection produces the same evidence.
 
-Determine how seed, star count, resource settings, Dark Fog settings, galaxy
-algorithm version, and any other discovered inputs affect generated output.
-Confirm the identity through repeated runtime generation and controlled
-single-setting changes.
+The investigation determined how seed, star count, resource settings, Dark Fog
+settings, galaxy algorithm version, creation version, and the ordered theme
+catalogue affected generated output. It confirmed the identity boundary
+through assembly inspection and repeated, controlled runtime generation in two
+independent game processes.
 
-**Produces:** A generation-identity contract, experiment record, and list of
-settings proven relevant, irrelevant, or still unknown.
+**Produced:** A candidate
+[generation-identity contract](../specification/GENERATION-IDENTITY.md) and
+[experiment record](../specification/SPEC-01-EXPERIMENTS.md), including inputs
+confirmed relevant to each generation stage, inputs that did not affect the
+pre-play snapshot, and unresolved boundaries.
 
-**Prior-art targets:** Compare the input and algorithm-version assumptions in
-DSP-Seed-Finder, dsp_search_seed, DSPSeedCalc, and DSPSeedSearch. Use their
-differences to design controlled runtime experiments, not to settle the
-identity contract.
+**Prior-art used:** The input and algorithm-version assumptions in
+DSP-Seed-Finder, dsp_search_seed, DSPSeedCalc, and DSPSeedSearch were used to
+broaden the candidate input list. Their outputs did not settle the contract;
+the installed runtime did.
 
-**Excludes:** Performance optimization, batch scanning, scoring, and UI.
+**Excluded:** Performance optimization, batch scanning, scoring, UI, and
+acceptance of the candidate contract.
 
 ### SPEC-02: Map reproducible runtime facts
 

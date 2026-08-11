@@ -1,10 +1,14 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** The product-specification roadmap is still being worked on. No
-user story is active.
+**Status:** SPEC-01 execution is complete and its candidate generation-identity
+contract is pending acceptance. No user story is active.
 
 The current roadmap is [docs/management/ROADMAP.md](management/ROADMAP.md).
-It governs the investigation that must precede implementation planning.
+It governs the remaining investigation that must precede implementation
+planning. SPEC-01 produced a candidate
+[generation-identity contract](specification/GENERATION-IDENTITY.md) and
+[experiment record](specification/SPEC-01-EXPERIMENTS.md); neither has been
+accepted as product scope merely because the work was completed.
 
 ## Purpose
 
@@ -19,7 +23,8 @@ or present one universal definition of a good seed.
 ## Current specification objective
 
 Before selecting features or implementation stories, the project must answer
-three questions:
+three questions. SPEC-01 established a candidate answer to the first; the
+remaining roadmap must test and connect it to the other two.
 
 1. Which cluster facts can the available DSP runtime reproduce reliably from
    the seed and all generation-affecting settings?
