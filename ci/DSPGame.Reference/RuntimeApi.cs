@@ -17,6 +17,10 @@ public static class GameConfig
 public sealed class GameDesc
 {
     public int[] savedThemeIds = System.Array.Empty<int>();
+    public Version creationVersion;
+    public int galaxySeed;
+    public int starCount;
+    public float resourceMultiplier;
     public bool isPeaceMode;
     public CombatSettings combatSettings;
 
@@ -28,6 +32,11 @@ public sealed class GameDesc
         float resourceMultiplier)
     {
     }
+}
+
+public class UIGalaxySelect
+{
+    public void SetStarmapGalaxy() { }
 }
 
 public struct CombatSettings

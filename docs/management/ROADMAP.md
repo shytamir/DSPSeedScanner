@@ -1,10 +1,10 @@
 # New Game Presentation Roadmap
 
-**Status:** In progress. PRES-01 and PRES-02 are accepted; PRES-03 is
+**Status:** In progress. PRES-01 through PRES-03 are accepted; PRES-04 is
 implemented and pending acceptance.
 
-**Active user story:** PRES-03 is at its acceptance gate. PRES-04 remains
-inactive until PRES-03 is accepted.
+**Active user story:** PRES-04 is at its acceptance gate. PRES-05 remains
+inactive until PRES-04 is accepted.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -198,7 +198,7 @@ performed or required by this story.
 
 ### PRES-03: Reuse trustworthy local results
 
-**State:** Implemented on 2026-08-12; pending acceptance.
+**State:** Accepted on 2026-08-12.
 
 As a player revisiting a preview, I want an already completed local scan reused
 so that I do not repeatedly wait for identical evidence.
@@ -281,7 +281,7 @@ in-game validation remained outside this story.
 
 ### PRES-04: Resolve every preview automatically once
 
-**State:** Approved; inactive.
+**State:** Implemented on 2026-08-12; pending acceptance.
 
 As a player entering a cluster preview, I want its available conclusions
 resolved automatically so that using the mod requires no scan command.
@@ -300,6 +300,46 @@ result.
 
 **Out of scope:** Panel rendering, presentation wording, player controls,
 multiple queued identities, batch scanning, and cache management UI.
+
+**Implemented:** The presentation-neutral `PreviewResolutionCoordinator`
+now owns one attributable attempt per lifecycle session. It evaluates the
+live preview, reads the validated complete-conclusion cache, or starts one
+cooperative complete scan; a successful scan is admitted to that cache.
+Duplicate callbacks reuse the same attempt, while replacement and exit retire
+and cancel obsolete work before another scan may acquire the shared runtime
+gate. Only the lifecycle's current session is publishable.
+
+The BepInEx plugin patches the completion boundary of DSP's
+`UIGalaxySelect.SetStarmapGalaxy` and the preview's `_OnClose` lifecycle
+boundary. Each completed method call receives a new monotonic load sequence
+and exact generation identity. The plugin advances at most one solid planet
+for the current operation per Unity frame; it does not infer loads from input
+events, timers, or frame polling.
+
+**Acceptance evidence:**
+
+- a cache miss evaluated immediate reports, started one incremental scan,
+  reached one complete terminal state, and persisted only the successful
+  complete reports; a later load of the same identity evaluated fresh preview
+  reports and reached one cached terminal state without another complete scan;
+- a duplicate completion callback did not repeat preview evaluation or start
+  another scan;
+- seed replacement cancelled the obsolete attempt at a restored boundary,
+  made its output unpublishable, and admitted one new attempt; preview exit
+  cancelled the current attempt and left no publishable state;
+- busy, incompatible, preview-failure, and complete-scan-failure fixtures each
+  reached one attributable terminal state, remained stable when advanced
+  again, and exposed no fabricated complete reports; and
+- the Release solution and installed-game plugin builds completed with zero
+  warnings, all 14 conclusion checks and 43 runtime-boundary checks passed,
+  the hosted-runner reference build completed, and the semantic-versioned DLL
+  and Thunderstore package validators accepted the three-assembly package.
+
+**Produced:** `PreviewResolutionAttempt`, `PreviewResolutionCoordinator`,
+focused automatic-resolution fixtures, the completed-load and preview-close
+Harmony integration, and hosted-CI compile references for that integration.
+Panel rendering, presentation wording, player controls, multiple queued
+identities, and human in-game validation remained outside this story.
 
 ### PRES-05: Show current operational state
 

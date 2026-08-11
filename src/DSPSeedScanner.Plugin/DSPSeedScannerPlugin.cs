@@ -9,6 +9,7 @@ using System.Threading;
 using BepInEx;
 using DSPSeedScanner.Core;
 using DSPSeedScanner.Runtime;
+using HarmonyLib;
 using UnityEngine;
 
 namespace DSPSeedScanner.Plugin
@@ -27,6 +28,10 @@ namespace DSPSeedScanner.Plugin
         private CompleteClusterRawCoordinator? completeClusterCoordinator;
         private CompleteClusterConclusionCache? completeClusterCache;
         private DspRawPlanetGateway? rawGateway;
+        private PreviewSessionLifecycle? previewLifecycle;
+        private PreviewResolutionCoordinator? previewResolution;
+        private Harmony? harmony;
+        private long previewLoadSequence;
         private bool probeAttempted;
         private CompleteClusterRawOperation? cooperativeProbeOperation;
         private CompleteClusterRawResult? cooperativeProbeReference;
@@ -50,12 +55,23 @@ namespace DSPSeedScanner.Plugin
                 operationGate);
             completeClusterCache = new CompleteClusterConclusionCache(
                 Path.Combine(Paths.ConfigPath, "DSPSeedScanner", "cache"));
+            previewLifecycle = new PreviewSessionLifecycle();
+            previewResolution = new PreviewResolutionCoordinator(
+                previewLifecycle,
+                coordinator,
+                completeClusterCoordinator,
+                completeClusterCache);
+            PreviewUiPatches.Plugin = this;
+            harmony = new Harmony(PluginGuid);
+            harmony.PatchAll(typeof(PreviewUiPatches));
             Logger.LogInfo("Runtime boundary initialized on managed thread " +
                 Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture) + ".");
         }
 
         private void Update()
         {
+            previewResolution?.AdvanceCurrent();
+
             string? output = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_OUTPUT");
             if (String.IsNullOrWhiteSpace(output) ||
                 LDB.themes == null || LDB.themes.Length == 0)
@@ -113,6 +129,64 @@ namespace DSPSeedScanner.Plugin
             {
                 Application.Quit();
             }
+        }
+
+        private void OnDestroy()
+        {
+            previewResolution?.Dispose();
+            PreviewUiPatches.Plugin = null;
+            harmony?.UnpatchSelf();
+        }
+
+        internal void OnPreviewLoadCompleted(GameDesc descriptor)
+        {
+            if (previewGateway == null || previewResolution == null)
+                return;
+
+            try
+            {
+                decimal initialColonize = Convert.ToDecimal(descriptor.combatSettings.initialColonize);
+                decimal maxDensity = Convert.ToDecimal(descriptor.combatSettings.maxDensity);
+                var request = new PreviewScanRequest(
+                    descriptor.galaxySeed,
+                    descriptor.starCount,
+                    descriptor.creationVersion.ToFullString(),
+                    Convert.ToDecimal(descriptor.resourceMultiplier),
+                    descriptor.isPeaceMode ? CombatMode.Peace : CombatMode.Combat,
+                    PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
+                    initialColonize,
+                    maxDensity);
+                RuntimeFingerprint fingerprint = previewGateway.CaptureFingerprint(request);
+                var galaxyIdentity = new GenerationIdentity(
+                    fingerprint.GameVersion,
+                    fingerprint.GalaxyAlgorithm,
+                    fingerprint.AssemblySha256,
+                    fingerprint.OrderedThemeIdsKey,
+                    fingerprint.ScannerCompatibilityVersion,
+                    request.GalaxySeed,
+                    request.RequestedStarCount,
+                    request.CreationVersion);
+                var identity = new PreviewGenerationIdentity(
+                    galaxyIdentity,
+                    request.ResourceMultiplier,
+                    request.CombatMode,
+                    request.CombatSettingsKey,
+                    request.InitialColonize,
+                    request.MaxDensity);
+                previewResolution.ObserveCompletedLoad(
+                    checked(++previewLoadSequence),
+                    identity,
+                    request);
+            }
+            catch (Exception exception)
+            {
+                Logger.LogError("Completed preview load could not be resolved: " + exception);
+            }
+        }
+
+        internal void OnPreviewClosed()
+        {
+            previewResolution?.ExitPreview();
         }
 
         private void AdvanceCooperativeProbe(string path)

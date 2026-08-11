@@ -8,8 +8,10 @@ BepInEx/config/DSPSeedScanner/cache
 ```
 
 The cache is local to the installed game and is not a source of new evidence.
-It only avoids repeating a scan whose complete semantic conclusions were
-produced for the same supported runtime and generation identity.
+On each completed New Game preview load, the mod checks it automatically after
+evaluating the live preview. A valid hit avoids repeating a complete scan whose
+semantic conclusions were produced for the same supported runtime and
+generation identity.
 
 ## Trust boundary
 

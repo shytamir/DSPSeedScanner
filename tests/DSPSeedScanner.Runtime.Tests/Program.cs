@@ -55,6 +55,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("duplicate callbacks coalesce while same identity reloads", DuplicateCallbacksCoalesceAndReloadsReplace),
                 ("replacement rejects stale publication and late loads", ReplacementRejectsStalePublication),
                 ("preview exit retires once and blocks resurrection", PreviewExitRetiresAndBlocksResurrection),
+                ("automatic resolution uses cache once per completed load", AutomaticResolutionUsesCacheOncePerLoad),
+                ("automatic resolution cancels replacement and exit", AutomaticResolutionCancelsReplacementAndExit),
+                ("automatic resolution terminal failures never retry", AutomaticResolutionFailuresNeverRetry),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -1154,6 +1157,181 @@ namespace DSPSeedScanner.Runtime.Tests
             True(lifecycle.CurrentSession == null);
         }
 
+        private static void AutomaticResolutionUsesCacheOncePerLoad()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var previewGateway = new FakeGateway();
+                var completeGateway = new FakeCompleteClusterGateway();
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle,
+                    new PreviewScanCoordinator(previewGateway, gate),
+                    new CompleteClusterRawCoordinator(completeGateway, gate),
+                    new CompleteClusterConclusionCache(path));
+
+                PreviewLoadTransition first = resolver.ObserveCompletedLoad(
+                    1,
+                    PreviewIdentity(16_315_224),
+                    Request());
+                Equal(PreviewLoadDisposition.SessionCreated, first.Disposition);
+                PreviewResolutionAttempt scanned = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Scanning, scanned.State);
+                Equal(1, previewGateway.GenerateCalls);
+                Equal(1, completeGateway.GenerateCalls);
+
+                PreviewLoadTransition duplicate = resolver.ObserveCompletedLoad(
+                    1,
+                    PreviewIdentity(16_315_224),
+                    Request());
+                Equal(PreviewLoadDisposition.DuplicateCoalesced, duplicate.Disposition);
+                Equal(1, previewGateway.GenerateCalls);
+                Equal(1, completeGateway.GenerateCalls);
+
+                while (!scanned.IsTerminal)
+                    resolver.AdvanceCurrent();
+                Equal(PreviewResolutionState.Complete, scanned.State);
+                Equal(1, scanned.TerminalTransitionCount);
+                True(scanned.CacheStored);
+                True(scanned.PreviewReports.Count > 0);
+                True(scanned.CompleteReports.Count > 0);
+                Equal(scanned.ExpectedPlanets, scanned.CompletedPlanets);
+
+                PreviewLoadTransition reload = resolver.ObserveCompletedLoad(
+                    2,
+                    PreviewIdentity(16_315_224),
+                    Request());
+                Equal(PreviewLoadDisposition.SessionCreated, reload.Disposition);
+                PreviewResolutionAttempt cached = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, cached.State);
+                Equal(1, cached.TerminalTransitionCount);
+                Equal(2, previewGateway.GenerateCalls);
+                Equal(1, completeGateway.GenerateCalls);
+                Equal(scanned.CompleteReports.Count, cached.CompleteReports.Count);
+                True(cached.CompleteReports.Select(report =>
+                    report.ConclusionId + "\t" + report.Outcome).SequenceEqual(
+                        scanned.CompleteReports.Select(report =>
+                            report.ConclusionId + "\t" + report.Outcome)));
+            });
+        }
+
+        private static void AutomaticResolutionCancelsReplacementAndExit()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle,
+                    new PreviewScanCoordinator(new FakeGateway(), gate),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway(), gate),
+                    new CompleteClusterConclusionCache(path));
+
+                resolver.ObserveCompletedLoad(10, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt obsolete = resolver.CurrentPublishedAttempt!;
+                resolver.AdvanceCurrent();
+
+                PreviewScanRequest replacementRequest = RequestForSeed(73_339_583);
+                resolver.ObserveCompletedLoad(
+                    11,
+                    PreviewIdentity(73_339_583),
+                    replacementRequest);
+                PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cancelled, obsolete.State);
+                Equal(1, obsolete.TerminalTransitionCount);
+                False(lifecycle.CanPublish(obsolete.Session));
+                True(lifecycle.CanPublish(replacement.Session));
+
+                PreviewResolutionAttempt? exited = resolver.ExitPreview();
+                True(ReferenceEquals(replacement, exited));
+                Equal(PreviewResolutionState.Cancelled, replacement.State);
+                Equal(1, replacement.TerminalTransitionCount);
+                True(resolver.CurrentPublishedAttempt == null);
+                resolver.AdvanceCurrent();
+                Equal(1, replacement.TerminalTransitionCount);
+            });
+        }
+
+        private static void AutomaticResolutionFailuresNeverRetry()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var busyGate = new RuntimeOperationGate();
+                True(busyGate.TryEnter());
+                using (var busy = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway(), busyGate),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway(), busyGate),
+                    new CompleteClusterConclusionCache(Path.Combine(path, "busy"))))
+                {
+                    busy.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                    PreviewResolutionAttempt attempt = busy.CurrentPublishedAttempt!;
+                    Equal(PreviewResolutionState.Busy, attempt.State);
+                    busy.AdvanceCurrent();
+                    Equal(1, attempt.TerminalTransitionCount);
+                }
+                busyGate.Exit();
+
+                var incompatibleGateway = new FakeGateway
+                {
+                    Fingerprint = Fingerprint(gameVersion: "unsupported")
+                };
+                var incompatibleGate = new RuntimeOperationGate();
+                using (var incompatible = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(incompatibleGateway, incompatibleGate),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway(), incompatibleGate),
+                    new CompleteClusterConclusionCache(Path.Combine(path, "incompatible"))))
+                {
+                    incompatible.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                    PreviewResolutionAttempt attempt = incompatible.CurrentPublishedAttempt!;
+                    Equal(PreviewResolutionState.Incompatible, attempt.State);
+                    incompatible.AdvanceCurrent();
+                    Equal(1, incompatibleGateway.FingerprintCalls);
+                    Equal(1, attempt.TerminalTransitionCount);
+                }
+
+                var failedGateway = new FakeGateway
+                {
+                    GenerationFailure = new InvalidOperationException("injected preview failure")
+                };
+                var failedGate = new RuntimeOperationGate();
+                using (var failed = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(failedGateway, failedGate),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway(), failedGate),
+                    new CompleteClusterConclusionCache(Path.Combine(path, "failed"))))
+                {
+                    failed.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                    PreviewResolutionAttempt attempt = failed.CurrentPublishedAttempt!;
+                    Equal(PreviewResolutionState.Failed, attempt.State);
+                    failed.AdvanceCurrent();
+                    Equal(1, failedGateway.GenerateCalls);
+                    Equal(1, attempt.TerminalTransitionCount);
+                    Equal(0, attempt.CompleteReports.Count);
+                }
+
+                var rawFailure = new FakeCompleteClusterGateway
+                {
+                    GenerationFailure = new InvalidOperationException("injected complete failure")
+                };
+                var rawFailureGate = new RuntimeOperationGate();
+                using var completeFailure = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway(), rawFailureGate),
+                    new CompleteClusterRawCoordinator(rawFailure, rawFailureGate),
+                    new CompleteClusterConclusionCache(Path.Combine(path, "raw-failed")));
+                completeFailure.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt rawAttempt = completeFailure.CurrentPublishedAttempt!;
+                completeFailure.AdvanceCurrent();
+                Equal(PreviewResolutionState.Failed, rawAttempt.State);
+                completeFailure.AdvanceCurrent();
+                Equal(1, rawAttempt.TerminalTransitionCount);
+                Equal(0, rawAttempt.CompleteReports.Count);
+            });
+        }
+
         private static void RuntimeBoundaryExposesNoGameObjects()
         {
             Assembly assembly = typeof(PreviewScanCoordinator).Assembly;
@@ -1181,7 +1359,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(PreviewGenerationIdentity),
                 typeof(PreviewSession),
                 typeof(PreviewLoadTransition),
-                typeof(PreviewSessionLifecycle)
+                typeof(PreviewSessionLifecycle),
+                typeof(PreviewResolutionAttempt),
+                typeof(PreviewResolutionCoordinator)
             })
             {
                 foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -1214,6 +1394,17 @@ namespace DSPSeedScanner.Runtime.Tests
                 PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
                 initialColonize,
                 maxDensity);
+        }
+
+        private static PreviewScanRequest RequestForSeed(int seed)
+        {
+            return new PreviewScanRequest(
+                seed,
+                ConclusionDefinition.ReferenceStarCount,
+                ConclusionDefinition.ReferenceGameVersion,
+                1m,
+                CombatMode.Combat,
+                ConclusionDefinition.ReferenceCombatSettingsKey);
         }
 
         private static CompleteClusterRawResult CompleteResult(decimal resourceMultiplier = 1m) =>
@@ -1666,18 +1857,23 @@ namespace DSPSeedScanner.Runtime.Tests
             {
                 GenerateCalls++;
                 cancellationToken.ThrowIfCancellationRequested();
-                return new Session(this, recordTrace);
+                return new Session(this, request.GalaxySeed, recordTrace);
             }
 
             private sealed class Session : IRuntimeCompleteClusterRawSession
             {
                 private readonly FakeCompleteClusterGateway owner;
+                private readonly int galaxySeed;
                 private readonly Action<string> recordTrace;
                 private bool disposed;
 
-                public Session(FakeCompleteClusterGateway owner, Action<string> recordTrace)
+                public Session(
+                    FakeCompleteClusterGateway owner,
+                    int galaxySeed,
+                    Action<string> recordTrace)
                 {
                     this.owner = owner;
+                    this.galaxySeed = galaxySeed;
                     this.recordTrace = recordTrace;
                     StateRestored = true;
                 }
@@ -1703,9 +1899,9 @@ namespace DSPSeedScanner.Runtime.Tests
                             throw new InvalidOperationException("injected cluster planet failure");
                         return target.PlanetId switch
                         {
-                            102 => ClusterSnapshot(target, "kimberlite", 9, 1128, 200),
-                            103 => ClusterSnapshot(target, "unipolar-magnet", 14, 1016, 300),
-                            _ => ClusterSnapshot(target, null, 0, 0, 0)
+                            102 => ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 200),
+                            103 => ClusterSnapshot(galaxySeed, target, "unipolar-magnet", 14, 1016, 300),
+                            _ => ClusterSnapshot(galaxySeed, target, null, 0, 0, 0)
                         };
                     }
                     finally
@@ -1729,6 +1925,7 @@ namespace DSPSeedScanner.Runtime.Tests
             }
 
             private static NormalizedRawPlanetEvidence ClusterSnapshot(
+                int galaxySeed,
                 CompleteClusterPlanetTarget target,
                 string? rareId,
                 int rareType,
@@ -1758,7 +1955,7 @@ namespace DSPSeedScanner.Runtime.Tests
                         1, rareAmount, 0.4m, 0.5m, 0.6m));
                 }
                 return new NormalizedRawPlanetEvidence(
-                    16_315_224,
+                    galaxySeed,
                     target.PlanetId,
                     1,
                     target.AlgorithmId,

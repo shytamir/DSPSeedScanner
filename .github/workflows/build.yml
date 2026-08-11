@@ -59,8 +59,13 @@ jobs:
           Expand-Archive -LiteralPath $archive -DestinationPath $referenceRoot
           $reference = Join-Path $referenceRoot `
             'BepInExPack\BepInEx\core\BepInEx.dll'
+          $harmonyReference = Join-Path $referenceRoot `
+            'BepInExPack\BepInEx\core\0Harmony.dll'
           if (-not (Test-Path -LiteralPath $reference -PathType Leaf)) {
             throw "BepInEx compile reference was not found at $reference."
+          }
+          if (-not (Test-Path -LiteralPath $harmonyReference -PathType Leaf)) {
+            throw "Harmony compile reference was not found at $harmonyReference."
           }
           $referenceVersion = (
             [Reflection.AssemblyName]::GetAssemblyName($reference)
@@ -69,6 +74,7 @@ jobs:
             throw "BepInEx reference version is $referenceVersion; expected 5.4.17.0."
           }
           "CI_BEPINEX_PATH=$reference" >> $env:GITHUB_ENV
+          "CI_HARMONY_PATH=$harmonyReference" >> $env:GITHUB_ENV
 
       - name: Build scanner core
         id: core_build
@@ -100,7 +106,8 @@ jobs:
           dotnet restore `
             src/DSPSeedScanner.Plugin/DSPSeedScanner.Plugin.csproj `
             -p:UseCiReferences=true `
-            "-p:CiBepInExPath=$env:CI_BEPINEX_PATH"
+            "-p:CiBepInExPath=$env:CI_BEPINEX_PATH" `
+            "-p:CiHarmonyPath=$env:CI_HARMONY_PATH"
 
       - name: Build real plugin
         id: plugin_build
@@ -112,6 +119,7 @@ jobs:
             --no-restore `
             -p:UseCiReferences=true `
             "-p:CiBepInExPath=$env:CI_BEPINEX_PATH" `
+            "-p:CiHarmonyPath=$env:CI_HARMONY_PATH" `
             "-p:Version=$env:SEMANTIC_VERSION" `
             "-p:AssemblyVersion=$env:ASSEMBLY_VERSION" `
             "-p:FileVersion=$env:ASSEMBLY_VERSION" `
