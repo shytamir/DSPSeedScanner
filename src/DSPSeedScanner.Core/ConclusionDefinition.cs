@@ -46,6 +46,8 @@ namespace DSPSeedScanner.Core
         public const int ReferenceStarCount = 64;
         public const string ReferenceAssemblySha256 =
             "AE0BA95F75BD879A62AA4CE253B2AB78EAA4FB3C7C595F5E1FEE75EBE0E0EF85";
+        public const string ReferenceGenerationMethodIlSha256 =
+            "A0CC806F17FD8A88468AA8CF05CDD4C1A8728A33BA1A4C0FA967C2EF50775C9B";
         public const string ReferenceOrderedThemeIds =
             "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25";
         public const string ReferenceCombatSettingsKey =

@@ -28,12 +28,23 @@ namespace DSPSeedScanner.Runtime
                 return Reject("missing-runtime-member", fingerprint.MissingMember ?? "Required member unavailable.");
             if (fingerprint.LoadedGenerationModIds.Count != 0)
                 return Reject("generation-mod-uncertain", String.Join(",", fingerprint.LoadedGenerationModIds));
+            if (fingerprint.LoadedPatcherIds.Count != 0)
+                return Reject("generation-patcher-uncertain", String.Join(",", fingerprint.LoadedPatcherIds));
             if (!String.Equals(fingerprint.GameVersion, ConclusionDefinition.ReferenceGameVersion, StringComparison.Ordinal))
                 return Reject("game-version-mismatch", fingerprint.GameVersion);
             if (fingerprint.GalaxyAlgorithm != ConclusionDefinition.ReferenceGalaxyAlgorithm)
                 return Reject("galaxy-algorithm-mismatch", fingerprint.GalaxyAlgorithm.ToString());
             if (!String.Equals(fingerprint.AssemblySha256, ConclusionDefinition.ReferenceAssemblySha256, StringComparison.OrdinalIgnoreCase))
                 return Reject("assembly-mismatch", fingerprint.AssemblySha256);
+            if (!String.Equals(
+                fingerprint.GenerationMethodIlSha256,
+                ConclusionDefinition.ReferenceGenerationMethodIlSha256,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return Reject(
+                    "generation-method-il-mismatch",
+                    fingerprint.GenerationMethodIlSha256);
+            }
             if (!String.Equals(fingerprint.OrderedThemeIdsKey, ConclusionDefinition.ReferenceOrderedThemeIds, StringComparison.Ordinal))
                 return Reject("theme-catalogue-mismatch", fingerprint.OrderedThemeIdsKey);
             if (!String.Equals(fingerprint.ScannerCompatibilityVersion, ConclusionDefinition.DefinitionVersion, StringComparison.Ordinal))

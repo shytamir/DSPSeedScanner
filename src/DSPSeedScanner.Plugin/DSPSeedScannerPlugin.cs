@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using BepInEx;
@@ -20,6 +21,7 @@ namespace DSPSeedScanner.Plugin
         public const string PluginVersion = "0.1.0";
 
         private PreviewScanCoordinator? coordinator;
+        private DspPreviewGateway? previewGateway;
         private RawPlanetCoordinator? rawCoordinator;
         private BirthSystemRawCoordinator? birthSystemCoordinator;
         private CompleteClusterRawCoordinator? completeClusterCoordinator;
@@ -29,7 +31,7 @@ namespace DSPSeedScanner.Plugin
         private void Awake()
         {
             var operationGate = new RuntimeOperationGate();
-            var previewGateway = new DspPreviewGateway(
+            previewGateway = new DspPreviewGateway(
                 Thread.CurrentThread.ManagedThreadId,
                 PluginGuid);
             rawGateway = new DspRawPlanetGateway(previewGateway);
@@ -56,7 +58,12 @@ namespace DSPSeedScanner.Plugin
             try
             {
                 string? mode = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_MODE");
-                if (String.Equals(mode, "rare-access", StringComparison.Ordinal))
+                if (String.Equals(mode, "conformance", StringComparison.Ordinal))
+                {
+                    WriteConformanceProbe(output);
+                    Logger.LogInfo("IMPL-08 conformance probe completed: " + output);
+                }
+                else if (String.Equals(mode, "rare-access", StringComparison.Ordinal))
                 {
                     WriteRareAccessProbe(output);
                     Logger.LogInfo("IMPL-07 rare-access probe completed: " + output);
@@ -130,6 +137,137 @@ namespace DSPSeedScanner.Plugin
                 request,
                 cancellationToken,
                 reportProgress);
+        }
+
+        private void WriteConformanceProbe(string path)
+        {
+            if (previewGateway == null)
+                throw new InvalidOperationException("The preview gateway is unavailable.");
+
+            GameData? originalData = GameMain.data;
+            GameDesc? originalDescription = DSPGame.GameDesc;
+            var sentinelDescription = new GameDesc();
+            var sentinelData = new GameData
+            {
+                gameDesc = sentinelDescription,
+                factories = new PlanetFactory[1]
+            };
+            try
+            {
+                GameMain.data = sentinelData;
+                DSPGame.GameDesc = sentinelDescription;
+                WriteConformanceCases(path);
+            }
+            finally
+            {
+                GameMain.data = originalData;
+                DSPGame.GameDesc = originalDescription;
+            }
+        }
+
+        private void WriteConformanceCases(string path)
+        {
+            if (previewGateway == null)
+                throw new InvalidOperationException("The preview gateway is unavailable.");
+
+            int seed = ParseSeeds().First();
+            var cases = new List<ConformanceCase>();
+            cases.Add(RunPreviewCase(
+                "preview-success",
+                () => ScanPreview(Request(seed), CancellationToken.None)));
+
+            try
+            {
+                previewGateway.AfterGalaxyCreatedForProbe = () =>
+                    throw new InvalidOperationException("injected preview failure");
+                cases.Add(RunPreviewCase(
+                    "preview-failure",
+                    () => ScanPreview(Request(seed), CancellationToken.None)));
+            }
+            finally
+            {
+                previewGateway.AfterGalaxyCreatedForProbe = null;
+            }
+
+            using (var cancellation = new CancellationTokenSource())
+            {
+                try
+                {
+                    previewGateway.AfterGalaxyCreatedForProbe = cancellation.Cancel;
+                    cases.Add(RunPreviewCase(
+                        "preview-cancellation",
+                        () => ScanPreview(Request(seed), cancellation.Token)));
+                }
+                finally
+                {
+                    previewGateway.AfterGalaxyCreatedForProbe = null;
+                }
+            }
+
+            RuntimeScanResult? nested = null;
+            try
+            {
+                previewGateway.AfterGalaxyCreatedForProbe = () =>
+                    nested = ScanPreview(Request(seed), CancellationToken.None);
+                cases.Add(RunPreviewCase(
+                    "preview-reentrant-outer",
+                    () => ScanPreview(Request(seed), CancellationToken.None)));
+            }
+            finally
+            {
+                previewGateway.AfterGalaxyCreatedForProbe = null;
+            }
+            if (nested == null)
+                throw new InvalidOperationException("The re-entrant preview probe did not run.");
+            cases.Add(new ConformanceCase(
+                "preview-reentrant-inner",
+                nested,
+                Array.Empty<KeyValuePair<string, bool>>()));
+
+            var lines = new StringBuilder();
+            foreach (ConformanceCase item in cases)
+            {
+                RuntimeScanResult result = item.Result;
+                lines.Append("conformance-result\t").Append(item.Name).Append('\t')
+                    .Append(result.GalaxySeed).Append('\t').Append(result.Stage).Append('\t')
+                    .Append(result.Status).Append('\t').Append(result.Code).Append('\t')
+                    .Append(result.StateRestored).Append('\t')
+                    .Append(result.Reports.Count).AppendLine();
+                if (result.Fingerprint != null)
+                {
+                    lines.Append("conformance-fingerprint\t").Append(item.Name).Append('\t')
+                        .Append(result.Fingerprint.GameVersion).Append('\t')
+                        .Append(result.Fingerprint.GalaxyAlgorithm).Append('\t')
+                        .Append(result.Fingerprint.AssemblySha256).Append('\t')
+                        .Append(result.Fingerprint.OrderedThemeIdsKey).Append('\t')
+                        .Append(result.Fingerprint.GenerationMethodIlSha256).Append('\t')
+                        .Append(String.Join(",", result.Fingerprint.LoadedGenerationModIds)).Append('\t')
+                        .Append(String.Join(",", result.Fingerprint.LoadedPatcherIds)).AppendLine();
+                }
+                foreach (KeyValuePair<string, bool> check in item.StateChecks)
+                {
+                    lines.Append("conformance-state\t").Append(item.Name).Append('\t')
+                        .Append(check.Key).Append('\t').Append(check.Value).AppendLine();
+                }
+                foreach (string trace in result.Trace.Where(value =>
+                    value == "GalaxyData.Free" ||
+                    value.StartsWith("state:restore=", StringComparison.Ordinal) ||
+                    value == "request:cancelled" || value == "request:failed"))
+                {
+                    lines.Append("conformance-trace\t").Append(item.Name).Append('\t')
+                        .Append(trace).AppendLine();
+                }
+            }
+            File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
+        }
+
+        private ConformanceCase RunPreviewCase(
+            string name,
+            Func<RuntimeScanResult> operation)
+        {
+            DspStateSnapshot before = DspStateSnapshot.Capture();
+            RuntimeScanResult result = operation();
+            return new ConformanceCase(name, result, before.CompareCurrent());
         }
 
         private void WriteRareAccessProbe(string path)
@@ -487,7 +625,9 @@ namespace DSPSeedScanner.Plugin
                         .Append(result.Fingerprint.GalaxyAlgorithm.ToString(CultureInfo.InvariantCulture)).Append('\t')
                         .Append(result.Fingerprint.AssemblySha256).Append('\t')
                         .Append(result.Fingerprint.OrderedThemeIdsKey).Append('\t')
-                        .Append(String.Join(",", result.Fingerprint.LoadedGenerationModIds))
+                        .Append(String.Join(",", result.Fingerprint.LoadedGenerationModIds)).Append('\t')
+                        .Append(result.Fingerprint.GenerationMethodIlSha256).Append('\t')
+                        .Append(String.Join(",", result.Fingerprint.LoadedPatcherIds))
                         .AppendLine();
                 }
                 foreach (ConclusionReport report in result.Reports)
@@ -598,6 +738,97 @@ namespace DSPSeedScanner.Plugin
                         .Append('\t').Append(result.Trace[index]).AppendLine();
             }
             File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
+        }
+
+        private sealed class ConformanceCase
+        {
+            public ConformanceCase(
+                string name,
+                RuntimeScanResult result,
+                IEnumerable<KeyValuePair<string, bool>> stateChecks)
+            {
+                Name = name;
+                Result = result;
+                StateChecks = stateChecks.ToArray();
+            }
+
+            public string Name { get; }
+            public RuntimeScanResult Result { get; }
+            public IReadOnlyList<KeyValuePair<string, bool>> StateChecks { get; }
+        }
+
+        private sealed class DspStateSnapshot
+        {
+            private static readonly string[] TrackedGameDataFields =
+            {
+                "gameDesc",
+                "galaxy",
+                "factories",
+                "factoryCount",
+                "history",
+                "statistics",
+                "mainPlayer"
+            };
+
+            private readonly GameData? gameData;
+            private readonly GameDesc? gameDesc;
+            private readonly KeyValuePair<FieldInfo, object?>[] values;
+
+            private DspStateSnapshot(
+                GameData? gameData,
+                GameDesc? gameDesc,
+                KeyValuePair<FieldInfo, object?>[] values)
+            {
+                this.gameData = gameData;
+                this.gameDesc = gameDesc;
+                this.values = values;
+            }
+
+            public static DspStateSnapshot Capture()
+            {
+                GameData? data = GameMain.data;
+                var values = new List<KeyValuePair<FieldInfo, object?>>();
+                if (data != null)
+                {
+                    foreach (string name in TrackedGameDataFields)
+                    {
+                        FieldInfo? field = typeof(GameData).GetField(
+                            name,
+                            BindingFlags.Instance | BindingFlags.Public |
+                            BindingFlags.NonPublic);
+                        if (field != null)
+                            values.Add(new KeyValuePair<FieldInfo, object?>(field, field.GetValue(data)));
+                    }
+                }
+                return new DspStateSnapshot(data, DSPGame.GameDesc, values.ToArray());
+            }
+
+            public IReadOnlyList<KeyValuePair<string, bool>> CompareCurrent()
+            {
+                var checks = new List<KeyValuePair<string, bool>>
+                {
+                    Check("GameMain.data", ReferenceEquals(GameMain.data, gameData)),
+                    Check("DSPGame.GameDesc", ReferenceEquals(DSPGame.GameDesc, gameDesc))
+                };
+                foreach (KeyValuePair<FieldInfo, object?> pair in values)
+                {
+                    object? current = gameData == null ? null : pair.Key.GetValue(gameData);
+                    checks.Add(Check("GameData." + pair.Key.Name, ValuesEqual(current, pair.Value)));
+                }
+                return checks;
+            }
+
+            private static KeyValuePair<string, bool> Check(string name, bool value) =>
+                new KeyValuePair<string, bool>(name, value);
+
+            private static bool ValuesEqual(object? current, object? expected)
+            {
+                if (current == null || expected == null)
+                    return current == expected;
+                return current.GetType().IsValueType
+                    ? current.Equals(expected)
+                    : ReferenceEquals(current, expected);
+            }
         }
 
         private static string F(decimal value) =>

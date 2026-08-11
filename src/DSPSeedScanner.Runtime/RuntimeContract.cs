@@ -74,6 +74,7 @@ namespace DSPSeedScanner.Runtime
     {
         private readonly string[] orderedThemeIds;
         private readonly string[] loadedGenerationModIds;
+        private readonly string[] loadedPatcherIds;
 
         public RuntimeFingerprint(
             string gameVersion,
@@ -84,7 +85,9 @@ namespace DSPSeedScanner.Runtime
             string scannerContractVersion,
             bool requiredMembersAvailable,
             string? missingMember,
-            IEnumerable<string>? loadedGenerationModIds)
+            IEnumerable<string>? loadedGenerationModIds,
+            string generationMethodIlSha256 = "unavailable",
+            IEnumerable<string>? loadedPatcherIds = null)
         {
             GameVersion = Required(gameVersion, nameof(gameVersion));
             GalaxyAlgorithm = galaxyAlgorithm;
@@ -99,6 +102,14 @@ namespace DSPSeedScanner.Runtime
             this.loadedGenerationModIds = loadedGenerationModIds == null
                 ? Array.Empty<string>()
                 : loadedGenerationModIds.Where(value => !String.IsNullOrWhiteSpace(value)).ToArray();
+            GenerationMethodIlSha256 = Required(
+                generationMethodIlSha256,
+                nameof(generationMethodIlSha256));
+            this.loadedPatcherIds = loadedPatcherIds == null
+                ? Array.Empty<string>()
+                : loadedPatcherIds.Where(value => !String.IsNullOrWhiteSpace(value))
+                    .OrderBy(value => value, StringComparer.Ordinal)
+                    .ToArray();
         }
 
         public string GameVersion { get; }
@@ -112,6 +123,9 @@ namespace DSPSeedScanner.Runtime
         public string? MissingMember { get; }
         public IReadOnlyList<string> LoadedGenerationModIds =>
             Array.AsReadOnly((string[])loadedGenerationModIds.Clone());
+        public string GenerationMethodIlSha256 { get; }
+        public IReadOnlyList<string> LoadedPatcherIds =>
+            Array.AsReadOnly((string[])loadedPatcherIds.Clone());
 
         private static string Required(string value, string parameterName)
         {

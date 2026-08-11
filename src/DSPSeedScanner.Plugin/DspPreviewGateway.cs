@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
+using BepInEx;
 using BepInEx.Bootstrap;
 using DSPSeedScanner.Core;
 using DSPSeedScanner.Runtime;
@@ -33,6 +35,8 @@ namespace DSPSeedScanner.Plugin
 
         public int MainThreadId { get; }
 
+        internal Action? AfterGalaxyCreatedForProbe { get; set; }
+
         public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request)
         {
             string? missingMember = FindMissingMember();
@@ -44,6 +48,8 @@ namespace DSPSeedScanner.Plugin
                 .Where(id => !String.Equals(id, ownPluginGuid, StringComparison.Ordinal))
                 .OrderBy(id => id, StringComparer.Ordinal)
                 .ToArray();
+            string[] patchers = CapturePatcherInventory();
+            string methodHash = CaptureGenerationMethodHash();
 
             return new RuntimeFingerprint(
                 GameConfig.gameVersion.ToFullString(),
@@ -54,7 +60,9 @@ namespace DSPSeedScanner.Plugin
                 ConclusionDefinition.ContractVersion,
                 missingMember == null,
                 missingMember,
-                otherPlugins);
+                otherPlugins,
+                methodHash,
+                patchers);
         }
 
         public RuntimeStateLease CaptureState()
@@ -74,6 +82,8 @@ namespace DSPSeedScanner.Plugin
             {
                 recordTrace("UniverseGen.CreateGalaxy:thread=" + Thread.CurrentThread.ManagedThreadId);
                 galaxy = UniverseGen.CreateGalaxy(descriptor);
+                AfterGalaxyCreatedForProbe?.Invoke();
+                cancellationToken.ThrowIfCancellationRequested();
                 return NormalizePreview(request, galaxy, recordTrace);
             }
             finally
@@ -303,6 +313,53 @@ namespace DSPSeedScanner.Plugin
             using (FileStream stream = File.OpenRead(path))
             using (SHA256 hash = SHA256.Create())
                 return BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", String.Empty);
+        }
+
+        private static string[] CapturePatcherInventory()
+        {
+            string path = Paths.PatcherPluginPath;
+            if (!Directory.Exists(path))
+                return Array.Empty<string>();
+            return Directory.GetFiles(path, "*.dll", SearchOption.TopDirectoryOnly)
+                .OrderBy(file => Path.GetFileName(file), StringComparer.OrdinalIgnoreCase)
+                .Select(file => Path.GetFileName(file) + ":" + HashAssembly(file))
+                .ToArray();
+        }
+
+        private static string CaptureGenerationMethodHash()
+        {
+            MethodInfo? preview = typeof(UniverseGen).GetMethod(
+                "CreateGalaxy",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static,
+                null,
+                new[] { typeof(GameDesc) },
+                null);
+            MethodInfo? raw = typeof(PlanetData).GetMethod(
+                "RegenerateRawDataImmediately",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                Type.EmptyTypes,
+                null);
+            if (preview?.GetMethodBody() == null || raw?.GetMethodBody() == null)
+                return "unavailable";
+
+            var bytes = new List<byte>();
+            AddMethod(bytes, preview);
+            AddMethod(bytes, raw);
+            using (SHA256 hash = SHA256.Create())
+            {
+                return BitConverter.ToString(hash.ComputeHash(bytes.ToArray()))
+                    .Replace("-", String.Empty);
+            }
+        }
+
+        private static void AddMethod(ICollection<byte> destination, MethodInfo method)
+        {
+            string identity = method.DeclaringType?.FullName + "." + method.Name + "\n";
+            foreach (byte value in Encoding.UTF8.GetBytes(identity))
+                destination.Add(value);
+            foreach (byte value in method.GetMethodBody()?.GetILAsByteArray() ?? Array.Empty<byte>())
+                destination.Add(value);
         }
 
         private sealed class DspStateLease : RuntimeStateLease

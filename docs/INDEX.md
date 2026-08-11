@@ -11,6 +11,8 @@ current status; the active roadmap owns story state and history.
   acceptance evidence, sequencing, and story history.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
+- [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
+  evidence, operating bounds, and residual limits for the implemented core.
 
 ## Accepted specification
 

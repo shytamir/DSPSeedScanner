@@ -2,9 +2,9 @@
 
 **Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None. IMPL-01 through IMPL-04 are accepted; IMPL-05 is
-completed and pending acceptance. IMPL-03 carried two explicit
-runtime-validation debts into the IMPL-08 conformance gate.
+**Active user story:** None. IMPL-01 through IMPL-07 are accepted; IMPL-08 is
+completed and pending acceptance. IMPL-08 closed both runtime-validation
+debts carried from IMPL-03.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -218,12 +218,12 @@ initial `DSPSeedScanner.Plugin` project, and CI coverage for the runtime-neutral
 boundary. The plugin still requires local DSP and BepInEx references and is not
 the packaged artifact.
 
-**Deferred debt:** Acceptance allowed implementation to proceed without more
-game execution at this stage. [TD-001](TECHNICAL-DEBT.md#td-001-complete-non-success-runtime-isolation-probes)
-retains the missing in-game failure, cancellation, and busy isolation proof;
+**Historical debt:** Acceptance allowed implementation to proceed without more
+game execution at that stage. [TD-001](TECHNICAL-DEBT.md#td-001-complete-non-success-runtime-isolation-probes)
+recorded the missing in-game failure, cancellation, and busy isolation proof;
 [TD-002](TECHNICAL-DEBT.md#td-002-detect-preloader-and-in-memory-generation-patch-uncertainty)
-retains conservative preloader and in-memory patch detection. Both debts are
-release-blocking and must close by IMPL-08 acceptance.
+recorded conservative preloader and in-memory patch detection. IMPL-08 later
+closed both entries at its conformance gate.
 
 **Excluded:** Broad preview extraction, quantitative derivations, raw planet
 generation, batch or parallel scanning, another runtime identity,
@@ -286,8 +286,9 @@ repeatable multi-seed developer probe. No scan output or external game
 assembly entered the repository, and the real plugin is still not the package
 artifact.
 
-**Retained debt:** IMPL-04 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
-Their temporary constraints and IMPL-08 closure gate remain unchanged.
+**Historical debt:** IMPL-04 retained [TD-001 and TD-002](TECHNICAL-DEBT.md)
+for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
+both entries.
 
 **Excluded:** Raw evidence, starter or rare-resource conclusions, batch search,
 persistent caching, New Game hooks, player controls, layout, and presentation
@@ -362,8 +363,9 @@ conversion, not preserved as their original IEEE-754 bit patterns. That loss
 is accepted because no active conclusion depends on bit-exact raw positions;
 resource type, product, amount, group, provenance, and coverage remain exact.
 
-**Retained debt:** IMPL-05 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
-Their release constraints and IMPL-08 closure gate remain unchanged.
+**Historical debt:** IMPL-05 retained [TD-001 and TD-002](TECHNICAL-DEBT.md)
+for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
+both entries.
 
 **Excluded:** Birth-system or cluster orchestration, resource conclusions,
 per-planet queue progress, performance bounds, background work, UI, and broad
@@ -458,12 +460,13 @@ common total.
 repeatable developer harness. Generated evidence and copied game-linked
 artifacts remained outside the repository.
 
-**Retained debt:** IMPL-06 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
-Their release constraints and IMPL-08 closure gate remain unchanged.
+**Historical debt:** IMPL-06 retained [TD-001 and TD-002](TECHNICAL-DEBT.md)
+for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
+both entries.
 
 ### IMPL-07: Return exact rare-resource access
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player planning expansion, I want an explicit complete-cluster scan for
 rare-resource distance so that nearby access is based on actual deposits and
@@ -564,14 +567,15 @@ performance guarantee or authorization for queues or parallel scans.
 repeatable developer acceptance harness. Generated evidence, observations,
 and game-linked artifacts remained outside the repository.
 
-**Retained debt:** IMPL-07 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
-Their release constraints and IMPL-08 closure gate remain unchanged.
+**Historical debt:** IMPL-07 retained [TD-001 and TD-002](TECHNICAL-DEBT.md)
+for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
+both entries.
 
 ## Phase 4 - Prove conformance and package the core
 
 ### IMPL-08: Prove scanner-core runtime conformance
 
-**State:** Proposed; depends on IMPL-01 through IMPL-07 acceptance.
+**State:** Completed; pending acceptance.
 
 As a player relying on scanner results, I want failures, cancellation, and
 unsupported environments challenged across the complete core so that no
@@ -608,6 +612,68 @@ is packaged as a real mod.
 **Out of scope:** New conclusion behavior, refactoring for hypothetical
 extensions, broad performance optimization, another runtime identity,
 packaging replacement, publication, UI, and telemetry.
+
+**Delivered:** A reviewable [scanner core conformance record](../CONFORMANCE.md)
+ties the pure suites and every required runtime gate to exact supported-runtime
+evidence, enforced bounds, failure behavior, state isolation, and residual
+limits.
+
+**Implemented:**
+
+- the compatibility fingerprint now includes the loaded IL of the two exact
+  generation entry points and a deterministic inventory of BepInEx preloader
+  assemblies, rejecting either mismatch before generation;
+- the developer conformance harness exercises supported preview success,
+  injected post-generation failure, safe-boundary cancellation, and a
+  re-entrant busy request against isolated non-null New Game and `GameData`
+  sentinels;
+- focused compatibility cases cover identity, members, catalogues, unknown
+  enums, raw planet failures, partial coverage, cleanup, provenance, subjects,
+  independent components, and unknown or not-applicable propagation; and
+- the 256-solid-planet complete-cluster limit is enforced before raw
+  generation, with all runtime operations sharing one serialization gate.
+
+**Acceptance evidence:**
+
+- two independent supported-runtime conformance processes produced
+  byte-identical records with SHA-256
+  `7ACF7AD82CB1A17C1C759922F92A6584F6DE5FAEC67C5CC0CD5A0FC7BACBF09A`;
+- success and re-entrant outer requests each returned 374 preview reports,
+  while injected failure, cancellation, and the inner busy request returned
+  none; every result retained seed `16315224`, stage `galaxy-preview`, and its
+  precise status and code;
+- all 32 before-and-after identity or value comparisons passed for
+  `GameMain.data`, `DSPGame.GameDesc`, and the tracked description, galaxy,
+  factories, factory count, history, and statistics fields; each owned galaxy
+  was freed and every captured lease restored;
+- the supported in-memory generation-method digest is
+  `A0CC806F17FD8A88468AA8CF05CDD4C1A8728A33BA1A4C0FA967C2EF50775C9B`;
+  a controlled external preloader fixture was inventoried by filename and
+  digest, rejected as `generation-patcher-uncertain`, and reached no generation
+  trace;
+- independent preview, birth-system, and complete-cluster repetition and all
+  required derivation, raw-algorithm, failure, cleanup, and measurement gates
+  are cross-referenced in the conformance record; and
+- the focused pure suites, Release solution, game-linked plugin, and generic
+  dummy-package validation passed without adding generated evidence or game,
+  Unity, or BepInEx assemblies to the repository.
+
+**Operating bounds:** Preview generation remains one serialized 64-star
+operation. Birth-system generation remains one declared solid planet at a
+time. Complete-cluster generation rejects more than 256 declared solid
+planets before raw generation and processes accepted planets sequentially.
+The measured times and managed-memory observations are evidence for these
+bounds, not performance guarantees.
+
+**Produced:** The conformance harness, conservative patch uncertainty gate,
+focused bound test, and durable conformance record. Exact probe outputs,
+controlled fixture binaries, and game-linked artifacts remained outside the
+repository.
+
+**Closed debt:** IMPL-08 closed
+[TD-001 and TD-002](TECHNICAL-DEBT.md). Packaging still uses its intentional
+dummy artifact and placeholder metadata until IMPL-09; no player-facing
+invocation or broader runtime claim was introduced.
 
 ### IMPL-09: Package the conformant scanner core
 

@@ -1,6 +1,7 @@
 # Technical Debt Register
 
-**Status:** Active.
+**Status:** No active entries. TD-001 and TD-002 were closed by IMPL-08 on
+2026-08-11.
 
 This register records deliberately deferred engineering obligations that are
 too important to disappear into story prose. A debt entry does not weaken the
@@ -12,57 +13,56 @@ close it.
 
 **Introduced:** IMPL-03 acceptance review, 2026-08-11.
 
+**State:** Closed by IMPL-08 on 2026-08-11.
+
 **Deferred obligation:** Prove from the intended BepInEx lifecycle that shared
 New Game, active save, factory, and progression state is unchanged after an
 injected post-capture runtime failure and safe-boundary cancellation. Record a
 re-entrant busy rejection in the same harness.
 
-**Current evidence:** The isolated DSP probe proved the supported success path,
-main-thread call sequence, `GalaxyData.Free`, and successful state restoration.
-Focused tests proved failure, cancellation, and busy orchestration against a
-fake runtime gateway, and code inspection confirmed that every post-capture
-exit uses the same restoration block. Those checks do not replace the missing
-in-game failure and cancellation evidence.
+**Evidence before closure:** The isolated DSP probe had proved the supported
+success path, main-thread call sequence, `GalaxyData.Free`, and successful
+state restoration. Focused tests had proved failure, cancellation, and busy
+orchestration against a fake runtime gateway.
 
-**Risk while open:** A DSP-specific side effect on a non-success path could
-escape the pure harness and remain undiscovered.
+**Closure evidence:** Two independent supported-runtime processes produced the
+same conformance record. Success, an injected post-generation failure,
+cancellation, and a re-entrant outer request together passed 32 before-and-
+after comparisons across non-null New Game and `GameData` sentinels; the inner
+request was rejected busy. All cases retained seed and stage, no non-success
+case returned reports, each owned galaxy was freed, and every captured state
+lease restored. The record SHA-256 was
+`7ACF7AD82CB1A17C1C759922F92A6584F6DE5FAEC67C5CC0CD5A0FC7BACBF09A`.
 
-**Temporary constraint:** Runtime operations remain developer-invoked and are
-not release-ready. Later implementation may reuse the boundary, but may not
-cite non-success in-game isolation as proven.
+**Closure gate:** Satisfied for IMPL-08. Player-facing invocation and package
+replacement remain separately scoped to later work.
 
-**Closure evidence:** In an isolated supported runtime, capture before-and-after
-state identities, inject a failure after state capture, cancel at a supported
-boundary, attempt a re-entrant request, and show cleanup, unchanged tracked
-state, and precise seed-and-stage results for every case.
-
-**Required by:** IMPL-08 acceptance. It also blocks player-facing invocation
-and replacement of the dummy package.
 ## TD-002: Detect preloader and in-memory generation patch uncertainty
 
 **Introduced:** IMPL-03 acceptance review, 2026-08-11.
+
+**State:** Closed by IMPL-08 on 2026-08-11.
 
 **Deferred obligation:** Extend the compatibility fingerprint beyond ordinary
 `Chainloader.PluginInfos` entries and the on-disk Assembly-CSharp hash so a
 custom BepInEx preloader patcher or equivalent known in-memory generation patch
 cannot pass as the supported runtime.
 
-**Current evidence:** The adapter rejects every other ordinary loaded BepInEx
-plugin and exact mismatches in game version, galaxy algorithm, assembly hash,
-ordered themes, required members, and scanner contract versions. Policy tests
-prove rejection when patch uncertainty is reported; they do not prove that the
-adapter discovers preloader patch uncertainty.
+**Evidence before closure:** The adapter rejected every other ordinary loaded
+BepInEx plugin and exact mismatches in game version, galaxy algorithm, assembly
+hash, ordered themes, required members, and scanner contract versions. Policy
+tests rejected explicitly reported patch uncertainty.
 
-**Risk while open:** A patched in-memory generator could retain the accepted
-on-disk identity and produce a conclusion under a false supported fingerprint.
+**Closure evidence:** The fingerprint now hashes the loaded IL bodies of
+`UniverseGen.CreateGalaxy(GameDesc)` and
+`PlanetData.RegenerateRawDataImmediately()` and inventories every assembly in
+the BepInEx patcher directory by filename and SHA-256. The exact supported
+method digest is
+`A0CC806F17FD8A88468AA8CF05CDD4C1A8728A33BA1A4C0FA967C2EF50775C9B`.
+A controlled external patcher fixture was detected and rejected as
+`generation-patcher-uncertain` before generation; a focused test separately
+rejected a changed in-memory method digest.
 
-**Temporary constraint:** Only the controlled isolated runtime used by project
-probes is verified. No broader modded-runtime compatibility claim is allowed.
-
-**Closure evidence:** Add a deterministic patcher or loaded-patch inventory to
-the fingerprint, conservatively reject unrecognized entries, and demonstrate
-the rejection with a controlled patcher fixture without weakening the exact
-supported-runtime case.
-
-**Required by:** IMPL-08 acceptance. It also blocks player-facing invocation
-and replacement of the dummy package.
+**Closure gate:** Satisfied for IMPL-08. Compatibility remains deliberately
+limited to the one recorded runtime identity; no general mod compatibility is
+claimed.

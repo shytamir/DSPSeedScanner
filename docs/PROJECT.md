@@ -5,9 +5,9 @@ tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core roadmap is active. IMPL-01 through
-IMPL-06 are accepted; IMPL-07 is completed and pending acceptance. The two
-runtime-validation debts accepted with IMPL-03 remain deferred to the IMPL-08
-conformance gate. No user story is active.
+IMPL-07 are accepted; IMPL-08 is completed and pending acceptance. Its
+conformance work closed the two runtime-validation debts carried from
+IMPL-03. No user story is active.
 
 ## Product decision
 

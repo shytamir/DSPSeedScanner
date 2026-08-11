@@ -18,6 +18,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete preview reaches all immediate families", CompletePreviewReachesAllImmediateFamilies),
                 ("identity mismatches reject safely", IdentityMismatchesRejectSafely),
                 ("member and mod uncertainty reject safely", MemberAndModUncertaintyRejectSafely),
+                ("patcher and in-memory generation uncertainty reject safely", PatcherAndMethodUncertaintyRejectSafely),
                 ("unsupported request identity rejects safely", UnsupportedRequestIdentityRejectsSafely),
                 ("other star count preserves fixed and declines quantitative", OtherStarCountIsBounded),
                 ("peace preview makes Dark Fog not applicable", PeacePreviewIsNotApplicable),
@@ -39,6 +40,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete cluster aggregates rare access and deferred strength", CompleteClusterAggregatesRareAccess),
                 ("complete cluster partial exits expose no evidence", CompleteClusterPartialExitsExposeNoEvidence),
                 ("complete cluster incompatibility remains explicit", CompleteClusterIncompatibilityIsExplicit),
+                ("complete cluster bound rejects before raw generation", CompleteClusterBoundRejectsBeforeGeneration),
                 ("complete cluster shares runtime serialization", CompleteClusterSharesSerialization),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
@@ -121,6 +123,16 @@ namespace DSPSeedScanner.Runtime.Tests
         {
             AssertRejected(Fingerprint(members: false, missing: "UniverseGen.CreateGalaxy"), "missing-runtime-member");
             AssertRejected(Fingerprint(mods: new[] { "example.generation.patch" }), "generation-mod-uncertain");
+        }
+
+        private static void PatcherAndMethodUncertaintyRejectSafely()
+        {
+            AssertRejected(
+                Fingerprint(patchers: new[] { "example-preloader.dll:ABC" }),
+                "generation-patcher-uncertain");
+            AssertRejected(
+                Fingerprint(methodIl: "BAD"),
+                "generation-method-il-mismatch");
         }
 
         private static void UnsupportedRequestIdentityRejectsSafely()
@@ -598,6 +610,26 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(1, gateway.RestoreCalls);
         }
 
+        private static void CompleteClusterBoundRejectsBeforeGeneration()
+        {
+            var gateway = new FakeCompleteClusterGateway
+            {
+                TargetCount = CompleteClusterRawCoordinator.MaximumSolidPlanets + 1
+            };
+            CompleteClusterRawResult result = new CompleteClusterRawCoordinator(gateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Incompatible, result.Status);
+            Equal("complete-cluster-planet-bound-exceeded", result.Code);
+            Equal(257, result.Coverage.ExpectedPlanets);
+            Equal(0, result.Coverage.CompletedPlanets);
+            Equal(CoverageState.Unavailable, result.Coverage.State);
+            Equal(0, result.RareResources.Count);
+            Equal(0, result.Reports.Count);
+            Equal(0, gateway.GenerateCalls);
+            Equal(1, gateway.RestoreCalls);
+            Equal("original", gateway.StateMarker);
+        }
+
         private static void CompleteClusterSharesSerialization()
         {
             var gate = new RuntimeOperationGate();
@@ -705,7 +737,9 @@ namespace DSPSeedScanner.Runtime.Tests
             IEnumerable<string>? themes = null,
             bool members = true,
             string? missing = null,
-            IEnumerable<string>? mods = null)
+            IEnumerable<string>? mods = null,
+            string? methodIl = null,
+            IEnumerable<string>? patchers = null)
         {
             return new RuntimeFingerprint(
                 gameVersion ?? ConclusionDefinition.ReferenceGameVersion,
@@ -716,7 +750,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 ConclusionDefinition.ContractVersion,
                 members,
                 missing,
-                mods);
+                mods,
+                methodIl ?? ConclusionDefinition.ReferenceGenerationMethodIlSha256,
+                patchers);
         }
 
         private static RuntimePreviewSnapshot Snapshot(int generatedStarCount = 64)
@@ -1000,6 +1036,8 @@ namespace DSPSeedScanner.Runtime.Tests
             public int? FailingPlanetId { get; set; }
             public Exception? GenerationFailure { get; set; }
             public Action? OnPlanet { get; set; }
+            public int TargetCount { get; set; } = 3;
+            public int GenerateCalls { get; private set; }
             public int RestoreCalls { get; private set; }
             public string StateMarker { get; set; } = "original";
             public int MainThreadId => Thread.CurrentThread.ManagedThreadId;
@@ -1030,24 +1068,22 @@ namespace DSPSeedScanner.Runtime.Tests
                 CancellationToken cancellationToken,
                 Action<string> recordTrace)
             {
-                recordTrace("cluster-plan:declared=3");
+                recordTrace("cluster-plan:declared=" + TargetCount);
+                var targets = new List<CompleteClusterPlanetTarget>(TargetCount);
+                for (int index = 0; index < TargetCount; index++)
+                {
+                    int planetId = 101 + index;
+                    targets.Add(new CompleteClusterPlanetTarget(
+                        planetId,
+                        index + 1,
+                        new ConclusionSubject(
+                            index == 0 ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                            (index + 1).ToString()),
+                        index == 0 ? 0m : index == 1 ? 2m : 20m));
+                }
                 return new CompleteClusterRawPlan(
                     Snapshot(),
-                    new[]
-                    {
-                        new CompleteClusterPlanetTarget(
-                            101, 1,
-                            new ConclusionSubject(SubjectKind.BirthSystem, "1"),
-                            0m),
-                        new CompleteClusterPlanetTarget(
-                            102, 2,
-                            new ConclusionSubject(SubjectKind.StarSystem, "2"),
-                            2m),
-                        new CompleteClusterPlanetTarget(
-                            103, 3,
-                            new ConclusionSubject(SubjectKind.StarSystem, "3"),
-                            20m)
-                    });
+                    targets);
             }
 
             public void GenerateCompleteCluster(
@@ -1058,6 +1094,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 Action<CompleteClusterPlanetTarget, NormalizedRawPlanetEvidence> planetCompleted,
                 Action<string> recordTrace)
             {
+                GenerateCalls++;
                 if (GenerationFailure != null)
                     throw GenerationFailure;
                 foreach (CompleteClusterPlanetTarget target in plan.Targets)
