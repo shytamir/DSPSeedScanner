@@ -1,12 +1,12 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** SPEC-01 through SPEC-06 are accepted. SPEC-07 produced the final
-implementation-planning boundary and is pending acceptance. No user story is
-active.
+**Status:** Product specification is complete and accepted. A candidate scanner
+core implementation roadmap is pending review. No user story is active.
 
-The current roadmap is [docs/management/ROADMAP.md](management/ROADMAP.md).
-It governs the remaining investigation that must precede implementation
-planning. SPEC-01 produced the accepted
+The candidate [scanner core implementation
+roadmap](management/IMPLEMENTATION-ROADMAP.md) will govern implementation if it
+is accepted. The completed [product specification
+roadmap](management/ROADMAP.md) produced the accepted
 [generation-identity contract](specification/GENERATION-IDENTITY.md) and
 [experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced the
 accepted [runtime evidence feasibility
@@ -18,7 +18,7 @@ matrix](specification/DECISION-EVIDENCE-MATRIX.md). SPEC-05 produced the
 accepted [seed conclusion contract](specification/CONCLUSION-CONTRACT.md).
 SPEC-06 produced the accepted [predicate, range, and validation
 catalogue](specification/PREDICATE-RANGE-VALIDATION.md). SPEC-07 produced the
-candidate [implementation-planning
+accepted [implementation-planning
 boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md).
 
 ## Purpose
@@ -33,16 +33,16 @@ refine conclusions inside accepted ranges, but do not create or reverse the
 neutral outcome. The project will not maintain an independent galaxy generator
 or present one universal definition of a good seed.
 
-## Current specification objective
+## Accepted specification outcome
 
-Before selecting features or implementation stories, the project must answer
+Before selecting features or implementation stories, the project had to answer
 three questions. SPEC-01 established the accepted identity required to answer
 the first, SPEC-02 established the accepted evidence boundary, SPEC-03
 documented how players describe the second, and SPEC-04 identified the accepted
 decision-worthy intersection. SPEC-05 defined the accepted conclusion
 contract, and SPEC-06 established its accepted predicate, range, and validation
-definition. SPEC-07 reconciled the baseline into a conservative implementation
-handoff. Acceptance of that handoff closes the specification phase.
+definition. SPEC-07 reconciled the baseline into the accepted conservative
+implementation handoff and closed the specification phase.
 
 1. Which cluster facts can the available DSP runtime reproduce reliably from
    the seed and all generation-affecting settings?
@@ -51,7 +51,7 @@ handoff. Acceptance of that handoff closes the specification phase.
 3. Where do those sets intersect strongly enough to support a meaningful,
    context-specific decision?
 
-The result will be a bounded decision contract: supported player questions,
+The result is a bounded decision contract: supported player questions,
 the evidence required to answer them, known tradeoffs, and claims the product
 must decline to make.
 
@@ -212,8 +212,8 @@ Future New Game presentation
 The eventual New Game panel should present conclusions and decisive tradeoffs,
 not a dump of cluster statistics. It should show low-cost preview conclusions
 immediately and place execution-heavy evidence behind an on-demand control.
-Its user story is deliberately inactive in the roadmap until the evidence and
-conclusion contracts are settled.
+Its user story remains inactive until a separate presentation roadmap is
+proposed and accepted.
 
 ## Existing delivery infrastructure
 
@@ -239,9 +239,9 @@ The roadmap produced:
 - recorded uncertainties and technical probes that must remain implementation
   prerequisites.
 
-The candidate [implementation-planning
+The accepted [implementation-planning
 boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md) records the
 normative baseline, minimum product contract, runtime gates, validation
-obligations, and deferred work. Once SPEC-07 is accepted, product specification
-is closed and a separate implementation roadmap may begin. Until then, no
-implementation story is active.
+obligations, and deferred work. Product specification is closed. The candidate
+[scanner core implementation roadmap](management/IMPLEMENTATION-ROADMAP.md)
+must be accepted before any implementation story is activated.

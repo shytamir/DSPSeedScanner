@@ -1,24 +1,22 @@
 # Implementation-Planning Boundary
 
-**Status:** Candidate produced by SPEC-07; pending product acceptance.
+**Status:** Accepted on 2026-08-11.
 
-This handoff prepares closure of product specification without creating
-implementation stories. It identifies the smallest useful product contract,
+This handoff prepared closure of product specification without creating
+implementation stories. It identified the smallest useful product contract,
 the constraints engineering must preserve, and the evidence required before
 runtime-dependent code can be treated as production-ready.
 
 ## Readiness decision
 
 The accepted technical baseline is sufficient for a separate implementation
-roadmap, subject to acceptance of this handoff. Runtime probes demonstrated
-that the intended BepInEx boundary can generate the required preview and raw
-evidence. The accepted contracts define deterministic identity, evidence
-stages, neutral outcomes, predicates, ranges, validation fixtures, and declined
-claims.
+roadmap. Runtime probes demonstrated that the intended BepInEx boundary can
+generate the required preview and raw evidence. The accepted contracts define
+deterministic identity, evidence stages, neutral outcomes, predicates, ranges,
+validation fixtures, and declined claims.
 
-This is not approval to implement from this roadmap. Acceptance of this
-handoff closes the specification phase and authorizes planning the engineering
-work in a new roadmap.
+This completed specification roadmap did not approve implementation. A
+separately accepted implementation roadmap remains required.
 
 ## Normative baseline
 
@@ -229,15 +227,16 @@ The first raw proof should remain a developer-invoked harness until the raw
 runtime gates pass. This sequencing limits risk without prescribing classes,
 frameworks, schedules, or estimates.
 
-## SPEC-07 acceptance
+## Accepted SPEC-07 resolution
 
-Acceptance confirms that:
+Acceptance confirmed that:
 
 1. the normative baseline contains no unresolved product contradiction;
 2. the minimum active and explicitly unknown conclusion set is adequate;
 3. the architecture and runtime gates are sufficient implementation
    constraints;
 4. the deferred list is outside the initial implementation plan; and
-5. implementation work will be planned in a separate roadmap.
+5. implementation work would be planned in a separate roadmap.
 
-Acceptance without semantic change closes the product-specification phase.
+Acceptance without semantic change closed the product-specification phase on
+2026-08-11.

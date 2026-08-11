@@ -1,7 +1,6 @@
 # Product Specification Roadmap
 
-**Status:** Final review. SPEC-01 through SPEC-06 are accepted; SPEC-07 is
-completed and pending acceptance.
+**Status:** Completed and accepted on 2026-08-11.
 
 **Active user story:** None.
 
@@ -239,7 +238,7 @@ automated test implementation, and product code.
 
 ### SPEC-07: Prepare the implementation-planning boundary
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a maintainer planning implementation, I want the accepted product contract,
 remaining uncertainties, and required technical probes in one bounded handoff
@@ -250,7 +249,7 @@ The minimum active and explicitly unknown conclusion set was selected, and the
 architecture, runtime probes, validation gates, and deferred work required for
 implementation planning were recorded.
 
-**Produced:** Candidate [implementation-planning
+**Produced:** The accepted [implementation-planning
 boundary](../specification/IMPLEMENTATION-PLANNING-BOUNDARY.md), containing the
 normative baseline, single-request initial scope, immediate and on-demand
 surfaces, required unknowns, runtime integration gates, conformance checks,
@@ -268,23 +267,23 @@ the future presentation story, and beginning product code.
 
 ### FUTURE-UI-01: Present conclusions in New Game selection
 
-**State:** Inactive; not eligible for activation in this roadmap.
+**State:** Inactive; outside this completed roadmap.
 
 As a player considering a generated seed, I want concise context-aware
 conclusions integrated into the New Game seed-selection flow so that I can make
 a decision without leaving the game or decoding raw statistics.
 
-Future planning may address panel placement, context selection, comparison,
-refresh behavior, accessibility, and failure states only after the generation,
-evidence, and conclusion contracts are approved.
+A separate future roadmap may address panel placement, context selection,
+comparison, refresh behavior, accessibility, and failure states. This completed
+roadmap does not authorize that work.
 
-**Prior-art targets:** When this story becomes eligible, review
+**Prior-art targets:** A future presentation roadmap should review
 DSP-Seed-Finder's interactive exploration and DSPSeedSearch's New Game hook for
 workflow lessons. They are not presentation requirements, and no UI research
-is authorized by the current roadmap.
+was authorized by this roadmap.
 
-**Activation prerequisite:** Completion of SPEC-01 through SPEC-07 and adoption
-of a separate presentation roadmap.
+**Activation prerequisite:** SPEC-01 through SPEC-07 are complete. Adoption of
+a separate presentation roadmap remains required.
 
 **Explicitly excluded now:** UI implementation, mockups, input interception,
 New Game patches, styling, and presentation-specific telemetry.
