@@ -20,32 +20,7 @@ Follow, in order:
 
 A specific instruction overrides a general one.
 
-## 3. Product contract
-
-DSP Seed Scanner is a planned BepInEx-dependent mod that uses the Dyson Sphere
-Program runtime to help players decide whether a generated star cluster suits
-the run they intend to play.
-
-Preserve these invariants unless a task explicitly changes one:
-
-- scanning is deterministic for the same complete generation identity and
-  supported game version;
-- scanning does not modify the player's factory, progression, or save data;
-- game runtime data is treated as authoritative;
-- generation, extraction, normalization, interpretation, and presentation
-  remain separate concerns;
-- conclusions are tied to a stated player context and never imply a universal
-  best seed;
-- long-running scans remain bounded, observable, and interruptible;
-- failures identify the affected seed and stage without fabricating results;
-- game, Unity, and BepInEx assemblies are dependencies and are never
-  redistributed from this repository.
-
-Read `docs/PROJECT.md` before changing scan behavior, result contracts,
-runtime integration, or project scope. Read `docs/management/ROADMAP.md` before
-starting or changing product-specification work.
-
-## 4. Scope discipline
+## 3. Scope and preservation
 
 Inspect and modify only files named by the task and files directly required to
 complete it. Do not perform unrelated cleanup, dependency upgrades, broad
@@ -54,91 +29,60 @@ refactors, or speculative feature work.
 Preserve unexplained user changes. If they overlap the requested work and
 cannot be safely retained, stop and ask for direction.
 
-## 5. Before editing
+Treat external dependencies and installed software as read-only inputs unless
+the task explicitly requires changing them. Do not copy dependency binaries,
+credentials, private data, or machine-specific state into the repository.
+
+## 4. Before editing
 
 1. Run `git status --short`.
-2. Inspect the directly relevant source and documentation.
+2. Inspect the directly relevant files and governing documentation.
 3. Identify existing behavior and local conventions.
-4. Determine the smallest viable implementation and narrowest validation.
+4. Determine the smallest viable change and narrowest useful validation.
 5. Ask a question only when a missing decision materially changes the result.
 
-## 6. Architecture and runtime evidence
+## 5. Change discipline
 
-Keep these responsibilities separate as the implementation develops:
+Prefer small, local, direct, and readable changes compatible with the existing
+toolchain. Reuse established patterns when they fit, but do not preserve a
+pattern that conflicts with the current requirements.
 
-```text
-Complete generation identity
-    |
-DSP runtime generation
-    |
-Normalized cluster evidence
-    |
-Context-specific interpretation
-    |
-Decision conclusions
-    |
-Future New Game presentation
-```
+Avoid speculative abstractions, compatibility layers, broad reflection,
+unbounded work, or behavior that depends silently on ambient machine state.
+When external behavior is uncertain, distinguish confirmed evidence from
+inference and fail explicitly rather than fabricating a result.
 
-Use the installed game and its assemblies as read-only development inputs.
-Do not copy game assemblies into the repository or introduce replacement
-generation logic when the task calls for authoritative runtime behavior.
-
-When runtime members or behavior are uncertain, inspect the installed
-assemblies or record runtime evidence. Distinguish confirmed behavior from
-inference. Compatibility failures should be explicit and diagnostic rather
-than silently producing incomplete scan results.
-
-## 7. Implementation discipline
-
-Prefer:
-
-- small, local changes;
-- direct and readable code compatible with the selected BepInEx toolchain;
-- deterministic evaluation with explicit inputs;
-- normalized data at the boundary between DSP runtime access and scan rules;
-- cancellation and progress reporting for batch work;
-- focused validation and documentation that matches behavior.
-
-Avoid:
-
-- hidden dependence on the active save;
-- frame-by-frame work that can be scheduled or batched;
-- unbounded allocations or retained game objects across seeds;
-- scoring rules embedded in runtime extraction code;
-- broad reflection scans when a focused runtime API is known;
-- speculative abstractions and compatibility layers.
-
-## 8. Validation
+## 6. Validation
 
 Run the narrowest relevant check first. For implementation changes, build the
 affected project and repair failures caused by the change. Add focused tests
-for deterministic normalization or evaluation logic when practical.
+when they provide practical protection for the changed behavior.
 
-Compilation alone does not prove in-game behavior, runtime compatibility,
-performance, or deterministic cluster generation. Report checks requiring a
-running game as skipped unless they were actually performed.
+Report checks that require unavailable software, credentials, hardware, or an
+interactive runtime as skipped unless they were actually performed. Do not
+claim that compilation proves runtime behavior, compatibility, performance, or
+other properties it did not exercise.
 
-Do not commit generated build output, copied assemblies, scan result dumps,
-save data, temporary diagnostics, or editor and OS noise.
+Do not commit generated build output, dependency binaries, data dumps,
+temporary diagnostics, secrets, credentials, or editor and OS noise.
 
-## 9. Documentation
+## 7. Documentation
 
-Keep `README.md` focused on users and contributors. Keep `docs/PROJECT.md` as
-the authority for product purpose, scope, invariants, architecture, and current
-state. Update both when a change affects their respective contracts.
+Update user, contributor, project, and management documentation only when the
+change affects their respective contracts. Keep authoritative information in
+the repository document designated for it instead of duplicating it here.
 
-Do not present proposed behavior as implemented. Mark unsettled decisions and
-future work plainly.
+Do not present proposed behavior as implemented. Mark unsettled decisions,
+skipped validation, and future work plainly.
 
-## 10. Git discipline
+## 8. Git discipline
 
 Before committing:
 
 1. inspect `git status --short` and the final diff;
 2. confirm that only intended files changed;
 3. run the relevant validation;
-4. check for secrets, generated output, copied assemblies, and scan data.
+4. check for secrets, generated output, dependency binaries, and data dumps.
 
 Commit only when requested. Push only when explicitly requested. Do not amend,
 rebase, reset, clean, stash, force-push, or rewrite history unless explicitly
@@ -155,21 +99,21 @@ git -c "safe.directory=$repo" status --short
 Before pushing a clean branch that may be behind its remote, fetch and use a
 fast-forward-only update. Never resolve divergence with a force push.
 
-## 11. Definition of done
+## 9. Definition of done
 
 A task is complete when:
 
 - the requested behavior or artifact exists;
 - the change stays within scope;
 - relevant checks pass or skipped checks are reported accurately;
-- documentation matches the implemented behavior;
+- affected documentation matches the result;
 - the final diff contains only intentional changes;
 - required commit and push operations succeed.
 
 Stop when the acceptance criteria are satisfied.
 
-## 12. Final report
+## 10. Final report
 
-Report the completed result, changed files, checks actually run, Git branch
-and commit details, push result, and any known residual issues. Keep the report
+Report the completed result, changed files, checks actually run, Git branch and
+commit details, push result, and any known residual issues. Keep the report
 factual and concise.
