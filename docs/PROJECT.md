@@ -28,6 +28,9 @@ seed.
   cases, but cannot override runtime-confirmed behavior.
 - Unsupported compatibility, incomplete coverage, or unavailable evidence
   produces an explicit unknown rather than an approximation.
+- Raw vein positions may use deterministic invariant-decimal normalization of
+  DSP's single-precision values; preserving the source floating-point bit
+  pattern is not required by the active conclusion contract.
 
 The detailed boundaries are maintained in the accepted
 [generation identity](specification/GENERATION-IDENTITY.md) and

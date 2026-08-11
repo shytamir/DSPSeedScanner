@@ -317,8 +317,12 @@ explicit non-success result.
 - isolated candidate galaxy ownership with exact target and algorithm checks,
   `PlanetModelingManager.PrepareWorks`, `RandomTable.Init()`, DSP's selected
   atomic raw call, deterministic normalization, and guaranteed release;
-- exact resource type, product, amount, group, and position evidence, with oil
-  represented separately as flow semantics and its runtime multiplier;
+- exact resource type, product, amount, and group evidence plus deterministic
+  invariant-decimal positions, with oil represented separately as flow
+  semantics and its runtime multiplier;
+- a raw-specific state lease that restored the three `RandomTable` and seven
+  `PlanetModelingManager` preparation-array references in addition to the
+  existing game, save, factory, progression, and descriptor state;
 - complete or unavailable single-planet coverage, seed/planet/stage errors,
   explicit unknown runtime-value diagnostics, and no partial evidence escape;
   and
@@ -343,7 +347,7 @@ explicit non-success result.
 - an injected post-atomic failure and cancellation both before raw work and
   after the atomic call returned unavailable coverage, no evidence, precise
   seed/planet/stage results, and restored state; every created candidate was
-  released; and
+  released, and all ten preparation-array identities were restored; and
 - the Release solution and local plugin builds completed with zero warnings,
   all 14 conclusion checks passed, and all 19 runtime-boundary checks passed.
 
@@ -351,6 +355,12 @@ explicit non-success result.
 repeatable catalogue harness. Probe output, copied dependencies, and generated
 assemblies remained outside the repository; preview traces continued to prove
 that automatic preview evaluation never invoked raw generation.
+
+**Accepted position limitation:** Raw node and group positions are normalized
+from DSP's single-precision values through deterministic invariant-decimal
+conversion, not preserved as their original IEEE-754 bit patterns. That loss
+is accepted because no active conclusion depends on bit-exact raw positions;
+resource type, product, amount, group, provenance, and coverage remain exact.
 
 **Retained debt:** IMPL-05 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
 Their release constraints and IMPL-08 closure gate remain unchanged.

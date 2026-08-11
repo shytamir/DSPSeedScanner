@@ -29,6 +29,19 @@ namespace DSPSeedScanner.Plugin
                 { (int)EVeinType.Bamboo, "spiniform-stalagmite-crystal" },
                 { (int)EVeinType.Mag, "unipolar-magnet" }
             };
+        private static readonly (Type Type, string Member)[] PreparationStaticFields =
+        {
+            (typeof(RandomTable), "sphericNormal"),
+            (typeof(RandomTable), "sphericInside"),
+            (typeof(RandomTable), "integers"),
+            (typeof(PlanetModelingManager), "vegeHps"),
+            (typeof(PlanetModelingManager), "vegeScaleRanges"),
+            (typeof(PlanetModelingManager), "vegeProtos"),
+            (typeof(PlanetModelingManager), "veinProducts"),
+            (typeof(PlanetModelingManager), "veinModelIndexs"),
+            (typeof(PlanetModelingManager), "veinModelCounts"),
+            (typeof(PlanetModelingManager), "veinProtos")
+        };
 
         private readonly DspPreviewGateway sharedGateway;
 
@@ -44,7 +57,14 @@ namespace DSPSeedScanner.Plugin
         public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) =>
             sharedGateway.CaptureFingerprint(request);
 
-        public RuntimeStateLease CaptureState() => sharedGateway.CaptureState();
+        public RuntimeStateLease CaptureState()
+        {
+            KeyValuePair<FieldInfo, object?>[] preparationState =
+                CapturePreparationStaticState();
+            return new DspRawStateLease(
+                sharedGateway.CaptureState(),
+                preparationState);
+        }
 
         public IReadOnlyList<int> ReachableSolidAlgorithmIds(PreviewScanRequest request)
         {
@@ -287,7 +307,106 @@ namespace DSPSeedScanner.Plugin
                     return type.FullName + "." + member;
                 }
             }
+            foreach ((Type type, string member) in PreparationStaticFields)
+            {
+                if (FindStaticField(type, member) == null)
+                    return type.FullName + "." + member;
+            }
             return null;
+        }
+
+        private static KeyValuePair<FieldInfo, object?>[] CapturePreparationStaticState()
+        {
+            var values = new List<KeyValuePair<FieldInfo, object?>>();
+            foreach ((Type type, string member) in PreparationStaticFields)
+            {
+                FieldInfo? field = FindStaticField(type, member);
+                if (field == null)
+                {
+                    throw new RawCompatibilityException(
+                        "missing-raw-runtime-member",
+                        "A required raw preparation field is unavailable.",
+                        type.FullName + "." + member);
+                }
+                values.Add(new KeyValuePair<FieldInfo, object?>(field, field.GetValue(null)));
+            }
+            return values.ToArray();
+        }
+
+        private static FieldInfo? FindStaticField(Type type, string member)
+        {
+            return type.GetField(
+                member,
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        }
+
+        private sealed class DspRawStateLease : RuntimeStateLease
+        {
+            private readonly RuntimeStateLease sharedLease;
+            private readonly KeyValuePair<FieldInfo, object?>[] preparationState;
+            private bool restored;
+
+            public DspRawStateLease(
+                RuntimeStateLease sharedLease,
+                KeyValuePair<FieldInfo, object?>[] preparationState)
+            {
+                this.sharedLease = sharedLease ??
+                    throw new ArgumentNullException(nameof(sharedLease));
+                this.preparationState = preparationState ??
+                    throw new ArgumentNullException(nameof(preparationState));
+            }
+
+            public override bool Restored => restored;
+
+            public override void Dispose()
+            {
+                Exception? failure = null;
+                bool preparationRestored = true;
+                foreach (KeyValuePair<FieldInfo, object?> pair in preparationState)
+                {
+                    try
+                    {
+                        pair.Key.SetValue(null, pair.Value);
+                    }
+                    catch (Exception exception)
+                    {
+                        preparationRestored = false;
+                        if (failure == null)
+                            failure = exception;
+                    }
+                }
+                foreach (KeyValuePair<FieldInfo, object?> pair in preparationState)
+                {
+                    try
+                    {
+                        preparationRestored &=
+                            ReferenceEquals(pair.Key.GetValue(null), pair.Value);
+                    }
+                    catch (Exception exception)
+                    {
+                        preparationRestored = false;
+                        if (failure == null)
+                            failure = exception;
+                    }
+                }
+
+                try
+                {
+                    sharedLease.Dispose();
+                }
+                catch (Exception exception)
+                {
+                    if (failure == null)
+                        failure = exception;
+                }
+                restored = preparationRestored && sharedLease.Restored;
+                if (failure != null)
+                {
+                    throw new InvalidOperationException(
+                        "Raw runtime state restoration failed.",
+                        failure);
+                }
+            }
         }
     }
 }
