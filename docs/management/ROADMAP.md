@@ -1,10 +1,9 @@
 # Scanner Core Roadmap
 
-**Status:** Active; accepted for execution on 2026-08-11.
+**Status:** Completed and accepted on 2026-08-11.
 
-**Active user story:** None. IMPL-01 through IMPL-08 are accepted; IMPL-09 is
-completed and pending acceptance. The scanner core roadmap awaits final story
-acceptance before it is complete.
+**Active user story:** None. IMPL-01 through IMPL-09 are accepted and the
+scanner core roadmap is complete.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -677,7 +676,7 @@ invocation or broader runtime claim was introduced.
 
 ### IMPL-09: Package the conformant scanner core
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a maintainer preparing presentation work, I want the conformant core built
 as an installable BepInEx package so that later integration depends on a real
@@ -757,8 +756,9 @@ source control.
 
 **Residual limits:** This story did not publish or promote a release. The
 package has no player-facing panel, hook, control, keybinding, telemetry,
-batch search, persistence, or wider compatibility claim. Product acceptance
-and any presentation roadmap remain separate decisions.
+batch search, persistence, or wider compatibility claim. Optional
+single-assembly packaging is tracked as [TD-003](TECHNICAL-DEBT.md#td-003-evaluate-single-assembly-packaging).
+Any presentation roadmap remains a separate decision.
 
 ## Roadmap coverage
 

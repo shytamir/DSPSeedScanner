@@ -1,7 +1,7 @@
 # Technical Debt Register
 
-**Status:** No active entries. TD-001 and TD-002 were closed by IMPL-08 on
-2026-08-11.
+**Status:** One active entry. TD-001 and TD-002 were closed by IMPL-08;
+TD-003 was recorded at IMPL-09 acceptance on 2026-08-11.
 
 This register records deliberately deferred engineering obligations that are
 too important to disappear into story prose. A debt entry does not weaken the
@@ -66,3 +66,37 @@ rejected a changed in-memory method digest.
 **Closure gate:** Satisfied for IMPL-08. Compatibility remains deliberately
 limited to the one recorded runtime identity; no general mod compatibility is
 claimed.
+
+## TD-003: Evaluate single-assembly packaging
+
+**Introduced:** IMPL-09 acceptance, 2026-08-11.
+
+**State:** Active; non-blocking for presentation planning.
+
+**Deferred obligation:** Determine whether the three scanner-owned assemblies
+can be merged into one delivered `DSPSeedScanner.dll` without collapsing the
+source-project boundaries between the plugin adapter, runtime orchestration,
+and pure conclusion core.
+
+**Current evidence:** The accepted three-assembly package loads and executes
+all core operations correctly. Separate assemblies keep the Core and Runtime
+projects independently testable without DSP, Unity, or BepInEx. Assembly
+merging would be a packaging refinement, not a functional requirement.
+
+**Value if closed by implementation:** One installed DLL reduces visible
+package clutter and simplifies manual inspection and removal.
+
+**Cost boundary:** Do not adopt merging if it introduces significant build or
+maintenance cost, weakens deterministic builds, changes public report types,
+obscures stack traces, breaks BepInEx discovery, or risks including DSP, Unity,
+BepInEx, or the CI reference assembly. The existing source and test boundaries
+must remain intact.
+
+**Closure evidence:** Either produce a one-DLL package that passes artifact and
+archive validation, loads in the supported isolated runtime, and repeats
+preview and raw invocation successfully, or document that the demonstrated
+cost or risk is disproportionate and close the refinement as declined. The
+three-DLL package remains acceptable until that decision.
+
+**Required by:** Review before any publication-ready package is approved. It
+does not block presentation specification or implementation.

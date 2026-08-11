@@ -4,10 +4,11 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
-**Current status:** The scanner core roadmap is active. IMPL-01 through
-IMPL-08 are accepted; IMPL-09 is completed and pending acceptance. The
-installable presentation-neutral core package exists, but no player-facing
-panel or invocation is implemented. No user story is active.
+**Current status:** The scanner core roadmap was completed and accepted on
+2026-08-11. The installable presentation-neutral core package exists, but no
+player-facing panel or invocation is implemented. Presentation planning has
+not started and no user story is active. One packaging refinement remains
+tracked as non-blocking technical debt.
 
 ## Product decision
 
