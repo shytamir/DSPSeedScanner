@@ -27,7 +27,7 @@ namespace DSPSeedScanner.Runtime
         public RuntimeFingerprint Fingerprint { get; }
         public string CanonicalValue { get; }
         public string Hash { get; }
-        public string FileName => Hash + CompleteClusterResultCache.EntryExtension;
+        public string FileName => Hash + CompleteClusterConclusionCache.EntryExtension;
 
         public static bool TryCreate(
             PreviewGenerationIdentity identity,
@@ -83,7 +83,7 @@ namespace DSPSeedScanner.Runtime
         {
             GenerationIdentity galaxy = identity.GalaxyIdentity;
             var value = new StringBuilder();
-            Add(value, "cache-schema", CompleteClusterResultCache.SchemaVersion.ToString(CultureInfo.InvariantCulture));
+            Add(value, "cache-schema", CompleteClusterConclusionCache.SchemaVersion.ToString(CultureInfo.InvariantCulture));
             Add(value, "stage", EvidenceStage.CompleteClusterRaw.ToString());
             Add(value, "game-version", galaxy.GameVersion);
             Add(value, "galaxy-algorithm", galaxy.GalaxyAlgorithm.ToString(CultureInfo.InvariantCulture));
@@ -126,20 +126,39 @@ namespace DSPSeedScanner.Runtime
         }
     }
 
-    public sealed class CompleteClusterResultCache
+    public sealed class CachedCompleteClusterConclusions
     {
-        internal const int SchemaVersion = 1;
+        internal CachedCompleteClusterConclusions(
+            string cacheKeyHash,
+            PreviewGenerationIdentity identity,
+            CompleteClusterRawCoverage coverage,
+            IEnumerable<ConclusionReport> reports)
+        {
+            CacheKeyHash = cacheKeyHash;
+            Identity = identity;
+            Coverage = coverage;
+            Reports = Array.AsReadOnly(reports.ToArray());
+        }
+
+        public string CacheKeyHash { get; }
+        public PreviewGenerationIdentity Identity { get; }
+        public CompleteClusterRawCoverage Coverage { get; }
+        public IReadOnlyList<ConclusionReport> Reports { get; }
+    }
+
+    public sealed class CompleteClusterConclusionCache
+    {
+        internal const int SchemaVersion = 2;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
-        private const int MaximumEntryBytes = 8 * 1024 * 1024;
-        private const int MaximumReports = 4096;
-        private const int MaximumRareResources = 64;
+        private const int MaximumEntryBytes = 512 * 1024;
+        private const int MaximumReports = 1024;
 
         private readonly object sync = new object();
         private readonly int maximumEntries;
         private long lastTouchTicks;
 
-        public CompleteClusterResultCache(string directoryPath, int maximumEntries = 128)
+        public CompleteClusterConclusionCache(string directoryPath, int maximumEntries = 128)
         {
             if (String.IsNullOrWhiteSpace(directoryPath))
                 throw new ArgumentException("A cache directory is required.", nameof(directoryPath));
@@ -155,7 +174,7 @@ namespace DSPSeedScanner.Runtime
         public bool TryRead(
             PreviewGenerationIdentity identity,
             RuntimeFingerprint fingerprint,
-            out CompleteClusterRawResult? result)
+            out CachedCompleteClusterConclusions? result)
         {
             result = null;
             if (!CompleteClusterCacheKey.TryCreate(identity, fingerprint, out CompleteClusterCacheKey? key) ||
@@ -183,7 +202,7 @@ namespace DSPSeedScanner.Runtime
                         throw new InvalidDataException("The cache entry checksum is invalid.");
                     using var stream = new MemoryStream(entry, 0, payloadLength, writable: false);
                     using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
-                    CompleteClusterRawResult candidate = Read(reader, key);
+                    CachedCompleteClusterConclusions candidate = Read(reader, key);
                     if (stream.Position != stream.Length || !IsCacheable(key, candidate))
                         throw new InvalidDataException("The cache entry contract is invalid.");
                     Touch(path);
@@ -222,6 +241,9 @@ namespace DSPSeedScanner.Runtime
                 string? temporary = null;
                 try
                 {
+                    ConclusionReport[] cachedReports = result.Reports
+                        .Where(report => report.Stage == EvidenceStage.CompleteClusterRaw)
+                        .ToArray();
                     Directory.CreateDirectory(DirectoryPath);
                     string destination = Path.Combine(DirectoryPath, key.FileName);
                     temporary = Path.Combine(
@@ -231,7 +253,7 @@ namespace DSPSeedScanner.Runtime
                     using (var buffer = new MemoryStream())
                     using (var writer = new BinaryWriter(buffer, Encoding.UTF8, leaveOpen: true))
                     {
-                        Write(writer, key, result);
+                        Write(writer, key, result.Coverage, cachedReports);
                         writer.Flush();
                         payload = buffer.ToArray();
                     }
@@ -314,8 +336,7 @@ namespace DSPSeedScanner.Runtime
                 result.AffectedPlanetId.HasValue ||
                 result.RawDiagnostic != null ||
                 result.Reports.Count == 0 ||
-                result.Reports.Count > MaximumReports ||
-                result.RareResources.Count > MaximumRareResources)
+                result.Reports.Count > MaximumReports)
             {
                 return false;
             }
@@ -333,51 +354,72 @@ namespace DSPSeedScanner.Runtime
                 key.Identity.ResourceMultiplier,
                 key.Identity.CombatMode,
                 key.Identity.CombatSettingsKey);
-            if (result.RareResources.Select(item => item.ResourceId)
-                    .Distinct(StringComparer.Ordinal).Count() != result.RareResources.Count)
-            {
-                return false;
-            }
             bool hasCompleteClusterReport = false;
             foreach (ConclusionReport report in result.Reports)
             {
-                if (report.Identity != key.Identity.GalaxyIdentity ||
-                    report.Settings != settings ||
-                    !String.Equals(
-                        report.ContractVersion,
-                        ConclusionDefinition.ContractVersion,
-                        StringComparison.Ordinal) ||
-                    !String.Equals(
-                        report.DefinitionVersion,
-                        ConclusionDefinition.DefinitionVersion,
-                        StringComparison.Ordinal))
-                {
+                if (!IsCurrentReport(key, settings, report))
                     return false;
-                }
                 hasCompleteClusterReport |= report.Stage == EvidenceStage.CompleteClusterRaw &&
                     report.Coverage.IsComplete;
             }
             return hasCompleteClusterReport;
         }
 
+        private static bool IsCacheable(
+            CompleteClusterCacheKey key,
+            CachedCompleteClusterConclusions result)
+        {
+            if (!String.Equals(result.CacheKeyHash, key.Hash, StringComparison.Ordinal) ||
+                !result.Identity.Equals(key.Identity) ||
+                !result.Coverage.IsComplete ||
+                result.Coverage.ExpectedPlanets <= 0 ||
+                result.Reports.Count == 0 ||
+                result.Reports.Count > MaximumReports)
+            {
+                return false;
+            }
+
+            var settings = new EvaluationSettings(
+                key.Identity.ResourceMultiplier,
+                key.Identity.CombatMode,
+                key.Identity.CombatSettingsKey);
+            return result.Reports.All(report =>
+                report.Stage == EvidenceStage.CompleteClusterRaw &&
+                report.Coverage.IsComplete &&
+                IsCurrentReport(key, settings, report));
+        }
+
+        private static bool IsCurrentReport(
+            CompleteClusterCacheKey key,
+            EvaluationSettings settings,
+            ConclusionReport report) =>
+            report.Identity == key.Identity.GalaxyIdentity &&
+            report.Settings == settings &&
+            String.Equals(
+                report.ContractVersion,
+                ConclusionDefinition.ContractVersion,
+                StringComparison.Ordinal) &&
+            String.Equals(
+                report.DefinitionVersion,
+                ConclusionDefinition.DefinitionVersion,
+                StringComparison.Ordinal);
+
         private static void Write(
             BinaryWriter writer,
             CompleteClusterCacheKey key,
-            CompleteClusterRawResult result)
+            CompleteClusterRawCoverage coverage,
+            IReadOnlyList<ConclusionReport> reports)
         {
             writer.Write(Magic);
             writer.Write(SchemaVersion);
             writer.Write(key.CanonicalValue);
-            writer.Write(result.Coverage.ExpectedPlanets);
-            writer.Write(result.RareResources.Count);
-            foreach (NormalizedRareResourceEvidence rare in result.RareResources)
-                WriteRare(writer, rare);
-            writer.Write(result.Reports.Count);
-            foreach (ConclusionReport report in result.Reports)
+            writer.Write(coverage.ExpectedPlanets);
+            writer.Write(reports.Count);
+            foreach (ConclusionReport report in reports)
                 WriteReport(writer, report);
         }
 
-        private static CompleteClusterRawResult Read(
+        private static CachedCompleteClusterConclusions Read(
             BinaryReader reader,
             CompleteClusterCacheKey key)
         {
@@ -389,52 +431,20 @@ namespace DSPSeedScanner.Runtime
                 throw new InvalidDataException("The cache identity is not current.");
 
             int expectedPlanets = Positive(reader.ReadInt32(), 4096, "planet count");
-            int rareCount = Bounded(reader.ReadInt32(), MaximumRareResources, "rare-resource count");
-            var rare = new List<NormalizedRareResourceEvidence>(rareCount);
-            for (int index = 0; index < rareCount; index++)
-                rare.Add(ReadRare(reader));
             int reportCount = Positive(reader.ReadInt32(), MaximumReports, "report count");
             var reports = new List<ConclusionReport>(reportCount);
             for (int index = 0; index < reportCount; index++)
                 reports.Add(ReadReport(reader, key.Identity));
 
-            return new CompleteClusterRawResult(
-                RuntimeScanStatus.Success,
-                key.Identity.GalaxyIdentity.GalaxySeed,
-                "cache-hit",
-                "A complete result was restored from the local cache.",
-                key.Fingerprint,
+            return new CachedCompleteClusterConclusions(
+                key.Hash,
+                key.Identity,
                 new CompleteClusterRawCoverage(
                     CoverageState.Complete,
                     expectedPlanets,
                     expectedPlanets),
-                Array.Empty<CompleteClusterRawProgress>(),
-                rare,
-                reports,
-                new[] { "cache:hit" },
-                stateRestored: true,
-                elapsedMilliseconds: 0,
-                managedMemoryDeltaBytes: 0);
+                reports);
         }
-
-        private static void WriteRare(BinaryWriter writer, NormalizedRareResourceEvidence rare)
-        {
-            writer.Write(rare.ResourceId);
-            writer.Write(rare.IsPresent);
-            WriteOptionalSubject(writer, rare.NearestSystem);
-            WriteOptionalDecimal(writer, rare.DistanceFromBirthLy);
-            WriteOptionalInt64(writer, rare.Amount);
-            WriteOptionalInt32(writer, rare.VeinGroups);
-        }
-
-        private static NormalizedRareResourceEvidence ReadRare(BinaryReader reader) =>
-            new NormalizedRareResourceEvidence(
-                Required(reader.ReadString(), "rare resource"),
-                reader.ReadBoolean(),
-                ReadOptionalSubject(reader),
-                ReadOptionalDecimal(reader),
-                ReadOptionalInt64(reader),
-                ReadOptionalInt32(reader));
 
         private static void WriteReport(BinaryWriter writer, ConclusionReport report)
         {
@@ -525,16 +535,6 @@ namespace DSPSeedScanner.Runtime
                 EnumValue<SubjectKind>(reader.ReadInt32()),
                 Required(reader.ReadString(), "subject identifier"));
 
-        private static void WriteOptionalSubject(BinaryWriter writer, ConclusionSubject? subject)
-        {
-            writer.Write(subject != null);
-            if (subject != null)
-                WriteSubject(writer, subject);
-        }
-
-        private static ConclusionSubject? ReadOptionalSubject(BinaryReader reader) =>
-            reader.ReadBoolean() ? ReadSubject(reader) : null;
-
         private static void WriteOptionalString(BinaryWriter writer, string? value)
         {
             writer.Write(value != null);
@@ -544,36 +544,6 @@ namespace DSPSeedScanner.Runtime
 
         private static string? ReadOptionalString(BinaryReader reader) =>
             reader.ReadBoolean() ? Required(reader.ReadString(), "optional string") : null;
-
-        private static void WriteOptionalDecimal(BinaryWriter writer, decimal? value)
-        {
-            writer.Write(value.HasValue);
-            if (value.HasValue)
-                writer.Write(value.Value);
-        }
-
-        private static decimal? ReadOptionalDecimal(BinaryReader reader) =>
-            reader.ReadBoolean() ? reader.ReadDecimal() : (decimal?)null;
-
-        private static void WriteOptionalInt64(BinaryWriter writer, long? value)
-        {
-            writer.Write(value.HasValue);
-            if (value.HasValue)
-                writer.Write(value.Value);
-        }
-
-        private static long? ReadOptionalInt64(BinaryReader reader) =>
-            reader.ReadBoolean() ? reader.ReadInt64() : (long?)null;
-
-        private static void WriteOptionalInt32(BinaryWriter writer, int? value)
-        {
-            writer.Write(value.HasValue);
-            if (value.HasValue)
-                writer.Write(value.Value);
-        }
-
-        private static int? ReadOptionalInt32(BinaryReader reader) =>
-            reader.ReadBoolean() ? reader.ReadInt32() : (int?)null;
 
         private void Touch(string path)
         {

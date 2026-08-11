@@ -1,14 +1,15 @@
 # Complete-Cluster Cache
 
-DSP Seed Scanner keeps successful complete-cluster results under:
+DSP Seed Scanner keeps successful complete-cluster presentation conclusions
+under:
 
 ```text
 BepInEx/config/DSPSeedScanner/cache
 ```
 
 The cache is local to the installed game and is not a source of new evidence.
-It only avoids repeating a scan whose complete result was produced for the
-same supported runtime and generation identity.
+It only avoids repeating a scan whose complete semantic conclusions were
+produced for the same supported runtime and generation identity.
 
 ## Trust boundary
 
@@ -24,22 +25,25 @@ An entry is reusable only when all of the following still match exactly:
 
 Partial, failed, cancelled, incompatible, corrupt, oversized, or obsolete
 entries are cache misses. Each entry carries a payload checksum; corrupt or
-obsolete files encountered at the current key are removed. A cache hit
-reconstructs the complete rare-resource evidence and conclusion reports; it
-does not imitate the elapsed time, memory, per-planet progress, or diagnostic
-trace of the original execution.
+obsolete files encountered at the current key are removed. A cache hit returns
+only semantic conclusion reports attributed to complete-cluster evidence.
+Live preview conclusions are inexpensive to regenerate and are not duplicated.
+Normalized rare-resource evidence, rendered panel wording, elapsed time,
+memory, per-planet progress, and execution diagnostics are never persisted.
 
 Writes use a temporary file in the cache directory and atomically replace the
-destination only after the complete entry has been flushed. The default cache
-retains the 128 most recently written or read entries. It does not migrate old
-schemas or synchronize results between installations.
+destination only after the complete entry has been flushed. Each entry is
+limited to 512 KiB. The default cache retains the 128 most recently written or
+read entries, establishing a 64 MiB worst-case payload bound. It does not
+migrate old schemas or synchronize results between installations.
 
 ## Clear the cache
 
 Close Dyson Sphere Program, then delete the
 `BepInEx/config/DSPSeedScanner/cache` directory. The mod recreates it when a
-later successful scan is stored. This removes only cached scanner results; it
-does not affect saves, configuration settings, or the installed mod.
+later successful scan is stored. This removes only cached presentation
+conclusions; it does not affect saves, configuration settings, or the installed
+mod.
 
 Integrations may perform the same operation through
 `ClearCompleteClusterCache`. There is no cache-management panel in the current

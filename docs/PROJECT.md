@@ -7,10 +7,11 @@ story scope, evidence, and history belong in the roadmap.
 **Current status:** The scanner core roadmap was completed and accepted on
 2026-08-11. The New Game presentation roadmap was approved on 2026-08-12.
 PRES-01 and PRES-02 were accepted. PRES-03 implemented the bounded local
-complete-result cache and is at its acceptance gate. No player-facing panel or
-automatic scan invocation is implemented. Panel anchoring is resolved as a
-four-corner configuration with bottom-right as the default. One packaging
-refinement remains tracked as non-blocking technical debt.
+complete-conclusion cache and is at its revised acceptance gate. No
+player-facing panel or automatic scan invocation is implemented. Panel
+anchoring is resolved as a four-corner configuration with bottom-right as the
+default. One packaging refinement remains tracked as non-blocking technical
+debt.
 
 ## Product decision
 
@@ -66,8 +67,10 @@ The accepted semantics and thresholds are maintained in the
   bounded full raw scan for that preview load.
 - Replaced or exited previews cancel obsolete work at a safe boundary, and a
   stale result can never update the current panel.
-- Only successful complete results are persisted in a versioned, bounded local
-  cache under the mod configuration area.
+- Only presentation-ready semantic conclusions derived from a successful
+  complete scan are persisted in a versioned, bounded local cache under the
+  mod configuration area. Raw or normalized resource evidence, execution
+  diagnostics, and rendered wording are not cached.
 - The panel presents immediate and complete neutral conclusions without
   requiring player input. Its numeric corner setting defaults to `1` for
   bottom-right, then proceeds clockwise as `2` bottom-left, `3` top-left, and

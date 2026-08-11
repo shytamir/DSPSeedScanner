@@ -25,7 +25,7 @@ namespace DSPSeedScanner.Plugin
         private RawPlanetCoordinator? rawCoordinator;
         private BirthSystemRawCoordinator? birthSystemCoordinator;
         private CompleteClusterRawCoordinator? completeClusterCoordinator;
-        private CompleteClusterResultCache? completeClusterCache;
+        private CompleteClusterConclusionCache? completeClusterCache;
         private DspRawPlanetGateway? rawGateway;
         private bool probeAttempted;
         private CompleteClusterRawOperation? cooperativeProbeOperation;
@@ -48,7 +48,7 @@ namespace DSPSeedScanner.Plugin
             completeClusterCoordinator = new CompleteClusterRawCoordinator(
                 rawGateway,
                 operationGate);
-            completeClusterCache = new CompleteClusterResultCache(
+            completeClusterCache = new CompleteClusterConclusionCache(
                 Path.Combine(Paths.ConfigPath, "DSPSeedScanner", "cache"));
             Logger.LogInfo("Runtime boundary initialized on managed thread " +
                 Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture) + ".");
@@ -289,7 +289,7 @@ namespace DSPSeedScanner.Plugin
         public bool TryGetCachedCompleteCluster(
             PreviewGenerationIdentity identity,
             RuntimeFingerprint fingerprint,
-            out CompleteClusterRawResult? result)
+            out CachedCompleteClusterConclusions? result)
         {
             if (completeClusterCache == null)
                 throw new InvalidOperationException("The plugin has not completed Awake.");

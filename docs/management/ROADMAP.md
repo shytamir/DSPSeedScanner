@@ -34,7 +34,8 @@ the scanner to receive its supported conclusions.
 - One preview load creates exactly one **resolution attempt**. A cache hit
   performs no new scan; a cache miss may perform at most one new scan.
 - Duplicate runtime callbacks for one load are coalesced. Reloading the same
-  identity creates a new resolution attempt and may use its cached result.
+  identity creates a new resolution attempt and may use its cached complete
+  conclusions.
 - Immediate preview conclusions remain useful while complete raw evidence is
   pending. Raw completion produces a new attributed report and never silently
   rewrites the earlier report.
@@ -43,7 +44,9 @@ the scanner to receive its supported conclusions.
   boundaries.
 - A result may update the panel only while its preview session and complete
   generation identity are still current.
-- Only successful complete results may be persisted. Cache corruption,
+- Only complete-scan semantic conclusions admitted from a successful complete
+  result may be persisted. Raw or normalized evidence, execution diagnostics,
+  preview conclusions, and rendered wording are excluded. Cache corruption,
   incompatibility, or version mismatch is a miss, never current evidence.
 - The panel renders the accepted neutral conclusion contract. It introduces no
   score, ranking, hidden weighting, new predicate, or required player input.
@@ -201,21 +204,26 @@ As a player revisiting a preview, I want an already completed local scan reused
 so that I do not repeatedly wait for identical evidence.
 
 **Return:** A bounded local cache in the mod configuration area stores and
-retrieves complete results by full generation identity, evidence coverage, and
-the applicable scanner contract versions.
+retrieves only complete-scan semantic conclusion bundles by full generation
+identity, complete coverage, and the applicable scanner contract versions.
+Live preview conclusions are regenerated rather than duplicated.
 
 **Acceptance gate:** Automated storage tests prove deterministic key equality,
-atomic replacement, bounded retention, successful round trips, and safe misses
-for absent, partial, failed, cancelled, corrupt, incompatible, or obsolete
-entries. A documented manual clear operation removes cached scanner results.
+atomic replacement, the 512 KiB per-entry ceiling, bounded retention,
+successful semantic-conclusion round trips, exclusion of preview conclusions
+and scan evidence or diagnostics, and safe misses for absent, partial, failed,
+cancelled, corrupt, incompatible, oversized, or obsolete entries. A documented
+manual clear operation removes cached conclusions.
 
 **Out of scope:** Shared or cross-machine caches, cloud storage, databases,
 cache browsing UI, migration promises, incomplete-result resumption, and
-changes to conclusion semantics.
+changes to conclusion semantics. Raw and normalized scan evidence, execution
+history, and rendered presentation copy are explicitly not cache payloads.
 
-**Delivered:** Successful complete-cluster reports can now be reused from a
-bounded local cache only when the current supported runtime, full generation
-identity, complete evidence stage, and scanner contracts match exactly.
+**Delivered:** Presentation-ready complete-cluster semantic conclusions can
+now be reused from a bounded local cache only when the current supported
+runtime, full generation identity, complete evidence stage, and scanner
+contracts match exactly.
 
 **Implemented:**
 
@@ -224,11 +232,15 @@ identity, complete evidence stage, and scanner contracts match exactly.
   resource settings, pre-play combat identity, complete-cluster stage, and
   applicable scanner contract versions;
 - one checksummed, dependency-free versioned binary entry per identity,
-  limited to 8 MiB and written through a flushed same-directory temporary file
-  and atomic replace;
-- successful-complete-only admission with report identity, settings, version,
-  coverage, fingerprint, and restored-state validation before persistence and
-  again after reconstruction;
+  limited to 512 KiB and written through a flushed same-directory temporary
+  file and atomic replace;
+- successful-complete-only admission that extracts reports attributed to
+  complete-cluster evidence after validating identity, settings, versions,
+  coverage, fingerprint, and restored runtime state;
+- a distinct cached-conclusions contract containing only identity, complete
+  coverage, and semantic reports; preview reports, normalized rare-resource
+  evidence, execution diagnostics, performance observations, and rendered
+  wording have no persisted representation;
 - fail-closed reads that treat absent, partial, failed, cancelled,
   incompatible, corrupt, oversized, or obsolete material as a miss and remove
   an invalid file encountered at the current key;
@@ -242,9 +254,12 @@ identity, complete evidence stage, and scanner contracts match exactly.
 - equivalent identities with differently scaled decimals produced the same
   canonical key, while seed and resource-setting changes produced different
   keys and unsupported fingerprints could not create keys;
-- a successful complete result round-tripped with identical rare-resource
-  evidence, conclusion reports, and coverage, and atomically replaced an
-  existing invalid destination without leaving a temporary file;
+- a successful complete result round-tripped only its identical complete-stage
+  semantic reports and coverage, excluded its preview reports, and atomically
+  replaced an existing invalid destination without leaving a temporary file;
+- reflection checks confirmed the cached contract exposes no rare-resource
+  evidence, progress, trace, elapsed-time, or memory surface, while an
+  otherwise valid semantic payload over 512 KiB was not persisted;
 - a two-entry fixture deterministically evicted the least-recent entry, kept
   the two current identities readable, and the clear operation removed every
   cache entry and remained idempotent;
@@ -256,10 +271,11 @@ identity, complete evidence stage, and scanner contracts match exactly.
   checks passed; and the semantic-versioned DLL and Thunderstore package
   validators accepted the resulting three-assembly package.
 
-**Produced:** `CompleteClusterCacheKey`, `CompleteClusterResultCache`, four
-focused storage fixtures, the BepInEx configuration-path adapter, and the
-[cache operation record](../CACHE.md). Cache-or-scan orchestration, cache UI,
-migration, and human in-game validation remained outside this story.
+**Produced:** `CompleteClusterCacheKey`, `CachedCompleteClusterConclusions`,
+`CompleteClusterConclusionCache`, four focused storage fixtures, the BepInEx
+configuration-path adapter, and the [cache operation record](../CACHE.md).
+Cache-or-scan orchestration, cache UI, migration, rendered copy, and human
+in-game validation remained outside this story.
 
 ## Phase 2 - Deliver the hands-off workflow
 
@@ -323,7 +339,7 @@ tradeoffs, and uncertainty without decoding raw statistics.
 and context-grouped conclusion cards for the accepted fresh-start,
 megafactory, Dark Fog farming, compact-expansion, sphere or energy, and
 decision-relevant-trait contexts. The pending detailed section shows activity
-until complete evidence replaces it, and cached results are identified.
+until complete evidence replaces it, and cached conclusions are identified.
 
 **Acceptance gate:** Snapshot and mapping tests cover every accepted outcome,
 tradeoff, unknown, not-applicable state, subject attribution, and supported

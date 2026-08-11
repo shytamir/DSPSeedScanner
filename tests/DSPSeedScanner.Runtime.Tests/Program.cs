@@ -834,7 +834,7 @@ namespace DSPSeedScanner.Runtime.Tests
         {
             WithTemporaryDirectory(path =>
             {
-                var cache = new CompleteClusterResultCache(path, maximumEntries: 3);
+                var cache = new CompleteClusterConclusionCache(path, maximumEntries: 3);
                 PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
                 RuntimeFingerprint fingerprint = Fingerprint();
                 CompleteClusterRawResult source = CompleteResult();
@@ -849,19 +849,29 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(1, Directory.GetFiles(path, "*.dspseedscan").Length);
                 Equal(0, Directory.GetFiles(path, ".*.tmp").Length);
 
-                var reopened = new CompleteClusterResultCache(path, maximumEntries: 3);
+                var reopened = new CompleteClusterConclusionCache(path, maximumEntries: 3);
                 True(reopened.TryRead(
                     identity,
                     fingerprint,
-                    out CompleteClusterRawResult? restored));
-                Equal(RuntimeScanStatus.Success, restored?.Status);
-                Equal("cache-hit", restored?.Code);
+                    out CachedCompleteClusterConclusions? restored));
+                ConclusionReport[] expected = source.Reports
+                    .Where(report => report.Stage == EvidenceStage.CompleteClusterRaw)
+                    .ToArray();
+                Equal(identity, restored?.Identity);
+                Equal(key.Hash, restored?.CacheKeyHash);
                 Equal(source.Coverage, restored?.Coverage);
-                True(source.RareResources.SequenceEqual(restored!.RareResources));
-                True(source.Reports.SequenceEqual(restored.Reports));
-                Equal(0, restored.Progress.Count);
-                Equal("cache:hit", restored.Trace.Single());
-                True(restored.StateRestored);
+                True(expected.SequenceEqual(restored!.Reports));
+                True(restored.Reports.All(report =>
+                    report.Stage == EvidenceStage.CompleteClusterRaw));
+                True(source.Reports.Any(report =>
+                    report.Stage == EvidenceStage.GalaxyPreview));
+                True(restored.Reports.Count < source.Reports.Count);
+                False(typeof(CachedCompleteClusterConclusions).GetProperties()
+                    .Any(property => property.Name == "RareResources" ||
+                        property.Name == "Progress" || property.Name == "Trace" ||
+                        property.Name == "ElapsedMilliseconds" ||
+                        property.Name == "ManagedMemoryDeltaBytes"));
+                True(new FileInfo(entry).Length <= 512 * 1024);
             });
         }
 
@@ -869,7 +879,7 @@ namespace DSPSeedScanner.Runtime.Tests
         {
             WithTemporaryDirectory(path =>
             {
-                var cache = new CompleteClusterResultCache(path, maximumEntries: 2);
+                var cache = new CompleteClusterConclusionCache(path, maximumEntries: 2);
                 PreviewGenerationIdentity firstIdentity = PreviewIdentity(16_315_224, 1m);
                 PreviewGenerationIdentity secondIdentity = PreviewIdentity(16_315_224, 0.5m);
                 PreviewGenerationIdentity thirdIdentity = PreviewIdentity(16_315_224, 2m);
@@ -892,7 +902,7 @@ namespace DSPSeedScanner.Runtime.Tests
         {
             WithTemporaryDirectory(path =>
             {
-                var cache = new CompleteClusterResultCache(path);
+                var cache = new CompleteClusterConclusionCache(path);
                 PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
                 CompleteClusterRawResult source = CompleteResult();
                 var partial = new CompleteClusterRawResult(
@@ -951,11 +961,41 @@ namespace DSPSeedScanner.Runtime.Tests
                     true,
                     0,
                     0);
+                ConclusionReport template = source.Reports.First(report =>
+                    report.Stage == EvidenceStage.CompleteClusterRaw);
+                var oversizedReport = new ConclusionReport(
+                    template.Identity,
+                    template.Settings,
+                    template.Coverage,
+                    new string('x', 600 * 1024),
+                    template.Context,
+                    template.ContractVersion,
+                    template.DefinitionVersion,
+                    template.Subject,
+                    template.Outcome,
+                    template.DecisiveFact,
+                    template.DiagnosticCause,
+                    template.SourceConclusionId);
+                var oversized = new CompleteClusterRawResult(
+                    RuntimeScanStatus.Success,
+                    source.GalaxySeed,
+                    "success",
+                    "oversized fixture",
+                    source.Fingerprint,
+                    source.Coverage,
+                    source.Progress,
+                    source.RareResources,
+                    new[] { oversizedReport },
+                    source.Trace,
+                    true,
+                    0,
+                    0);
 
                 False(cache.TryStore(identity, partial));
                 False(cache.TryStore(identity, failed));
                 False(cache.TryStore(identity, cancelled));
                 False(cache.TryStore(identity, incompatible));
+                False(cache.TryStore(identity, oversized));
                 False(cache.TryRead(identity, Fingerprint(), out _));
                 Equal(0, Directory.Exists(path) ? Directory.GetFiles(path).Length : 0);
 
@@ -1135,7 +1175,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(CompleteClusterRawProgress),
                 typeof(CompleteClusterRawOperation),
                 typeof(CompleteClusterCacheKey),
-                typeof(CompleteClusterResultCache),
+                typeof(CompleteClusterConclusionCache),
+                typeof(CachedCompleteClusterConclusions),
                 typeof(PreviewGenerationIdentity),
                 typeof(PreviewSession),
                 typeof(PreviewLoadTransition),

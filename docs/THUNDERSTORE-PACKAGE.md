@@ -83,8 +83,8 @@ After BepInEx loads `DSPSeedScannerPlugin`, an integration may obtain the
 plugin instance through its GUID `io.github.shytamir.dspseedscanner` and call
 the public `ScanPreview`, `GenerateRawPlanet`,
 `GenerateBirthSystemResources`, `GenerateCompleteClusterResources`, or
-`StartCompleteClusterResources` methods. Complete results may be read, stored,
-or cleared through `TryGetCachedCompleteCluster`,
+`StartCompleteClusterResources` methods. Complete-scan semantic conclusion
+bundles may be read, stored, or cleared through `TryGetCachedCompleteCluster`,
 `TryStoreCompleteCluster`, and `ClearCompleteClusterCache`. The start method
 returns a disposable presentation-neutral operation; each `Advance` call
 completes at most one solid planet and restores shared DSP state before
