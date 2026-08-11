@@ -68,6 +68,9 @@ temporary diagnostics, secrets, credentials, or editor and OS noise.
 
 ## 7. Documentation
 
+`docs/PROJECT.md` is authoritative for project steering decisions and current
+tracked status. Do not duplicate that authority in this file or elsewhere.
+
 Update user, contributor, project, and management documentation only when the
 change affects their respective contracts. Keep authoritative information in
 the repository document designated for it instead of duplicating it here.

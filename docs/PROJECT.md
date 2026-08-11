@@ -1,249 +1,87 @@
-# DSP Seed Scanner - Project Definition
+# DSP Seed Scanner - Project Steering
 
-**Status:** Product specification is complete. The scanner core roadmap is
-active; IMPL-01 is accepted, and IMPL-02 is completed and pending acceptance.
-No user story is active.
+This document is authoritative for accepted project decisions and current
+tracked status. Detailed contracts belong in the specification documents;
+story scope, evidence, and history belong in the roadmap.
 
-The active [scanner core roadmap](management/ROADMAP.md) governs
-implementation. The archived [product specification planning
-roadmap](archive/PLANNING-ROADMAP.md) produced the accepted
-[generation-identity contract](specification/GENERATION-IDENTITY.md) and
-[experiment record](specification/SPEC-01-EXPERIMENTS.md). SPEC-02 produced the
-accepted [runtime evidence feasibility
-matrix](specification/RUNTIME-EVIDENCE-FEASIBILITY.md). SPEC-03 produced the
-accepted [player seed-decision
-taxonomy](specification/PLAYER-DECISION-TAXONOMY.md). SPEC-04 produced the
-accepted [context-to-evidence decision
-matrix](specification/DECISION-EVIDENCE-MATRIX.md). SPEC-05 produced the
-accepted [seed conclusion contract](specification/CONCLUSION-CONTRACT.md).
-SPEC-06 produced the accepted [predicate, range, and validation
-catalogue](specification/PREDICATE-RANGE-VALIDATION.md). SPEC-07 produced the
-accepted [implementation-planning
-boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md).
+**Current status:** The scanner core roadmap is active. IMPL-02 is completed
+and pending acceptance. No user story is active.
 
-## Purpose
+## Product decision
 
 DSP Seed Scanner will help players decide whether a procedurally generated
-Dyson Sphere Program cluster suits the run they intend to play.
+Dyson Sphere Program cluster suits the run they intend to play. It will present
+bounded, context-specific conclusions and will not define a universally best
+seed.
 
-The project will ask the installed game runtime to generate candidate clusters,
-extract only faithfully reproducible facts, and interpret those facts across
-bounded product-defined contexts. Optional player preferences may prioritize or
-refine conclusions inside accepted ranges, but do not create or reverse the
-neutral outcome. The project will not maintain an independent galaxy generator
-or present one universal definition of a good seed.
+## Accepted steering decisions
 
-## Accepted specification outcome
+### Evidence authority
 
-Before selecting features or implementation stories, the project had to answer
-three questions. SPEC-01 established the accepted identity required to answer
-the first, SPEC-02 established the accepted evidence boundary, SPEC-03
-documented how players describe the second, and SPEC-04 identified the accepted
-decision-worthy intersection. SPEC-05 defined the accepted conclusion
-contract, and SPEC-06 established its accepted predicate, range, and validation
-definition. SPEC-07 reconciled the baseline into the accepted conservative
-implementation handoff and closed the specification phase.
+- The installed Dyson Sphere Program runtime is authoritative for generated
+  cluster evidence.
+- A seed is meaningful only with its complete generation identity and relevant
+  settings.
+- Community material and prior tools may identify player questions and test
+  cases, but cannot override runtime-confirmed behavior.
+- Unsupported compatibility, incomplete coverage, or unavailable evidence
+  produces an explicit unknown rather than an approximation.
 
-1. Which cluster facts can the available DSP runtime reproduce reliably from
-   the seed and all generation-affecting settings?
-2. Which characteristics do players use to judge seeds for different kinds of
-   runs?
-3. Where do those sets intersect strongly enough to support a meaningful,
-   context-specific decision?
+The detailed boundaries are maintained in the accepted
+[generation identity](specification/GENERATION-IDENTITY.md) and
+[runtime evidence feasibility](specification/RUNTIME-EVIDENCE-FEASIBILITY.md)
+documents.
 
-The result is a bounded decision contract: supported player questions,
-the evidence required to answer them, known tradeoffs, and claims the product
-must decline to make.
+### Decision contract
 
-## Evidence available to the investigation
+- Conclusions are evaluated automatically across the accepted fresh-start,
+  megafactory, Dark Fog farming, compact-expansion, sphere or energy, and
+  decision-relevant-trait contexts.
+- Neutral outcomes must survive the complete accepted preference range.
+  Optional preferences may filter or explain an outcome but cannot create or
+  reverse it.
+- Components remain independent. Material conflicts remain visible as
+  tradeoffs; no global score or hidden weighting may collapse them.
+- Unsupported claims remain declined even when adjacent diagnostic facts are
+  available.
 
-The current workspace provides:
+The accepted semantics and thresholds are maintained in the
+[conclusion contract](specification/CONCLUSION-CONTRACT.md) and
+[predicate and validation catalogue](specification/PREDICATE-RANGE-VALIDATION.md).
 
-- an installed Dyson Sphere Program runtime;
-- the installed `Assembly-CSharp.dll` and Unity managed assemblies as read-only
-  technical evidence;
-- an installed BepInEx environment for focused runtime probes;
-- the New Game flow and generated galaxy objects for behavioral observation;
-- community discussions, guides, existing seed tools, and reported seeds as
-  sources of player vocabulary and candidate preferences.
+### Delivery boundary
 
-Game assemblies and repeatable runtime observations are authoritative for what
-the scanner can reproduce. Community material is evidence of what players care
-about, not proof of game behavior. Existing scanners may suggest questions and
-test cases, but their calculations are not accepted as authoritative without
-confirmation against the installed runtime.
+- Low-cost preview conclusions are eligible for immediate evaluation.
+- Exact terrain and resource conclusions require explicit on-demand work.
+- Reports remain presentation-neutral. A New Game selection panel is future
+  planning work and is not part of the active scanner-core roadmap.
+- The project evaluates one explicitly requested generation identity at a time.
+  Batch search, parallel generation, unattended databases, and exports require
+  later steering decisions.
 
-## Faithful reproduction standard
+### Safety and responsibility boundaries
 
-A fact is eligible for the product only when the investigation establishes:
-
-- the complete input identity needed to reproduce it, including every relevant
-  generation setting and the DSP version;
-- an authoritative runtime source or a deterministic derivation from
-  runtime-sourced facts;
-- repeatable results across independent generations of the same input;
-- the point at which the fact becomes available during New Game selection;
-- acceptable collection cost and no dependence on player save progression;
-- explicit behavior when the source is unavailable or changes in a later game
-  version.
-
-Seed alone does not identify a cluster. SPEC-01 established the required
-layered generation identity, and SPEC-02 mapped which galaxy, resource, and
-Dark Fog facts were available at each runtime stage. The accepted delivery
-boundary supports immediate low-cost preview evidence and reserves exact,
-execution-heavy terrain and resource generation for an explicit on-demand
-control.
-
-## Player decision contexts
-
-SPEC-03 established three primary context families and admitted materially
-distinct alternatives. They remain research classifications, not implemented
-profiles.
-
-### Fresh start
-
-Concerned with the quality and convenience of progression from landing through
-early interstellar expansion. Players compare starter-system topology, travel
-friction, usable early resources, power opportunities, nearby expansion, and
-the interaction with chosen resource and combat settings.
-
-### Megafactory
-
-Concerned with sustained late-game scale. Players compare stellar energy
-potential, suitable planets and systems, rare-resource availability, transport
-geometry, construction capacity, and performance-aware concentration or
-distribution of production.
-
-### Dark Fog farming
-
-Concerned with establishing and sustaining deliberate combat farms. Players
-compare initial occupation, hive opportunity, farmable system topology,
-defensibility, and access to Dark Fog-exclusive drops. SPEC-03 separated those
-seed-selection concerns from planetary bases, replenishment, yield, and other
-state that develops only after play begins.
-
-### Valid alternatives
-
-The taxonomy admitted speedrunning, scarce-resource or maximum-difficulty play,
-compact expansion, sphere showcases, themed challenges, and discovery-first
-play because each changes a recognizable decision. A preference did not become
-a first-class context merely because it was measurable.
-
-## Decision-value standard
-
-The product should retain a candidate characteristic only when:
-
-1. players use it to make a recognizable choice;
-2. the runtime can reproduce the supporting evidence faithfully;
-3. the characteristic changes a decision in at least one defined context;
-4. its benefit and important tradeoffs can be stated without implying a
-   universal ranking;
-5. the conclusion can be validated against representative and counterexample
-   seeds.
-
-Raw availability is insufficient. A reproducible number with no material
-player decision is diagnostic data, not a product feature. A popular heuristic
-without reproducible evidence is research context, not a scanner conclusion.
-
-SPEC-04 advanced bounded preview and on-demand candidate families while
-rejecting unsupported predictions, subjective judgments, universal viability,
-and a global seed score. SPEC-05 converted those accepted dispositions into
-twelve automatically evaluated conclusion families across six supported
-contexts. SPEC-06 supplied accepted fixed predicates, setting-scoped ranges,
-and runtime-confirmed cases while deferring unsupported rate and abundance
-claims to unknown. SPEC-07 selected the minimum initial contract and recorded
-the runtime gates and deferrals required for implementation planning. Core
-outcomes must survive the complete accepted preference range.
-
-## Product invariants
-
-- The installed DSP runtime is authoritative for cluster generation.
-- Results are deterministic for the same complete generation identity and
-  supported game version.
-- Scanning does not modify player factories, progression, or save files.
-- Every conclusion is attributable to normalized evidence and a supported
-  product context.
-- Neutral conclusions are evaluated without player input and remain invariant
-  across their accepted preference range.
-- Optional preferences may filter, prioritize, or refine a conclusion but
-  cannot alter its evidence, identity, or core outcome.
-- Generation, extraction, normalization, interpretation, and presentation
-  remain separate responsibilities.
-- Context-specific tradeoffs are preserved; the product does not invent a
-  context-free best seed.
-- Unsupported or incomplete evidence produces an explicit unknown, not a
-  fabricated match or conclusion.
-- Batch work remains bounded, observable, cancellable, and isolated per seed.
+- Scanning must not modify player saves, factories, progression, or persistent
+  game state.
+- Generation, runtime extraction, normalization, evaluation, orchestration,
+  and presentation remain separate responsibilities.
+- Long-running work must be bounded, observable, cancellable at safe
+  boundaries, and attributable to its seed and stage.
 - DSP, Unity, and BepInEx assemblies remain external dependencies and are not
   redistributed.
 
-## Scope of the completed specification planning roadmap
+## Current scope exclusions
 
-The archived planning roadmap covered:
+The active product scope does not include an independent galaxy generator,
+universal seed ranking, subjective quality claims, post-start guarantees,
+player-facing UI, broad compatibility promises, or publication to an external
+service. New scope requires an explicit steering decision and corresponding
+roadmap change.
 
-- runtime-source and generation-input discovery;
-- reproducibility experiments and an evidence feasibility matrix;
-- research into player seed-selection goals and disagreements;
-- a cross-context decision matrix;
-- a supported conclusion contract and validation seed set;
-- a specification exit review suitable for implementation planning.
+## Management and documentation
 
-It does not authorize plugin implementation, batch-scanner optimization,
-result-schema construction, UI design, or release work.
-
-## Architecture boundary
-
-Implementation planning may refine names, but must preserve this separation:
-
-```text
-Complete generation identity
-    |
-DSP runtime generation
-    |
-Normalized cluster evidence
-    |
-Context-specific interpretation
-    |
-Decision conclusions
-    |
-Future New Game presentation
-```
-
-The eventual New Game panel should present conclusions and decisive tradeoffs,
-not a dump of cluster statistics. It should show low-cost preview conclusions
-immediately and place execution-heavy evidence behind an on-demand control.
-Its user story remains inactive until a separate presentation roadmap is
-proposed and accepted.
-
-## Existing delivery infrastructure
-
-The repository already establishes placeholder semantic versioning and generic
-Thunderstore package validation. `VERSION` supplies major and minor values,
-the GitHub Actions run number supplies the patch, assembly and file versions
-append `.0`, and diagnostic labels append the short commit.
-
-See [THUNDERSTORE-PACKAGE.md](THUNDERSTORE-PACKAGE.md). The current package is
-intentionally non-installable and remained outside the completed specification
-planning roadmap.
-
-## Specification exit review
-
-The completed specification planning roadmap produced:
-
-- a verified generation-identity contract;
-- a runtime evidence feasibility matrix;
-- a sourced player-goal and seed-characteristic taxonomy;
-- a context-to-evidence decision matrix;
-- an initial conclusion contract with explicit exclusions;
-- a validated predicate and bounded preference-range set;
-- representative positive, negative, and tradeoff validation seeds;
-- recorded uncertainties and technical probes that must remain implementation
-  prerequisites.
-
-The accepted [implementation-planning
-boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md) records the
-normative baseline, minimum product contract, runtime gates, validation
-obligations, and deferred work. Product specification is closed. IMPL-01
-established the runtime-independent normalized conclusion boundary. IMPL-02
-implemented the complete definition `0.1.0` pure conclusion engine and is
-pending acceptance; later implementation stories remain inactive.
+The active [scanner core roadmap](management/ROADMAP.md) owns story scope,
+acceptance evidence, sequencing, and history. The completed product planning
+roadmap is retained in the [archive](archive/PLANNING-ROADMAP.md). The
+[documentation index](INDEX.md) lists all current and archived documents with
+their purpose.
