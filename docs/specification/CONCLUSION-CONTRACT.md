@@ -1,9 +1,8 @@
 # Seed Conclusion Contract
 
-**Status:** Revised candidate contract produced by SPEC-05; pending product
-acceptance.
+**Status:** Accepted on 2026-08-11.
 
-**Contract version:** `0.1.0-candidate.2`
+**Contract version:** `0.1.0`
 
 This contract defines the first conclusions DSP Seed Scanner may draw from a
 generated cluster. It turns accepted evidence into neutral, useful answers
@@ -102,7 +101,7 @@ Every applicable conclusion family resolves without player input:
 | **Not applicable** | Authoritative settings make the context question irrelevant, such as Dark Fog farming in peace mode. |
 
 No numeric confidence, letter grade, aggregate score, or universal verdict is
-allowed by version `0.1.0-candidate.2`.
+allowed by version `0.1.0`.
 
 ## Predicate and preference-range requirements
 
@@ -249,7 +248,7 @@ caution.
 
 ## Explicitly declined claims
 
-Version `0.1.0-candidate.2` must not produce:
+Version `0.1.0` must not produce:
 
 - a universal best-seed verdict, aggregate score, or arbitrary weighting;
 - a guarantee that a starter is viable, safe, easy, or impossible to lose;
@@ -267,10 +266,11 @@ Unsupported or after-start requests resolve to **unknown** with the dependency
 identified. Complete but preference-dependent evidence resolves to
 **preference-sensitive**. Neither may be approximated by an adjacent fact.
 
-## Validation obligations for SPEC-06
+## Validation obligations addressed by SPEC-06
 
-Before this contract can become an implementation baseline, SPEC-06 must
-establish the predicate and preference-range set and test every family with:
+This contract becomes an implementation baseline only with an accepted matching
+predicate and preference-range definition. SPEC-06 produced a candidate that
+addressed these required cases:
 
 - stable positive evidence across the full accepted range;
 - stable negative or caution evidence where that outcome is allowed;
@@ -306,7 +306,7 @@ This contract uses semantic versioning independently of the mod package:
 
 Changing an accepted range endpoint, direction, or associated outcome requires
 at least a minor version. Pre-release labels identify unaccepted candidates.
-Acceptance of this artifact would establish contract version `0.1.0`; later
+Acceptance of this artifact established contract version `0.1.0`; later
 changes must record their compatibility impact.
 
 ## SPEC-05 conclusion

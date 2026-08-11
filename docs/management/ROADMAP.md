@@ -1,7 +1,7 @@
 # Product Specification Roadmap
 
-**Status:** Draft. SPEC-01 through SPEC-04 are accepted; the revised SPEC-05
-contract is pending acceptance.
+**Status:** Draft. SPEC-01 through SPEC-05 are accepted; SPEC-06 is completed
+and pending acceptance.
 
 **Active user story:** None.
 
@@ -167,7 +167,7 @@ implementation estimates.
 
 ### SPEC-05: Specify bounded seed conclusions
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a player in New Game selection, I want a small set of justified conclusions
 and decisive tradeoffs so that I can accept, reject, or compare a seed without
@@ -180,9 +180,9 @@ ranges were defined. Every supported context is evaluated without requiring
 player input. Optional input may prioritize or refine a result inside its
 accepted range but cannot reverse the neutral outcome.
 
-**Produced:** Candidate [seed conclusion
+**Produced:** The accepted [seed conclusion
 contract](../specification/CONCLUSION-CONTRACT.md)
-`0.1.0-candidate.2`, containing twelve automatically evaluated conclusion
+`0.1.0`, containing twelve automatically evaluated conclusion
 families across six supported contexts. It defines robust whole-range outcomes,
 `preference-sensitive` behavior for complete evidence that varies inside the
 accepted range, strict unknown/not-applicable behavior, and validation
@@ -194,37 +194,46 @@ conclusion models. The contract retained explicit predicates and declared
 comparisons as product-owned, versioned definitions without inheriting either
 tool's criteria or treating a match as universally good.
 
-**Excluded:** Activating SPEC-06, panel layout, presentation copy, visual
-design, result serialization, interaction behavior, and scan orchestration.
+**Excluded at completion:** Panel layout, presentation copy, visual design,
+result serialization, interaction behavior, and scan orchestration.
 
 ## Phase 5 - Validate that the specification discriminates usefully
 
 ### SPEC-06: Establish predicates, ranges, and the validation seed set
 
-**State:** Proposed.
+**State:** Completed; pending acceptance.
 
 As a player relying on a neutral conclusion, I want its predicate and preference
 range challenged by representative robust, sensitive, and mixed seeds so that
 the result survives reasonable preferences rather than reflecting only the
 examples that inspired it.
 
-Establish the product-owned predicate and preference-range set, then select
-runtime-confirmed seeds for each supported context. Include robust positives,
-robust negatives, values inside adjustable ranges, endpoint boundaries,
-conflicting strengths, settings-sensitive cases, and incomplete evidence.
-Record expected conclusions without turning named seeds into permanent special
-cases.
+The product-owned predicate and preference-range set was established and
+runtime-confirmed seeds were selected across the supported contexts. The
+catalogue included robust positives, robust negatives, adjustable-range and
+endpoint cases, conflicting strengths, settings-sensitive cases, and incomplete
+evidence. Expected conclusions were recorded without turning named seeds into
+permanent special cases.
 
-**Produces:** A versioned predicate and preference-range set, reproducible
-validation catalogue, and acceptance procedure for the conclusion contract.
+**Produced:** Candidate [predicate, range, and validation
+catalogue](../specification/PREDICATE-RANGE-VALIDATION.md)
+`0.1.0-candidate.1`. It established deterministic fixed predicates,
+setting-scoped cohort ranges, a research-anchored compact-distance range,
+runtime-confirmed validation seeds, unknown/not-applicable cases, and an
+acceptance procedure. Gas-rate, cluster-resource-strength, and rare-abundance
+claims were purposefully left unknown because the evidence did not support
+neutral ranges.
 
-**Prior-art targets:** Draw candidate positive, negative, and boundary seeds
-from DSPSeedScanner's published lists and DSPSeedSearch's largest-sphere
-results. Re-generate every adopted case with the supported DSP runtime and add
-counterexamples; prior-art labels are hypotheses, not expected truth.
+**Prior-art used:** Candidate cases were drawn from DSPSeedScanner's published
+lists and regenerated with the supported DSP runtime. Seed `1369` confirmed a
+nearby high-energy case, while `45772` and `82506644` confirmed relevant
+birth-system traits. Cohort cases and counterexamples supplied the remaining
+boundaries. Prior-art labels remained hypotheses until runtime confirmation;
+DSPSeedSearch's single largest-sphere model informed the separate geometry
+components without supplying their thresholds.
 
-**Excludes:** Exhaustive seed searches, performance benchmarking, and automated
-test implementation.
+**Excluded:** Activating SPEC-07, exhaustive seed searches, performance
+benchmarking, automated test implementation, and product code.
 
 ## Phase 6 - Close product specification
 

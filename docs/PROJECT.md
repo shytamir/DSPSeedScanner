@@ -1,7 +1,8 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** SPEC-01 through SPEC-04 are accepted. The revised SPEC-05 seed
-conclusion contract is pending acceptance. No user story is active.
+**Status:** SPEC-01 through SPEC-05 are accepted. SPEC-06 produced a candidate
+predicate, range, and validation catalogue that is pending acceptance. No user
+story is active.
 
 The current roadmap is [docs/management/ROADMAP.md](management/ROADMAP.md).
 It governs the remaining investigation that must precede implementation
@@ -13,9 +14,10 @@ matrix](specification/RUNTIME-EVIDENCE-FEASIBILITY.md). SPEC-03 produced the
 accepted [player seed-decision
 taxonomy](specification/PLAYER-DECISION-TAXONOMY.md). SPEC-04 produced the
 accepted [context-to-evidence decision
-matrix](specification/DECISION-EVIDENCE-MATRIX.md). SPEC-05 produced a candidate
-[seed conclusion contract](specification/CONCLUSION-CONTRACT.md), which remains
-pending acceptance.
+matrix](specification/DECISION-EVIDENCE-MATRIX.md). SPEC-05 produced the
+accepted [seed conclusion contract](specification/CONCLUSION-CONTRACT.md).
+SPEC-06 produced the candidate [predicate, range, and validation
+catalogue](specification/PREDICATE-RANGE-VALIDATION.md).
 
 ## Purpose
 
@@ -35,8 +37,10 @@ Before selecting features or implementation stories, the project must answer
 three questions. SPEC-01 established the accepted identity required to answer
 the first, SPEC-02 established the accepted evidence boundary, SPEC-03
 documented how players describe the second, and SPEC-04 identified the accepted
-decision-worthy intersection. SPEC-05 defined the first candidate conclusion
-contract; the remaining roadmap must validate and close it.
+decision-worthy intersection. SPEC-05 defined the accepted conclusion
+contract, and SPEC-06 produced its candidate predicate, range, and validation
+definition. The remaining roadmap must accept or revise that definition and
+close the specification boundary.
 
 1. Which cluster facts can the available DSP runtime reproduce reliably from
    the seed and all generation-affecting settings?
@@ -141,10 +145,12 @@ without reproducible evidence is research context, not a scanner conclusion.
 
 SPEC-04 advanced bounded preview and on-demand candidate families while
 rejecting unsupported predictions, subjective judgments, universal viability,
-and a global seed score. Revised SPEC-05 converted those accepted dispositions
-into twelve automatically evaluated candidate conclusion families across six
-supported contexts. Their core outcomes must survive the complete accepted
-preference range.
+and a global seed score. SPEC-05 converted those accepted dispositions into
+twelve automatically evaluated conclusion families across six supported
+contexts. SPEC-06 supplied candidate fixed predicates, setting-scoped ranges,
+and runtime-confirmed cases while deferring unsupported rate and abundance
+claims to unknown. Core outcomes must survive the complete accepted preference
+range.
 
 ## Product invariants
 
