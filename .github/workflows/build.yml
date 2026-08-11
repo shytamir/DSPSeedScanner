@@ -55,6 +55,15 @@ jobs:
           --configuration Release
           --no-build
 
+      - name: Test runtime boundary
+        id: runtime_test
+        shell: pwsh
+        run: >-
+          dotnet run
+          --project tests/DSPSeedScanner.Runtime.Tests/DSPSeedScanner.Runtime.Tests.csproj
+          --configuration Release
+          --no-build
+
       - name: Build placeholder DLL
         id: build
         shell: pwsh
@@ -101,6 +110,7 @@ jobs:
           VERSION_STATUS: ${{ steps.version.outcome }}
           CORE_BUILD_STATUS: ${{ steps.core_build.outcome }}
           CORE_TEST_STATUS: ${{ steps.core_test.outcome }}
+          RUNTIME_TEST_STATUS: ${{ steps.runtime_test.outcome }}
           BUILD_STATUS: ${{ steps.build.outcome }}
           PACKAGE_STATUS: ${{ steps.package.outcome }}
           PACKAGE_TEST_STATUS: ${{ steps.package_test.outcome }}
@@ -128,6 +138,7 @@ jobs:
           | Generate version | $env:VERSION_STATUS |
           | Build conclusion engine | $env:CORE_BUILD_STATUS |
           | Test conclusion engine | $env:CORE_TEST_STATUS |
+          | Test runtime boundary | $env:RUNTIME_TEST_STATUS |
           | Stage placeholder DLL | $env:BUILD_STATUS |
           | Build package | $env:PACKAGE_STATUS |
           | Validate package | $env:PACKAGE_TEST_STATUS |

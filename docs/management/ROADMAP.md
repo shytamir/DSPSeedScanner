@@ -2,8 +2,8 @@
 
 **Status:** Active; accepted for execution on 2026-08-11.
 
-**Active user story:** None. IMPL-01 is accepted; IMPL-02 is completed and
-pending acceptance.
+**Active user story:** None. IMPL-01 and IMPL-02 are accepted; IMPL-03 is
+completed and pending acceptance.
 
 This roadmap turns the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selects stories by the usable capability
@@ -115,7 +115,7 @@ derivation, DSP runtime access, orchestration, persistence, UI, and packaging.
 
 ### IMPL-02: Complete the accepted conclusion engine
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a maintainer extending the proven decision boundary, I want the complete
 accepted predicate catalogue executable against normalized fixtures so that
@@ -168,42 +168,57 @@ outside definition `0.1.0`.
 
 ### IMPL-03: Establish the compatible runtime boundary
 
-**State:** Proposed; depends on IMPL-02 acceptance.
+**State:** Completed; pending acceptance.
 
 As a player relying on generated evidence, I want the scanner to recognize its
 exact runtime and isolate a preview request from game state so that unsupported
 or unsafe environments cannot produce apparently valid conclusions.
 
-**Return:** A developer-invoked BepInEx operation either captures a supported
-identity and minimal normalized topology evidence safely or returns a precise
-compatibility failure.
+**Delivered:** A developer-invoked BepInEx operation captured the supported
+runtime identity, generated one isolated preview, normalized birth topology,
+and returned the existing shared-satellite conclusion without retaining DSP
+objects.
 
-**In scope:**
+**Implemented:**
 
-- the initial BepInEx plugin project and local external assembly references;
-- a fingerprint containing full DSP version, galaxy algorithm, assembly
-  identity, ordered theme IDs, scanner contract versions, and conservative
-  loaded-mod compatibility status;
-- focused lifecycle and thread-affinity probes before production calls;
-- one serialized requested identity at a time, with busy rejection;
-- shared runtime-state restoration after success, failure, and cancellation;
-- minimal birth-system topology extraction proving the boundary end to end;
-- unknown enum preservation and seed-and-stage diagnostics; and
-- confirmation that normalized output retains no live DSP objects.
+- a game-independent serialized coordinator and a thin locally referenced
+  BepInEx/DSP adapter;
+- an exact fingerprint for DSP version, galaxy algorithm, Assembly-CSharp
+  SHA-256, ordered themes, scanner contract versions, required members, and
+  conservative loaded-plugin status;
+- main-thread enforcement, busy rejection, safe-boundary cancellation,
+  seed-and-stage failures, raw unknown-enum diagnostics, and ordered call
+  traces;
+- scoped capture and restoration of New Game, active game, galaxy, factory,
+  history, statistics, and player references on every post-capture exit; and
+- minimal `UniverseGen.CreateGalaxy` topology extraction with guaranteed
+  `GalaxyData.Free` cleanup and presentation-neutral output.
 
-**Acceptance:**
+**Acceptance evidence:**
 
-- the exact supported fingerprint succeeds and the accepted topology fixture
-  reaches the IMPL-01 evaluator through the runtime boundary;
-- deliberate assembly, catalogue, member, enum, and uncertain
-  generation-patch cases fail safely;
-- the supported generation call sequence and thread are recorded;
-- success, failure, cancellation, and busy rejection leave New Game settings,
-  active save, factory, and progression state unchanged; and
-- no repository or package file contains DSP, Unity, or BepInEx assemblies.
+- isolated DSP `0.10.34.28529` generated seed `16315224` with algorithm
+  `20200403`, the accepted assembly hash, themes `1..25`, and no other loaded
+  plugin; it returned `FS-TOPOLOGY.shared-satellites = Supports` from fact `3`;
+- the in-game trace recorded fingerprinting, compatibility, state capture,
+  `UniverseGen.CreateGalaxy` on managed thread `1`, extraction,
+  `GalaxyData.Free`, evaluation, and successful restoration;
+- focused tests rejected deliberate assembly, theme-order, version,
+  algorithm, required-member, loaded-generation-mod, thread, and raw-enum
+  incompatibilities before a valid conclusion could escape;
+- success, injected failure, cancellation, and re-entrant busy paths restored
+  their captured state in the coordinator harness; and
+- the Release solution and local plugin builds completed with zero warnings,
+  all 14 conclusion checks passed, all 9 runtime-boundary checks passed, and
+  assembly/reference inspection found no retained DSP objects or redistributed
+  external assemblies.
 
-**Out of scope:** Broad preview extraction, quantitative derivations, raw
-planet generation, batch or parallel scanning, another runtime identity,
+**Produced:** `DSPSeedScanner.Runtime`, its executable acceptance harness, the
+initial `DSPSeedScanner.Plugin` project, and CI coverage for the runtime-neutral
+boundary. The plugin still requires local DSP and BepInEx references and is not
+the packaged artifact.
+
+**Excluded:** Broad preview extraction, quantitative derivations, raw planet
+generation, batch or parallel scanning, another runtime identity,
 player-facing invocation, persistence, and packaging replacement.
 
 ### IMPL-04: Return all immediate preview conclusions

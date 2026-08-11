@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPSeedScanner.Core", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPSeedScanner.Core.Tests", "tests\DSPSeedScanner.Core.Tests\DSPSeedScanner.Core.Tests.csproj", "{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPSeedScanner.Runtime", "src\DSPSeedScanner.Runtime\DSPSeedScanner.Runtime.csproj", "{514CFAAE-A892-4431-8DA8-EFD7B6726915}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPSeedScanner.Runtime.Tests", "tests\DSPSeedScanner.Runtime.Tests\DSPSeedScanner.Runtime.Tests.csproj", "{27A94092-FC66-43BC-9145-05853BB31D9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,5 +24,13 @@ Global
 		{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19C61CCB-C722-4A67-BDF1-B1CD3AC6EA20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{514CFAAE-A892-4431-8DA8-EFD7B6726915}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{514CFAAE-A892-4431-8DA8-EFD7B6726915}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{514CFAAE-A892-4431-8DA8-EFD7B6726915}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{514CFAAE-A892-4431-8DA8-EFD7B6726915}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27A94092-FC66-43BC-9145-05853BB31D9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27A94092-FC66-43BC-9145-05853BB31D9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27A94092-FC66-43BC-9145-05853BB31D9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27A94092-FC66-43BC-9145-05853BB31D9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
