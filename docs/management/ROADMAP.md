@@ -48,9 +48,11 @@ the scanner to receive its supported conclusions.
   score, ranking, hidden weighting, new predicate, or required player input.
 - Scan failure receives a terminal diagnostic for that preview load. There is
   no automatic retry loop.
-- The panel uses the fixed anchor selected by the product owner before its UI
-  story begins. Adaptive placement, dragging, and collision solving are not
-  requirements.
+- The panel uses a numeric corner setting based on the available space observed
+  in the 4K New Game preview: `1` bottom-right by default, then clockwise as
+  `2` bottom-left, `3` top-left, and `4` top-right. The center of every screen
+  border is prohibited. Adaptive placement, dragging, and collision solving
+  are not requirements.
 
 ## Validation policy
 
@@ -192,24 +194,27 @@ multiple queued identities, batch scanning, and cache management UI.
 
 ### PRES-05: Show current operational state
 
-**State:** Approved; inactive. The fixed panel anchor must be supplied before
-this story is activated.
+**State:** Approved; inactive. The corner-anchor requirement was resolved on
+2026-08-12.
 
 As a player viewing a cluster preview, I want a small panel to show what the
 scanner is doing so that waiting, cache reuse, completion, and failure are
 never ambiguous.
 
 **Return:** The panel appears and disappears with the preview session at the
-approved fixed anchor. It distinguishes waiting, cached, scanning, complete,
-cancelled, unsupported, and failed states; active work displays a simple
-animated spinner and quiet planet progress.
+configured corner. The numeric setting maps `1` to bottom-right by default,
+then clockwise to `2` bottom-left, `3` top-left, and `4` top-right. It
+distinguishes waiting, cached, scanning, complete, cancelled, unsupported, and
+failed states; active work displays a simple animated spinner and quiet planet
+progress.
 
 **Acceptance gate:** Automated UI-state tests cover every state transition,
 ensure inactive or obsolete sessions cannot alter the visible panel, verify
-the spinner advances between scan steps, and enforce the agreed text bounds at
-the selected anchor.
+the spinner advances between scan steps, verify the exact `1` through `4`
+corner mapping and default, keep every border center unused, and enforce the
+agreed text bounds at each configured corner.
 
-**Out of scope:** Adaptive placement, dragging, overlap detection, alternative
+**Out of scope:** Adaptive placement, dragging, overlap detection, non-corner
 anchors, conclusion cards, raw evidence tables, preferences, manual retry, and
 visual redesign of DSP controls.
 
@@ -272,7 +277,7 @@ unrelated technical debt.
 | Responsive main-thread progress and safe cancellation | PRES-02 |
 | Versioned atomic bounded local cache and manual clearing | PRES-03 |
 | One automatic resolution attempt, cache-or-scan behavior, no retry, and stale suppression | PRES-04 |
-| Fixed-anchor panel, spinner, progress, and operational states | PRES-05 |
+| Configurable four-corner panel, spinner, progress, and operational states | PRES-05 |
 | Immediate and complete neutral conclusions grouped by every accepted context | PRES-06 |
 | Deferred human validation, package verification, and accurate handoff documentation | PRES-07 |
 

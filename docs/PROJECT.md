@@ -8,9 +8,9 @@ story scope, evidence, and history belong in the roadmap.
 2026-08-11. The New Game presentation roadmap was approved on 2026-08-12.
 PRES-01 implemented the presentation-neutral preview-session lifecycle and is
 at its acceptance gate; no player-facing panel or automatic scan invocation is
-implemented. The panel's fixed anchor remains a product-owner decision required
-before PRES-05. One packaging refinement remains tracked as non-blocking
-technical debt.
+implemented. Panel anchoring is resolved as a four-corner configuration with
+bottom-right as the default. One packaging refinement remains tracked as
+non-blocking technical debt.
 
 ## Product decision
 
@@ -69,8 +69,10 @@ The accepted semantics and thresholds are maintained in the
 - Only successful complete results are persisted in a versioned, bounded local
   cache under the mod configuration area.
 - The panel presents immediate and complete neutral conclusions without
-  requiring player input. It uses a product-owner-selected fixed anchor and
-  shows visible activity and terminal failure states.
+  requiring player input. Its numeric corner setting defaults to `1` for
+  bottom-right, then proceeds clockwise as `2` bottom-left, `3` top-left, and
+  `4` top-right. Border-center placement is prohibited. The panel shows visible
+  activity and terminal failure states.
 - The project resolves one current generation identity at a time. Batch search,
   parallel generation, unattended databases, shared caches, and exports
   require later steering decisions.
