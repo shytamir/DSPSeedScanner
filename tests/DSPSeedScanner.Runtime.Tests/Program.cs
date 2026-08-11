@@ -871,7 +871,7 @@ namespace DSPSeedScanner.Runtime.Tests
                         property.Name == "Progress" || property.Name == "Trace" ||
                         property.Name == "ElapsedMilliseconds" ||
                         property.Name == "ManagedMemoryDeltaBytes"));
-                True(new FileInfo(entry).Length <= 512 * 1024);
+                True(new FileInfo(entry).Length <= 256 * 1024);
             });
         }
 
@@ -903,6 +903,7 @@ namespace DSPSeedScanner.Runtime.Tests
             WithTemporaryDirectory(path =>
             {
                 var cache = new CompleteClusterConclusionCache(path);
+                Equal(256, cache.MaximumEntries);
                 PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
                 CompleteClusterRawResult source = CompleteResult();
                 var partial = new CompleteClusterRawResult(
@@ -967,7 +968,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     template.Identity,
                     template.Settings,
                     template.Coverage,
-                    new string('x', 600 * 1024),
+                    new string('x', 300 * 1024),
                     template.Context,
                     template.ContractVersion,
                     template.DefinitionVersion,

@@ -209,7 +209,7 @@ identity, complete coverage, and the applicable scanner contract versions.
 Live preview conclusions are regenerated rather than duplicated.
 
 **Acceptance gate:** Automated storage tests prove deterministic key equality,
-atomic replacement, the 512 KiB per-entry ceiling, bounded retention,
+atomic replacement, the 256 KiB per-entry ceiling, bounded retention,
 successful semantic-conclusion round trips, exclusion of preview conclusions
 and scan evidence or diagnostics, and safe misses for absent, partial, failed,
 cancelled, corrupt, incompatible, oversized, or obsolete entries. A documented
@@ -232,7 +232,7 @@ contracts match exactly.
   resource settings, pre-play combat identity, complete-cluster stage, and
   applicable scanner contract versions;
 - one checksummed, dependency-free versioned binary entry per identity,
-  limited to 512 KiB and written through a flushed same-directory temporary
+  limited to 256 KiB and written through a flushed same-directory temporary
   file and atomic replace;
 - successful-complete-only admission that extracts reports attributed to
   complete-cluster evidence after validating identity, settings, versions,
@@ -244,7 +244,7 @@ contracts match exactly.
 - fail-closed reads that treat absent, partial, failed, cancelled,
   incompatible, corrupt, oversized, or obsolete material as a miss and remove
   an invalid file encountered at the current key;
-- most-recently-used retention bounded to 128 entries by default, plus a
+- most-recently-used retention bounded to 256 entries by default, plus a
   presentation-neutral clear operation; and
 - plugin integration rooted at `BepInEx/config/DSPSeedScanner/cache`, without
   invoking the cache automatically or adding player-facing controls.
@@ -259,7 +259,7 @@ contracts match exactly.
   replaced an existing invalid destination without leaving a temporary file;
 - reflection checks confirmed the cached contract exposes no rare-resource
   evidence, progress, trace, elapsed-time, or memory surface, while an
-  otherwise valid semantic payload over 512 KiB was not persisted;
+  otherwise valid semantic payload over 256 KiB was not persisted;
 - a two-entry fixture deterministically evicted the least-recent entry, kept
   the two current identities readable, and the clear operation removed every
   cache entry and remained idempotent;

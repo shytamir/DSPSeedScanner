@@ -33,7 +33,7 @@ memory, per-planet progress, and execution diagnostics are never persisted.
 
 Writes use a temporary file in the cache directory and atomically replace the
 destination only after the complete entry has been flushed. Each entry is
-limited to 512 KiB. The default cache retains the 128 most recently written or
+limited to 256 KiB. The default cache retains the 256 most recently written or
 read entries, establishing a 64 MiB worst-case payload bound. It does not
 migrate old schemas or synchronize results between installations.
 

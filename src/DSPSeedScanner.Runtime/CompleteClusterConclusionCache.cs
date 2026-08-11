@@ -151,14 +151,14 @@ namespace DSPSeedScanner.Runtime
         internal const int SchemaVersion = 2;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
-        private const int MaximumEntryBytes = 512 * 1024;
+        private const int MaximumEntryBytes = 256 * 1024;
         private const int MaximumReports = 1024;
 
         private readonly object sync = new object();
         private readonly int maximumEntries;
         private long lastTouchTicks;
 
-        public CompleteClusterConclusionCache(string directoryPath, int maximumEntries = 128)
+        public CompleteClusterConclusionCache(string directoryPath, int maximumEntries = 256)
         {
             if (String.IsNullOrWhiteSpace(directoryPath))
                 throw new ArgumentException("A cache directory is required.", nameof(directoryPath));
