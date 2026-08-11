@@ -32,6 +32,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("raw failure and boundary cancellation restore state", RawExitPathsRestoreState),
                 ("raw compatibility diagnostics remain explicit", RawCompatibilityDiagnosticsRemainExplicit),
                 ("preview and raw operations share serialization", PreviewAndRawShareSerialization),
+                ("birth resources aggregate only complete declared coverage", BirthResourcesRequireCompleteCoverage),
+                ("birth resource settings preserve facts but decline ranges", BirthResourceSettingsAreBounded),
+                ("birth resource cancellation and failure retain diagnostics", BirthResourceExitPathsRetainDiagnostics),
+                ("birth request shares serialization and preserves preview report", BirthRequestPreservesPreviewReport),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -402,6 +406,101 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(0, previewGateway.GenerateCalls);
         }
 
+        private static void BirthResourcesRequireCompleteCoverage()
+        {
+            var gateway = new FakeBirthGateway();
+            var observed = new List<BirthSystemRawProgress>();
+            BirthSystemRawResult result = new BirthSystemRawCoordinator(gateway)
+                .TryGenerate(Request(), CancellationToken.None, observed.Add);
+            Equal(RuntimeScanStatus.Success, result.Status);
+            True(result.Coverage.IsComplete);
+            Equal(2, result.Coverage.ExpectedPlanets);
+            Equal(2, result.Coverage.CompletedPlanets);
+            Equal(5, result.Progress.Count);
+            Equal(result.Progress.Count, observed.Count);
+            Equal(BirthSystemProgressState.Planned, result.Progress[0].State);
+            Equal(BirthSystemProgressState.PlanetCompleted, result.Progress[4].State);
+            Equal(42_000L, gateway.GeneratedAmount);
+            ConclusionReport total = result.Reports.Single(report =>
+                report.ConclusionId == "FS-RESOURCES.common-total");
+            Equal(ComponentOutcome.DoesNotSupport, total.Outcome);
+            Equal("40000", total.DecisiveFact?.Value);
+            Equal(1, gateway.RestoreCalls);
+            Equal("original", gateway.StateMarker);
+        }
+
+        private static void BirthResourceSettingsAreBounded()
+        {
+            var request = new PreviewScanRequest(
+                16_315_224,
+                ConclusionDefinition.ReferenceStarCount,
+                ConclusionDefinition.ReferenceGameVersion,
+                0.5m,
+                CombatMode.Combat,
+                ConclusionDefinition.ReferenceCombatSettingsKey);
+            BirthSystemRawResult result = new BirthSystemRawCoordinator(new FakeBirthGateway())
+                .TryGenerate(request, CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, result.Status);
+            ConclusionReport total = result.Reports.Single(report =>
+                report.ConclusionId == "FS-RESOURCES.common-total");
+            Equal(ComponentOutcome.Unknown, total.Outcome);
+            Equal("40000", total.DecisiveFact?.Value);
+            Equal("unsupported-definition-scope", total.DiagnosticCause?.Code);
+        }
+
+        private static void BirthResourceExitPathsRetainDiagnostics()
+        {
+            var cancelledGateway = new FakeBirthGateway();
+            using (var source = new CancellationTokenSource())
+            {
+                BirthSystemRawResult cancelled = new BirthSystemRawCoordinator(cancelledGateway)
+                    .TryGenerate(Request(), source.Token, progress =>
+                    {
+                        if (progress.State == BirthSystemProgressState.PlanetCompleted)
+                            source.Cancel();
+                    });
+                Equal(RuntimeScanStatus.Cancelled, cancelled.Status);
+                Equal(CoverageState.Partial, cancelled.Coverage.State);
+                Equal(2, cancelled.Coverage.ExpectedPlanets);
+                Equal(1, cancelled.Coverage.CompletedPlanets);
+                Equal(0, cancelled.Reports.Count);
+                Equal(104, cancelled.AffectedPlanetId);
+                Equal(1, cancelledGateway.RestoreCalls);
+            }
+
+            var failedGateway = new FakeBirthGateway { FailingPlanetId = 104 };
+            BirthSystemRawResult failed = new BirthSystemRawCoordinator(failedGateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Failed, failed.Status);
+            Equal(CoverageState.Partial, failed.Coverage.State);
+            Equal(1, failed.Coverage.CompletedPlanets);
+            Equal(104, failed.AffectedPlanetId);
+            Equal(0, failed.Reports.Count);
+            Equal(1, failedGateway.RestoreCalls);
+        }
+
+        private static void BirthRequestPreservesPreviewReport()
+        {
+            var gate = new RuntimeOperationGate();
+            var previewGateway = new FakeGateway();
+            var previewCoordinator = new PreviewScanCoordinator(previewGateway, gate);
+            RuntimeScanResult preview = previewCoordinator.TryScan(Request(), CancellationToken.None);
+            var birthGateway = new FakeBirthGateway();
+            RuntimeScanResult? nested = null;
+            birthGateway.OnGenerate = () => nested ??=
+                previewCoordinator.TryScan(Request(), CancellationToken.None);
+
+            BirthSystemRawResult birth = new BirthSystemRawCoordinator(birthGateway, gate)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, birth.Status);
+            Equal(RuntimeScanStatus.Busy, nested?.Status);
+            Equal(ComponentOutcome.Unknown, preview.Reports.Single(report =>
+                report.ConclusionId == "FS-RESOURCES.common-total").Outcome);
+            Equal(ComponentOutcome.DoesNotSupport, birth.Reports.Single(report =>
+                report.ConclusionId == "FS-RESOURCES.common-total").Outcome);
+            Equal(1, previewGateway.GenerateCalls);
+        }
+
         private static void RuntimeBoundaryExposesNoGameObjects()
         {
             Assembly assembly = typeof(PreviewScanCoordinator).Assembly;
@@ -417,7 +516,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(RawPlanetResult),
                 typeof(NormalizedRawPlanetEvidence),
                 typeof(NormalizedRawVeinNode),
-                typeof(NormalizedRawVeinGroup)
+                typeof(NormalizedRawVeinGroup),
+                typeof(BirthSystemRawResult),
+                typeof(BirthSystemRawProgress)
             })
             {
                 foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -678,6 +779,79 @@ namespace DSPSeedScanner.Runtime.Tests
                 private bool restored;
 
                 public FakeRawLease(FakeRawGateway owner, string original)
+                {
+                    this.owner = owner;
+                    this.original = original;
+                }
+
+                public override bool Restored => restored;
+
+                public override void Dispose()
+                {
+                    owner.StateMarker = original;
+                    owner.RestoreCalls++;
+                    restored = true;
+                }
+            }
+        }
+
+        private sealed class FakeBirthGateway : IRuntimeBirthSystemRawGateway
+        {
+            public int? FailingPlanetId { get; set; }
+            public Action? OnGenerate { get; set; }
+            public int GenerateCalls { get; private set; }
+            public int RestoreCalls { get; private set; }
+            public long GeneratedAmount { get; private set; }
+            public string StateMarker { get; set; } = "original";
+            public int MainThreadId => Thread.CurrentThread.ManagedThreadId;
+
+            public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) => Fingerprint();
+
+            public RuntimeStateLease CaptureState()
+            {
+                string original = StateMarker;
+                StateMarker = "leased";
+                return new Lease(this, original);
+            }
+
+            public BirthSystemRawPlan DiscoverBirthSystem(
+                PreviewScanRequest request,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace)
+            {
+                recordTrace("birth-plan:declared=2");
+                return new BirthSystemRawPlan(
+                    Snapshot(),
+                    new[]
+                    {
+                        new BirthSystemPlanetTarget(103, 1),
+                        new BirthSystemPlanetTarget(104, 2)
+                    });
+            }
+
+            public NormalizedRawPlanetEvidence GenerateRawPlanet(
+                RawPlanetRequest request,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace)
+            {
+                GenerateCalls++;
+                OnGenerate?.Invoke();
+                if (FailingPlanetId == request.PlanetId)
+                    throw new InvalidOperationException("injected planet failure");
+                NormalizedRawPlanetEvidence evidence = RawSnapshot(
+                    request.PlanetId,
+                    request.ExpectedAlgorithmId);
+                GeneratedAmount += evidence.Nodes.Sum(node => node.Amount);
+                return evidence;
+            }
+
+            private sealed class Lease : RuntimeStateLease
+            {
+                private readonly FakeBirthGateway owner;
+                private readonly string original;
+                private bool restored;
+
+                public Lease(FakeBirthGateway owner, string original)
                 {
                     this.owner = owner;
                     this.original = original;

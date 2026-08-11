@@ -9,7 +9,7 @@ using DSPSeedScanner.Runtime;
 
 namespace DSPSeedScanner.Plugin
 {
-    internal sealed class DspRawPlanetGateway : IRuntimeRawPlanetGateway
+    internal sealed class DspRawPlanetGateway : IRuntimeBirthSystemRawGateway
     {
         private static readonly IReadOnlyDictionary<int, string> ResourceIds =
             new Dictionary<int, string>
@@ -68,7 +68,8 @@ namespace DSPSeedScanner.Plugin
 
         public IReadOnlyList<int> ReachableSolidAlgorithmIds(PreviewScanRequest request)
         {
-            var allowedThemes = new HashSet<int>(CreateDescriptor(request).savedThemeIds);
+            var allowedThemes = new HashSet<int>(
+                DspPreviewGateway.CreateDescriptor(request).savedThemeIds);
             return LDB.themes.dataArray
                 .Where(theme => allowedThemes.Contains(theme.ID) &&
                     theme.PlanetType != EPlanetType.Gas)
@@ -81,7 +82,7 @@ namespace DSPSeedScanner.Plugin
 
         public IReadOnlyDictionary<int, int> DiscoverCandidatePlanets(PreviewScanRequest request)
         {
-            GameDesc descriptor = CreateDescriptor(request);
+            GameDesc descriptor = DspPreviewGateway.CreateDescriptor(request);
             GalaxyData? galaxy = null;
             try
             {
@@ -95,6 +96,43 @@ namespace DSPSeedScanner.Plugin
             finally
             {
                 galaxy?.Free();
+            }
+        }
+
+        public BirthSystemRawPlan DiscoverBirthSystem(
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<string> recordTrace)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            GameDesc descriptor = DspPreviewGateway.CreateDescriptor(request);
+            GalaxyData? galaxy = null;
+            try
+            {
+                recordTrace("UniverseGen.CreateGalaxy:birth-plan:thread=" +
+                    Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture));
+                galaxy = UniverseGen.CreateGalaxy(descriptor);
+                RuntimePreviewSnapshot preview = DspPreviewGateway.NormalizePreview(
+                    request,
+                    galaxy,
+                    recordTrace);
+                StarData birthStar = galaxy.StarById(galaxy.birthStarId);
+                BirthSystemPlanetTarget[] targets = birthStar.planets
+                    .Where(planet => planet.type != EPlanetType.Gas)
+                    .Select(planet => new BirthSystemPlanetTarget(planet.id, planet.algoId))
+                    .OrderBy(target => target.PlanetId)
+                    .ToArray();
+                recordTrace("birth-plan:declared=" +
+                    targets.Length.ToString(CultureInfo.InvariantCulture));
+                return new BirthSystemRawPlan(preview, targets);
+            }
+            finally
+            {
+                if (galaxy != null)
+                {
+                    galaxy.Free();
+                    recordTrace("birth-plan:candidate:released");
+                }
             }
         }
 
@@ -113,7 +151,7 @@ namespace DSPSeedScanner.Plugin
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            GameDesc descriptor = CreateDescriptor(request.Identity);
+            GameDesc descriptor = DspPreviewGateway.CreateDescriptor(request.Identity);
             GalaxyData? galaxy = null;
             try
             {
@@ -258,21 +296,6 @@ namespace DSPSeedScanner.Plugin
             type == (int)EVeinType.Oil
                 ? RawResourceSemantics.OilFlow
                 : RawResourceSemantics.FiniteDeposit;
-
-        private static GameDesc CreateDescriptor(PreviewScanRequest request)
-        {
-            var descriptor = new GameDesc();
-            descriptor.SetForNewGame(
-                UniverseGen.algoVersion,
-                request.GalaxySeed,
-                request.RequestedStarCount,
-                1,
-                (float)request.ResourceMultiplier);
-            descriptor.isPeaceMode = request.CombatMode == CombatMode.Peace;
-            descriptor.combatSettings.initialColonize = (float)request.InitialColonize;
-            descriptor.combatSettings.maxDensity = (float)request.MaxDensity;
-            return descriptor;
-        }
 
         private static string? FindMissingRawMember()
         {

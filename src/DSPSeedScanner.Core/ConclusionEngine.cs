@@ -204,13 +204,13 @@ namespace DSPSeedScanner.Core
                 ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity) &&
                 evidence.Settings.ResourceMultiplier == 1m;
 
-            StarterResourceMetric[] metrics = ConclusionDefinition.CommonResourceIds
+            StarterResourceMetric[] metrics = ConclusionDefinition.StarterTotalResourceIds
                 .Select(resourceId => starter?.Resources.SingleOrDefault(resource =>
                     String.Equals(resource.ResourceId, resourceId, StringComparison.Ordinal)))
                 .Where(resource => resource != null)
                 .Cast<StarterResourceMetric>()
                 .ToArray();
-            decimal? total = metrics.Length == ConclusionDefinition.CommonResourceIds.Count
+            decimal? total = metrics.Length == ConclusionDefinition.StarterTotalResourceIds.Count
                 ? metrics.Sum(resource => (decimal)resource.Amount)
                 : null;
 

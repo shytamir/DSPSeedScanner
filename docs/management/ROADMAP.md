@@ -297,7 +297,7 @@ copy.
 
 ### IMPL-05: Certify isolated raw planet generation
 
-**State:** Completed; pending acceptance.
+**State:** Accepted on 2026-08-11.
 
 As a maintainer adding exact evidence, I want one safe normalized raw-planet
 boundary certified across the supported catalogue so that later on-demand
@@ -371,7 +371,7 @@ terrain or buildable-area interpretation.
 
 ### IMPL-06: Return exact starter-resource conclusions
 
-**State:** Proposed; depends on IMPL-05 acceptance.
+**State:** Completed; pending acceptance.
 
 As a player judging a fresh start, I want exact birth-system resources on
 explicit request so that starter conclusions use generated deposits rather
@@ -406,6 +406,60 @@ elsewhere.
 **Out of scope:** Complete-cluster generation, rare-resource distance, gas-rate
 conclusions, other resource ranges, buildable-area judgments, player controls,
 background queues, and generalized benchmarking.
+
+**Delivered:** An explicit developer-invoked operation declared every solid
+birth-system planet, generated each through the accepted raw boundary, reported
+immutable per-planet progress, and returned a new complete `FS-RESOURCES`
+report without changing the earlier preview result.
+
+**Implemented:**
+
+- a runtime-neutral plan, target, progress, coverage, and result contract with
+  exact expected/completed counts and affected-planet attribution;
+- one serialized main-thread operation that captured compatibility and shared
+  state once, normalized a complete preview, and invoked the certified raw
+  boundary for each declared solid birth-system planet;
+- exact per-resource amount and vein-group aggregation, independent oil-flow
+  facts, finite common-deposit totals, and fire-ice presence;
+- complete-only evaluation: partial cancellation or failure retained coverage
+  and progress diagnostics but exposed no reports;
+- reference-multiplier conclusions and unscaled exact facts with explicit
+  unknown amount/group conclusions at other multipliers; and
+- a developer-only probe covering accepted fixtures, altered settings,
+  cancellation between planets, injected planet failure, state restoration,
+  and candidate release traces.
+
+**Acceptance evidence:**
+
+- 22 accepted positive, negative, total-endpoint, per-resource amount-endpoint,
+  group-endpoint, and fire-ice fixtures matched the earlier runtime catalogue
+  with zero fact mismatches in two independent DSP processes;
+- both normalized probe files were byte-identical with SHA-256
+  `8CFDA61B9A356C80F2C38E7D4B61F3634B0169BE1F38F8C5C7D6D1B0310F2E98`;
+- all 23 complete requests restored state and declared/completed three planets;
+  the multiplier-`0.5` variant preserved exact facts, returned unknown range
+  outcomes without scaling thresholds, and retained invariant fire-ice state;
+- cancellation and injected failure each stopped after one completed planet,
+  retained partial `1/3` coverage and the affected planet, and returned no
+  conclusions;
+- all 25 plans, 72 created raw candidates, and all 25 captured state leases
+  recorded release or successful restoration on their respective exit paths;
+  and
+- the Release plugin build completed with zero warnings, all 14 conclusion
+  checks passed, and all 23 runtime-boundary checks passed.
+
+**Clarified oil semantics:** The accepted named fixture totals excluded oil,
+while one catalogue sentence had included it despite oil using flow semantics.
+The implementation and corrected catalogue keep oil amount and groups as exact
+independent components and do not add oil flow units to the finite-deposit
+common total.
+
+**Produced:** The first exact on-demand player-decision report boundary and a
+repeatable developer harness. Generated evidence and copied game-linked
+artifacts remained outside the repository.
+
+**Retained debt:** IMPL-06 did not close [TD-001 or TD-002](TECHNICAL-DEBT.md).
+Their release constraints and IMPL-08 closure gate remain unchanged.
 
 ### IMPL-07: Return exact rare-resource access
 

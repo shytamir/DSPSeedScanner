@@ -74,45 +74,7 @@ namespace DSPSeedScanner.Plugin
             {
                 recordTrace("UniverseGen.CreateGalaxy:thread=" + Thread.CurrentThread.ManagedThreadId);
                 galaxy = UniverseGen.CreateGalaxy(descriptor);
-                recordTrace("preview:extract");
-                StarData birthStar = galaxy.StarById(galaxy.birthStarId);
-                PlanetData birthPlanet = galaxy.PlanetById(galaxy.birthPlanetId);
-                foreach (StarData star in galaxy.stars)
-                {
-                    foreach (PlanetData planet in star.planets)
-                    {
-                        int rawType = (int)planet.type;
-                        if (!Enum.IsDefined(typeof(EPlanetType), planet.type))
-                        {
-                            return new RuntimePreviewSnapshot(
-                                SystemIdentifier(request.GalaxySeed, birthStar, true),
-                                galaxy.starCount,
-                                Array.Empty<NormalizedSystemEvidence>(),
-                                Array.Empty<NormalizedSystemDistance>(),
-                                nameof(EPlanetType),
-                                rawType);
-                        }
-                    }
-                }
-
-                NormalizedSystemEvidence[] systems = galaxy.stars
-                    .Select(star => NormalizeSystem(
-                        request.GalaxySeed,
-                        star,
-                        birthStar,
-                        birthPlanet))
-                    .ToArray();
-                NormalizedSystemDistance[] distances = NormalizeDistances(
-                    request.GalaxySeed,
-                    galaxy.birthStarId,
-                    galaxy.stars);
-                recordTrace("preview:normalized");
-
-                return new RuntimePreviewSnapshot(
-                    SystemIdentifier(request.GalaxySeed, birthStar, true),
-                    galaxy.starCount,
-                    systems,
-                    distances);
+                return NormalizePreview(request, galaxy, recordTrace);
             }
             finally
             {
@@ -122,6 +84,51 @@ namespace DSPSeedScanner.Plugin
                     recordTrace("GalaxyData.Free");
                 }
             }
+        }
+
+        internal static RuntimePreviewSnapshot NormalizePreview(
+            PreviewScanRequest request,
+            GalaxyData galaxy,
+            Action<string> recordTrace)
+        {
+            recordTrace("preview:extract");
+            StarData birthStar = galaxy.StarById(galaxy.birthStarId);
+            PlanetData birthPlanet = galaxy.PlanetById(galaxy.birthPlanetId);
+            foreach (StarData star in galaxy.stars)
+            {
+                foreach (PlanetData planet in star.planets)
+                {
+                    int rawType = (int)planet.type;
+                    if (!Enum.IsDefined(typeof(EPlanetType), planet.type))
+                    {
+                        return new RuntimePreviewSnapshot(
+                            SystemIdentifier(request.GalaxySeed, birthStar, true),
+                            galaxy.starCount,
+                            Array.Empty<NormalizedSystemEvidence>(),
+                            Array.Empty<NormalizedSystemDistance>(),
+                            nameof(EPlanetType),
+                            rawType);
+                    }
+                }
+            }
+
+            NormalizedSystemEvidence[] systems = galaxy.stars
+                .Select(star => NormalizeSystem(
+                    request.GalaxySeed,
+                    star,
+                    birthStar,
+                    birthPlanet))
+                .ToArray();
+            NormalizedSystemDistance[] distances = NormalizeDistances(
+                request.GalaxySeed,
+                galaxy.birthStarId,
+                galaxy.stars);
+            recordTrace("preview:normalized");
+            return new RuntimePreviewSnapshot(
+                SystemIdentifier(request.GalaxySeed, birthStar, true),
+                galaxy.starCount,
+                systems,
+                distances);
         }
 
         private static NormalizedSystemEvidence NormalizeSystem(
@@ -236,7 +243,7 @@ namespace DSPSeedScanner.Plugin
                 (isBirth ? ":birth" : String.Empty);
         }
 
-        private static GameDesc CreateDescriptor(PreviewScanRequest request)
+        internal static GameDesc CreateDescriptor(PreviewScanRequest request)
         {
             var descriptor = new GameDesc();
             descriptor.SetForNewGame(

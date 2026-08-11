@@ -175,7 +175,7 @@ namespace DSPSeedScanner.Runtime
                             }
                             else
                             {
-                                reports = Evaluate(request, fingerprint, snapshot);
+                                reports = RuntimeConclusionEvaluator.Evaluate(request, fingerprint, snapshot);
                                 status = RuntimeScanStatus.Success;
                                 code = "success";
                                 message = "The complete compatible preview was evaluated.";
@@ -235,60 +235,6 @@ namespace DSPSeedScanner.Runtime
                 restored,
                 generatedStarCount,
                 rawDiagnostic);
-        }
-
-        private static IReadOnlyList<ConclusionReport> Evaluate(
-            PreviewScanRequest request,
-            RuntimeFingerprint fingerprint,
-            RuntimePreviewSnapshot snapshot)
-        {
-            var identity = new GenerationIdentity(
-                fingerprint.GameVersion,
-                fingerprint.GalaxyAlgorithm,
-                fingerprint.AssemblySha256,
-                fingerprint.OrderedThemeIdsKey,
-                fingerprint.ScannerCompatibilityVersion,
-                request.GalaxySeed,
-                request.RequestedStarCount,
-                request.CreationVersion);
-            var settings = new EvaluationSettings(
-                request.ResourceMultiplier,
-                request.CombatMode,
-                request.CombatSettingsKey);
-            int systemCount = snapshot.Systems.Count;
-            int distanceCount = snapshot.SystemDistances.Count;
-            var coverages = new[]
-            {
-                Complete(EvidenceScope.BirthSystemTopology, 1),
-                Complete(EvidenceScope.BirthSystemRotation, 1),
-                Complete(EvidenceScope.BirthSystemPower, 1),
-                Complete(EvidenceScope.BirthSystemGasProducts, 1),
-                Complete(EvidenceScope.ClusterEnergy, systemCount),
-                Complete(EvidenceScope.ClusterSphereGeometry, systemCount),
-                Complete(EvidenceScope.ClusterOccupation, systemCount),
-                Complete(EvidenceScope.SystemDistances, Math.Max(1, distanceCount))
-            };
-            var evidence = new NormalizedClusterEvidence(
-                identity,
-                settings,
-                new ConclusionSubject(
-                    SubjectKind.Cluster,
-                    request.GalaxySeed + ":cluster"),
-                snapshot.BirthSystemIdentifier,
-                coverages,
-                snapshot.Systems,
-                systemDistances: snapshot.SystemDistances);
-            return ConclusionEngine.Evaluate(evidence);
-        }
-
-        private static EvidenceCoverage Complete(EvidenceScope scope, int subjects)
-        {
-            return new EvidenceCoverage(
-                EvidenceStage.GalaxyPreview,
-                scope,
-                CoverageState.Complete,
-                subjects,
-                subjects);
         }
 
         private static RuntimeScanResult Result(

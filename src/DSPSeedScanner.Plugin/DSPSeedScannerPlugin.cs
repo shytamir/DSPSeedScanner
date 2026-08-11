@@ -21,6 +21,7 @@ namespace DSPSeedScanner.Plugin
 
         private PreviewScanCoordinator? coordinator;
         private RawPlanetCoordinator? rawCoordinator;
+        private BirthSystemRawCoordinator? birthSystemCoordinator;
         private DspRawPlanetGateway? rawGateway;
         private bool probeAttempted;
 
@@ -33,6 +34,7 @@ namespace DSPSeedScanner.Plugin
             rawGateway = new DspRawPlanetGateway(previewGateway);
             coordinator = new PreviewScanCoordinator(previewGateway, operationGate);
             rawCoordinator = new RawPlanetCoordinator(rawGateway, operationGate);
+            birthSystemCoordinator = new BirthSystemRawCoordinator(rawGateway, operationGate);
             Logger.LogInfo("Runtime boundary initialized on managed thread " +
                 Thread.CurrentThread.ManagedThreadId.ToString(CultureInfo.InvariantCulture) + ".");
         }
@@ -50,7 +52,12 @@ namespace DSPSeedScanner.Plugin
             try
             {
                 string? mode = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_MODE");
-                if (String.Equals(mode, "raw-certification", StringComparison.Ordinal))
+                if (String.Equals(mode, "birth-resources", StringComparison.Ordinal))
+                {
+                    WriteBirthResourceProbe(output);
+                    Logger.LogInfo("IMPL-06 birth-resource probe completed: " + output);
+                }
+                else if (String.Equals(mode, "raw-certification", StringComparison.Ordinal))
                 {
                     WriteRawCertificationProbe(output);
                     Logger.LogInfo("IMPL-05 raw certification probe completed: " + output);
@@ -91,6 +98,101 @@ namespace DSPSeedScanner.Plugin
             if (rawCoordinator == null)
                 throw new InvalidOperationException("The plugin has not completed Awake.");
             return rawCoordinator.TryGenerate(request, cancellationToken);
+        }
+
+        public BirthSystemRawResult GenerateBirthSystemResources(
+            PreviewScanRequest request,
+            CancellationToken cancellationToken,
+            Action<BirthSystemRawProgress>? reportProgress = null)
+        {
+            if (birthSystemCoordinator == null)
+                throw new InvalidOperationException("The plugin has not completed Awake.");
+            return birthSystemCoordinator.TryGenerate(request, cancellationToken, reportProgress);
+        }
+
+        private void WriteBirthResourceProbe(string path)
+        {
+            if (rawGateway == null)
+                throw new InvalidOperationException("The raw gateway is unavailable.");
+
+            int[] seeds = ParseSeeds().ToArray();
+            var results = new List<BirthSystemRawResult>();
+            foreach (int seed in seeds)
+                results.Add(GenerateBirthSystemResources(Request(seed), CancellationToken.None));
+
+            results.Add(GenerateBirthSystemResources(
+                Request(seeds[0], 0.5m),
+                CancellationToken.None));
+
+            using (var cancellation = new CancellationTokenSource())
+            {
+                results.Add(GenerateBirthSystemResources(
+                    Request(seeds[0]),
+                    cancellation.Token,
+                    progress =>
+                    {
+                        if (progress.State == BirthSystemProgressState.PlanetCompleted)
+                            cancellation.Cancel();
+                    }));
+            }
+
+            int atomicCompletions = 0;
+            try
+            {
+                rawGateway.AtomicCompletedForProbe = () =>
+                {
+                    atomicCompletions++;
+                    if (atomicCompletions == 2)
+                        throw new InvalidOperationException("injected birth-system planet failure");
+                };
+                results.Add(GenerateBirthSystemResources(Request(seeds[0]), CancellationToken.None));
+            }
+            finally
+            {
+                rawGateway.AtomicCompletedForProbe = null;
+            }
+            WriteBirthProbe(path, results);
+        }
+
+        private static void WriteBirthProbe(
+            string path,
+            IEnumerable<BirthSystemRawResult> results)
+        {
+            var lines = new StringBuilder();
+            foreach (BirthSystemRawResult result in results)
+            {
+                string seed = result.GalaxySeed.ToString(CultureInfo.InvariantCulture);
+                lines.Append("birth-result\t").Append(seed).Append('\t')
+                    .Append(result.Status).Append('\t').Append(result.Code).Append('\t')
+                    .Append(result.StateRestored).Append('\t')
+                    .Append(result.Coverage.State).Append('\t')
+                    .Append(result.Coverage.ExpectedPlanets).Append('\t')
+                    .Append(result.Coverage.CompletedPlanets).AppendLine();
+                foreach (BirthSystemRawProgress progress in result.Progress)
+                {
+                    lines.Append("birth-progress\t").Append(seed).Append('\t')
+                        .Append(progress.State).Append('\t')
+                        .Append(progress.ExpectedPlanets).Append('\t')
+                        .Append(progress.CompletedPlanets).Append('\t')
+                        .Append(progress.PlanetId).AppendLine();
+                }
+                foreach (ConclusionReport report in result.Reports.Where(report =>
+                    report.ConclusionId.StartsWith("FS-RESOURCES.", StringComparison.Ordinal)))
+                {
+                    lines.Append("birth-report\t").Append(seed).Append('\t')
+                        .Append(report.ConclusionId).Append('\t').Append(report.Outcome).Append('\t')
+                        .Append(report.DecisiveFact?.Value).Append('\t')
+                        .Append(report.DecisiveFact?.Unit).Append('\t')
+                        .Append(report.DiagnosticCause?.Code).AppendLine();
+                }
+                for (int index = 0; index < result.Trace.Count; index++)
+                {
+                    lines.Append("birth-trace\t").Append(seed).Append('\t')
+                        .Append(index.ToString(CultureInfo.InvariantCulture)).Append('\t')
+                        .Append(result.Trace[index]).AppendLine();
+                }
+            }
+            File.WriteAllText(path, lines.ToString(), new UTF8Encoding(false));
         }
 
         private void WriteRawCertificationProbe(string path)
@@ -165,11 +267,16 @@ namespace DSPSeedScanner.Plugin
 
         private static PreviewScanRequest Request(int seed)
         {
+            return Request(seed, 1m);
+        }
+
+        private static PreviewScanRequest Request(int seed, decimal resourceMultiplier)
+        {
             return new PreviewScanRequest(
                 seed,
                 ConclusionDefinition.ReferenceStarCount,
                 ConclusionDefinition.ReferenceGameVersion,
-                1m,
+                resourceMultiplier,
                 CombatMode.Combat,
                 ConclusionDefinition.ReferenceCombatSettingsKey);
         }

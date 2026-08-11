@@ -109,7 +109,7 @@ All increasing ranges use the increasing rule above unless stated otherwise.
 | --- | --- | --- | --- |
 | `FS-POWER.solar` | Maximum solid-planet solar ratio in the birth system | `[1.16, 1.35]` | Preview; reference identity only |
 | `FS-POWER.wind` | Maximum solid-planet wind ratio in the birth system | `[1.0, 1.5]` | Preview; reference identity only |
-| `FS-RESOURCES.common-total` | Sum of iron, copper, silicon, titanium, stone, coal, and oil runtime amounts in the birth system | `[74,788,292, 105,667,431]` | Complete raw birth system; resource multiplier `1` only |
+| `FS-RESOURCES.common-total` | Sum of finite common deposits (iron, copper, silicon, titanium, stone, and coal) in the birth system | `[74,788,292, 105,667,431]` | Complete raw birth system; resource multiplier `1` only; oil flow remains a separate component |
 | `MF-ENERGY-SYSTEM.output` | Highest Dyson luminosity in the cluster | `[2.4489998817, 2.4900000095]` | Complete preview cluster; reference identity only |
 | `MF-ENERGY-SYSTEM.separation` | Highest Dyson luminosity divided by the second highest | `[1.1104599329, 1.2183275480]` | Complete preview cluster; reference identity only |
 | `MF-SPHERE-GEOMETRY.radius` | Largest derived maximum shell radius in the cluster | `[76,200, 191,400]` radius units | Complete preview cluster; reference identity only |

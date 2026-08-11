@@ -189,6 +189,13 @@ namespace DSPSeedScanner.Core.Tests
             AssertStarterTotal(48_823_053, 105_667_431, ComponentOutcome.Supports);
             AssertStarterTotal(96_178_012, 124_175_637, ComponentOutcome.Supports);
 
+            FixtureOptions oilIsIndependent = Options(12_345_678);
+            oilIsIndependent.ResourceAmounts["iron"] = 74_788_292;
+            oilIsIndependent.ResourceAmounts["oil"] = 9_999_999;
+            IReadOnlyList<ConclusionReport> oilReports = Evaluate(oilIsIndependent);
+            Equal("74788292", Find(oilReports, "FS-RESOURCES.common-total").DecisiveFact?.Value);
+            Equal("9999999", Find(oilReports, "FS-RESOURCES.amount:oil").DecisiveFact?.Value);
+
             foreach (string resourceId in ConclusionDefinition.CommonResourceIds)
             {
                 AcceptedRange amount = ConclusionDefinition.StarterAmount(resourceId);

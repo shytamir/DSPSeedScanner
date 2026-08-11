@@ -57,6 +57,9 @@ namespace DSPSeedScanner.Core
         public static readonly IReadOnlyList<string> CommonResourceIds = Array.AsReadOnly(
             new[] { "coal", "copper", "iron", "oil", "silicon", "stone", "titanium" });
 
+        public static readonly IReadOnlyList<string> StarterTotalResourceIds = Array.AsReadOnly(
+            new[] { "coal", "copper", "iron", "silicon", "stone", "titanium" });
+
         public static readonly AcceptedRange Solar =
             new AcceptedRange(1.16m, 1.35m, ThresholdDirection.Increasing, "ratio");
         public static readonly AcceptedRange Wind =
