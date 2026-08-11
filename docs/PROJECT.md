@@ -1,8 +1,7 @@
 # DSP Seed Scanner - Project Definition
 
-**Status:** SPEC-01 through SPEC-04 are accepted. SPEC-05 execution is complete
-and its seed conclusion contract is pending acceptance. No user story is
-active.
+**Status:** SPEC-01 through SPEC-04 are accepted. The revised SPEC-05 seed
+conclusion contract is pending acceptance. No user story is active.
 
 The current roadmap is [docs/management/ROADMAP.md](management/ROADMAP.md).
 It governs the remaining investigation that must precede implementation
@@ -24,8 +23,10 @@ DSP Seed Scanner will help players decide whether a procedurally generated
 Dyson Sphere Program cluster suits the run they intend to play.
 
 The project will ask the installed game runtime to generate candidate clusters,
-extract only faithfully reproducible facts, and interpret those facts in the
-player's stated context. It will not maintain an independent galaxy generator
+extract only faithfully reproducible facts, and interpret those facts across
+bounded product-defined contexts. Optional player preferences may prioritize or
+refine conclusions inside accepted ranges, but do not create or reverse the
+neutral outcome. The project will not maintain an independent galaxy generator
 or present one universal definition of a good seed.
 
 ## Current specification objective
@@ -140,8 +141,10 @@ without reproducible evidence is research context, not a scanner conclusion.
 
 SPEC-04 advanced bounded preview and on-demand candidate families while
 rejecting unsupported predictions, subjective judgments, universal viability,
-and a global seed score. SPEC-05 converted those accepted dispositions into
-twelve candidate conclusion families across six supported contexts.
+and a global seed score. Revised SPEC-05 converted those accepted dispositions
+into twelve automatically evaluated candidate conclusion families across six
+supported contexts. Their core outcomes must survive the complete accepted
+preference range.
 
 ## Product invariants
 
@@ -149,8 +152,12 @@ twelve candidate conclusion families across six supported contexts.
 - Results are deterministic for the same complete generation identity and
   supported game version.
 - Scanning does not modify player factories, progression, or save files.
-- Every conclusion is attributable to normalized evidence and a stated player
-  context.
+- Every conclusion is attributable to normalized evidence and a supported
+  product context.
+- Neutral conclusions are evaluated without player input and remain invariant
+  across their accepted preference range.
+- Optional preferences may filter, prioritize, or refine a conclusion but
+  cannot alter its evidence, identity, or core outcome.
 - Generation, extraction, normalization, interpretation, and presentation
   remain separate responsibilities.
 - Context-specific tradeoffs are preserved; the product does not invent a
@@ -219,6 +226,7 @@ Implementation planning may begin when the roadmap has produced:
 - a sourced player-goal and seed-characteristic taxonomy;
 - a context-to-evidence decision matrix;
 - an initial conclusion contract with explicit exclusions;
+- a validated predicate and bounded preference-range set;
 - representative positive, negative, and tradeoff validation seeds;
 - recorded uncertainties and technical probes that must remain implementation
   prerequisites.

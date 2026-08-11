@@ -1,191 +1,255 @@
 # Seed Conclusion Contract
 
-**Status:** Candidate contract produced by SPEC-05; pending product acceptance.
+**Status:** Revised candidate contract produced by SPEC-05; pending product
+acceptance.
 
-**Contract version:** `0.1.0-candidate.1`
+**Contract version:** `0.1.0-candidate.2`
 
 This contract defines the first conclusions DSP Seed Scanner may draw from a
-generated cluster. It turns accepted evidence into answers to bounded player
-questions without inventing a universal definition of a good seed.
+generated cluster. It turns accepted evidence into neutral, useful answers
+without requiring the player to formulate queries and without inventing a
+universal definition of a good seed.
 
 The contract depends on the accepted [generation identity](GENERATION-IDENTITY.md),
 [runtime evidence boundary](RUNTIME-EVIDENCE-FEASIBILITY.md), [player decision
 taxonomy](PLAYER-DECISION-TAXONOMY.md), and [context-to-evidence
 matrix](DECISION-EVIDENCE-MATRIX.md).
 
-It specifies meaning, not interface copy, storage layout, visual priority, or
-implementation design.
+It specifies conclusion meaning, not interface copy, storage layout, visual
+priority, or implementation design.
 
-## Contract inputs
+## Neutrality and robustness rule
 
-A conclusion is valid only for a declared evaluation scope containing:
+The product owns every conclusion's question, evidence dependencies, predicate,
+comparison basis, and supported preference range. A player does not have to
+supply a context, threshold, desired arrangement, role definition, or reference
+before the scanner can evaluate the cluster.
+
+For a conclusion family `C`, let `E` be its complete normalized evidence and
+`P(C)` be the full product-defined range of admissible preferences. The neutral
+outcome is evaluated across the whole range:
+
+```text
+Evaluate C(E, p) for every p in P(C)
+    |
+All admissible preferences agree positively -> Supports
+All admissible preferences agree negatively -> Does not support or Caution
+Admissible preferences disagree             -> Preference-sensitive
+Invariant strengths and drawbacks coexist   -> Tradeoff
+Evidence incomplete or unsupported           -> Unknown
+Settings remove the question                  -> Not applicable
+```
+
+The core outcome must survive every permitted preference value. An individual
+preference may refine strength, relevance, or explanation inside that outcome;
+it may not replace or reverse it.
+
+Structural predicates with no adjustable value use a singleton preference
+range. Quantitative predicates use product-owned intervals validated and
+versioned with the contract. Until such an interval is accepted, the dependent
+conclusion is **unknown** rather than silently using a community threshold or a
+developer guess.
+
+## Evaluation inputs
+
+Neutral evaluation requires only authoritative product inputs:
 
 - the complete generation identity and supported DSP version;
-- one named player context;
-- the relevant time horizon and intended system or planet role;
 - all generation and combat settings that affect the evidence;
-- any user-supplied requirement or comparison reference;
-- the evidence stage and exact generated coverage; and
-- whether the player requested preview-only or on-demand evaluation.
+- a complete New Game galaxy snapshot for preview conclusions;
+- exact generated coverage for conclusions that require raw evidence; and
+- the contract version and its matching predicate and preference-range set.
 
-The scanner must not silently assume a context, route, threshold, system role,
-or comparison reference when one is required. A missing required input produces
-**unknown**, not a default preference.
+The scanner evaluates every supported context that is applicable to those
+inputs. Contexts are product-owned interpretive lenses, not questions the
+player must construct.
+
+### Optional player influence
+
+Optional player input may:
+
+- prioritize or filter already evaluated contexts and conclusions;
+- select a value inside a published preference interval;
+- refine the displayed strength of a stable conclusion;
+- show the selected interpretation of a **preference-sensitive** conclusion;
+  or
+- reduce disclosure for discovery-first play.
+
+Optional player input may not:
+
+- alter evidence, predicates, admissible ranges, or the neutral outcome;
+- turn **supports** into **does not support**, or the reverse;
+- hide a decisive tradeoff inside a score;
+- make incomplete evidence appear complete; or
+- create an unsupported context or conclusion.
+
+An input outside the accepted range is not clamped or treated as authoritative.
+The neutral conclusion remains valid, and the unsupported preference is
+reported as not applied.
 
 ## Allowed outcome semantics
 
-Every requested conclusion question resolves to one of these outcomes:
+Every applicable conclusion family resolves without player input:
 
 | Outcome | Meaning |
 | --- | --- |
-| **Supports** | Complete evidence satisfies an explicit structural predicate, user requirement, or declared comparison for the named context. |
-| **Does not support** | Complete evidence proves that the same explicit predicate or requirement is not satisfied. This is not a claim that the seed is bad or unplayable. |
-| **Tradeoff** | Complete evidence establishes material advantages and disadvantages that should remain visible together. It does not collapse them into a winner. |
-| **Caution** | Complete evidence establishes a context-specific exposure or limitation, without predicting that harm will occur. |
-| **Unknown** | Required evidence, scope, compatibility, coverage, predicate, or reference is absent or incomplete. Unknown is not equivalent to does not support. |
-| **Not applicable** | The selected settings or context make the question irrelevant, such as Dark Fog farming in peace mode. |
+| **Supports** | Complete evidence satisfies the context objective for every preference in the accepted range. |
+| **Does not support** | Complete evidence fails the same bounded objective for every preference in the accepted range. This does not make the seed bad or unplayable. |
+| **Preference-sensitive** | Complete evidence produces different interpretations within the accepted preference range. The evidence is known; its value is legitimately variable. |
+| **Tradeoff** | Complete evidence establishes invariant material strengths and drawbacks that must remain visible together. |
+| **Caution** | Complete evidence establishes an invariant context-specific exposure or limitation without predicting that harm will occur. |
+| **Unknown** | Required evidence, compatibility, coverage, predicate, or accepted range is missing or incomplete. Unknown is not a negative result or preference ambiguity. |
+| **Not applicable** | Authoritative settings make the context question irrelevant, such as Dark Fog farming in peace mode. |
 
 No numeric confidence, letter grade, aggregate score, or universal verdict is
-allowed by version `0.1.0-candidate.1`.
+allowed by version `0.1.0-candidate.2`.
 
-## Evidence and attribution rules
+## Predicate and preference-range requirements
 
-Every conclusion must be explainable from its evaluation scope:
+Every conclusion family must own a versioned evaluation definition containing:
 
-1. Name the context and the planet, system, cluster, or comparison being
-   evaluated.
-2. Identify the decisive normalized facts and whether each came from preview,
-   deterministic derivation, or on-demand raw generation.
-3. Preserve the generation settings and evidence coverage needed to reproduce
-   those facts.
-4. State the material tradeoff or limiting assumption when the same fact can
-   have an opposite interpretation in another context.
-5. Distinguish factual absence from unavailable or incomplete evidence.
-6. Keep simultaneous conclusions separate; one strength must not numerically
-   cancel an unrelated caution.
+1. a neutral question and the context decision it informs;
+2. the subject scope: planet, system, birth region, or complete cluster;
+3. its normalized evidence and required evidence stage;
+4. a fixed structural predicate or quantitative function;
+5. the complete admissible preference interval, including units and endpoints;
+6. invariant positive, negative, preference-sensitive, tradeoff, unknown, and
+   not-applicable behavior where relevant;
+7. settings that alter evidence or applicability;
+8. material tradeoffs and prohibited inferences; and
+9. validation cases supporting every reachable outcome.
 
-Preview conclusions require a complete New Game galaxy snapshot. On-demand
-conclusions require complete raw generation for the declared planet, system,
-or cluster scope. Cancellation, generation failure, unsupported runtime
-members, or partial coverage forces every dependent question to **unknown**.
-Preview facts may remain available, but they may not substitute for the missing
-raw evidence.
+Ranges are owned by the contract, not by UI defaults. They must be justified
+from the accepted player taxonomy, challenged by runtime-confirmed examples,
+and approved through SPEC-06. Different settings may select different published
+ranges when their effect is understood; they may not silently rescale one range.
 
-### Confidence semantics
+An interval may express tolerable variation in distance, amount, concentration,
+energy opportunity, or context intensity. Its endpoints are contract data and
+change under the versioning rules below.
+
+## Evidence, confidence, and attribution
+
+Every conclusion must:
+
+- name its context and planet, system, birth region, or cluster subject;
+- identify the decisive normalized preview, derived, or raw facts;
+- preserve generation settings, contract version, and generated coverage;
+- state material tradeoffs and limiting assumptions;
+- distinguish factual absence from unavailable evidence; and
+- remain separate from unrelated conclusions rather than participating in a
+  hidden weight.
+
+Preview conclusions require a complete galaxy snapshot. On-demand conclusions
+require complete raw generation for the declared scope. Cancellation, failure,
+unsupported runtime members, or partial coverage forces every dependent family
+to **unknown**. Preview facts remain usable by preview families but cannot stand
+in for missing raw evidence.
 
 This version permits no probabilistic or graduated confidence label. An outcome
-other than **unknown** or **not applicable** requires the matrix's high-confidence
-intersection: an accepted runtime source, a versioned derivation when used,
-complete declared coverage, and an explicit player decision predicate.
+other than **unknown** or **not applicable** requires an accepted runtime source,
+a versioned derivation when used, complete declared coverage, an accepted
+predicate, and an accepted preference range. Context dependence is represented
+by the outcome and its interval, not by lowering confidence.
 
-Context dependence is not low confidence. It is expressed through the named
-context, settings, role, comparison, and tradeoffs. When evidence is only a
-proxy or the interpretation still has medium or low confidence, the dependent
-question remains **unknown** until a later contract supplies and validates the
-missing predicate.
+## Automatically evaluated contexts
 
-## Supported contexts in the first contract
+The first contract evaluates six bounded contexts:
 
-The first contract supports six bounded contexts:
-
-| Context | Supported decision | Required qualification |
+| Context | Neutral decision supported | Required boundary |
 | --- | --- | --- |
-| Fresh start | Identify structural conveniences, early power or gas-product opportunities, and exact starter-resource support | Convenience is not viability; exact deposits require on-demand generation. |
-| Megafactory | Nominate systems for energy, sphere geometry, factual roles, and declared resource requirements | Production capacity, hardware suitability, and logistics throughput remain unknown. |
-| Dark Fog farming | Identify initial farming opportunity or exposure and separation options | Combat must be enabled; farm performance and evolving state remain unknown. |
-| Compact expansion | Compare geometric grouping of explicitly named system roles | Distance is not travel time or throughput. |
-| Sphere showcase or energy-focused | Identify strong stellar and shell-geometry options | Receiver performance, realized output, and attractiveness remain unknown. |
-| Explicit trait match | Determine whether a requested reproducible star, planet, orbit, theme, or resource combination exists | The contract answers the factual match, not whether it is rare, beautiful, fun, or challenging. |
+| Fresh start | Identify robust structural conveniences, early power and gas-product opportunities, and starter-resource limitations or strengths | Convenience is not viability; exact deposits require on-demand generation. |
+| Megafactory | Identify robust energy, sphere-geometry, system-role, and resource-scale candidates | Production capacity, hardware suitability, and logistics throughput remain unknown. |
+| Dark Fog farming | Identify initial farming opportunity, unwanted exposure, and role-separation tradeoffs | Combat must be enabled; farm performance and evolving state remain unknown. |
+| Compact expansion | Identify robust or preference-sensitive geometric grouping of supported system roles | Distance is not travel time or throughput. |
+| Sphere showcase or energy-focused | Identify strong stellar and shell-geometry options under product-owned comparisons | Receiver performance, realized output, and attractiveness remain unknown. |
+| Decision-relevant traits | Identify supported factual arrangements that materially affect at least one accepted context | The contract may describe the arrangement, not whether it is rare, beautiful, fun, or challenging. |
 
-Scarce-resource and maximum-difficulty play are supported as settings-sensitive
-qualifiers to fresh-start, resource, and Dark Fog questions. They do not yet
+Scarce-resource and maximum-difficulty play qualify the fresh-start, resource,
+and Dark Fog evaluations using their authoritative game settings. They do not
 receive a broad survival or viability conclusion.
 
-Relaxed or discovery-first play is supported by permitting evaluation to be
-disabled or limited to requested questions. It does not create an automatic
-conclusion.
-
-Set-seed speedrunning is deferred. Its resource and topology facts are
-reproducible, but a useful route conclusion requires a named category, route,
-game version, split objective, and route-specific predicates that this contract
-does not define.
+Discovery-first preferences affect disclosure only. Set-seed speedrunning
+remains deferred because a neutral route conclusion requires a separately
+accepted category, route, game version, split objective, and predicate set.
 
 ## Conclusion catalogue
 
-Conclusion identifiers are stable semantic names. The wording eventually shown
-to a player may change without changing their meaning.
+The catalogue retains twelve semantic families. Each evaluates automatically;
+the player is never required to provide its predicate.
 
-### Fresh-start conclusions
-
-| ID | Player question | Evidence stage | Supports when | Does not support, tradeoff, or unknown behavior |
+| ID | Neutral question | Evidence | Product-owned evaluation | Required boundary |
 | --- | --- | --- | --- | --- |
-| `FS-TOPOLOGY` | Does the birth-system arrangement support the player's requested compact early expansion pattern? | Preview | Direct orbit and satellite topology satisfies an explicit requested arrangement. | **Does not support** only for a declared pattern miss. Mention moon/star-orbit tradeoffs. **Unknown** if no pattern was requested. |
-| `FS-POWER` | Does a reachable birth-system planet provide the requested renewable-power opportunity? | Preview | Direct rotation flags and wind/solar fields satisfy an explicit factual power predicate, such as tidal locking. | **Does not support** for an explicit predicate miss. Preserve planet location and progression limits; do not predict build output. |
-| `FS-GAS-ROUTE` | Does the birth system provide the requested giant product route? | Preview | Direct gas products include the requested item, with its setting-sensitive collection rate available. | **Does not support** if absent. State that collection requires progression and does not imply mineable deposits. |
-| `FS-RESOURCES` | Do generated starter deposits support an explicit resource-presence or amount requirement? | On demand | Complete birth-system raw coverage proves the requested resource presence or bound. | **Does not support** only for a proven miss. **Unknown** for partial coverage. Never convert the result into general starter viability. |
+| `FS-TOPOLOGY` | Does the birth system contain a materially concentrated early-expansion arrangement? | Preview topology | Fixed structural predicates identify shared-giant satellite groups and other accepted concentration patterns. | Emit **tradeoff** when the same topology constrains an accepted sphere or role objective. Never predict travel time. |
+| `FS-POWER` | Does a reachable birth-system planet provide a robust renewable-power opportunity? | Preview rotation, wind, solar, and orbit facts | Fixed traits such as tidal locking are invariant; quantitative energy ratios use accepted ranges. | Identify the planet and progression limits. Never predict realized build output. |
+| `FS-GAS-ROUTE` | Which early-to-midgame giant-product opportunities exist? | Preview gas products and rates | Fixed product presence is evaluated automatically; rates use setting-specific accepted ranges. | Preserve collection prerequisites and never imply mineable deposits. Multiple products may coexist without ranking. |
+| `FS-RESOURCES` | Are starter deposits robustly strong, limited, or preference-sensitive for early progression? | Complete on-demand birth-system veins and oil | Per-resource, setting-specific amount and distribution intervals determine the stable outcome. | **Unknown** until ranges and complete coverage exist. Never convert the result into starter viability. |
+| `MF-ENERGY-SYSTEM` | Which systems are robust stellar-energy candidates within this cluster? | Preview stellar facts and Dyson luminosity | Cluster-relative extrema and accepted separation intervals identify leaders, ties, or a preference-sensitive leading group. | An extremum is not a universal best system and does not predict realized output or hardware suitability. |
+| `MF-SPHERE-GEOMETRY` | Which systems provide robust shell-radius or orbital-containment opportunities? | Preview and derived sphere geometry | Fixed runtime containment predicates and accepted geometry ranges identify opportunities and ties. | State the containment predicate. Never infer receiver effectiveness. |
+| `MF-SYSTEM-ROLE` | Which systems robustly satisfy the contract's supported factual roles? | Preview composition, topology, distance, and eligible conclusions | Versioned role predicates are evaluated for every system without a player-supplied role. | Buildable area, factory capacity, and logistics performance cannot define a role in this version. |
+| `MF-RESOURCE-SCOPE` | Is system or cluster supply robustly strong, limited, or preference-sensitive for long-horizon scale? | Complete on-demand resources and vein structure | Setting-specific amount, distribution, and coverage intervals produce separate conclusions. | Keep amount, node/group structure, and distance separate. Never predict lifetime or throughput. |
+| `DF-OCCUPATION` | Does generated Dark Fog occupation create robust farming opportunity, exposure, or a role-separation tradeoff? | Preview hive counts, orbits, safety fields, and combat settings | Product-owned occupation ranges are evaluated separately for farming opportunity and protected-role exposure. | **Not applicable** in peace mode. Never predict bases, levels, yield, threat, or attack timing. |
+| `CX-GROUPING` | Are supported system roles robustly compact, dispersed, or preference-sensitive? | Preview distances and role conclusions; raw evidence when a role requires it | Product-owned roles and distance intervals evaluate the complete cluster automatically. | **Unknown** when a dependent role lacks evidence. Never infer travel time or throughput. |
+| `RR-ACCESS` | Is rare-resource access robustly close, abundant, limited, or preference-sensitive? | Complete on-demand rare veins and derived distances | Separate setting-specific amount and distance intervals are evaluated together without merging their outcomes. | Preserve nearby convenience versus distant abundance as a possible **tradeoff**. |
+| `TRAIT-SUMMARY` | Which accepted decision-relevant structural traits materially distinguish this cluster's options? | Eligible preview or raw evidence | A versioned registry emits only factual traits connected to another supported context. | No subjective quality or undefined rarity. Diagnostic facts without a decision remain excluded. |
 
-### Megafactory and sphere conclusions
+## Robust quantitative behavior
 
-| ID | Player question | Evidence stage | Supports when | Does not support, tradeoff, or unknown behavior |
-| --- | --- | --- | --- | --- |
-| `MF-ENERGY-SYSTEM` | Which system best satisfies the declared stellar-energy comparison or requirement? | Preview | Direct stellar facts and runtime Dyson luminosity satisfy a user bound or identify an extremum within the declared cluster scope. | A comparative result must name its reference and ties. Do not infer realized generation, need, or hardware suitability. |
-| `MF-SPHERE-GEOMETRY` | Does a system provide the requested shell radius or planet-containment option? | Preview | Runtime-derived allowed radius and an explicit containment predicate satisfy the request. | **Does not support** for a proven geometry miss. State the chosen shell and containment predicate; do not infer receiver performance. |
-| `MF-SYSTEM-ROLE` | Does a system match an explicit factual role description? | Preview | Its star, planet, theme, topology, and distance facts satisfy all declared role predicates. | **Does not support** for a complete predicate miss. Buildable area, factory capacity, and logistics performance cannot be role predicates in this version. |
-| `MF-RESOURCE-SCOPE` | Does a fully generated system or cluster satisfy a declared resource requirement or comparison? | On demand | Normalized exact totals, rare-resource presence, and/or vein structure satisfy the declared requirement under identical relevant settings. | **Unknown** for partial scope. Preserve amount, node/group structure, and distance as separate reasons; do not predict lifetime or throughput. |
+For a monotonically favorable metric with an accepted player-preference
+threshold interval `[L, U]`:
 
-### Dark Fog conclusion
+| Evidence value | Neutral outcome |
+| --- | --- |
+| Value satisfies the objective even at `U` | **Supports** across the full range. |
+| Value fails the objective even at `L` | **Does not support** or **caution**, according to the family contract. |
+| Value satisfies some thresholds but not others | **Preference-sensitive**. |
+| Value or accepted interval is unavailable | **Unknown**. |
 
-| ID | Player question | Evidence stage | Supports when | Does not support, tradeoff, or unknown behavior |
-| --- | --- | --- | --- | --- |
-| `DF-OCCUPATION` | Does a system provide or avoid the requested initial Dark Fog opportunity? | Preview | Initial/max hive counts and orbit opportunity satisfy the requested direction under the complete combat settings. | Use **tradeoff** when opportunity also exposes a protected role. Use **caution** for unwanted exposure. **Not applicable** in peace mode. Never predict bases, levels, yield, threat, or attack timing. |
+Direction may be reversed for metrics where lower is favorable, such as
+distance. Non-monotonic metrics require an explicit evaluation function and
+must demonstrate the same whole-range invariance. Multi-metric conclusions may
+emit **tradeoff**; they may not collapse disagreement into a weighted average.
 
-### Cross-context conclusions
-
-| ID | Player question | Evidence stage | Supports when | Does not support, tradeoff, or unknown behavior |
-| --- | --- | --- | --- | --- |
-| `CX-GROUPING` | Does the cluster geometrically group the explicitly requested system roles? | Preview, plus on-demand evidence if a role requires exact resources | Every role is supported by eligible evidence and the declared distance predicate is satisfied. | **Does not support** for a complete miss; **unknown** if any role depends on incomplete raw evidence. Do not infer travel time or throughput. |
-| `RR-ACCESS` | Does a generated scope contain the requested rare resource at the required geometric relationship? | On demand | Exact rare veins satisfy the presence or amount predicate and derived distance satisfies the separately declared relationship. | Report closeness and abundance separately and retain their possible conflict. **Unknown** for incomplete raw coverage. |
-| `TRAIT-MATCH` | Does the cluster contain the explicitly requested reproducible combination? | Preview or on demand, according to the requested facts | Every requested factual predicate is satisfied within the declared scope. | **Does not support** for a complete miss. **Unknown** if any predicate is unsupported or ungenerated. Do not infer rarity or subjective quality. |
+An optional player selection inside `[L, U]` may explain which side of a
+**preference-sensitive** result fits that player. The neutral result remains
+**preference-sensitive** and must remain recoverable.
 
 ## Comparison semantics
 
-The catalogue permits four comparison bases:
+Neutral comparisons may use only product-owned references:
 
-- a user-supplied bound with preserved units;
-- another seed generated with the same relevant identity and settings;
-- another system or planet within the same cluster; or
-- an extremum within a declared, completely evaluated scope.
+- another system or planet within the completely evaluated cluster;
+- a cluster-relative extremum or tie;
+- an accepted quantitative preference interval; or
+- a versioned reference population established by an accepted later contract.
 
-“High,” “low,” “near,” “many,” “best,” and similar relative terms are invalid
-without one of those bases. Community-reported thresholds are not built-in
-defaults. Comparisons across different resource settings, combat settings,
-cluster sizes, game versions, or incomplete raw scopes must be declined unless
-the conclusion explicitly concerns that difference.
+Community thresholds, arbitrary defaults, and unbounded user-supplied values
+are not comparison bases. “High,” “low,” “near,” “many,” “best,” and similar
+terms require one of the references above and must preserve units and ties.
 
-An extremum is a factual comparison, not an endorsement. For example, the
-highest Dyson luminosity in a cluster may be identified, but it is not “the
-best system” without a declared sphere-energy question and its tradeoffs.
+Comparisons across different relevant settings, cluster sizes, game versions,
+or incomplete raw scopes are declined unless the conclusion explicitly and
+validly concerns that difference.
 
 ## Required tradeoff behavior
 
-The following conflicts must remain visible whenever both sides are supported:
+The following conflicts remain visible whenever both sides are established:
 
 - starter convenience versus long-horizon importance;
 - nearby access versus potentially greater distant resource abundance;
 - resource amount versus vein/node distribution;
 - concentrated roles versus deliberate system separation;
-- Dark Fog farming opportunity versus exposure of protected infrastructure;
-- sphere-energy potential versus the player's actual need and performance
-  budget; and
-- factual optimization versus discovery-first disclosure preference.
+- Dark Fog farming opportunity versus protected-infrastructure exposure;
+- sphere-energy potential versus practical need and performance budget; and
+- factual optimization versus discovery-first disclosure.
 
-The contract does not decide these conflicts through weights. It may emit
-multiple **supports**, **tradeoff**, or **caution** outcomes for the same seed
-when they answer different questions.
+The contract may emit multiple conclusions about one seed. It never decides
+these conflicts through weights or lets one strength cancel an unrelated
+caution.
 
 ## Explicitly declined claims
 
-Version `0.1.0-candidate.1` must not produce:
+Version `0.1.0-candidate.2` must not produce:
 
 - a universal best-seed verdict, aggregate score, or arbitrary weighting;
 - a guarantee that a starter is viable, safe, easy, or impossible to lose;
@@ -194,59 +258,69 @@ Version `0.1.0-candidate.1` must not produce:
 - ray-receiver effectiveness or realized Dyson sphere output;
 - future Dark Fog bases, level, growth, farm yield, threat, or attack timing;
 - visual attractiveness, fun, novelty, challenge quality, or undefined rarity;
-- speedrun suitability without a separately accepted route contract; or
-- any raw-evidence conclusion from preview proxies or partial generation.
+- speedrun suitability without a separately accepted route contract;
+- a raw-evidence conclusion from preview proxies or partial generation; or
+- a neutral positive or negative result whose polarity changes inside the
+  accepted preference range.
 
-Requests for these claims resolve to **unknown** with the unsupported or
-after-start dependency identified. They must not be approximated by an adjacent
-supported fact.
+Unsupported or after-start requests resolve to **unknown** with the dependency
+identified. Complete but preference-dependent evidence resolves to
+**preference-sensitive**. Neither may be approximated by an adjacent fact.
 
 ## Validation obligations for SPEC-06
 
-Before this contract can become an implementation baseline, SPEC-06 must test
-each catalogue entry with:
+Before this contract can become an implementation baseline, SPEC-06 must
+establish the predicate and preference-range set and test every family with:
 
-- a positive case that produces **supports**;
-- a complete negative case that produces **does not support** where allowed;
-- a mixed case that preserves a material **tradeoff** or **caution**;
-- a settings-sensitive case where the interpretation changes or becomes
-  **not applicable**;
-- an incomplete, cancelled, or unavailable evidence case that produces
-  **unknown**; and
-- a counterexample that would expose any prohibited proxy or universal claim.
+- stable positive evidence across the full accepted range;
+- stable negative or caution evidence where that outcome is allowed;
+- evidence inside each adjustable interval that produces
+  **preference-sensitive**;
+- a mixed case that preserves an invariant **tradeoff**;
+- settings-sensitive cases, including **not applicable** behavior;
+- incomplete, cancelled, unavailable, and incompatible cases producing
+  **unknown**;
+- optional preference values at both endpoints and inside the interval,
+  demonstrating that the neutral outcome survives; and
+- counterexamples exposing prohibited proxies, hidden weighting, or polarity
+  changes.
 
-Comparative entries also require ties, changed references, and mismatched
-settings. On-demand entries require declared scope, complete-versus-partial
-coverage, and deterministic repetition under the accepted generation identity.
+Quantitative ranges must record units, inclusive/exclusive endpoints, direction,
+settings applicability, research basis, runtime-confirmed boundary examples,
+and compatibility with the contract version. On-demand entries also require
+complete-versus-partial coverage and deterministic repetition.
 
-SPEC-06 may reveal that a catalogue entry is not discriminating or testable.
-Such an entry must be narrowed or removed rather than preserved for symmetry.
+SPEC-06 may narrow or remove a family that cannot obtain a defensible range or
+discriminate usefully. Symmetry is not a reason to preserve it.
 
 ## Contract evolution
 
 This contract uses semantic versioning independently of the mod package:
 
 - a **major** change removes an outcome, changes an existing conclusion's
-  meaning, or weakens unknown/declined behavior;
-- a **minor** change adds a backward-compatible context, question, or
-  conclusion identifier; and
+  meaning, expands player influence beyond its accepted bounds, or weakens
+  unknown/declined behavior;
+- a **minor** change adds a backward-compatible context, family, predicate, or
+  preference range; and
 - a **patch** clarifies wording or corrects an error without changing meaning.
 
-Pre-release labels identify unaccepted candidates. Acceptance of this artifact
-would establish contract version `0.1.0`; later changes must record their
-compatibility impact.
+Changing an accepted range endpoint, direction, or associated outcome requires
+at least a minor version. Pre-release labels identify unaccepted candidates.
+Acceptance of this artifact would establish contract version `0.1.0`; later
+changes must record their compatibility impact.
 
 ## SPEC-05 conclusion
 
-The first contract defines twelve attributable conclusion families across six
-supported contexts. It permits contextual support, explicit misses, preserved
-tradeoffs, cautions, unknowns, and not-applicable results. It never converts
-evidence into a context-free grade.
+The revised contract defines twelve automatically evaluated conclusion families
+across six contexts. The product owns their predicates, comparisons, and
+bounded preference ranges. Players may prioritize, filter, or refine results,
+but they are not required to supply the questions and cannot reverse a neutral
+outcome.
 
-The contract deliberately favors exact structural predicates, user-supplied
-bounds, and declared comparisons. It defers speedrun routing, broad survival or
-starter-viability judgments, subjective evaluation, and all after-start
-performance claims.
+Stable evidence produces **supports**, **does not support**, **caution**, or
+**tradeoff**. Complete evidence whose interpretation changes within the accepted
+range produces **preference-sensitive**. Missing or unsupported evidence alone
+produces **unknown**.
 
 No presentation copy, layout, result serialization, implementation priority,
-or validation seed was selected in SPEC-05.
+accepted quantitative range, or validation seed was selected in SPEC-05.

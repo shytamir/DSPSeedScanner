@@ -1,7 +1,7 @@
 # Product Specification Roadmap
 
-**Status:** Draft. SPEC-01 through SPEC-04 are accepted; SPEC-05 execution is
-complete and pending acceptance.
+**Status:** Draft. SPEC-01 through SPEC-04 are accepted; the revised SPEC-05
+contract is pending acceptance.
 
 **Active user story:** None.
 
@@ -173,43 +173,50 @@ As a player in New Game selection, I want a small set of justified conclusions
 and decisive tradeoffs so that I can accept, reject, or compare a seed without
 interpreting a wall of statistics.
 
-The first supported contexts, questions, evidence requirements, comparison
-rules, allowed outcomes, tradeoff behavior, and mandatory unknown cases were
-defined. The contract selected explainable categorical conclusions and
-explicitly rejected a single opaque score.
+The first supported contexts, neutral questions, evidence requirements,
+comparison rules, outcome invariance, tradeoff behavior, mandatory unknown
+cases, and ownership and validation requirements for predicates and preference
+ranges were defined. Every supported context is evaluated without requiring
+player input. Optional input may prioritize or refine a result inside its
+accepted range but cannot reverse the neutral outcome.
 
 **Produced:** Candidate [seed conclusion
 contract](../specification/CONCLUSION-CONTRACT.md)
-`0.1.0-candidate.1`, containing twelve conclusion families across six supported
-contexts, explicit miss/unknown/not-applicable behavior, comparison semantics,
-declined claims, and validation obligations.
+`0.1.0-candidate.2`, containing twelve automatically evaluated conclusion
+families across six supported contexts. It defines robust whole-range outcomes,
+`preference-sensitive` behavior for complete evidence that varies inside the
+accepted range, strict unknown/not-applicable behavior, and validation
+obligations for predicates and ranges.
 
 **Prior-art used:** DSP-Seed-Finder's configurable match rules and
 DSPSeedSearch's single-purpose largest-sphere result were treated as contrasting
 conclusion models. The contract retained explicit predicates and declared
-comparisons without inheriting either tool's criteria or treating a match as
-universally good.
+comparisons as product-owned, versioned definitions without inheriting either
+tool's criteria or treating a match as universally good.
 
 **Excluded:** Activating SPEC-06, panel layout, presentation copy, visual
 design, result serialization, interaction behavior, and scan orchestration.
 
 ## Phase 5 - Validate that the specification discriminates usefully
 
-### SPEC-06: Establish the validation seed set
+### SPEC-06: Establish predicates, ranges, and the validation seed set
 
 **State:** Proposed.
 
-As a player relying on a conclusion, I want it challenged by representative
-good, bad, and mixed seeds so that it reflects meaningful tradeoffs rather than
-the examples that inspired it.
+As a player relying on a neutral conclusion, I want its predicate and preference
+range challenged by representative robust, sensitive, and mixed seeds so that
+the result survives reasonable preferences rather than reflecting only the
+examples that inspired it.
 
-Select runtime-confirmed seeds for each supported context, including positive
-examples, clear negatives, threshold boundaries, conflicting strengths, and
-settings-sensitive cases. Record expected evidence and conclusions without
-turning named seeds into permanent special cases.
+Establish the product-owned predicate and preference-range set, then select
+runtime-confirmed seeds for each supported context. Include robust positives,
+robust negatives, values inside adjustable ranges, endpoint boundaries,
+conflicting strengths, settings-sensitive cases, and incomplete evidence.
+Record expected conclusions without turning named seeds into permanent special
+cases.
 
-**Produces:** A reproducible validation catalogue and acceptance procedure for
-the conclusion contract.
+**Produces:** A versioned predicate and preference-range set, reproducible
+validation catalogue, and acceptance procedure for the conclusion contract.
 
 **Prior-art targets:** Draw candidate positive, negative, and boundary seeds
 from DSPSeedScanner's published lists and DSPSeedSearch's largest-sphere

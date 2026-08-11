@@ -119,12 +119,14 @@ and “on demand” describe evidence availability, not panel design.
 The cross-check establishes the following requirements for any conclusion
 contract:
 
-1. Every conclusion must name or receive a context, relevant settings, time
-   horizon, and system role.
+1. Every conclusion must name its product-defined context, relevant settings,
+   time horizon, and system role. The player need not supply them for neutral
+   evaluation.
 2. A direction such as “more” or “closer” is allowed only when the context
    establishes why that direction helps and the result retains its tradeoff.
-3. Comparative claims must declare their reference: another seed, another
-   system in the same cluster, a user-supplied bound, or a validated category.
+3. Comparative claims must use a product-owned reference: another system in the
+   same complete cluster, a cluster-relative extremum, an accepted bounded
+   preference interval, or a versioned reference population.
 4. Immediate conclusions may depend only on complete preview evidence.
    On-demand conclusions must declare generated coverage and remain unknown
    when generation is cancelled, partial, or incompatible.
@@ -132,7 +134,8 @@ contract:
    cancel each other inside a hidden weight.
 6. Unsupported outcomes must return unknown or an explicit declined claim;
    a proxy may not silently replace the requested evidence.
-7. Discovery-first play must permit no evaluation or selective disclosure.
+7. Discovery-first play may limit disclosure, but it does not alter the neutral
+   evaluation or its outcome.
 
 These constraints favor small, attributable conclusion sets over broad
 profiles. SPEC-05 remains responsible for selecting the initial set and
@@ -143,8 +146,10 @@ defining its exact semantics.
 The configurable rules in
 [DSP-Seed-Finder](https://github.com/DoubleUTH/DSP-Seed-Finder) and
 [dsp_search_seed](https://github.com/botany233/dsp_search_seed) map well to
-atomic evidence predicates and user-supplied bounds. Their breadth does not
-establish that every rule belongs in the first product contract.
+atomic evidence predicates and bounded comparisons. Their breadth does not
+establish that every rule belongs in the first product contract. Revised
+SPEC-05 made the adopted predicates and ranges product-owned rather than
+requiring player-supplied queries.
 
 [DSPSeedDatabase](https://github.com/SuperB3333/DSPSeedDatabase) reinforces the
 useful separation between stored evidence, queries, and optional evaluation.
@@ -169,6 +174,7 @@ The strongest initial surface is deliberately asymmetric:
 - after-start performance, subjective quality, universal viability, and global
   quality scores remain outside the product's truthful boundary.
 
-SPEC-05 used this accepted boundary to define the candidate [seed conclusion
-contract](CONCLUSION-CONTRACT.md). No final presentation wording, threshold,
-profile, or implementation priority was selected in SPEC-04.
+SPEC-05 used this accepted boundary to define the revised candidate [seed
+conclusion contract](CONCLUSION-CONTRACT.md), including automatic context
+evaluation and bounded preference invariance. No final presentation wording,
+threshold, profile, or implementation priority was selected in SPEC-04.
