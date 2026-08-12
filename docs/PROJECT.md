@@ -4,12 +4,11 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
-**Current status:** The scanner core roadmap and New Game presentation roadmap
-were completed and accepted on 2026-08-11 and 2026-08-12 respectively. No user
-story is active. Presentation refinement planning is in progress using the
-accepted installed workflow, the recorded residual copy and semantic issues,
-and a planned smoother scan-cadence tradeoff. One packaging refinement remains
-tracked as non-blocking technical debt.
+**Current status:** The scanner core and New Game presentation roadmaps were
+completed and accepted on 2026-08-11 and 2026-08-12 respectively. The approved
+presentation refinement roadmap is active, and RFIN-01 is pending
+implementation. One packaging refinement remains tracked as non-blocking
+technical debt.
 
 ## Product decision
 
@@ -41,9 +40,10 @@ documents.
 
 ### Decision contract
 
-- Conclusions are evaluated automatically across the accepted fresh-start,
-  megafactory, Dark Fog farming, compact-expansion, sphere or energy, and
-  decision-relevant-trait contexts.
+- The retained decision contexts are fresh start, megafactory, compact
+  expansion, and sphere or energy. Dark Fog occupation will be shown only as
+  neutral status metadata, and redundant decision-relevant traits will be
+  removed during the active roadmap.
 - Neutral outcomes must survive the complete accepted preference range.
   Optional preferences may filter or explain an outcome but cannot create or
   reverse it.
@@ -69,11 +69,11 @@ The accepted semantics and thresholds are maintained in the
   complete scan are persisted in a versioned, bounded local cache under the
   mod configuration area. Raw or normalized resource evidence, execution
   diagnostics, and rendered wording are not cached.
-- The panel presents only actionable strengths, preference-sensitive results,
-  tradeoffs, cautions, and limitations without requiring player input. Unknown
-  and not-applicable components are retained in the evaluation contract but
-  omitted from the player panel. System conclusions use DSP's display name and
-  star type; distance conclusions include a short light-year value.
+- The panel presents concise natural-language strengths,
+  preference-sensitive results, and limitations without requiring player
+  input. Unknown and not-applicable components remain omitted. Named candidates
+  must retain evidence-backed attribution; the panel will not expose internal
+  identifiers, raw runtime units, or mechanical evidence summaries.
 - Its numeric corner setting defaults to `1` for
   bottom-right, then proceeds clockwise as `2` bottom-left, `3` top-left, and
   `4` top-right. Border-center placement is prohibited. The panel shows visible
@@ -106,12 +106,12 @@ decision and corresponding roadmap change.
 
 ## Management and documentation
 
-The completed [New Game presentation roadmap](management/ROADMAP.md) owns its
-story scope, acceptance evidence, sequencing, and history while the refinement
-roadmap is planned. The
+The active [presentation refinement roadmap](management/ROADMAP.md) owns its
+story scope, acceptance gates, sequencing, and history. The completed New Game
+presentation roadmap is retained in the [archive](archive/INDEX.md). The
 [technical debt register](management/TECHNICAL-DEBT.md) owns explicitly
 deferred obligations and their closure gates; recording debt does not weaken
-the accepted safety contract. The completed scanner-core and product-planning
-roadmaps are retained in the [archive](archive/INDEX.md). The
+the accepted safety contract. The completed scanner-core, New Game
+presentation, and product-planning roadmaps are retained in the archive. The
 [documentation index](INDEX.md) lists all current and archived documents with
 their purpose.

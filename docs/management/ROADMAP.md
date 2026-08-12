@@ -1,671 +1,415 @@
-# New Game Presentation Roadmap
+# Presentation Refinement Roadmap
 
-**Status:** Completed and accepted on 2026-08-12. PRES-01 through PRES-07 are
-accepted.
+**Status:** Approved for implementation on 2026-08-12. RFIN-01 is pending.
 
-**Active user story:** None. Presentation refinement planning follows this
-completed roadmap.
+**Active user story:** RFIN-01 is pending implementation.
 
-This roadmap turns the accepted scanner core into a hands-off decision panel
-in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
-to the behavior accepted during presentation planning.
-
-Approval of this roadmap did not activate its first story. Each story must be
-activated, implemented through its stated automated gate, reviewed, and
-accepted before dependent work begins.
+This roadmap refines the accepted New Game panel without reopening its
+lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
+evidence summaries with concise conclusions and removes contexts that do not
+add a defensible player decision.
 
 ## Product return
 
-On completion, each successfully loaded New Game cluster preview will initiate
-one resolution attempt for its complete generation identity. A valid local
-cache hit will resolve immediately; otherwise the panel will show immediate
-preview conclusions, run one bounded full scan automatically, display visible
-activity while work remains, and replace that activity with concise neutral
-conclusions when complete.
+The accepted hands-off panel will remain stable while cache-miss scans yield
+more recovery frames. Fresh start, Megafactory, Compact expansion, and Sphere /
+energy cards will answer distinct player questions in brief natural language.
+Dark Fog will move to neutral status metadata, and redundant trait conclusions
+will disappear.
 
-Changing the seed or leaving the preview will make obsolete work ineligible to
-update the panel. The player will not need to invoke, configure, or interpret
-the scanner to receive its supported conclusions.
+## Governing presentation rules
 
-## Governing decisions
+- The panel presents conclusions, not an evidence table. A supporting fact is
+  shown only when it is uniquely useful and brief.
+- Strength, preference-sensitive, and limitation remain the three columns.
+  Unknown and not-applicable results remain omitted.
+- Removing Dark Fog judgments removes every currently emitted tradeoff and
+  caution. The approved provisional `T` and `C` badge treatment is therefore
+  retained as a deferred presentation rule, not an active story, until a future
+  accepted conclusion emits one of those outcomes.
+- Player-visible names are evidence-backed. The presenter never invents a
+  planet or assigns separate facts to the same planet without attribution.
+- Lists contain at most three examples. Larger sets use an approved natural
+  qualifier such as `many`; they never use `+N` or an omitted-count sentence.
+- Internal identifiers, `@`, raw runtime units, unsupported operational claims,
+  and mechanical labels never reach the panel.
+- The accepted viewport size, anchors, scroll behavior, session lifecycle, and
+  cache-hit behavior do not change.
 
-- The trigger is a completed DSP cluster-preview load, not a keystroke, text
-  edit, button action, or timer.
-- One preview load creates exactly one **resolution attempt**. A cache hit
-  performs no new scan; a cache miss may perform at most one new scan.
-- Duplicate runtime callbacks for one load are coalesced. Reloading the same
-  identity creates a new resolution attempt and may use its cached complete
-  conclusions.
-- Immediate preview conclusions remain useful while complete raw evidence is
-  pending. Raw completion produces a new attributed report and never silently
-  rewrites the earlier report.
-- Full raw scanning is automatic for this New Game workflow. It remains one
-  serialized, bounded operation and may yield or cancel only at safe runtime
-  boundaries.
-- A result may update the panel only while its preview session and complete
-  generation identity are still current.
-- Only complete-scan semantic conclusions admitted from a successful complete
-  result may be persisted. Raw or normalized evidence, execution diagnostics,
-  preview conclusions, and rendered wording are excluded. Cache corruption,
-  incompatibility, or version mismatch is a miss, never current evidence.
-- The panel renders the accepted neutral conclusion contract. It introduces no
-  score, ranking, hidden weighting, new predicate, or required player input.
-- Scan failure receives a terminal diagnostic for that preview load. There is
-  no automatic retry loop.
-- The panel uses a numeric corner setting based on the available space observed
-  in the 4K New Game preview: `1` bottom-right by default, then clockwise as
-  `2` bottom-left, `3` top-left, and `4` top-right. The center of every screen
-  border is prohibited. Adaptive placement, dragging, and collision solving
-  are not requirements.
+## Sequencing
+
+RFIN-01 is independent. RFIN-02 supplies planet attribution needed by RFIN-04.
+RFIN-03 supplies bounded system candidates needed by RFIN-06 and RFIN-08.
+RFIN-05 removes Dark Fog roles before RFIN-06 rewrites Megafactory and RFIN-07
+summarizes the remaining route roles. RFIN-09 reconciles removals and panel
+finish after all context stories. Human in-game validation occurs only in
+RFIN-10.
 
 ## Validation policy
 
-Stories PRES-01 through PRES-06 use focused automated tests, deterministic
-harnesses, builds, and automated game-linked probes where runtime behavior must
-be exercised. They do not require human in-game validation.
-
-Human in-game validation occurs only in PRES-07. This accepted sequencing risk
-does not relax the final runtime, responsiveness, lifecycle, or presentation
-acceptance gate. A failure discovered there is repaired within PRES-07 only
-when it is necessary to satisfy an already stated requirement; it does not
-authorize new product behavior.
-
-## Phase 1 - Establish presentation-safe execution
-
-### PRES-01: Recognize one current preview session
-
-**State:** Accepted on 2026-08-12.
-
-As a player changing New Game seeds, I want the scanner to respond to the
-cluster that DSP actually loaded so that edits and duplicate callbacks cannot
-start redundant or stale work.
-
-**Return:** A presentation-neutral lifecycle adapter emits one session for each
-completed preview load, captures its complete generation identity, coalesces
-duplicate callbacks, and retires the session when another preview replaces it
-or the New Game preview is left.
-
-**Acceptance gate:** Automated lifecycle fixtures prove keyboard entry, paste,
-randomization, repeated callbacks, same-identity reload, different-identity
-replacement, and preview exit all produce the required session count and stale
-publication behavior without starting a scan.
-
-**Out of scope:** Scanning, caching, panel creation, conclusion copy, placement,
-retry, and changes to DSP's seed controls.
-
-**Delivered:** A presentation-neutral lifecycle boundary now creates one
-current session from each completed preview-load sequence and retains the full
-layered galaxy, resource, and pre-play combat identity for later resolution.
-
-**Implemented:**
-
-- a monotonic load-sequence contract that coalesces repeated callbacks while
-  treating a later sequence as a new session even when its identity is equal;
-- exact preview identity equality across the accepted galaxy identity,
-  resource multiplier, combat mode, initial colonization, maximum density, and
-  canonical combat-settings key;
-- replacement and preview-exit retirement with a cancellable session lifetime;
-- rejection of an inconsistent identity reused with one load sequence, plus
-  suppression of late and already-retired load callbacks; and
-- a current-session publication gate that makes replaced and exited sessions
-  ineligible to update later presentation state.
-
-**Acceptance evidence:**
-
-- completed keyboard-entry, paste, and randomization fixtures created exactly
-  one session each, and no input-specific trigger entered the lifecycle API;
-- a duplicate callback reused its session, while a later load of the same
-  identity created a new session and retired the earlier lifetime;
-- different-identity replacement cancelled the old lifetime, rejected its
-  publication, and ignored its late completion without replacing the current
-  session;
-- preview exit retired once, cancelled the session lifetime, rejected stale
-  publication, and prevented a repeated completion from resurrecting it;
-- the runtime assembly remained free of DSP, Unity, and BepInEx references;
-  and
-- the Release solution and game-linked plugin built with zero warnings, all 14
-  conclusion checks passed, and all 33 runtime-boundary checks passed.
-
-**Produced:** `PreviewSessionLifecycle`, its immutable identity and transition
-contracts, and four focused automated lifecycle fixtures. Per the roadmap's
-validation policy, no human in-game validation was performed or required.
-
-### PRES-02: Keep the full scan responsive
-
-**State:** Accepted on 2026-08-12.
-
-As a player waiting on exact conclusions, I want the long scan to yield between
-safe units so that the New Game interface and its activity indicator can remain
-responsive.
-
-**Return:** Complete-cluster raw work can advance incrementally on the required
-game thread, report bounded progress, and stop at the next accepted safe
-boundary without changing its evidence or conclusions.
-
-**Acceptance gate:** Automated runtime probes and deterministic comparisons
-show incremental and existing complete execution return equivalent successful
-reports; progress is monotonic; cancellation prevents complete conclusions;
-generation remains serialized; cleanup and game-state restoration hold on
-success, cancellation, and injected failure; and the operation yields often
-enough for presentation updates between completed planets.
-
-**Out of scope:** Background DSP generation, parallelism, throughput tuning,
-automatic invocation, cache storage, panel code, and new scan bounds.
-
-**Delivered:** Complete-cluster raw generation now exposes a cooperative
-game-thread operation that completes at most one solid planet per explicit
-advance. The established synchronous entry point remains available and drives
-the same operation to completion without changing its result contract.
-
-**Implemented:**
-
-- a disposable operation with explicit ready and completed states, bounded
-  planet progress, one-planet advances, and a result only at a terminal state;
-- cancellation checks before the next planet and immediately after DSP's
-  indivisible raw-generation call, with no complete conclusions from partial
-  coverage;
-- a retained, scanner-owned candidate galaxy whose DSP global pointers and
-  raw-preparation static references are restored before every yield and freed
-  on success, cancellation, failure, or disposal;
-- one shared runtime-operation lease held for the operation lifetime, keeping
-  preview and raw generation serialized across frame boundaries; and
-- a developer-only probe mode that advances the cooperative operation once
-  per Unity update and compares it with the synchronous entry point.
-
-**Acceptance evidence:**
-
-- deterministic fixtures returned identical rare-resource evidence and
-  conclusion reports through synchronous and cooperative execution, with one
-  completed planet per advance and monotonic planned, started, and completed
-  progress;
-- cancellation after `1/3`, injected failure on the second planet, and early
-  disposal all restored the simulated runtime state and exposed no complete
-  evidence or conclusions;
-- competing preview requests remained busy before and between cooperative
-  advances, then succeeded after the terminal step released serialization;
-- an isolated supported DSP/BepInEx probe for seed `73339583` returned equal
-  successful synchronous and cooperative evidence and reports, advanced all
-  `218/218` solid planets on 218 distinct Unity frames, preserved monotonic
-  progress, and passed every per-yield and final state-restoration check; and
-- the Release solution and game-linked plugin built with zero warnings, all 14
-  conclusion checks passed, and all 36 runtime-boundary checks passed.
-
-**Produced:** `CompleteClusterRawOperation`, its incremental runtime-session
-boundary, the synchronous compatibility wrapper, three focused automated
-fixtures, and the cooperative game-linked probe. No automatic invocation,
-cache, or panel behavior was introduced, and no human in-game validation was
-performed or required by this story.
-
-### PRES-03: Reuse trustworthy local results
-
-**State:** Accepted on 2026-08-12.
-
-As a player revisiting a preview, I want an already completed local scan reused
-so that I do not repeatedly wait for identical evidence.
-
-**Return:** A bounded local cache in the mod configuration area stores and
-retrieves only complete-scan semantic conclusion bundles by full generation
-identity, complete coverage, and the applicable scanner contract versions.
-Live preview conclusions are regenerated rather than duplicated.
-
-**Acceptance gate:** Automated storage tests prove deterministic key equality,
-atomic replacement, the 256 KiB per-entry ceiling, bounded retention,
-successful semantic-conclusion round trips, exclusion of preview conclusions
-and scan evidence or diagnostics, and safe misses for absent, partial, failed,
-cancelled, corrupt, incompatible, oversized, or obsolete entries. A documented
-manual clear operation removes cached conclusions.
-
-**Out of scope:** Shared or cross-machine caches, cloud storage, databases,
-cache browsing UI, migration promises, incomplete-result resumption, and
-changes to conclusion semantics. Raw and normalized scan evidence, execution
-history, and rendered presentation copy are explicitly not cache payloads.
-
-**Delivered:** Presentation-ready complete-cluster semantic conclusions can
-now be reused from a bounded local cache only when the current supported
-runtime, full generation identity, complete evidence stage, and scanner
-contracts match exactly.
-
-**Implemented:**
-
-- a deterministic canonical key and SHA-256 filename covering the DSP build,
-  generation implementation, ordered themes, seed and star count, creation and
-  resource settings, pre-play combat identity, complete-cluster stage, and
-  applicable scanner contract versions;
-- one checksummed, dependency-free versioned binary entry per identity,
-  limited to 256 KiB and written through a flushed same-directory temporary
-  file and atomic replace;
-- successful-complete-only admission that extracts reports attributed to
-  complete-cluster evidence after validating identity, settings, versions,
-  coverage, fingerprint, and restored runtime state;
-- a distinct cached-conclusions contract containing only identity, complete
-  coverage, and semantic reports; preview reports, normalized rare-resource
-  evidence, execution diagnostics, performance observations, and rendered
-  wording have no persisted representation;
-- fail-closed reads that treat absent, partial, failed, cancelled,
-  incompatible, corrupt, oversized, or obsolete material as a miss and remove
-  an invalid file encountered at the current key;
-- most-recently-used retention bounded to 256 entries by default, plus a
-  presentation-neutral clear operation; and
-- plugin integration rooted at `BepInEx/config/DSPSeedScanner/cache`, without
-  invoking the cache automatically or adding player-facing controls.
-
-**Acceptance evidence:**
-
-- equivalent identities with differently scaled decimals produced the same
-  canonical key, while seed and resource-setting changes produced different
-  keys and unsupported fingerprints could not create keys;
-- a successful complete result round-tripped only its identical complete-stage
-  semantic reports and coverage, excluded its preview reports, and atomically
-  replaced an existing invalid destination without leaving a temporary file;
-- reflection checks confirmed the cached contract exposes no rare-resource
-  evidence, progress, trace, elapsed-time, or memory surface, while an
-  otherwise valid semantic payload over 256 KiB was not persisted;
-- a two-entry fixture deterministically evicted the least-recent entry, kept
-  the two current identities readable, and the clear operation removed every
-  cache entry and remained idempotent;
-- partial, failed, cancelled, and incompatible results were not written;
-  absent, obsolete-schema, and checksum-corrupt entries returned misses, and
-  invalid current-key files were removed; and
-- the Release solution, game-linked plugin, and hosted-CI reference build
-  completed with zero warnings; all 14 conclusion and 40 runtime-boundary
-  checks passed; and the semantic-versioned DLL and Thunderstore package
-  validators accepted the resulting three-assembly package.
-
-**Produced:** `CompleteClusterCacheKey`, `CachedCompleteClusterConclusions`,
-`CompleteClusterConclusionCache`, four focused storage fixtures, the BepInEx
-configuration-path adapter, and the [cache operation record](../CACHE.md).
-Cache-or-scan orchestration, cache UI, migration, rendered copy, and human
-in-game validation remained outside this story.
-
-## Phase 2 - Deliver the hands-off workflow
-
-### PRES-04: Resolve every preview automatically once
-
-**State:** Accepted on 2026-08-12.
-
-As a player entering a cluster preview, I want its available conclusions
-resolved automatically so that using the mod requires no scan command.
-
-**Return:** Each preview session performs one resolution attempt: it evaluates
-immediate preview evidence, uses a valid complete cache hit when available, or
-starts at most one incremental full scan and persists its successful result.
-Replacement and exit cancel obsolete work, and stale completion can never be
-published to the current session.
-
-**Acceptance gate:** An automated orchestration matrix proves cache-hit,
-cache-miss, duplicate-event, seed replacement, same-identity reload, preview
-exit, busy, incompatibility, cancellation, and failure behavior. Every case
-has one attributable terminal state, no retry loop, and no fabricated complete
-result.
-
-**Out of scope:** Panel rendering, presentation wording, player controls,
-multiple queued identities, batch scanning, and cache management UI.
-
-**Implemented:** The presentation-neutral `PreviewResolutionCoordinator`
-now owns one attributable attempt per lifecycle session. It evaluates the
-live preview, reads the validated complete-conclusion cache, or starts one
-cooperative complete scan; a successful scan is admitted to that cache.
-Duplicate callbacks reuse the same attempt, while replacement and exit retire
-and cancel obsolete work before another scan may acquire the shared runtime
-gate. Only the lifecycle's current session is publishable.
-
-The BepInEx plugin patches the completion boundary of DSP's
-`UIGalaxySelect.SetStarmapGalaxy` and the preview's `_OnClose` lifecycle
-boundary. Each completed method call receives a new monotonic load sequence
-and exact generation identity. The plugin advances at most one solid planet
-for the current operation per Unity frame; it does not infer loads from input
-events, timers, or frame polling.
-
-**Acceptance evidence:**
-
-- a cache miss evaluated immediate reports, started one incremental scan,
-  reached one complete terminal state, and persisted only the successful
-  complete reports; a later load of the same identity evaluated fresh preview
-  reports and reached one cached terminal state without another complete scan;
-- a duplicate completion callback did not repeat preview evaluation or start
-  another scan;
-- seed replacement cancelled the obsolete attempt at a restored boundary,
-  made its output unpublishable, and admitted one new attempt; preview exit
-  cancelled the current attempt and left no publishable state;
-- busy, incompatible, preview-failure, and complete-scan-failure fixtures each
-  reached one attributable terminal state, remained stable when advanced
-  again, and exposed no fabricated complete reports; and
-- the Release solution and installed-game plugin builds completed with zero
-  warnings, all 14 conclusion checks and 43 runtime-boundary checks passed,
-  the hosted-runner reference build completed, and the semantic-versioned DLL
-  and Thunderstore package validators accepted the three-assembly package.
-
-**Produced:** `PreviewResolutionAttempt`, `PreviewResolutionCoordinator`,
-focused automatic-resolution fixtures, the completed-load and preview-close
-Harmony integration, and hosted-CI compile references for that integration.
-Panel rendering, presentation wording, player controls, multiple queued
-identities, and human in-game validation remained outside this story.
-
-### PRES-05: Show current operational state
-
-**State:** Accepted on 2026-08-12. The corner-anchor
-requirement was resolved on 2026-08-12.
-
-As a player viewing a cluster preview, I want a small panel to show what the
-scanner is doing so that waiting, cache reuse, completion, and failure are
-never ambiguous.
-
-**Return:** The panel appears and disappears with the preview session at the
-configured corner. The numeric setting maps `1` to bottom-right by default,
-then clockwise to `2` bottom-left, `3` top-left, and `4` top-right. It
-distinguishes waiting, cached, scanning, complete, cancelled, unsupported, and
-failed states; active work displays a simple animated spinner and quiet planet
-progress.
-
-**Acceptance gate:** Automated UI-state tests cover every state transition,
-ensure inactive or obsolete sessions cannot alter the visible panel, verify
-the spinner advances between scan steps, verify the exact `1` through `4`
-corner mapping and default, keep every border center unused, and enforce the
-agreed text bounds at each configured corner.
-
-**Out of scope:** Adaptive placement, dragging, overlap detection, non-corner
-anchors, conclusion cards, raw evidence tables, preferences, manual retry, and
-visual redesign of DSP controls.
-
-**Implemented:** A presentation-neutral panel model now maps the current
-resolution attempt to waiting, cached, scanning, complete, cancelled,
-unsupported, or failed operational state. Active states use a four-frame ASCII
-spinner and scanning includes completed-versus-expected planet progress.
-Rendered copy is limited to one 32-character title and one 64-character detail
-line; raw diagnostics and conclusion wording do not enter this layer.
-
-`PreviewPanelController` admits updates only from its active, non-retired
-session and hides exactly that session or the current preview. The plugin binds
-`Presentation.PanelCorner` through BepInEx configuration, defaults invalid or
-absent values to `1`, advances the spinner once per Unity update, and renders a
-non-interactive 520-by-116 IMGUI panel with a 24-pixel corner margin. The panel
-is hidden on preview close and plugin destruction without modifying DSP's UI
-hierarchy or controls.
-
-**Acceptance evidence:**
-
-- mapping fixtures covered waiting, cached, scanning, complete, cancelled,
-  unsupported, busy-as-unavailable, and failed inputs; only active states
-  carried a spinner, and planning remained visibly distinct from planet
-  progress;
-- successive active steps selected different spinner frames and scanning
-  exposed quiet completed-versus-expected planet counts;
-- configuration values `1` through `4` mapped exactly to bottom-right,
-  bottom-left, top-left, and top-right, while out-of-range values returned the
-  bottom-right default;
-- 4K placement fixtures kept all four rectangles within their selected corner,
-  outside both screen center axes, and away from every border center;
-- every rendered title and detail remained inside its fixed single-line bound;
-  and obsolete, retired, mismatched, and exited sessions could not replace or
-  hide the current view; and
-- the Release solution and installed-game plugin builds completed with zero
-  warnings, all 14 conclusion checks and 46 runtime-boundary checks passed,
-  the hosted-reference build completed, and the semantic-versioned DLL and
-  Thunderstore package validators accepted the three-assembly package.
-
-**Produced:** `PreviewPanelStateMapper`, `PreviewPanelLayout`,
-`PreviewPanelController`, `PreviewStatusPanelRenderer`, the numeric BepInEx
-corner setting, and focused state, placement, spinner, text-bound, and stale
-publication fixtures. Conclusion cards, raw evidence tables, adaptive layout,
-player controls, and human in-game validation remained outside this story.
-
-### PRES-06: Present concise neutral conclusions
-
-**State:** Accepted on 2026-08-12.
-
-As a player deciding whether a seed suits an intended run, I want its supported
-conclusions grouped by context so that I can understand strengths, limitations,
-tradeoffs, and uncertainty without decoding raw statistics.
-
-**Return:** The panel presents an identity header, immediate preview summary,
-and context-grouped conclusion cards for the accepted fresh-start,
-megafactory, Dark Fog farming, compact-expansion, sphere or energy, and
-decision-relevant-trait contexts. The pending detailed section shows activity
-until complete evidence replaces it, and cached conclusions are identified.
-
-**Acceptance gate:** Snapshot and mapping tests cover every accepted outcome,
-tradeoff, unknown, not-applicable state, subject attribution, and supported
-context using bounded copy. Immediate and complete reports remain visibly
-distinct, all decisive conflicts survive, and no score, universal verdict,
-unsupported claim, or raw-number wall is introduced.
-
-**Out of scope:** New predicates or ranges, player preference controls,
-discovery-mode controls, seed comparison, sorting, exports, charts, detailed
-evidence browsing, localization, and package-branding refinement.
-
-**Implemented at acceptance:** `PreviewConclusionPresenter` mapped only the twelve accepted
-semantic families into the six accepted contexts. Each card carries an
-explicit strength, limitation, preference-sensitive, tradeoff, caution,
-unknown, or not-applicable outcome and a bounded subject summary. Repeated
-subject-level reports are collapsed only when their context, evidence stage,
-family, and outcome agree. Every tradeoff and caution remains an independent
-card, and non-rendered source IDs retain traceability without exposing contract
-identifiers to players.
-
-At acceptance, the panel document began with seed, star count, resource multiplier, and
-combat mode. It keeps complete Galaxy Preview cards under `Immediate preview`
-and Complete Cluster Raw cards under a separately labelled detailed section.
-That section says scanning while work remains, complete after a successful
-scan, cached after reuse, or unavailable after a terminal rejection. Lines are
-limited to 112 characters and documents to 72 lines; decisive fact values,
-units, diagnostics, raw identifiers, and scores have no rendered path.
-
-The accepted IMGUI renderer expanded the existing corner panel to the bounded document
-size, applies separate identity, section, context, and card styles, and retains
-the configured anchor and operational spinner or progress line. It adds no
-interaction, sorting, preference, inspection, or comparison control.
-
-**Acceptance evidence:**
-
-- focused mapping fixtures covered all seven accepted outcomes and every
-  subject kind used by the conclusion contract, including birth systems, star
-  systems, clusters, resources, system pairs, and traits;
-- the live deterministic preview fixture produced all six context groups in
-  accepted order, and every rendered immediate card was attributable only to
-  Galaxy Preview evidence;
-- completed and cached fixtures replaced the pending detailed section with
-  Complete Cluster Raw cards, kept the immediate section unchanged, and
-  identified cache reuse explicitly;
-- the number of rendered caution and tradeoff cards exactly matched the
-  decisive source reports, with each source retained independently;
-- deterministic snapshots enforced the identity and section hierarchy, line
-  and document bounds, all four 4K corner fits, and absence of contract IDs,
-  raw units, scores, rankings, universal verdicts, or best-seed language; and
-- the Release solution and installed-game plugin builds completed with zero
-  warnings and all 14 conclusion and 49 runtime-boundary checks passed, while
-  the hosted-reference build completed and the semantic-versioned DLL and
-  Thunderstore package validators accepted the three-assembly package.
-
-**Produced:** `PresentedConclusionCard`, `PresentedContextGroup`,
-`PreviewConclusionPresentation`, `PreviewPanelDocument`, the accepted-family
-and outcome copy mapper, the expanded bounded renderer, and focused mapping,
-conflict, cache, stage-separation, snapshot, and placement fixtures. New
-predicates, preferences, comparisons, charts, detailed evidence browsing,
-localization, and human in-game validation remained outside this story.
-
-## Phase 3 - Accept the installed experience
-
-### PRES-07: Validate the complete New Game experience
-
-**State:** Accepted on 2026-08-12.
-
-As a player installing DSP Seed Scanner, I want the hands-off panel to behave
-correctly through real New Game preview changes so that I can rely on what it
-shows before starting a game.
-
-**Return:** The packaged mod is exercised end to end in the supported game,
-and the completed presentation behavior is documented accurately for players
-and maintainers.
-
-**Acceptance gate:** Human in-game validation confirms panel placement and text
-fit, responsive spinner and controls during a cache miss, immediate cache-hit
-reuse, exactly one resolution attempt per completed preview load, correct
-replacement after seed changes, safe cancellation on preview exit, complete
-context conclusions, and terminal unsupported or failure states without stale
-results. Automated suites, build, exact package validation, and isolated
-installation also pass for the accepted commit.
-
-**Out of scope:** Further UX features, adaptive anchoring, broader runtime or
-mod compatibility, performance guarantees beyond the accepted operation bound,
-publication, telemetry, comparison, preferences, exports, and closure of
-unrelated technical debt.
-
-**Implemented:** The first isolated 4K run exposed two acceptance defects and
-one misleading diagnostic. The panel now scales its readable coordinate space,
-reserves additional bottom clearance, and replaces the tall indented document
-with three wrapped columns for strengths, preference-sensitive results, and
-limitations. Tradeoffs remain in the preference-sensitive column and cautions
-remain in the limitations column. Unknown and not-applicable components are no
-longer rendered, and the redundant immediate and detailed section labels were
-removed.
-
-The live preview now carries a presentation-only lookup from stable system
-identifiers to DSP's display name and star-type text. Cards never expose an
-unresolved internal system identifier. Distance cards require a decisive
-light-year fact, render it to roughly three significant figures, and include
-the player-visible system name when the report identifies one. Wrapped cards
-replace list-era ellipses. Unsupported states now distinguish other-plugin or
-preloader uncertainty from a DSP-version or generation-runtime mismatch.
-
-**Earlier human evidence:** In the isolated supported runtime, the panel became
-readable at 4K, cache-miss progress remained visibly active, controls remained
-usable despite the expected performance cost, and a 204-solid-planet scan
-completed within the previously estimated acceptable duration. The completed
-result rendered without text overlap or clipping. That pass also found the
-excessive footprint, unknown cards, raw system identifiers, omitted distance
-values, and redundant stage headings repaired above; therefore it did not
-close this story's human gate.
-
-**Automated evidence:** The Release solution and installed-game plugin build
-with zero warnings, all 14 conclusion checks and 49 runtime-boundary checks
-pass, system-display metadata stays outside the evidence identity and cache,
-and focused fixtures enforce outcome-to-column mapping, suppression of unknown
-and not-applicable cards, player-visible system labels, short distance values,
-bottom clearance, stale-state rejection, and bounded copy. The installed- and
-hosted-reference plugin builds and the exact semantic-versioned package
-validation also passed locally; pushed CI was still part of the final gate at
-that stage.
-
-**Second human pass and repair:** The first three-column candidate was readable
-and retained acceptable scan responsiveness, but repeated each context heading
-inside independently flowing columns, used an opaque full-panel background,
-and remained too small. The second pass also demonstrated that revisiting an
-identical seed did not use the cache. Investigation found that cache admission
-bounded every evaluator report before filtering to the complete-stage payload;
-large but valid preview role/grouping sets could therefore reject a small
-cacheable complete bundle.
-
-The repaired renderer now treats each context as one card spanning the three
-aligned outcome columns, centers one neutral context heading, orders cards
-with all three outcomes first, and packs sparser contexts afterward. The full
-surface has no background, while conclusion and class-heading fonts are
-larger. The cache applies its report-count ceiling to the complete-stage
-payload it actually serializes; a focused regression stores and reloads that
-payload from a successful result containing more than 1,024 total reports.
-Dark Fog conclusions remain unchanged pending broader seed sampling.
-
-This second repair passed all 14 conclusion and 49 runtime-boundary checks and
-the installed-game plugin build with zero warnings. Human revalidation and the
-pushed package/CI gates were still required before PRES-07 acceptance.
-
-**Bounded-viewport repair note (approved 2026-08-12):** The second human image
-showed that content-sized placement could not converge: a verbose seed grew
-the document across most of the preview, transparent conclusion text crossed
-the stellar legend, and one full three-column row per context left large blank
-bands. PRES-07 therefore no longer permits seed content to determine the
-panel's outer dimensions.
-
-The repaired presentation uses one resolution-relative viewport. Its corner
-placement applies stable safe-area clearance for the
-top-right legend and bottom-left Back control. A lightly tinted translucent
-surface separates conclusion text from the cluster map without hiding it. The
-identity, progress line, and three conclusion-class headings remain fixed;
-only the clipped card document scrolls, and its position resets for each new
-preview session. Content length can now affect only the document's scrollable
-extent, never the panel footprint.
-
-Contexts containing all three conclusion classes remain full-width cards at
-the top. Sparse contexts retain their actual class-column positions and are
-packed into complementary spaces in shared rows below, so a strength-only
-context can share a row with a preference-and-limitation context. Each card
-keeps one centered neutral title, bounded wrapped copy, and its existing class
-colors. This repair introduces no tabs, collapsing, automatic paging,
-preference controls, or changes to Dark Fog conclusions. At that stage, human
-validation still had to confirm the safe areas, scrolling, readability, and
-lifecycle behavior in the installed game before PRES-07 could be accepted.
-
-Focused placement fixtures now lock the resolution-relative geometry and the
-top-right and bottom-left safe clearances. The accepted viewport occupies 37%
-of the resolution width and 37% of its height, rounded to the nearest logical
-pixel. The repaired code passed all 14 conclusion and 49 runtime-boundary
-checks plus installed-game and hosted-reference plugin builds with zero
-warnings.
-
-**Final human evidence:** The accepted 4K candidate kept its bottom-right
-anchor, cleared the stellar legend and bottom controls, remained readable, and
-presented a bounded scrollable document on its translucent surface. Scrolling
-worked; complete results joined the immediate conclusions as expected; a
-revisited identity reused its cache; a replacement seed could not receive the
-previous session's result; and leaving the preview retired the current work.
-The accepted local `0.1.4104` test package also passed exact DLL and
-Thunderstore-package validation. These observations closed the PRES-07 human
-gate without asserting that the current conclusion wording needs no further
-refinement.
-
-## Refinement planning handoff
-
-The completed panel exposed presentation issues that did not invalidate its
-workflow acceptance:
-
-- five semantic outcomes currently collapse into three visual classes;
-  tradeoffs share preference-sensitive presentation and cautions share
-  limitations without an explicit outcome label;
-- birth-topology conclusions identify the system without naming the decisive
-  arrangement;
-- compact-expansion conclusions show distances but omit the system roles whose
-  grouping was classified;
-- sphere conclusions omit the contained-orbit count, and rare-resource access
-  omits the destination system when the available subject attribution does not
-  identify it;
-- Dark Fog opportunity text can be identical across different outcome classes,
-  birth exposure remains terse, and broader real-seed sampling is needed
-  before changing or removing the context;
-- decision-relevant traits expose mechanically formatted identifiers; and
-- three examples plus `+N` favors breadth over explaining why the examples
-  received their class. The native scrollbar is also visually heavier than
-  the rest of the panel, but is cosmetic.
-
-The next roadmap must also contain a bounded scan-cadence story. It may accept
-a longer cache-miss duration in exchange for yielding more frequently and
-reducing visible frame disruption. It must preserve main-thread generation,
-serialization, cancellation, progress, restoration of runtime statics, and
-the one-attempt lifecycle; it is not authorization for parallel or background
-DSP generation.
+RFIN-01 through RFIN-09 use focused automated fixtures, builds, and package
+checks. They do not require human in-game validation. RFIN-10 owns the single
+installed-game validation phase and may exercise multiple representative seeds
+within that phase.
+
+## Phase 1 - Prepare refinement inputs
+
+### RFIN-01: Add scan recovery frames
+
+**State:** Pending implementation.
+
+As a player inspecting a new seed, I want the automatic scan to disrupt the
+preview less, even if complete conclusions arrive later.
+
+**Return:** Add one recovery frame after every existing safe yield, doubling
+the yielded frames while retaining visible planet progress.
+
+**Acceptance gate:** Scheduling fixtures prove twice as many yielded frames for
+the same scan work, monotonic progress, identical final evidence, safe
+cancellation, serialization, and restoration of preparation statics. The final
+human gate records cache-miss smoothness and duration.
+
+**Out of scope:** Background or parallel generation, adaptive frame budgets,
+yielding while DSP generation statics are installed, or scan acceleration.
+
+### RFIN-02: Preserve planet attribution
+
+**State:** Approved; inactive.
+
+As a player, I want every named planet to own the fact that qualified it.
+
+**Return:** Retain presentation-safe planet attribution for per-planet Solar,
+Wind, and tidal-lock facts. Retain starter gas-giant count and per-giant product
+membership so singular, plural, presence, and known-absence copy is supported.
+Names and ownership remain evidence, not presenter inference.
+
+**Acceptance gate:** Fixtures map each retained fact to its DSP planet, prevent
+cross-planet merging, and preserve deterministic ordering and DSP display
+names. Gas fixtures distinguish zero, one, and multiple giants and never infer
+that every giant carries an aggregate product. Incomplete attribution is
+unknown and omitted. Any affected persisted contract is versioned and
+incompatible entries fail as cache misses.
+
+**Out of scope:** New thresholds, planet scoring, terrain judgments, localized
+name guarantees, or copy changes.
+
+### RFIN-03: Preserve bounded system candidates
+
+**State:** Approved; inactive.
+
+As a player, I want the panel to name several useful systems when the evidence
+supports more than one candidate.
+
+**Return:** Retain presentation-safe per-system energy and shell evidence so
+later stories can select up to three candidates instead of receiving only the
+cluster maximum. Candidate ownership and ordering remain evidence-backed.
+
+**Acceptance gate:** Fixtures retain each qualifying system's decisive facts,
+rank candidates deterministically, keep facts attached to their source system,
+and expose no more evidence than the presentation contracts require. Missing
+or partial candidate evidence remains unknown. Any affected persisted contract
+is versioned and incompatible entries fail as cache misses.
+
+**Out of scope:** New thresholds, composite scores, changed role predicates,
+copy, or displaying more than three candidates.
+
+## Phase 2 - Rewrite decision presentation
+
+### RFIN-04: Rewrite Fresh start conclusions
+
+**State:** Approved; inactive.
+
+As a player, I want to know how this seed's conditions complement a fresh
+start.
+
+**Return:** Apply the Fresh start contract below to gas products,
+renewable power, shared-giant topology, starter resources, vein groups, and
+local Fire Ice.
+
+**Acceptance gate:** Every known family and outcome has deterministic bounded
+copy, planet names appear only with RFIN-02 attribution, and no raw quantities,
+star-type suffixes, `@`, or unsupported output claims appear. Unknowns remain
+omitted. The open Fresh start decisions below must be settled before this story
+is activated.
+
+**Out of scope:** New predicates, changed ranges, resource viability, mining
+performance, or raw evidence views.
+
+### RFIN-05: Separate Dark Fog facts from judgments
+
+**State:** Approved; inactive.
+
+As a player, I want the generated Dark Fog occupation reported without a
+farming verdict.
+
+**Return:** Remove Dark Fog conclusion reports, cards, tradeoffs, cautions,
+Megafactory roles, and Compact expansion roles. Preserve the underlying
+occupation evidence. In Combat mode with complete compatible preview coverage,
+show one neutral fixed-status line:
+
+`Dark Fog: 36 initial hives; 1 in starter system`
+
+Use natural singular forms. Peace, incomplete, and unsupported cases omit the
+line; the identity continues to state `Peace` or `Combat`.
+
+**Acceptance gate:** Exact cluster and starter counts appear only in the fixed
+status area under eligible Combat previews. No Dark Fog outcome remains visible
+or influences another conclusion. Normalized occupation evidence remains
+available for future specification. The changed conclusion set invalidates
+older semantic-cache entries safely.
+
+**Out of scope:** Farming suitability, bases, levels, loot, threat, attack
+timing, future occupation, icons, or combat-setting changes.
+
+### RFIN-06: Rewrite Megafactory candidates
+
+**State:** Approved; inactive.
+
+As a player, I want to know which candidates exist for each supported
+megafactory role.
+
+**Return:** Apply the Megafactory contract below to stellar energy, large
+shells, contained orbits, and rare access. Present up to three evidence-backed
+candidates and group several roles belonging to one system.
+
+**Acceptance gate:** Each supported state uses approved copy and deterministic
+selection. Candidate lists do not exceed three, larger sets use approved
+`many` forms, and no internal roles, raw resource amounts, `@`, Dark Fog, or
+operational claims appear. The open strong-energy role rule below must be
+settled before this story is activated.
+
+**Out of scope:** Factory capacity, throughput, logistics performance, new
+resource-abundance ranges, or new system roles.
+
+### RFIN-07: Summarize Compact expansion routes
+
+**State:** Approved; inactive.
+
+As a player, I want to know how easy or difficult expansion is for the roles
+this seed supports.
+
+**Return:** Replace system-pair data with `Short routes`, `Normal routes`, and
+`Long routes`, optionally followed by up to three of `starter`, `energy`,
+`sphere`, `orbits`, and `rares`.
+
+**Acceptance gate:** Roles are deduplicated deterministically into one approved
+distance class, copy matches the Compact contract below, and no exact distance,
+pair, system, star type, internal role, or intermediate predicate appears. The
+open role-class reduction rule below must be settled before activation.
+
+**Out of scope:** Route planning, travel time, throughput, system-pair display,
+or new role predicates.
+
+### RFIN-08: Rewrite Sphere / energy candidates
+
+**State:** Approved; inactive.
+
+As a player, I want to know how favorable this seed is for sphere construction.
+
+**Return:** Present shell size and contained-orbit roles using the approved
+Sphere / energy contract below. Select no more than three candidates per
+component: shell candidates by radius, containment candidates by orbit count,
+then stable identity for ties. No composite score is introduced.
+
+**Acceptance gate:** All three outcomes for both components use approved copy,
+lists remain deterministic and bounded, and no internal radius, orbit distance,
+`+N`, `@`, raw geometry, or receiver/output claim appears.
+
+**Out of scope:** Sphere design, receiver effectiveness, aesthetics, composite
+ranking, or threshold changes.
+
+## Phase 3 - Reconcile and validate the panel
+
+### RFIN-09: Remove redundant traits and finish the panel
+
+**State:** Approved; inactive.
+
+As a player, I want every panel section to add a distinct decision and remain
+easy to scan.
+
+**Return:** Remove the trait registry, trait evaluation, cached trait reports,
+trait context, and trait tests without altering their source conclusions.
+Apply the approved per-context aggregation rules and visually harmonize the
+scrollbar with the existing panel.
+
+**Acceptance gate:** No trait identifier or derived output remains. Source
+conclusions are unchanged, aggregation snapshots match every context contract,
+mechanical identifiers are absent, and scrolling remains discoverable and
+functional within the accepted viewport. The changed conclusion set invalidates
+older semantic-cache entries safely.
+
+**Out of scope:** New summaries, sorting, filters, tabs, charts, comparisons,
+final icons, or panel resizing.
+
+### RFIN-10: Validate the refined experience
+
+**State:** Approved; inactive.
+
+As a player installing the refined package, I want smoother scanning and the
+revised conclusions to work together in the supported New Game flow.
+
+**Return:** Exercise the complete refined package after RFIN-01 through RFIN-09
+have passed their automated gates.
+
+**Acceptance gate:** Automated snapshots cover every approved copy outcome,
+aggregation boundary, omission rule, and cache-version transition. Automated
+suites, hosted-reference build, and exact package validation pass. The
+installed 4K phase covers representative cached and uncached seeds, smoother
+cache-miss pacing and recorded duration, replacement, exit, scrolling, all four
+retained contexts, Dark Fog metadata, and absence of Dark Fog judgments and
+traits. Residual limits are documented without assuming product acceptance.
+
+**Out of scope:** Publication, wider compatibility, localization, comparison,
+or unrelated technical debt.
+
+## Context contracts
+
+### Fresh start
+
+**Question:** How are this seed's conditions complementary to a fresh start?
+
+**Copy:**
+
+- Gas products: `Starter gas giant has Fire Ice / Hydrogen`; use `Starter gas
+  giants have/lack ...` when multiple giants exist. Known absence may be a
+  limitation; incomplete coverage is omitted unknown.
+- Solar and Wind are separate. Solar uses `bright`, `mid`, or `dim`; Wind uses
+  `strong`, `mid`, or `weak`. Percentages are omitted and planet names require
+  RFIN-02 attribution.
+- Tidal lock: `Permanent solar source on Aspidiske II` or `No permanent solar
+  sources`.
+- Shared-giant topology: `2 gas giant neighbors` or `No gas giant neighbors`.
+  The displayed neighbor count is the stored shared-body count minus the birth
+  planet itself.
+- Resource amount: `[Resource] plentiful` or `[Resource] scarce`; no amount is
+  shown.
+- Vein groups use `[Resource] has many vein groups` and `[Resource] has few vein
+  groups` for the accepted outer outcomes.
+- Fire Ice veins: `Found Fire Ice veins` or `No Fire Ice veins`.
+
+**Aggregation:** Show at most three planets within the starter system when a
+sentence needs planet targets. Group only planets sharing the stated fact and
+outcome. Never combine Solar and Wind classifications.
+
+**Never show:** Star-type suffixes on planet conclusions, `@`, raw quantities,
+superfluous numbers, fabricated attribution, realized power, mining performance,
+or universal starter viability.
+
+**Open wording decisions:**
+
+1. Choose the exact Solar/Wind fragments using the approved adjectives, such
+   as `Bright solar on Aspidiske II` versus `Aspidiske II has bright solar`.
+2. Choose the middle resource-amount and vein-group words, and decide whether
+   the combined starter-deposit total receives its own concise sentence.
+
+### Megafactory
+
+**Question:** Which candidates are present for each supported megafactory role?
+
+**Copy:**
+
+- Energy combinations: `Venator outshines all`, `Venator unusually bright`,
+  `Venator brightest`, `Venator bright`, or `No bright stars`.
+- Numeric luminosity is normally omitted. An out-of-band exceptional form may
+  use `Venator unusually bright: 2.70` or `No bright stars: best 2.40`.
+- Sphere size: `Large sphere at Venator`, `Large spheres at Venator,
+  Alsciaukat, and Shaula`, `Many large-sphere systems`, or `No large spheres`.
+- Orbit containment: `Contained orbit at Lambda Librae`, `3 contained orbits
+  at Lambda Librae`, `Contained orbits at Lambda Librae, Shaula, and Venator`,
+  `Many contained-orbit systems`, or `No contained orbits`. Megafactory shows
+  qualifying role candidates; other classes remain under Sphere / energy.
+- Rare access: `Nearby Fire Ice in Alsciaukat`, `Fire Ice in Alsciaukat`,
+  `Distant Fire Ice in Alsciaukat`, or `No Fire Ice`.
+- System-first grouping: `Venator: unusually bright, large sphere, 3 contained
+  orbits` or `Alsciaukat: Fire Ice, contained orbit`.
+
+**Aggregation:** Show at most three systems per role and three rare resources
+per distance class. Larger groups use forms such as `Many bright stars:
+Venator, Shaula, Alsciaukat`, `Many large spheres: Venator, Shaula,
+Alsciaukat`, or `Many nearby rares: Fire Ice, Kimberlite, Organic Crystal`.
+Retain destination systems when grouped rare resources have different
+destinations. Never show an omitted count.
+
+**Never show:** Internal roles, Dark Fog roles, `@`, raw resource amounts,
+mechanical language, factory capacity, throughput, or logistics claims.
+
+**Open contract decision:** Define how output class and leader separation
+create the `energy` role used by Compact expansion. The accepted implementation
+uses output strength alone; the approved copy treats separation as evidence of
+a distinct leader. This must be an explicit predicate decision, not presenter
+inference.
+
+### Compact expansion
+
+**Question:** How easy or difficult is expansion for the available roles?
+
+**Copy:** `Short routes`, `Normal routes`, or `Long routes`, optionally followed
+by up to three roles: `Short routes: starter, energy, sphere`.
+
+**Aggregation:** Summarize natural roles, never pairs. Approved roles are
+`starter`, `energy`, `sphere`, `orbits`, and `rares`.
+
+**Never show:** Exact figures, pairs, systems, star types, inputs, intermediate
+predicates, internal identifiers, or non-final conclusions.
+
+**Open reduction decision:** When one role participates in pair reports across
+multiple distance classes, choose one deterministic final class. The recommended
+rule is the shortest eligible route for that role; this must be approved before
+RFIN-07 begins.
+
+### Sphere / energy
+
+**Question:** How favorable are this seed's conditions for sphere construction?
+
+**Copy:** `Grand shell`, `Normal shell`, `Tiny shell`, `Many contained orbits`,
+`1 contained orbit`, and `No contained orbits`. Attach a system naturally when
+identifying a candidate, such as `Grand shell at Venator`.
+
+**Aggregation:** Group systems by shared conclusion. Show at most three shell
+candidates ordered by radius and three containment candidates ordered by orbit
+count, with stable identity as the tie-breaker.
+
+**Never show:** Internal radius, orbit distance, `+N`, `@`, raw geometry,
+receiver effectiveness, realized output, or aesthetics.
+
+## Removed conclusion contexts
+
+### Dark Fog farming
+
+Hive counts do not support a neutral farming judgment because their direction
+depends on player preference. RFIN-05 removes the context and downstream roles.
+Only exact initial occupation remains as neutral status metadata in eligible
+Combat previews.
+
+### Decision-relevant traits
+
+Every trait repeats a Fresh start, Megafactory, Compact expansion, or Sphere /
+energy strength. RFIN-09 removes the registry and all derived output. Nothing
+replaces it in the status area.
 
 ## Roadmap coverage
 
-| Accepted presentation requirement | Covered by |
+| Refinement requirement | Covered by |
 | --- | --- |
-| Completed-preview recognition, duplicate coalescing, and current-session identity | PRES-01 |
-| Responsive main-thread progress and safe cancellation | PRES-02 |
-| Versioned atomic bounded local cache and manual clearing | PRES-03 |
-| One automatic resolution attempt, cache-or-scan behavior, no retry, and stale suppression | PRES-04 |
-| Configurable four-corner panel, spinner, progress, and operational states | PRES-05 |
-| Immediate and complete neutral conclusions grouped by every accepted context | PRES-06 |
-| Deferred human validation, package verification, and accurate handoff documentation | PRES-07 |
+| Twice the current safe recovery frames with visible progress | RFIN-01 |
+| Evidence-backed planet names and gas-giant ownership | RFIN-02 |
+| Up to three evidence-backed system candidates | RFIN-03 |
+| Fresh start natural-language conclusions | RFIN-04 |
+| Neutral Dark Fog status without judgments or roles | RFIN-05 |
+| Megafactory role candidates | RFIN-06 |
+| Compact expansion route summaries | RFIN-07 |
+| Sphere construction candidates | RFIN-08 |
+| Trait removal, aggregation, and panel finish | RFIN-09 |
+| Automated, package, and installed-game acceptance | RFIN-10 |
 
 ## Roadmap-wide exclusions
 
-This roadmap does not add adaptive panel placement, player scoring or required
-preferences, manual scan or retry controls, seed comparison, batch search,
-parallel generation, background DSP generation, shared caches, databases,
-exports, telemetry, new conclusions, wider compatibility, publication, or
-package icon and marketing-copy refinement. TD-003 remains independent and
-does not block this roadmap.
+This roadmap does not change evidence thresholds unless the open energy-role
+decision explicitly revises that role predicate. It adds no scoring,
+preferences, comparison, route planning, raw-data view, new Dark Fog judgment,
+background generation, localization, publication, or compatibility expansion.
 
 ## Completion
 
-PRES-01 through PRES-07 were individually accepted, and PRES-07 recorded the
-sole human in-game validation of the installed experience. This roadmap was
-completed on 2026-08-12. Its completion did not authorize external publication
-or the refinement work listed above.
+The roadmap is complete only when RFIN-01 through RFIN-10 are individually
+accepted and RFIN-10 records the single installed-game validation.

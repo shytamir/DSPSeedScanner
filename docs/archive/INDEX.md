@@ -8,8 +8,8 @@ authority.
 
 - [Project steering](../PROJECT.md): Authoritative accepted decisions and
   current tracked project status.
-- [New Game presentation roadmap](../management/ROADMAP.md): Active story state,
-  acceptance gates, sequencing, and history.
+- [Presentation refinement roadmap](../management/ROADMAP.md): Active story
+  state, acceptance gates, sequencing, and history.
 
 ## Archived documents
 
@@ -18,5 +18,8 @@ authority.
   at that time.
 - [Scanner core roadmap](CORE-ROADMAP.md): Completed IMPL-01 through IMPL-09
   implementation and acceptance record.
+- [New Game presentation roadmap](PRESENTATION-ROADMAP.md): Completed PRES-01
+  through PRES-07 hands-off panel implementation, validation, and refinement
+  handoff.
 
 Return to the [documentation index](../INDEX.md) for all current documents.

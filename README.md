@@ -24,8 +24,8 @@ bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.
 
 [docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current
 project status and steering decisions. The current
-[roadmap](docs/management/ROADMAP.md) records the completed presentation work
-and its refinement-planning handoff.
+[roadmap](docs/management/ROADMAP.md) records the active presentation refinement
+stories, acceptance gates, and status.
 
 The [documentation index](docs/INDEX.md) lists the accepted specifications,
 delivery notes, management documents, and archived planning material.

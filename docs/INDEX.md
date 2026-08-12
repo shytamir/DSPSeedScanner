@@ -7,8 +7,8 @@ current status; the current roadmap records story state and history.
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [New Game presentation roadmap](management/ROADMAP.md): Completed PRES-01
-  through PRES-07 hands-off panel record and refinement-planning handoff.
+- [Presentation refinement roadmap](management/ROADMAP.md): Active RFIN-01
+  through RFIN-10 story scope, sequencing, acceptance gates, and status.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
@@ -52,3 +52,6 @@ current status; the current roadmap records story state and history.
   deferred at that time.
 - [Scanner core roadmap](archive/CORE-ROADMAP.md): Completed IMPL-01 through
   IMPL-09 implementation and acceptance record.
+- [New Game presentation roadmap](archive/PRESENTATION-ROADMAP.md): Completed
+  PRES-01 through PRES-07 hands-off panel implementation, validation, and
+  refinement handoff.
