@@ -1,9 +1,9 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 reached its automated acceptance gate on
-2026-08-12 and awaits product acceptance.
+**Status:** Active. RFIN-01 was accepted on 2026-08-12. RFIN-02 reached its
+automated acceptance gate on 2026-08-12 and awaits product acceptance.
 
-**Active user story:** RFIN-01 is at its acceptance gate.
+**Active user story:** RFIN-02 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -57,8 +57,7 @@ within that phase.
 
 ### RFIN-01: Add scan recovery frames
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player inspecting a new seed, I want the automatic scan to disrupt the
 preview less, even if complete conclusions arrive later.
@@ -104,7 +103,8 @@ validation phase.
 
 ### RFIN-02: Preserve planet attribution
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want every named planet to own the fact that qualified it.
 
@@ -122,6 +122,35 @@ incompatible entries fail as cache misses.
 
 **Out of scope:** New thresholds, planet scoring, terrain judgments, localized
 name guarantees, or copy changes.
+
+**Implemented:** The normalized birth-system evidence now retains every solid
+planet's DSP ID, display name, Solar ratio, Wind ratio, and tidal-lock state.
+Each starter gas giant separately owns its DSP display name and complete
+product membership. Attribution is sorted by DSP planet ID and remains one
+immutable evidence contract through preview evaluation and presentation
+resolution, so the presenter cannot merge separately owned facts.
+
+**Acceptance evidence:**
+
+- fixtures preserved DSP display names and per-planet Solar, Wind, tidal-lock,
+  and gas-product ownership in deterministic planet-ID order;
+- duplicate planet identities and incomplete gas-product attribution failed
+  closed, while absent attribution remained explicitly unknown and unpublished;
+- zero-, one-, and two-giant fixtures retained distinct cardinality, and
+  differently stocked giants never inherited the birth system's aggregate
+  product set;
+- a cached conclusion reload regenerated attribution from its current live
+  preview and retained it for presentation without starting another complete
+  scan; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks passed, and all 51 runtime-boundary checks passed.
+
+**Produced:** Presentation-safe `NormalizedBirthPlanetEvidence` owned by the
+birth system, live-preview extraction using DSP planet display names, and a
+resolution handoff that deliberately does not add attribution to the persisted
+semantic-conclusion cache. Because neither conclusion semantics nor persisted
+cache shape changed, no cache contract version changed; existing valid entries
+remain reusable and attribution is always regenerated from the loaded preview.
 
 ### RFIN-03: Preserve bounded system candidates
 

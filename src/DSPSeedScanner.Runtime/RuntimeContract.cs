@@ -174,6 +174,7 @@ namespace DSPSeedScanner.Runtime
         private readonly NormalizedSystemEvidence[] systems;
         private readonly NormalizedSystemDistance[] systemDistances;
         private readonly RuntimeSystemDisplay[] systemDisplays;
+        private readonly NormalizedBirthPlanetEvidence[]? birthPlanetAttributions;
 
         public RuntimePreviewSnapshot(
             string birthSystemIdentifier,
@@ -199,6 +200,9 @@ namespace DSPSeedScanner.Runtime
             this.systemDistances = systemDistances.ToArray();
             this.systemDisplays = (systemDisplays ?? Array.Empty<RuntimeSystemDisplay>())
                 .ToArray();
+            NormalizedSystemEvidence? birthSystem = this.systems
+                .SingleOrDefault(system => system.IsBirthSystem);
+            this.birthPlanetAttributions = birthSystem?.BirthPlanets?.ToArray();
             if (this.systemDisplays.Select(value => value.Identifier)
                 .Distinct(StringComparer.Ordinal).Count() != this.systemDisplays.Length)
             {
@@ -208,7 +212,6 @@ namespace DSPSeedScanner.Runtime
             }
             if (this.systems.Length == 0 && unknownEnumType == null)
                 throw new ArgumentException("At least one generated system is required.", nameof(systems));
-
             BirthSystemIdentifier = birthSystemIdentifier;
             GeneratedStarCount = generatedStarCount;
             UnknownEnumType = unknownEnumType;
@@ -223,6 +226,11 @@ namespace DSPSeedScanner.Runtime
             Array.AsReadOnly((NormalizedSystemDistance[])systemDistances.Clone());
         public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays =>
             Array.AsReadOnly((RuntimeSystemDisplay[])systemDisplays.Clone());
+        public IReadOnlyList<NormalizedBirthPlanetEvidence>? BirthPlanetAttributions =>
+            birthPlanetAttributions == null
+                ? null
+                : Array.AsReadOnly(
+                    (NormalizedBirthPlanetEvidence[])birthPlanetAttributions.Clone());
         public string? UnknownEnumType { get; }
         public int? UnknownEnumValue { get; }
     }

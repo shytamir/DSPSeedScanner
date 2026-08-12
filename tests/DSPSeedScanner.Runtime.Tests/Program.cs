@@ -18,6 +18,8 @@ namespace DSPSeedScanner.Runtime.Tests
             {
                 ("supported topology reaches evaluator", SupportedTopologyReachesEvaluator),
                 ("complete preview reaches all immediate families", CompletePreviewReachesAllImmediateFamilies),
+                ("birth planet attribution is deterministic and owned", BirthPlanetAttributionIsDeterministicAndOwned),
+                ("birth planet attribution distinguishes gas cardinality and unknown", BirthPlanetAttributionDistinguishesCardinalityAndUnknown),
                 ("identity mismatches reject safely", IdentityMismatchesRejectSafely),
                 ("member and mod uncertainty reject safely", MemberAndModUncertaintyRejectSafely),
                 ("patcher and in-memory generation uncertainty reject safely", PatcherAndMethodUncertaintyRejectSafely),
@@ -96,6 +98,136 @@ namespace DSPSeedScanner.Runtime.Tests
             True(result.StateRestored);
             True(result.Trace.Any(value => value.StartsWith("generate:thread=", StringComparison.Ordinal)));
             Equal(1, gateway.GenerateCalls);
+        }
+
+        private static void BirthPlanetAttributionIsDeterministicAndOwned()
+        {
+            NormalizedBirthPlanetEvidence[] input =
+            {
+                GasAttribution(202, "Alpha II", "hydrogen"),
+                SolidAttribution(201, "Alpha I", 1.35m, 1.1m, true),
+                GasAttribution(203, "Alpha III", "fire-ice", "hydrogen")
+            };
+            var gateway = new FakeGateway
+            {
+                Snapshot = Snapshot(birthPlanetAttributions: input)
+            };
+
+            RuntimeScanResult result = new PreviewScanCoordinator(gateway)
+                .TryScan(Request(), CancellationToken.None);
+
+            Equal(RuntimeScanStatus.Success, result.Status);
+            True(result.BirthPlanetAttributions != null);
+            Equal("201,202,203", String.Join(",", result.BirthPlanetAttributions!
+                .Select(value => value.PlanetId)));
+            Equal("Alpha I", result.BirthPlanetAttributions![0].DisplayName);
+            Equal(1.35m, result.BirthPlanetAttributions[0].SolarRatio);
+            Equal(1.1m, result.BirthPlanetAttributions[0].WindRatio);
+            Equal(true, result.BirthPlanetAttributions[0].IsTidalLocked);
+            Equal("fire-ice,hydrogen", String.Join(",",
+                result.BirthPlanetAttributions[2].GasProductIds));
+            Equal("hydrogen", String.Join(",",
+                result.BirthPlanetAttributions[1].GasProductIds));
+
+            input[0] = GasAttribution(999, "Mutated", "deuterium");
+            Equal(202, result.BirthPlanetAttributions[1].PlanetId);
+            False(result.BirthPlanetAttributions[1].GasProductIds.Contains("deuterium"));
+
+            bool duplicateRejected = false;
+            try
+            {
+                Snapshot(birthPlanetAttributions: new[]
+                {
+                    GasAttribution(202, "Alpha II", "hydrogen"),
+                    GasAttribution(202, "Alpha II", "fire-ice")
+                });
+            }
+            catch (ArgumentException)
+            {
+                duplicateRejected = true;
+            }
+            True(duplicateRejected);
+
+            bool incompleteGasRejected = false;
+            try
+            {
+                _ = new NormalizedBirthPlanetEvidence(
+                    202,
+                    "Alpha II",
+                    true,
+                    null,
+                    null,
+                    null,
+                    null);
+            }
+            catch (ArgumentNullException)
+            {
+                incompleteGasRejected = true;
+            }
+            True(incompleteGasRejected);
+        }
+
+        private static void BirthPlanetAttributionDistinguishesCardinalityAndUnknown()
+        {
+            RuntimePreviewSnapshot[] snapshots =
+            {
+                Snapshot(birthPlanetAttributions: new[]
+                {
+                    SolidAttribution(201, "Alpha I", 1.35m, 1.1m, true)
+                }),
+                Snapshot(birthPlanetAttributions: new[]
+                {
+                    SolidAttribution(201, "Alpha I", 1.35m, 1.1m, true),
+                    GasAttribution(202, "Alpha II", "hydrogen")
+                }),
+                Snapshot(birthPlanetAttributions: new[]
+                {
+                    SolidAttribution(201, "Alpha I", 1.35m, 1.1m, true),
+                    GasAttribution(202, "Alpha II", "hydrogen"),
+                    GasAttribution(203, "Alpha III", "fire-ice")
+                })
+            };
+            int[] expectedGasCounts = { 0, 1, 2 };
+            for (int index = 0; index < snapshots.Length; index++)
+            {
+                var gateway = new FakeGateway { Snapshot = snapshots[index] };
+                RuntimeScanResult result = new PreviewScanCoordinator(gateway)
+                    .TryScan(Request(), CancellationToken.None);
+                True(result.BirthPlanetAttributions != null);
+                Equal(expectedGasCounts[index], result.BirthPlanetAttributions!
+                    .Count(value => value.IsGasGiant));
+            }
+
+            var unknownGateway = new FakeGateway { Snapshot = Snapshot() };
+            RuntimeScanResult unknown = new PreviewScanCoordinator(unknownGateway)
+                .TryScan(Request(), CancellationToken.None);
+            True(unknown.BirthPlanetAttributions == null);
+
+            var incompleteGateway = new FakeGateway
+            {
+                Snapshot = Snapshot(32, new[]
+                {
+                    SolidAttribution(201, "Alpha I", 1.35m, 1.1m, true)
+                })
+            };
+            RuntimeScanResult incomplete = new PreviewScanCoordinator(incompleteGateway)
+                .TryScan(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Failed, incomplete.Status);
+            True(incomplete.BirthPlanetAttributions == null);
+
+            WithTemporaryDirectory(path =>
+            {
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle,
+                    new PreviewScanCoordinator(unknownGateway),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                False(attempt.HasCompleteBirthPlanetAttribution);
+                Equal(0, attempt.BirthPlanetAttributions.Count);
+            });
         }
 
         private static void CompletePreviewReachesAllImmediateFamilies()
@@ -920,7 +1052,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     .Any(property => property.Name == "RareResources" ||
                         property.Name == "Progress" || property.Name == "Trace" ||
                         property.Name == "ElapsedMilliseconds" ||
-                        property.Name == "ManagedMemoryDeltaBytes"));
+                        property.Name == "ManagedMemoryDeltaBytes" ||
+                        property.Name == "BirthPlanetAttributions"));
                 True(new FileInfo(entry).Length <= 256 * 1024);
             });
         }
@@ -1209,7 +1342,14 @@ namespace DSPSeedScanner.Runtime.Tests
             WithTemporaryDirectory(path =>
             {
                 var gate = new RuntimeOperationGate();
-                var previewGateway = new FakeGateway();
+                var previewGateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(birthPlanetAttributions: new[]
+                    {
+                        SolidAttribution(201, "Alpha I", 1.35m, 1.1m, true),
+                        GasAttribution(202, "Alpha II", "hydrogen")
+                    })
+                };
                 var completeGateway = new FakeCompleteClusterGateway();
                 var lifecycle = new PreviewSessionLifecycle();
                 using var resolver = new PreviewResolutionCoordinator(
@@ -1255,6 +1395,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(1, cached.TerminalTransitionCount);
                 Equal(2, previewGateway.GenerateCalls);
                 Equal(1, completeGateway.GenerateCalls);
+                True(cached.HasCompleteBirthPlanetAttribution);
+                Equal("Alpha I,Alpha II", String.Join(",",
+                    cached.BirthPlanetAttributions.Select(value => value.DisplayName)));
                 Equal(scanned.CompleteReports.Count, cached.CompleteReports.Count);
                 True(cached.CompleteReports.Select(report =>
                     report.ConclusionId + "\t" + report.Outcome).SequenceEqual(
@@ -2126,7 +2269,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 patchers);
         }
 
-        private static RuntimePreviewSnapshot Snapshot(int generatedStarCount = 64)
+        private static RuntimePreviewSnapshot Snapshot(
+            int generatedStarCount = 64,
+            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -2146,7 +2291,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     leader ? 2.698m : 1m,
                     leader ? 234_200 : 50_000,
                     leader ? 4 : 0,
-                    birth ? 1 : leader ? 39 : 0));
+                    birth ? 1 : leader ? 39 : 0,
+                    birth ? birthPlanetAttributions : null));
             }
 
             var distances = new List<NormalizedSystemDistance>();
@@ -2170,6 +2316,38 @@ namespace DSPSeedScanner.Runtime.Tests
                         index.ToString(),
                         index == 1 ? "Alpha" : "Star " + index,
                         index == 2 ? "O type star" : "G type star")));
+        }
+
+        private static NormalizedBirthPlanetEvidence SolidAttribution(
+            int planetId,
+            string displayName,
+            decimal solarRatio,
+            decimal windRatio,
+            bool isTidalLocked)
+        {
+            return new NormalizedBirthPlanetEvidence(
+                planetId,
+                displayName,
+                false,
+                solarRatio,
+                windRatio,
+                isTidalLocked,
+                null);
+        }
+
+        private static NormalizedBirthPlanetEvidence GasAttribution(
+            int planetId,
+            string displayName,
+            params string[] products)
+        {
+            return new NormalizedBirthPlanetEvidence(
+                planetId,
+                displayName,
+                true,
+                null,
+                null,
+                null,
+                products);
         }
 
         private static ConclusionReport FindReport(

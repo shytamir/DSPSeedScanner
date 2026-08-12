@@ -164,6 +164,10 @@ namespace DSPSeedScanner.Plugin
             decimal maximumSolar = 0m;
             decimal maximumWind = 0m;
             var gasRates = new SortedDictionary<string, decimal>(StringComparer.Ordinal);
+            var birthPlanets = isBirth
+                ? new List<NormalizedBirthPlanetEvidence>()
+                : null;
+            bool birthPlanetAttributionComplete = isBirth;
             long maximumShellRadius = MaximumShellRadius(star);
             int containedOrbits = 0;
 
@@ -181,12 +185,24 @@ namespace DSPSeedScanner.Plugin
                     {
                         sharedBodies++;
                     }
+                    birthPlanets?.Add(new NormalizedBirthPlanetEvidence(
+                        planet.id,
+                        planet.displayName,
+                        false,
+                        Convert.ToDecimal(planet.luminosity),
+                        Convert.ToDecimal(planet.windStrength),
+                        (planet.singularity & EPlanetSingularity.TidalLocked) != 0,
+                        null));
                 }
                 if (planet.orbitRadius * 40_000f <= maximumShellRadius)
                     containedOrbits++;
 
                 if (planet.gasItems == null)
+                {
+                    if (!solid)
+                        birthPlanetAttributionComplete = false;
                     continue;
+                }
                 if (planet.gasSpeeds == null || planet.gasItems.Length != planet.gasSpeeds.Length)
                     throw new InvalidOperationException("Gas item and rate arrays do not match.");
                 for (int index = 0; index < planet.gasItems.Length; index++)
@@ -196,6 +212,18 @@ namespace DSPSeedScanner.Plugin
                     gasRates[productId] = gasRates.TryGetValue(productId, out decimal current)
                         ? current + rate
                         : rate;
+                }
+                if (!solid)
+                {
+                    birthPlanets?.Add(new NormalizedBirthPlanetEvidence(
+                        planet.id,
+                        planet.displayName,
+                        true,
+                        null,
+                        null,
+                        null,
+                        planet.gasItems.Select(NormalizeGasProductId)
+                            .Distinct(StringComparer.Ordinal)));
                 }
             }
 
@@ -217,7 +245,8 @@ namespace DSPSeedScanner.Plugin
                     MidpointRounding.AwayFromZero),
                 maximumShellRadius,
                 containedOrbits,
-                star.initialHiveCount);
+                star.initialHiveCount,
+                birthPlanetAttributionComplete ? birthPlanets : null);
         }
 
         private static NormalizedSystemDistance[] NormalizeDistances(
@@ -297,6 +326,7 @@ namespace DSPSeedScanner.Plugin
                 (typeof(StarData), "uPosition", MemberTypes.Field),
                 (typeof(StarData), "initialHiveCount", MemberTypes.Field),
                 (typeof(PlanetData), "orbitAround", MemberTypes.Field),
+                (typeof(PlanetData), "displayName", MemberTypes.Property),
                 (typeof(PlanetData), "orbitRadius", MemberTypes.Field),
                 (typeof(PlanetData), "singularity", MemberTypes.Field),
                 (typeof(PlanetData), "luminosity", MemberTypes.Field),

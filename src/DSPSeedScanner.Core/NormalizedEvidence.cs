@@ -60,6 +60,82 @@ namespace DSPSeedScanner.Core
         public decimal? CollectionRate { get; }
     }
 
+    public sealed record NormalizedBirthPlanetEvidence
+    {
+        private readonly string[] gasProductIds;
+
+        public NormalizedBirthPlanetEvidence(
+            int planetId,
+            string displayName,
+            bool isGasGiant,
+            decimal? solarRatio,
+            decimal? windRatio,
+            bool? isTidalLocked,
+            IEnumerable<string>? gasProductIds)
+        {
+            if (planetId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(planetId));
+            if (String.IsNullOrWhiteSpace(displayName))
+                throw new ArgumentException("Planet display name is required.", nameof(displayName));
+            if (isGasGiant &&
+                (solarRatio.HasValue || windRatio.HasValue || isTidalLocked.HasValue))
+            {
+                throw new ArgumentException(
+                    "Gas-giant attribution cannot carry solid-planet power facts.");
+            }
+            if (!isGasGiant &&
+                (!solarRatio.HasValue || !windRatio.HasValue || !isTidalLocked.HasValue))
+            {
+                throw new ArgumentException(
+                    "Solid-planet attribution requires complete power and rotation facts.");
+            }
+            if (solarRatio < 0)
+                throw new ArgumentOutOfRangeException(nameof(solarRatio));
+            if (windRatio < 0)
+                throw new ArgumentOutOfRangeException(nameof(windRatio));
+
+            string[] products = gasProductIds == null
+                ? Array.Empty<string>()
+                : gasProductIds.OrderBy(value => value, StringComparer.Ordinal).ToArray();
+            if (isGasGiant && gasProductIds == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(gasProductIds),
+                    "Gas-giant attribution requires complete product membership.");
+            }
+            if (!isGasGiant && products.Length != 0)
+            {
+                throw new ArgumentException(
+                    "Solid-planet attribution cannot carry gas products.",
+                    nameof(gasProductIds));
+            }
+            if (products.Any(String.IsNullOrWhiteSpace) ||
+                products.Distinct(StringComparer.Ordinal).Count() != products.Length)
+            {
+                throw new ArgumentException(
+                    "Gas-product IDs must be nonblank and unique.",
+                    nameof(gasProductIds));
+            }
+
+            PlanetId = planetId;
+            DisplayName = displayName;
+            IsGasGiant = isGasGiant;
+            SolarRatio = solarRatio;
+            WindRatio = windRatio;
+            IsTidalLocked = isTidalLocked;
+            this.gasProductIds = products;
+        }
+
+        public int PlanetId { get; }
+        public string DisplayName { get; }
+        public bool IsGasGiant { get; }
+        public decimal? SolarRatio { get; }
+        public decimal? WindRatio { get; }
+        public bool? IsTidalLocked { get; }
+        public IReadOnlyList<string> GasProductIds =>
+            Array.AsReadOnly((string[])gasProductIds.Clone());
+    }
+
     public sealed record NormalizedSystemEvidence
     {
         public NormalizedSystemEvidence(
@@ -73,7 +149,8 @@ namespace DSPSeedScanner.Core
             decimal? dysonLuminosity = null,
             long? maximumShellRadius = null,
             int? containedOrbitCount = null,
-            int? initialHiveCount = null)
+            int? initialHiveCount = null,
+            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanets = null)
         {
             Subject = subject ?? throw new ArgumentNullException(nameof(subject));
             if (subject.Kind != SubjectKind.BirthSystem &&
@@ -105,6 +182,12 @@ namespace DSPSeedScanner.Core
                 throw new ArgumentOutOfRangeException(nameof(containedOrbitCount));
             if (initialHiveCount < 0)
                 throw new ArgumentOutOfRangeException(nameof(initialHiveCount));
+            if (!isBirthSystem && birthPlanets != null)
+            {
+                throw new ArgumentException(
+                    "Only the birth system can carry birth-planet attribution.",
+                    nameof(birthPlanets));
+            }
 
             NormalizedGasProduct[] products = (giantProducts ??
                 Array.Empty<NormalizedGasProduct>())
@@ -117,6 +200,16 @@ namespace DSPSeedScanner.Core
                     "Gas product IDs must be unique.",
                     nameof(giantProducts));
             }
+            NormalizedBirthPlanetEvidence[]? planets = birthPlanets?
+                .OrderBy(planet => planet.PlanetId)
+                .ToArray();
+            if (planets != null && planets.Select(planet => planet.PlanetId)
+                .Distinct().Count() != planets.Length)
+            {
+                throw new ArgumentException(
+                    "Birth-planet IDs must be unique.",
+                    nameof(birthPlanets));
+            }
 
             IsBirthSystem = isBirthSystem;
             SharedBirthGiantBodies = sharedBirthGiantBodies;
@@ -128,6 +221,7 @@ namespace DSPSeedScanner.Core
             MaximumShellRadius = maximumShellRadius;
             ContainedOrbitCount = containedOrbitCount;
             InitialHiveCount = initialHiveCount;
+            BirthPlanets = planets == null ? null : Array.AsReadOnly(planets);
         }
 
         public ConclusionSubject Subject { get; }
@@ -151,6 +245,8 @@ namespace DSPSeedScanner.Core
         public int? ContainedOrbitCount { get; }
 
         public int? InitialHiveCount { get; }
+
+        public IReadOnlyList<NormalizedBirthPlanetEvidence>? BirthPlanets { get; }
     }
 
     public sealed record StarterResourceMetric

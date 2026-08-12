@@ -22,6 +22,8 @@ namespace DSPSeedScanner.Runtime
         private readonly List<ConclusionReport> completeReports = new List<ConclusionReport>();
         private readonly List<RuntimeSystemDisplay> systemDisplays =
             new List<RuntimeSystemDisplay>();
+        private readonly List<NormalizedBirthPlanetEvidence> birthPlanetAttributions =
+            new List<NormalizedBirthPlanetEvidence>();
 
         internal PreviewResolutionAttempt(PreviewSession session)
         {
@@ -39,6 +41,9 @@ namespace DSPSeedScanner.Runtime
         public IReadOnlyList<ConclusionReport> CompleteReports => completeReports.AsReadOnly();
         public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays =>
             systemDisplays.AsReadOnly();
+        public IReadOnlyList<NormalizedBirthPlanetEvidence> BirthPlanetAttributions =>
+            birthPlanetAttributions.AsReadOnly();
+        public bool HasCompleteBirthPlanetAttribution { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
         public bool CacheStored { get; internal set; }
@@ -61,6 +66,15 @@ namespace DSPSeedScanner.Runtime
         {
             systemDisplays.Clear();
             systemDisplays.AddRange(displays);
+        }
+
+        internal void SetBirthPlanetAttributions(
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? attributions)
+        {
+            birthPlanetAttributions.Clear();
+            HasCompleteBirthPlanetAttribution = attributions != null;
+            if (attributions != null)
+                birthPlanetAttributions.AddRange(attributions);
         }
     }
 
@@ -122,6 +136,7 @@ namespace DSPSeedScanner.Runtime
             RuntimeScanResult preview = previewCoordinator.TryScan(request, session.Lifetime);
             currentAttempt.SetPreviewReports(preview.Reports);
             currentAttempt.SetSystemDisplays(preview.SystemDisplays);
+            currentAttempt.SetBirthPlanetAttributions(preview.BirthPlanetAttributions);
             if (preview.Status != RuntimeScanStatus.Success || preview.Fingerprint == null)
             {
                 Finish(currentAttempt, preview.Status, preview.Code, preview.Message);

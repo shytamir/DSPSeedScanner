@@ -28,7 +28,8 @@ namespace DSPSeedScanner.Runtime
             bool stateRestored,
             int? generatedStarCount = null,
             string? rawDiagnostic = null,
-            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null)
+            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null,
+            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null)
         {
             Status = status;
             GalaxySeed = galaxySeed;
@@ -48,6 +49,10 @@ namespace DSPSeedScanner.Runtime
                 systemDisplays == null
                     ? Array.Empty<RuntimeSystemDisplay>()
                     : new List<RuntimeSystemDisplay>(systemDisplays).ToArray());
+            BirthPlanetAttributions = birthPlanetAttributions == null
+                ? null
+                : Array.AsReadOnly(
+                    new List<NormalizedBirthPlanetEvidence>(birthPlanetAttributions).ToArray());
         }
 
         public RuntimeScanStatus Status { get; }
@@ -79,6 +84,7 @@ namespace DSPSeedScanner.Runtime
         public int? GeneratedStarCount { get; }
         public string? RawDiagnostic { get; }
         public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays { get; }
+        public IReadOnlyList<NormalizedBirthPlanetEvidence>? BirthPlanetAttributions { get; }
     }
 
     public sealed class PreviewScanCoordinator
@@ -112,6 +118,7 @@ namespace DSPSeedScanner.Runtime
             IReadOnlyList<ConclusionReport>? reports = null;
             int? generatedStarCount = null;
             IReadOnlyList<RuntimeSystemDisplay>? systemDisplays = null;
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null;
             bool restored = true;
 
             try
@@ -184,6 +191,7 @@ namespace DSPSeedScanner.Runtime
                             else
                             {
                                 reports = RuntimeConclusionEvaluator.Evaluate(request, fingerprint, snapshot);
+                                birthPlanetAttributions = snapshot.BirthPlanetAttributions;
                                 status = RuntimeScanStatus.Success;
                                 code = "success";
                                 message = "The complete compatible preview was evaluated.";
@@ -243,7 +251,8 @@ namespace DSPSeedScanner.Runtime
                 restored,
                 generatedStarCount,
                 rawDiagnostic,
-                systemDisplays);
+                systemDisplays,
+                birthPlanetAttributions);
         }
 
         private static RuntimeScanResult Result(
@@ -257,7 +266,8 @@ namespace DSPSeedScanner.Runtime
             bool restored,
             int? generatedStarCount = null,
             string? rawDiagnostic = null,
-            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null)
+            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null,
+            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null)
         {
             return new RuntimeScanResult(
                 status,
@@ -271,7 +281,8 @@ namespace DSPSeedScanner.Runtime
                 restored,
                 generatedStarCount,
                 rawDiagnostic,
-                systemDisplays);
+                systemDisplays,
+                birthPlanetAttributions);
         }
     }
 }
