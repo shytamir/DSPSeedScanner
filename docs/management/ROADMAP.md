@@ -1,10 +1,9 @@
 # New Game Presentation Roadmap
 
-**Status:** In progress. PRES-01 through PRES-05 are accepted; PRES-06 is
-implemented and pending acceptance.
+**Status:** In progress. PRES-01 through PRES-06 are accepted; PRES-07 has a
+repaired candidate at its human revalidation gate.
 
-**Active user story:** PRES-06 is at its acceptance gate. PRES-07 remains
-inactive until PRES-06 is accepted.
+**Active user story:** PRES-07.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -411,7 +410,7 @@ player controls, and human in-game validation remained outside this story.
 
 ### PRES-06: Present concise neutral conclusions
 
-**State:** Implemented on 2026-08-12; pending acceptance.
+**State:** Accepted on 2026-08-12.
 
 As a player deciding whether a seed suits an intended run, I want its supported
 conclusions grouped by context so that I can understand strengths, limitations,
@@ -433,7 +432,7 @@ unsupported claim, or raw-number wall is introduced.
 discovery-mode controls, seed comparison, sorting, exports, charts, detailed
 evidence browsing, localization, and package-branding refinement.
 
-**Implemented:** `PreviewConclusionPresenter` now maps only the twelve accepted
+**Implemented at acceptance:** `PreviewConclusionPresenter` mapped only the twelve accepted
 semantic families into the six accepted contexts. Each card carries an
 explicit strength, limitation, preference-sensitive, tradeoff, caution,
 unknown, or not-applicable outcome and a bounded subject summary. Repeated
@@ -442,7 +441,7 @@ family, and outcome agree. Every tradeoff and caution remains an independent
 card, and non-rendered source IDs retain traceability without exposing contract
 identifiers to players.
 
-The panel document begins with seed, star count, resource multiplier, and
+At acceptance, the panel document began with seed, star count, resource multiplier, and
 combat mode. It keeps complete Galaxy Preview cards under `Immediate preview`
 and Complete Cluster Raw cards under a separately labelled detailed section.
 That section says scanning while work remains, complete after a successful
@@ -450,7 +449,7 @@ scan, cached after reuse, or unavailable after a terminal rejection. Lines are
 limited to 112 characters and documents to 72 lines; decisive fact values,
 units, diagnostics, raw identifiers, and scores have no rendered path.
 
-The IMGUI renderer expands the existing corner panel to the bounded document
+The accepted IMGUI renderer expanded the existing corner panel to the bounded document
 size, applies separate identity, section, context, and card styles, and retains
 the configured anchor and operational spinner or progress line. It adds no
 interaction, sorting, preference, inspection, or comparison control.
@@ -487,7 +486,7 @@ localization, and human in-game validation remained outside this story.
 
 ### PRES-07: Validate the complete New Game experience
 
-**State:** Approved; inactive.
+**State:** Implemented on 2026-08-12; pending human revalidation.
 
 As a player installing DSP Seed Scanner, I want the hands-off panel to behave
 correctly through real New Game preview changes so that I can rely on what it
@@ -509,6 +508,47 @@ installation also pass for the accepted commit.
 mod compatibility, performance guarantees beyond the accepted operation bound,
 publication, telemetry, comparison, preferences, exports, and closure of
 unrelated technical debt.
+
+**Implemented:** The first isolated 4K run exposed two acceptance defects and
+one misleading diagnostic. The panel now scales its readable coordinate space,
+reserves additional bottom clearance, and replaces the tall indented document
+with three wrapped columns for strengths, preference-sensitive results, and
+limitations. Tradeoffs remain in the preference-sensitive column and cautions
+remain in the limitations column. Unknown and not-applicable components are no
+longer rendered, and the redundant immediate and detailed section labels were
+removed.
+
+The live preview now carries a presentation-only lookup from stable system
+identifiers to DSP's display name and star-type text. Cards never expose an
+unresolved internal system identifier. Distance cards require a decisive
+light-year fact, render it to roughly three significant figures, and include
+the player-visible system name when the report identifies one. Wrapped cards
+replace list-era ellipses. Unsupported states now distinguish other-plugin or
+preloader uncertainty from a DSP-version or generation-runtime mismatch.
+
+**Human evidence so far:** In the isolated supported runtime, the panel became
+readable at 4K, cache-miss progress remained visibly active, controls remained
+usable despite the expected performance cost, and a 204-solid-planet scan
+completed within the previously estimated acceptable duration. The completed
+result rendered without text overlap or clipping. That pass also found the
+excessive footprint, unknown cards, raw system identifiers, omitted distance
+values, and redundant stage headings repaired above; therefore it did not
+close this story's human gate.
+
+**Automated evidence:** The Release solution and installed-game plugin build
+with zero warnings, all 14 conclusion checks and 49 runtime-boundary checks
+pass, system-display metadata stays outside the evidence identity and cache,
+and focused fixtures enforce outcome-to-column mapping, suppression of unknown
+and not-applicable cards, player-visible system labels, short distance values,
+bottom clearance, stale-state rejection, and bounded copy. The installed- and
+hosted-reference plugin builds and the exact semantic-versioned package
+validation also pass locally; pushed CI remains part of the final gate.
+
+**Remaining gate:** Human revalidation must confirm the compact panel clears
+the right-side legend and Back control, the three columns and colors are
+readable, wrapped cards contain no internal IDs or avoidable ellipses, and the
+previously required lifecycle, cache-hit, cancellation, replacement, and
+unsupported-state observations pass on the final installed candidate.
 
 ## Roadmap coverage
 

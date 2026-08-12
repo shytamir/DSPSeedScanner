@@ -1382,6 +1382,17 @@ namespace DSPSeedScanner.Runtime.Tests
                 False(view.Detail.Contains('\n'));
             }
 
+            PreviewPanelView modUncertainty = PreviewPanelStateMapper.Project(
+                4,
+                PreviewResolutionState.Incompatible,
+                0,
+                0,
+                PreviewPanelCorner.BottomRight,
+                0,
+                "generation-mod-uncertain");
+            True(modUncertainty.Detail.Contains("loaded plugins"));
+            True(modUncertainty.Detail.Length <= PreviewPanelLayout.MaximumDetailCharacters);
+
             PreviewPanelView planning = PreviewPanelStateMapper.Project(
                 3,
                 PreviewResolutionState.Scanning,
@@ -1409,13 +1420,50 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(PreviewPanelCorner.TopRight, PreviewPanelLayout.ParseCorner(4));
             Equal(PreviewPanelCorner.BottomRight, PreviewPanelLayout.ParseCorner(0));
             Equal(PreviewPanelCorner.BottomRight, PreviewPanelLayout.ParseCorner(5));
+            Equal(1.0, PreviewPanelLayout.ScaleForScreen(
+                1920,
+                1080,
+                PreviewPanelLayout.Width,
+                PreviewPanelLayout.Height));
+            Equal(1.5, PreviewPanelLayout.ScaleForScreen(
+                3840,
+                2160,
+                PreviewPanelLayout.Width,
+                PreviewPanelLayout.Height));
+            double fittedScale = PreviewPanelLayout.ScaleForScreen(
+                3840,
+                2160,
+                PreviewPanelLayout.ConclusionWidth,
+                1600);
+            True(fittedScale > 1.0 && fittedScale < 1.5);
+            True((PreviewPanelLayout.ConclusionWidth + PreviewPanelLayout.Margin * 2) *
+                fittedScale <= 3840);
+            True((1600 + PreviewPanelLayout.Margin * 2) * fittedScale <= 2160);
+
+            double presentationScale = PreviewPanelLayout.ScaleForScreen(
+                3840,
+                2160,
+                PreviewPanelLayout.ConclusionWidth,
+                600);
+            int logicalWidth = (int)Math.Floor(3840 / presentationScale);
+            int logicalHeight = (int)Math.Floor(2160 / presentationScale);
+            PreviewPanelBounds presentationBounds = PreviewPanelLayout.PlaceSized(
+                PreviewPanelCorner.BottomRight,
+                logicalWidth,
+                logicalHeight,
+                PreviewPanelLayout.ConclusionWidth,
+                600);
+            True(presentationBounds.X >= logicalWidth / 2);
+            True(presentationBounds.Y >= logicalHeight / 2);
+            True(presentationBounds.Bottom <=
+                logicalHeight - PreviewPanelLayout.BottomClearance);
 
             const int width = 3840;
             const int height = 2160;
             var expected = new[]
             {
-                (PreviewPanelCorner.BottomRight, 3296, 2020),
-                (PreviewPanelCorner.BottomLeft, 24, 2020),
+                (PreviewPanelCorner.BottomRight, 3296, 1924),
+                (PreviewPanelCorner.BottomLeft, 24, 1924),
                 (PreviewPanelCorner.TopLeft, 24, 24),
                 (PreviewPanelCorner.TopRight, 3296, 24)
             };
@@ -1487,15 +1535,22 @@ namespace DSPSeedScanner.Runtime.Tests
         {
             var outcomes = new[]
             {
-                (ComponentOutcome.Supports, "Strength:"),
-                (ComponentOutcome.DoesNotSupport, "Limitation:"),
-                (ComponentOutcome.PreferenceSensitive, "Preference-sensitive:"),
-                (ComponentOutcome.Tradeoff, "Tradeoff:"),
-                (ComponentOutcome.Caution, "Caution:"),
-                (ComponentOutcome.Unknown, "Unknown:"),
-                (ComponentOutcome.NotApplicable, "Not applicable:")
+                (ComponentOutcome.Supports, PreviewConclusionColumn.Strength),
+                (ComponentOutcome.DoesNotSupport, PreviewConclusionColumn.Limitation),
+                (ComponentOutcome.PreferenceSensitive,
+                    PreviewConclusionColumn.PreferenceSensitive),
+                (ComponentOutcome.Tradeoff, PreviewConclusionColumn.PreferenceSensitive),
+                (ComponentOutcome.Caution, PreviewConclusionColumn.Limitation)
             };
-            foreach ((ComponentOutcome outcome, string prefix) in outcomes)
+            RuntimeSystemDisplay[] displays =
+            {
+                new RuntimeSystemDisplay("1", "Alpha", "G type star"),
+                new RuntimeSystemDisplay("2", "Beta", "O type star"),
+                new RuntimeSystemDisplay("4", "Delta", "B type star"),
+                new RuntimeSystemDisplay("7", "Eta", "A type star"),
+                new RuntimeSystemDisplay("9", "Iota", "K type star")
+            };
+            foreach ((ComponentOutcome outcome, PreviewConclusionColumn column) in outcomes)
             {
                 ConclusionReport report = PresentationReport(
                     ConclusionContext.Megafactory,
@@ -1503,10 +1558,13 @@ namespace DSPSeedScanner.Runtime.Tests
                     EvidenceStage.GalaxyPreview,
                     "MF-ENERGY-SYSTEM.output",
                     new ConclusionSubject(SubjectKind.StarSystem, "7"));
-                PresentedConclusionCard card = PreviewConclusionPresenter.MapCard(report);
+                PresentedConclusionCard card = PreviewConclusionPresenter.MapCard(
+                    report,
+                    displays);
                 Equal(outcome, card.Outcome);
-                True(card.Line.StartsWith(prefix, StringComparison.Ordinal));
-                True(card.Line.Contains("System 7", StringComparison.Ordinal));
+                Equal(column, card.Column);
+                True(card.Line.Contains("Eta (A type star)", StringComparison.Ordinal));
+                False(card.Line.Contains("System 7", StringComparison.Ordinal));
                 True(card.Line.Length <= PreviewConclusionPresenter.MaximumLineCharacters);
                 Equal(1, card.SourceConclusionIds.Count);
                 False(card.Line.Contains("987654321", StringComparison.Ordinal));
@@ -1519,7 +1577,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     ComponentOutcome.Supports,
                     EvidenceStage.GalaxyPreview,
                     "FS-TOPOLOGY.shared-satellites",
-                    new ConclusionSubject(SubjectKind.BirthSystem, "1")), "Birth system"),
+                    new ConclusionSubject(SubjectKind.BirthSystem, "1")),
+                    "Alpha (G type star)"),
                 (PresentationReport(
                     ConclusionContext.DarkFogFarming,
                     ComponentOutcome.Tradeoff,
@@ -1531,15 +1590,19 @@ namespace DSPSeedScanner.Runtime.Tests
                     ComponentOutcome.Supports,
                     EvidenceStage.CompleteClusterRaw,
                     "RR-ACCESS.distance:unipolar-magnet",
-                    new ConclusionSubject(SubjectKind.Resource, "seed:resource:unipolar-magnet")),
-                    "Unipolar Magnet distance"),
+                    new ConclusionSubject(
+                        SubjectKind.Resource,
+                        "seed:resource:unipolar-magnet"),
+                    new DecisiveFact("distanceFromBirth", "12.34567", "light-years")),
+                    "Unipolar Magnet - 12.3 ly from birth"),
                 (PresentationReport(
                     ConclusionContext.CompactExpansion,
                     ComponentOutcome.PreferenceSensitive,
                     EvidenceStage.GalaxyPreview,
                     "CX-GROUPING.distance",
-                    new ConclusionSubject(SubjectKind.SystemPair, "2<->9:role-a+role-b")),
-                    "Systems 2 / 9"),
+                    new ConclusionSubject(SubjectKind.SystemPair, "2<->9:role-a+role-b"),
+                    new DecisiveFact("systemDistance", "2.34567", "light-years")),
+                    "2.35 ly between Beta (O type star) / Iota (K type star)"),
                 (PresentationReport(
                     ConclusionContext.DecisionRelevantTraits,
                     ComponentOutcome.Supports,
@@ -1560,18 +1623,20 @@ namespace DSPSeedScanner.Runtime.Tests
                     EvidenceStage.GalaxyPreview,
                     "MF-SYSTEM-ROLE.role:strong-energy",
                     new ConclusionSubject(SubjectKind.StarSystem, "2")),
-                    "Strong Energy @ System 2"),
+                    "Strong Energy @ Beta (O type star)"),
                 (PresentationReport(
                     ConclusionContext.SphereShowcase,
                     ComponentOutcome.Supports,
                     EvidenceStage.GalaxyPreview,
                     "MF-SPHERE-GEOMETRY.containment",
                     new ConclusionSubject(SubjectKind.StarSystem, "4")),
-                    "Contained orbits @ System 4")
+                    "Contained orbits @ Delta (B type star)")
             };
             foreach ((ConclusionReport report, string subject) in subjectCases)
             {
-                PresentedConclusionCard card = PreviewConclusionPresenter.MapCard(report);
+                PresentedConclusionCard card = PreviewConclusionPresenter.MapCard(
+                    report,
+                    displays);
                 True(card.Subjects.Contains(subject));
                 True(card.Line.Contains(subject, StringComparison.Ordinal));
             }
@@ -1612,7 +1677,6 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(panel.Update(attempt, PreviewPanelCorner.BottomRight, 0));
                 PreviewConclusionPresentation scanning = panel.Conclusions!;
                 Equal("Seed 16315224 | 64 stars | resources x1 | Combat", scanning.IdentityLine);
-                Equal("Detailed conclusions - scanning", scanning.DetailSectionTitle);
                 Equal(0, scanning.DetailGroups.Count);
                 Equal(6, scanning.ImmediateGroups.Count);
                 Equal(
@@ -1620,6 +1684,11 @@ namespace DSPSeedScanner.Runtime.Tests
                     String.Join(",", scanning.ImmediateGroups.Select(group => group.Title)));
                 True(scanning.ImmediateGroups.SelectMany(group => group.Cards)
                     .All(card => card.Stage == EvidenceStage.GalaxyPreview));
+                True(scanning.ImmediateGroups.SelectMany(group => group.Cards)
+                    .All(card => card.Outcome != ComponentOutcome.Unknown &&
+                        card.Outcome != ComponentOutcome.NotApplicable));
+                True(scanning.ImmediateGroups.SelectMany(group => group.Cards)
+                    .All(card => !card.Line.Contains(":star:", StringComparison.Ordinal)));
                 resolver.AdvanceCurrent();
                 panel.Update(attempt, PreviewPanelCorner.BottomRight, 1);
                 True(ReferenceEquals(scanning, panel.Conclusions));
@@ -1648,7 +1717,6 @@ namespace DSPSeedScanner.Runtime.Tests
                 }
                 Equal(PreviewResolutionState.Complete, attempt.State);
                 PreviewConclusionPresentation complete = panel.Conclusions!;
-                Equal("Detailed conclusions - complete", complete.DetailSectionTitle);
                 True(complete.DetailGroups.Count > 0);
                 True(complete.DetailGroups.SelectMany(group => group.Cards)
                     .All(card => card.Stage == EvidenceStage.CompleteClusterRaw));
@@ -1682,7 +1750,6 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(panel.Update(cachedAttempt, PreviewPanelCorner.BottomRight, 0));
                 Equal(PreviewResolutionState.Cached, cachedAttempt.State);
                 True(panel.Conclusions!.IsCached);
-                Equal("Detailed conclusions - cached", panel.Conclusions.DetailSectionTitle);
                 True(panel.Conclusions.DetailGroups.Count > 0);
             });
         }
@@ -1711,8 +1778,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(
                     "|  Scanning complete cluster - Planets 0 / 3",
                     document.Lines[1].Text);
-                Equal("Immediate preview", document.Lines[2].Text);
-                True(document.Lines.Any(line => line.Text == "Detailed conclusions - scanning"));
+                Equal("Fresh start", document.Lines[2].Text);
+                False(document.Lines.Any(line => line.Text.Contains(
+                    "conclusions",
+                    StringComparison.OrdinalIgnoreCase)));
                 True(document.Lines.Count <= PreviewConclusionPresenter.MaximumDocumentLines);
                 True(document.Lines.All(line =>
                     line.Text.Length <= PreviewConclusionPresenter.MaximumLineCharacters));
@@ -1722,7 +1791,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 {
                     "FS-", "MF-", "DF-", "CX-", "RR-", "TRAIT-",
                     "runtime-amount", "score", "ranking", "universal verdict",
-                    "best seed"
+                    "best seed", "Unknown:", "Not applicable:", "System 16315224"
                 })
                 {
                     False(rendered.IndexOf(forbidden, StringComparison.OrdinalIgnoreCase) >= 0);
@@ -1755,6 +1824,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(RuntimeScanResult),
                 typeof(RuntimeFingerprint),
                 typeof(RuntimePreviewSnapshot),
+                typeof(RuntimeSystemDisplay),
                 typeof(RawPlanetResult),
                 typeof(NormalizedRawPlanetEvidence),
                 typeof(NormalizedRawVeinNode),
@@ -1830,7 +1900,8 @@ namespace DSPSeedScanner.Runtime.Tests
             ComponentOutcome outcome,
             EvidenceStage stage,
             string conclusionId,
-            ConclusionSubject subject)
+            ConclusionSubject subject,
+            DecisiveFact? decisiveFact = null)
         {
             DiagnosticCause? cause = outcome == ComponentOutcome.Unknown ||
                 outcome == ComponentOutcome.NotApplicable
@@ -1856,7 +1927,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 ConclusionDefinition.DefinitionVersion,
                 subject,
                 outcome,
-                new DecisiveFact("fixture", "987654321", "fixture-units"),
+                decisiveFact ?? new DecisiveFact(
+                    "fixture",
+                    "987654321",
+                    "fixture-units"),
                 cause);
         }
 
@@ -2007,7 +2081,12 @@ namespace DSPSeedScanner.Runtime.Tests
                 "1",
                 generatedStarCount,
                 systems,
-                distances);
+                distances,
+                systemDisplays: Enumerable.Range(1, generatedStarCount)
+                    .Select(index => new RuntimeSystemDisplay(
+                        index.ToString(),
+                        index == 1 ? "Alpha" : "Star " + index,
+                        index == 2 ? "O type star" : "G type star")));
         }
 
         private static ConclusionReport FindReport(

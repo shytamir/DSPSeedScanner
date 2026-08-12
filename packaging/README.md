@@ -12,7 +12,9 @@ A small non-interactive corner panel shows waiting, cache reuse, scan progress,
 completion, cancellation, unsupported-runtime, and failure states. It also
 groups bounded neutral conclusions for fresh starts, megafactories, Dark Fog
 farming, compact expansion, sphere or energy goals, and decision-relevant
-traits without producing a universal seed score.
+traits into color-coded strength, preference-sensitive, and limitation
+columns. Unknown components are omitted, while system and distance cards use
+player-visible names and concise light-year values.
 
 ## Supported runtime
 
@@ -28,8 +30,9 @@ generation compatibility is not established.
   energy-system, sphere-geometry, Dark Fog, grouping, role, and trait cases.
 - The New Game workflow automatically reuses valid complete conclusions or
   runs one cooperative complete-cluster scan at one solid planet per frame.
-- Unsupported settings or evidence remain explicit unknown or not-applicable
-  results. No score or hidden weighting is produced.
+- Unsupported settings or evidence remain explicit in the evaluation contract
+  but are omitted from the decision panel. No score or hidden weighting is
+  produced.
 - Generation is serialized, cancellable at safe boundaries, and limited to
   one requested 64-star identity; a complete-cluster operation rejects more
   than 256 solid planets before raw generation.

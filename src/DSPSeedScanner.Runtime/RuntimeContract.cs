@@ -6,6 +6,30 @@ using DSPSeedScanner.Core;
 
 namespace DSPSeedScanner.Runtime
 {
+    public sealed record RuntimeSystemDisplay
+    {
+        public RuntimeSystemDisplay(
+            string identifier,
+            string displayName,
+            string starType)
+        {
+            Identifier = Required(identifier, nameof(identifier));
+            DisplayName = Required(displayName, nameof(displayName));
+            StarType = Required(starType, nameof(starType));
+        }
+
+        public string Identifier { get; }
+        public string DisplayName { get; }
+        public string StarType { get; }
+
+        private static string Required(string value, string parameterName)
+        {
+            if (String.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Value is required.", parameterName);
+            return value;
+        }
+    }
+
     public sealed class PreviewScanRequest
     {
         public PreviewScanRequest(
@@ -149,6 +173,7 @@ namespace DSPSeedScanner.Runtime
     {
         private readonly NormalizedSystemEvidence[] systems;
         private readonly NormalizedSystemDistance[] systemDistances;
+        private readonly RuntimeSystemDisplay[] systemDisplays;
 
         public RuntimePreviewSnapshot(
             string birthSystemIdentifier,
@@ -156,7 +181,8 @@ namespace DSPSeedScanner.Runtime
             IEnumerable<NormalizedSystemEvidence> systems,
             IEnumerable<NormalizedSystemDistance> systemDistances,
             string? unknownEnumType = null,
-            int? unknownEnumValue = null)
+            int? unknownEnumValue = null,
+            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null)
         {
             if (String.IsNullOrWhiteSpace(birthSystemIdentifier))
                 throw new ArgumentException("Birth system identifier is required.", nameof(birthSystemIdentifier));
@@ -171,6 +197,15 @@ namespace DSPSeedScanner.Runtime
 
             this.systems = systems.ToArray();
             this.systemDistances = systemDistances.ToArray();
+            this.systemDisplays = (systemDisplays ?? Array.Empty<RuntimeSystemDisplay>())
+                .ToArray();
+            if (this.systemDisplays.Select(value => value.Identifier)
+                .Distinct(StringComparer.Ordinal).Count() != this.systemDisplays.Length)
+            {
+                throw new ArgumentException(
+                    "System display identifiers must be unique.",
+                    nameof(systemDisplays));
+            }
             if (this.systems.Length == 0 && unknownEnumType == null)
                 throw new ArgumentException("At least one generated system is required.", nameof(systems));
 
@@ -186,6 +221,8 @@ namespace DSPSeedScanner.Runtime
             Array.AsReadOnly((NormalizedSystemEvidence[])systems.Clone());
         public IReadOnlyList<NormalizedSystemDistance> SystemDistances =>
             Array.AsReadOnly((NormalizedSystemDistance[])systemDistances.Clone());
+        public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays =>
+            Array.AsReadOnly((RuntimeSystemDisplay[])systemDisplays.Clone());
         public string? UnknownEnumType { get; }
         public int? UnknownEnumValue { get; }
     }

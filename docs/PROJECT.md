@@ -6,12 +6,12 @@ story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core roadmap was completed and accepted on
 2026-08-11. The New Game presentation roadmap was approved on 2026-08-12.
-PRES-01 through PRES-05 were accepted. PRES-06 implemented the bounded,
-context-grouped neutral conclusion presentation and is at its acceptance gate.
-Panel anchoring uses the accepted four-corner configuration with bottom-right
-as the default. Human validation of the complete installed experience remains
-for PRES-07. One packaging refinement remains tracked as non-blocking
-technical debt.
+PRES-01 through PRES-06 were accepted. PRES-07 reached human validation and
+its first installed pass accepted scan responsiveness and duration while
+identifying presentation defects. The resulting compact three-column repair
+is implemented and awaits human revalidation. Panel anchoring uses the
+accepted four-corner configuration with bottom-right as the default. One
+packaging refinement remains tracked as non-blocking technical debt.
 
 ## Product decision
 
@@ -71,8 +71,12 @@ The accepted semantics and thresholds are maintained in the
   complete scan are persisted in a versioned, bounded local cache under the
   mod configuration area. Raw or normalized resource evidence, execution
   diagnostics, and rendered wording are not cached.
-- The panel presents immediate and complete neutral conclusions without
-  requiring player input. Its numeric corner setting defaults to `1` for
+- The panel presents only actionable strengths, preference-sensitive results,
+  tradeoffs, cautions, and limitations without requiring player input. Unknown
+  and not-applicable components are retained in the evaluation contract but
+  omitted from the player panel. System conclusions use DSP's display name and
+  star type; distance conclusions include a short light-year value.
+- Its numeric corner setting defaults to `1` for
   bottom-right, then proceeds clockwise as `2` bottom-left, `3` top-left, and
   `4` top-right. Border-center placement is prohibited. The panel shows visible
   activity and terminal failure states.

@@ -15,6 +15,13 @@ namespace DSPSeedScanner.Runtime
         Conclusion
     }
 
+    public enum PreviewConclusionColumn
+    {
+        Strength,
+        PreferenceSensitive,
+        Limitation
+    }
+
     public sealed record PreviewPanelLine
     {
         public PreviewPanelLine(PreviewPanelLineKind kind, string text)
@@ -46,6 +53,7 @@ namespace DSPSeedScanner.Runtime
             Context = context;
             Stage = stage;
             Outcome = outcome;
+            Column = ColumnFor(outcome);
             Family = family;
             Title = title;
             Subjects = Array.AsReadOnly(subjects.ToArray());
@@ -56,11 +64,23 @@ namespace DSPSeedScanner.Runtime
         public ConclusionContext Context { get; }
         public EvidenceStage Stage { get; }
         public ComponentOutcome Outcome { get; }
+        public PreviewConclusionColumn Column { get; }
         public string Family { get; }
         public string Title { get; }
         public IReadOnlyList<string> Subjects { get; }
         public string Line { get; }
         public IReadOnlyList<string> SourceConclusionIds { get; }
+
+        private static PreviewConclusionColumn ColumnFor(ComponentOutcome outcome) =>
+            outcome switch
+            {
+                ComponentOutcome.Supports => PreviewConclusionColumn.Strength,
+                ComponentOutcome.PreferenceSensitive or ComponentOutcome.Tradeoff =>
+                    PreviewConclusionColumn.PreferenceSensitive,
+                ComponentOutcome.DoesNotSupport or ComponentOutcome.Caution =>
+                    PreviewConclusionColumn.Limitation,
+                _ => throw new ArgumentOutOfRangeException(nameof(outcome))
+            };
     }
 
     public sealed record PresentedContextGroup
@@ -85,14 +105,12 @@ namespace DSPSeedScanner.Runtime
         internal PreviewConclusionPresentation(
             long sessionId,
             string identityLine,
-            string detailSectionTitle,
             bool isCached,
             IEnumerable<PresentedContextGroup> immediateGroups,
             IEnumerable<PresentedContextGroup> detailGroups)
         {
             SessionId = sessionId;
             IdentityLine = identityLine;
-            DetailSectionTitle = detailSectionTitle;
             IsCached = isCached;
             ImmediateGroups = Array.AsReadOnly(immediateGroups.ToArray());
             DetailGroups = Array.AsReadOnly(detailGroups.ToArray());
@@ -100,7 +118,6 @@ namespace DSPSeedScanner.Runtime
 
         public long SessionId { get; }
         public string IdentityLine { get; }
-        public string DetailSectionTitle { get; }
         public bool IsCached { get; }
         public IReadOnlyList<PresentedContextGroup> ImmediateGroups { get; }
         public IReadOnlyList<PresentedContextGroup> DetailGroups { get; }
@@ -121,7 +138,7 @@ namespace DSPSeedScanner.Runtime
 
     public static class PreviewConclusionPresenter
     {
-        public const int MaximumLineCharacters = 112;
+        public const int MaximumLineCharacters = 240;
         public const int MaximumDocumentLines = 72;
         public const int MaximumSubjectsPerCard = 3;
 
@@ -141,22 +158,44 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentNullException(nameof(attempt));
 
             PreviewGenerationIdentity identity = attempt.Session.Identity;
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays =
+                attempt.SystemDisplays.ToDictionary(
+                    value => value.Identifier,
+                    StringComparer.Ordinal);
             return new PreviewConclusionPresentation(
                 attempt.Session.SessionId,
                 IdentityLine(identity),
-                DetailTitle(attempt.State),
                 attempt.State == PreviewResolutionState.Cached,
-                Group(attempt.PreviewReports.Where(report =>
-                    report.Stage == EvidenceStage.GalaxyPreview)),
-                Group(attempt.CompleteReports.Where(report =>
-                    report.Stage == EvidenceStage.CompleteClusterRaw)));
+                Group(
+                    attempt.PreviewReports.Where(report =>
+                        report.Stage == EvidenceStage.GalaxyPreview),
+                    displays),
+                Group(
+                    attempt.CompleteReports.Where(report =>
+                        report.Stage == EvidenceStage.CompleteClusterRaw),
+                    displays));
         }
 
         public static PresentedConclusionCard MapCard(ConclusionReport report)
         {
+            return MapCard(report, Array.Empty<RuntimeSystemDisplay>());
+        }
+
+        public static PresentedConclusionCard MapCard(
+            ConclusionReport report,
+            IEnumerable<RuntimeSystemDisplay> systemDisplays)
+        {
             if (report == null)
                 throw new ArgumentNullException(nameof(report));
-            return BuildCard(new[] { report });
+            if (systemDisplays == null)
+                throw new ArgumentNullException(nameof(systemDisplays));
+            return BuildCard(
+                new[] { report },
+                systemDisplays.ToDictionary(
+                    value => value.Identifier,
+                    StringComparer.Ordinal)) ??
+                throw new InvalidOperationException(
+                    "The conclusion has no player-readable presentation.");
         }
 
         public static PreviewPanelDocument Compose(
@@ -185,18 +224,19 @@ namespace DSPSeedScanner.Runtime
             if (conclusions == null)
                 return new PreviewPanelDocument(lines);
 
-            AddSection(lines, "Immediate preview", conclusions.ImmediateGroups);
-            lines.Add(new PreviewPanelLine(
-                PreviewPanelLineKind.Section,
-                conclusions.DetailSectionTitle));
+            AddGroups(lines, conclusions.ImmediateGroups);
             AddGroups(lines, conclusions.DetailGroups);
             return new PreviewPanelDocument(lines);
         }
 
         private static IReadOnlyList<PresentedContextGroup> Group(
-            IEnumerable<ConclusionReport> source)
+            IEnumerable<ConclusionReport> source,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
         {
-            ConclusionReport[] reports = source.ToArray();
+            ConclusionReport[] reports = source
+                .Where(report => report.Outcome != ComponentOutcome.Unknown &&
+                    report.Outcome != ComponentOutcome.NotApplicable)
+                .ToArray();
             var groups = new List<PresentedContextGroup>();
             foreach (ConclusionContext context in ContextOrder)
             {
@@ -214,7 +254,11 @@ namespace DSPSeedScanner.Runtime
                     if (report.Outcome == ComponentOutcome.Tradeoff ||
                         report.Outcome == ComponentOutcome.Caution)
                     {
-                        cards.Add(BuildCard(new[] { report }));
+                        PresentedConclusionCard? exceptional = BuildCard(
+                            new[] { report },
+                            displays);
+                        if (exceptional != null)
+                            cards.Add(exceptional);
                         continue;
                     }
 
@@ -230,15 +274,21 @@ namespace DSPSeedScanner.Runtime
                     bucket.Add(report);
                 }
                 foreach (string key in order)
-                    cards.Add(BuildCard(ordinary[key]));
+                {
+                    PresentedConclusionCard? card = BuildCard(ordinary[key], displays);
+                    if (card != null)
+                        cards.Add(card);
+                }
 
-                groups.Add(new PresentedContextGroup(context, ContextTitle(context), cards));
+                if (cards.Count != 0)
+                    groups.Add(new PresentedContextGroup(context, ContextTitle(context), cards));
             }
             return Array.AsReadOnly(groups.ToArray());
         }
 
-        private static PresentedConclusionCard BuildCard(
-            IReadOnlyList<ConclusionReport> reports)
+        private static PresentedConclusionCard? BuildCard(
+            IReadOnlyList<ConclusionReport> reports,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
         {
             if (reports.Count == 0)
                 throw new ArgumentException("A presentation card requires a source report.", nameof(reports));
@@ -254,13 +304,16 @@ namespace DSPSeedScanner.Runtime
             }
 
             string[] subjects = reports
-                .Select(SubjectLabel)
+                .Select(report => SubjectLabel(report, displays))
+                .Where(value => value != null)
+                .Select(value => value!)
                 .Distinct(StringComparer.Ordinal)
                 .ToArray();
+            if (subjects.Length == 0)
+                return null;
             string title = FamilyTitle(family, first);
             string line = Bound(
-                OutcomeLabel(first.Outcome) + ": " + title + " - " +
-                SubjectSummary(subjects),
+                title + " - " + SubjectSummary(subjects),
                 MaximumLineCharacters);
             return new PresentedConclusionCard(
                 first.Context,
@@ -305,14 +358,6 @@ namespace DSPSeedScanner.Runtime
                 " | " + (identity.CombatMode == CombatMode.Peace ? "Peace" : "Combat");
             return Bound(value, MaximumLineCharacters);
         }
-
-        private static string DetailTitle(PreviewResolutionState state) => state switch
-        {
-            PreviewResolutionState.Scanning => "Detailed conclusions - scanning",
-            PreviewResolutionState.Cached => "Detailed conclusions - cached",
-            PreviewResolutionState.Complete => "Detailed conclusions - complete",
-            _ => "Detailed conclusions - unavailable"
-        };
 
         private static string ContextTitle(ConclusionContext context) => context switch
         {
@@ -388,34 +433,40 @@ namespace DSPSeedScanner.Runtime
             _ => throw new ArgumentOutOfRangeException(nameof(outcome))
         };
 
-        private static string SubjectLabel(ConclusionReport report)
+        private static string? SubjectLabel(
+            ConclusionReport report,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
         {
-            string? semantic = SemanticSubjectLabel(report);
+            string? semantic = SemanticSubjectLabel(report, displays);
             if (semantic != null)
                 return semantic;
 
             string identifier = report.Subject.Identifier;
             return report.Subject.Kind switch
             {
-                SubjectKind.BirthSystem => "Birth system",
-                SubjectKind.StarSystem => "System " + identifier,
+                SubjectKind.BirthSystem => SystemLabel(identifier, displays) ??
+                    "Birth system",
+                SubjectKind.StarSystem => SystemLabel(identifier, displays),
                 SubjectKind.Cluster => "Cluster",
                 SubjectKind.Resource => ResourceLabel(report.ConclusionId),
-                SubjectKind.SystemPair => "Systems " + PairLabel(identifier),
+                SubjectKind.SystemPair => PairLabel(identifier, displays),
                 SubjectKind.Trait => Pretty(identifier.Split('@')[0]),
                 _ => throw new ArgumentOutOfRangeException(nameof(report.Subject.Kind))
             };
         }
 
-        private static string? SemanticSubjectLabel(ConclusionReport report)
+        private static string? SemanticSubjectLabel(
+            ConclusionReport report,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
         {
             string id = report.ConclusionId;
+            string? system = BasicSubjectLabel(report.Subject, displays);
             if (id == "FS-POWER.birth-tidal")
-                return "Tidal lock @ Birth system";
+                return "Tidal lock @ " + (system ?? "Birth system");
             if (id == "FS-POWER.solar")
-                return "Solar @ Birth system";
+                return "Solar @ " + (system ?? "Birth system");
             if (id == "FS-POWER.wind")
-                return "Wind @ Birth system";
+                return "Wind @ " + (system ?? "Birth system");
             if (id.StartsWith("FS-GAS-ROUTE.product:", StringComparison.Ordinal))
                 return ResourceLabel(id) + " presence";
             if (id.StartsWith("FS-GAS-ROUTE.rate:", StringComparison.Ordinal))
@@ -429,16 +480,16 @@ namespace DSPSeedScanner.Runtime
             if (id == "FS-RESOURCES.fire-ice")
                 return "Fire Ice presence";
             if (id == "MF-ENERGY-SYSTEM.output")
-                return "Output @ " + BasicSubjectLabel(report.Subject);
+                return system == null ? null : "Output @ " + system;
             if (id == "MF-ENERGY-SYSTEM.separation")
-                return "Leader separation @ " + BasicSubjectLabel(report.Subject);
+                return system == null ? null : "Leader separation @ " + system;
             if (id == "MF-SPHERE-GEOMETRY.radius")
-                return "Shell radius @ " + BasicSubjectLabel(report.Subject);
+                return system == null ? null : "Shell radius @ " + system;
             if (id == "MF-SPHERE-GEOMETRY.containment")
-                return "Contained orbits @ " + BasicSubjectLabel(report.Subject);
+                return system == null ? null : "Contained orbits @ " + system;
             if (id.StartsWith("MF-SYSTEM-ROLE.role:", StringComparison.Ordinal))
-                return Pretty(id.Substring("MF-SYSTEM-ROLE.role:".Length)) + " @ " +
-                    BasicSubjectLabel(report.Subject);
+                return system == null ? null :
+                    Pretty(id.Substring("MF-SYSTEM-ROLE.role:".Length)) + " @ " + system;
             if (id == "MF-RESOURCE-SCOPE.strength")
                 return "Complete cluster";
             if (id == "DF-OCCUPATION.opportunity")
@@ -446,19 +497,40 @@ namespace DSPSeedScanner.Runtime
             if (id == "DF-OCCUPATION.birth-exposure")
                 return "Birth-system exposure";
             if (id.StartsWith("RR-ACCESS.distance:", StringComparison.Ordinal))
-                return ResourceLabel(id) + " distance";
+            {
+                string? distance = DistanceLabel(report.DecisiveFact);
+                if (distance == null)
+                    return null;
+                string location = report.Subject.Kind == SubjectKind.StarSystem ||
+                    report.Subject.Kind == SubjectKind.BirthSystem
+                    ? SystemLabel(report.Subject.Identifier, displays) ?? "Birth system"
+                    : String.Empty;
+                return ResourceLabel(id) + " - " + distance + " from birth" +
+                    (location.Length == 0 ? String.Empty : " @ " + location);
+            }
+            if (id == "CX-GROUPING.distance")
+            {
+                string? distance = DistanceLabel(report.DecisiveFact);
+                string? pair = PairLabel(report.Subject.Identifier, displays);
+                return distance == null || pair == null
+                    ? null
+                    : distance + " between " + pair;
+            }
             if (id.StartsWith("RR-ACCESS.amount:", StringComparison.Ordinal))
                 return ResourceLabel(id) + " amount";
             return null;
         }
 
-        private static string BasicSubjectLabel(ConclusionSubject subject) =>
+        private static string? BasicSubjectLabel(
+            ConclusionSubject subject,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays) =>
             subject.Kind switch
             {
-                SubjectKind.BirthSystem => "Birth system",
-                SubjectKind.StarSystem => "System " + subject.Identifier,
+                SubjectKind.BirthSystem => SystemLabel(subject.Identifier, displays) ??
+                    "Birth system",
+                SubjectKind.StarSystem => SystemLabel(subject.Identifier, displays),
                 SubjectKind.Cluster => "Cluster",
-                _ => subject.Identifier
+                _ => null
             };
 
         private static string ResourceLabel(string conclusionId)
@@ -469,11 +541,49 @@ namespace DSPSeedScanner.Runtime
                 : "Resource";
         }
 
-        private static string PairLabel(string identifier)
+        private static string? PairLabel(
+            string identifier,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
         {
-            int roles = identifier.IndexOf(':');
-            string pair = roles < 0 ? identifier : identifier.Substring(0, roles);
-            return pair.Replace("<->", " / ");
+            int separator = identifier.IndexOf("<->", StringComparison.Ordinal);
+            if (separator < 0)
+                return null;
+            string first = identifier.Substring(0, separator);
+            string remaining = identifier.Substring(separator + 3);
+            int roles = remaining.LastIndexOf(':');
+            string second = roles < 0 ? remaining : remaining.Substring(0, roles);
+            string? firstLabel = SystemLabel(first, displays);
+            string? secondLabel = SystemLabel(second, displays);
+            return firstLabel == null || secondLabel == null
+                ? null
+                : firstLabel + " / " + secondLabel;
+        }
+
+        private static string? SystemLabel(
+            string identifier,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
+        {
+            if (!displays.TryGetValue(identifier, out RuntimeSystemDisplay? display))
+                return null;
+            return display.DisplayName + " (" + display.StarType + ")";
+        }
+
+        private static string? DistanceLabel(DecisiveFact? fact)
+        {
+            if (fact == null ||
+                !String.Equals(fact.Unit, "light-years", StringComparison.Ordinal) ||
+                !Decimal.TryParse(
+                    fact.Value,
+                    NumberStyles.Number,
+                    CultureInfo.InvariantCulture,
+                    out decimal value))
+            {
+                return null;
+            }
+            string format = Math.Abs(value) >= 100m ? "0" :
+                Math.Abs(value) >= 10m ? "0.0" :
+                Math.Abs(value) >= 1m ? "0.00" : "0.000";
+            return value.ToString(format, CultureInfo.InvariantCulture) + " ly";
         }
 
         private static string SubjectSummary(IReadOnlyList<string> subjects)
@@ -484,7 +594,7 @@ namespace DSPSeedScanner.Runtime
             if (subjects.Count > MaximumSubjectsPerCard)
                 shown += " +" + (subjects.Count - MaximumSubjectsPerCard).ToString(
                     CultureInfo.InvariantCulture);
-            return Bound(shown, 40);
+            return shown;
         }
 
         private static string Pretty(string value)

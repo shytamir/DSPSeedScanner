@@ -92,11 +92,38 @@ namespace DSPSeedScanner.Runtime
         public const int Width = 520;
         public const int Height = 116;
         public const int Margin = 24;
-        public const int ConclusionWidth = 900;
+        public const int ConclusionWidth = 1040;
         public const int DocumentPadding = 20;
         public const int DocumentLineHeight = 22;
+        public const int BottomClearance = 96;
         public const int MaximumTitleCharacters = 32;
         public const int MaximumDetailCharacters = 64;
+
+        public static double ScaleForScreen(
+            int screenWidth,
+            int screenHeight,
+            int contentWidth,
+            int contentHeight)
+        {
+            if (screenWidth <= 0)
+                throw new ArgumentOutOfRangeException(nameof(screenWidth));
+            if (screenHeight <= 0)
+                throw new ArgumentOutOfRangeException(nameof(screenHeight));
+            if (contentWidth <= 0)
+                throw new ArgumentOutOfRangeException(nameof(contentWidth));
+            if (contentHeight <= 0)
+                throw new ArgumentOutOfRangeException(nameof(contentHeight));
+
+            double resolutionScale = Math.Min(
+                screenWidth / 1920.0,
+                screenHeight / 1080.0);
+            double preferred = Math.Max(1.0, Math.Min(1.5, resolutionScale));
+            double fit = Math.Min(
+                screenWidth / (double)(contentWidth + Margin * 2),
+                screenHeight / (double)(
+                    contentHeight + Margin * 2 + BottomClearance));
+            return Math.Max(1.0, Math.Min(preferred, fit));
+        }
 
         public static PreviewPanelCorner ParseCorner(int value) => value switch
         {
@@ -139,7 +166,7 @@ namespace DSPSeedScanner.Runtime
                 corner == PreviewPanelCorner.BottomLeft;
             return new PreviewPanelBounds(
                 right ? screenWidth - Margin - width : Margin,
-                bottom ? screenHeight - Margin - height : Margin,
+                bottom ? screenHeight - Margin - BottomClearance - height : Margin,
                 width,
                 height);
         }
@@ -170,7 +197,8 @@ namespace DSPSeedScanner.Runtime
             int expectedPlanets,
             int completedPlanets,
             PreviewPanelCorner corner,
-            int spinnerStep)
+            int spinnerStep,
+            string? diagnosticCode = null)
         {
             ValidateSession(sessionId);
             if (expectedPlanets < 0)
@@ -217,7 +245,7 @@ namespace DSPSeedScanner.Runtime
                     corner,
                     PreviewPanelOperationalState.Unsupported,
                     "Unsupported runtime",
-                    "No complete result was published",
+                    UnsupportedDetail(diagnosticCode),
                     null),
                 PreviewResolutionState.Busy => View(
                     sessionId,
@@ -268,6 +296,18 @@ namespace DSPSeedScanner.Runtime
             return SpinnerFrames[step % SpinnerFrames.Length];
         }
 
+        private static string UnsupportedDetail(string? diagnosticCode) =>
+            diagnosticCode switch
+            {
+                "generation-mod-uncertain" =>
+                    "Other loaded plugins require an isolated scanner run",
+                "generation-patcher-uncertain" =>
+                    "A loaded preloader patch requires an isolated scanner run",
+                "game-version-mismatch" or "request-identity-unsupported" =>
+                    "This DSP version is outside the supported contract",
+                _ => "Generation runtime differs from the supported contract"
+            };
+
         private static void ValidateSession(long sessionId)
         {
             if (sessionId <= 0)
@@ -313,7 +353,8 @@ namespace DSPSeedScanner.Runtime
                 attempt.ExpectedPlanets,
                 attempt.CompletedPlanets,
                 corner,
-                spinnerStep);
+                spinnerStep,
+                attempt.Code);
             if (Conclusions == null ||
                 presentedState != attempt.State ||
                 presentedPreviewCount != attempt.PreviewReports.Count ||

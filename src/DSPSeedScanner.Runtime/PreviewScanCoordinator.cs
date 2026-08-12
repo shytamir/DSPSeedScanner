@@ -27,7 +27,8 @@ namespace DSPSeedScanner.Runtime
             IEnumerable<string> trace,
             bool stateRestored,
             int? generatedStarCount = null,
-            string? rawDiagnostic = null)
+            string? rawDiagnostic = null,
+            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null)
         {
             Status = status;
             GalaxySeed = galaxySeed;
@@ -43,6 +44,10 @@ namespace DSPSeedScanner.Runtime
             StateRestored = stateRestored;
             GeneratedStarCount = generatedStarCount;
             RawDiagnostic = rawDiagnostic;
+            SystemDisplays = Array.AsReadOnly(
+                systemDisplays == null
+                    ? Array.Empty<RuntimeSystemDisplay>()
+                    : new List<RuntimeSystemDisplay>(systemDisplays).ToArray());
         }
 
         public RuntimeScanStatus Status { get; }
@@ -73,6 +78,7 @@ namespace DSPSeedScanner.Runtime
         public bool StateRestored { get; }
         public int? GeneratedStarCount { get; }
         public string? RawDiagnostic { get; }
+        public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays { get; }
     }
 
     public sealed class PreviewScanCoordinator
@@ -105,6 +111,7 @@ namespace DSPSeedScanner.Runtime
             string? rawDiagnostic = null;
             IReadOnlyList<ConclusionReport>? reports = null;
             int? generatedStarCount = null;
+            IReadOnlyList<RuntimeSystemDisplay>? systemDisplays = null;
             bool restored = true;
 
             try
@@ -145,6 +152,7 @@ namespace DSPSeedScanner.Runtime
                             cancellationToken.ThrowIfCancellationRequested();
                             RuntimePreviewSnapshot snapshot = gateway.GeneratePreview(request, cancellationToken, trace.Add);
                             generatedStarCount = snapshot.GeneratedStarCount;
+                            systemDisplays = snapshot.SystemDisplays;
                             cancellationToken.ThrowIfCancellationRequested();
 
                             if (snapshot.UnknownEnumValue.HasValue)
@@ -234,7 +242,8 @@ namespace DSPSeedScanner.Runtime
                 trace,
                 restored,
                 generatedStarCount,
-                rawDiagnostic);
+                rawDiagnostic,
+                systemDisplays);
         }
 
         private static RuntimeScanResult Result(
@@ -247,7 +256,8 @@ namespace DSPSeedScanner.Runtime
             IEnumerable<string> trace,
             bool restored,
             int? generatedStarCount = null,
-            string? rawDiagnostic = null)
+            string? rawDiagnostic = null,
+            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null)
         {
             return new RuntimeScanResult(
                 status,
@@ -260,7 +270,8 @@ namespace DSPSeedScanner.Runtime
                 trace,
                 restored,
                 generatedStarCount,
-                rawDiagnostic);
+                rawDiagnostic,
+                systemDisplays);
         }
     }
 }

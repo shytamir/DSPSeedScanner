@@ -133,12 +133,22 @@ namespace DSPSeedScanner.Plugin
                 request.GalaxySeed,
                 galaxy.birthStarId,
                 galaxy.stars);
+            RuntimeSystemDisplay[] displays = galaxy.stars
+                .Select(star => new RuntimeSystemDisplay(
+                    SystemIdentifier(
+                        request.GalaxySeed,
+                        star,
+                        star.id == galaxy.birthStarId),
+                    star.displayName,
+                    star.typeString))
+                .ToArray();
             recordTrace("preview:normalized");
             return new RuntimePreviewSnapshot(
                 SystemIdentifier(request.GalaxySeed, birthStar, true),
                 galaxy.starCount,
                 systems,
-                distances);
+                distances,
+                systemDisplays: displays);
         }
 
         private static NormalizedSystemEvidence NormalizeSystem(

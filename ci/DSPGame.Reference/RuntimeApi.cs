@@ -67,6 +67,8 @@ public sealed class GalaxyData
 public sealed class StarData
 {
     public int id;
+    public string displayName => string.Empty;
+    public string typeString => string.Empty;
     public VectorLF3 uPosition;
     public float dysonRadius;
     public PlanetData[] planets = System.Array.Empty<PlanetData>();

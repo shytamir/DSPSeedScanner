@@ -20,6 +20,8 @@ namespace DSPSeedScanner.Runtime
     {
         private readonly List<ConclusionReport> previewReports = new List<ConclusionReport>();
         private readonly List<ConclusionReport> completeReports = new List<ConclusionReport>();
+        private readonly List<RuntimeSystemDisplay> systemDisplays =
+            new List<RuntimeSystemDisplay>();
 
         internal PreviewResolutionAttempt(PreviewSession session)
         {
@@ -35,6 +37,8 @@ namespace DSPSeedScanner.Runtime
         public string Message { get; internal set; }
         public IReadOnlyList<ConclusionReport> PreviewReports => previewReports.AsReadOnly();
         public IReadOnlyList<ConclusionReport> CompleteReports => completeReports.AsReadOnly();
+        public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays =>
+            systemDisplays.AsReadOnly();
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
         public bool CacheStored { get; internal set; }
@@ -51,6 +55,12 @@ namespace DSPSeedScanner.Runtime
         {
             completeReports.Clear();
             completeReports.AddRange(reports);
+        }
+
+        internal void SetSystemDisplays(IEnumerable<RuntimeSystemDisplay> displays)
+        {
+            systemDisplays.Clear();
+            systemDisplays.AddRange(displays);
         }
     }
 
@@ -110,6 +120,7 @@ namespace DSPSeedScanner.Runtime
 
             RuntimeScanResult preview = previewCoordinator.TryScan(request, session.Lifetime);
             currentAttempt.SetPreviewReports(preview.Reports);
+            currentAttempt.SetSystemDisplays(preview.SystemDisplays);
             if (preview.Status != RuntimeScanStatus.Success || preview.Fingerprint == null)
             {
                 Finish(currentAttempt, preview.Status, preview.Code, preview.Message);
