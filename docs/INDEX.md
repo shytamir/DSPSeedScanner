@@ -7,12 +7,12 @@ current status; the current roadmap records story state and history.
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [Presentation refinement roadmap](management/ROADMAP.md): Active RFIN-01
-  through RFIN-10 story scope, sequencing, acceptance gates, and status.
+- [Presentation refinement roadmap](management/ROADMAP.md): Completed RFIN-01
+  through RFIN-10 scope, sequencing, acceptance evidence, and history.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
-- [RFIN-10 human validation](management/RFIN-10-HUMAN-VALIDATION.md): Seven-step
-  installed 4K acceptance sequence for the refined release candidate.
+- [RFIN-10 human validation](management/RFIN-10-HUMAN-VALIDATION.md): Passed
+  seven-step installed 4K acceptance record for the refined release candidate.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
   evidence, operating bounds, and residual limits for the implemented core.
 

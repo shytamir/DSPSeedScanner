@@ -84,7 +84,7 @@ namespace DSPSeedScanner.Runtime
         private int? affectedPlanet;
         private string? rawDiagnostic;
         private bool advancing;
-        private bool recoveryFramePending;
+        private bool planetPending;
 
         private CompleteClusterRawOperation(
             IRuntimeCompleteClusterRawGateway gateway,
@@ -104,7 +104,7 @@ namespace DSPSeedScanner.Runtime
         public CompleteClusterRawResult? Result { get; private set; }
         public int ExpectedPlanets => expected;
         public int CompletedPlanets => completed;
-        public bool IsYieldStateRestored { get; private set; } = true;
+        public bool IsYieldStateRestored => runtimeSession?.StateRestored ?? true;
 
         internal static CompleteClusterRawOperation Start(
             IRuntimeCompleteClusterRawGateway gateway,
@@ -145,48 +145,40 @@ namespace DSPSeedScanner.Runtime
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
-                if (recoveryFramePending)
+                CompleteClusterPlanetTarget target = plan.Targets[completed];
+                affectedPlanet = target.PlanetId;
+                if (!planetPending)
                 {
-                    IsYieldStateRestored = runtimeSession.StateRestored;
-                    if (!IsYieldStateRestored)
-                    {
-                        throw new InvalidOperationException(
-                            "Runtime state was not restored during a recovery frame.");
-                    }
-
-                    recoveryFramePending = false;
-                    trace.Add("cluster-step:recovery:completed=" + completed);
-                    if (completed == expected)
-                        CompleteSuccessfully(plan);
+                    Publish(new CompleteClusterRawProgress(
+                        CompleteClusterProgressState.PlanetStarted,
+                        expected,
+                        completed,
+                        target.PlanetId));
+                    runtimeSession.StartPlanet(target, cancellationToken, trace.Add);
+                    planetPending = true;
                     return;
                 }
 
-                CompleteClusterPlanetTarget target = plan.Targets[completed];
-                affectedPlanet = target.PlanetId;
-                Publish(new CompleteClusterRawProgress(
-                    CompleteClusterProgressState.PlanetStarted,
-                    expected,
-                    completed,
-                    target.PlanetId));
-
-                NormalizedRawPlanetEvidence evidence = runtimeSession.GeneratePlanet(
+                if (!runtimeSession.TryCompletePlanet(
                     target,
                     cancellationToken,
-                    trace.Add);
-                IsYieldStateRestored = runtimeSession.StateRestored;
-                if (!IsYieldStateRestored)
-                    throw new InvalidOperationException("Runtime state was not restored after a planet step.");
+                    trace.Add,
+                    out NormalizedRawPlanetEvidence? evidence))
+                    return;
 
-                ValidatePlanet(request, target, evidence);
+                ValidatePlanet(request, target, evidence ??
+                    throw new InvalidOperationException("A completed terrain step returned no evidence."));
                 aggregate.Add(target, evidence);
                 completed++;
+                planetPending = false;
                 Publish(new CompleteClusterRawProgress(
                     CompleteClusterProgressState.PlanetCompleted,
                     expected,
                     completed,
                     target.PlanetId));
                 trace.Add("cluster-step:yield:completed=" + completed);
-                recoveryFramePending = true;
+                if (completed == expected)
+                    CompleteSuccessfully(plan);
             }
             catch (OperationCanceledException)
             {
@@ -299,9 +291,6 @@ namespace DSPSeedScanner.Runtime
                     plan,
                     cancellationToken,
                     trace.Add);
-                IsYieldStateRestored = runtimeSession.StateRestored;
-                if (!IsYieldStateRestored)
-                    throw new InvalidOperationException("Runtime state was not restored after raw-session setup.");
                 State = CompleteClusterRawOperationState.Ready;
             }
             catch (OperationCanceledException)
@@ -547,26 +536,24 @@ namespace DSPSeedScanner.Runtime
                 if (target.System.Kind == SubjectKind.BirthSystem)
                 {
                     BirthPlanetCount++;
-                    foreach (NormalizedRawVeinNode node in planet.Nodes)
-                    {
-                        if (starter.TryGetValue(node.ResourceId, out StarterAggregate? resource))
-                            resource.Amount = checked(resource.Amount + node.Amount);
-                        if (String.Equals(node.ResourceId, "fire-ice", StringComparison.Ordinal))
-                            birthContainsFireIce = true;
-                    }
                     foreach (NormalizedRawVeinGroup group in planet.Groups)
                     {
                         if (starter.TryGetValue(group.ResourceId, out StarterAggregate? resource))
+                        {
+                            resource.Amount = checked(resource.Amount + group.Amount);
                             resource.Groups = checked(resource.Groups + 1);
+                        }
+                        if (String.Equals(group.ResourceId, "fire-ice", StringComparison.Ordinal))
+                            birthContainsFireIce = true;
                     }
                 }
-                foreach (NormalizedRawVeinNode node in planet.Nodes)
+                foreach (NormalizedRawVeinGroup group in planet.Groups)
                 {
-                    if (ConclusionDefinition.StarterTotalResourceIds.Contains(node.ResourceId))
-                        CommonTotal = checked(CommonTotal + node.Amount);
-                    if (rare.TryGetValue(node.ResourceId, out RareAggregate? resource))
+                    if (ConclusionDefinition.StarterTotalResourceIds.Contains(group.ResourceId))
+                        CommonTotal = checked(CommonTotal + group.Amount);
+                    if (rare.TryGetValue(group.ResourceId, out RareAggregate? resource))
                     {
-                        resource.Amount = checked(resource.Amount + node.Amount);
+                        resource.Amount = checked(resource.Amount + group.Amount);
                         resource.Present = true;
                         if (resource.NearestSystem == null ||
                             target.DistanceFromBirthLy < resource.DistanceFromBirthLy)
@@ -574,12 +561,8 @@ namespace DSPSeedScanner.Runtime
                             resource.NearestSystem = target.System;
                             resource.DistanceFromBirthLy = target.DistanceFromBirthLy;
                         }
-                    }
-                }
-                foreach (NormalizedRawVeinGroup group in planet.Groups)
-                {
-                    if (rare.TryGetValue(group.ResourceId, out RareAggregate? resource))
                         resource.Groups = checked(resource.Groups + 1);
+                    }
                 }
             }
 

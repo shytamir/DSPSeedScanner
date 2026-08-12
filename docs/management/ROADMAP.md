@@ -1,10 +1,9 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 through RFIN-09 were accepted on 2026-08-12.
-RFIN-10 passed its automated release-candidate gate on 2026-08-12 and awaits
-the authorized installed-game human validation phase.
+**Status:** Completed and accepted on 2026-08-12. RFIN-01 through RFIN-10
+passed their acceptance gates, including the final installed 4K validation.
 
-**Active user story:** RFIN-10 awaits human validation.
+**Active user story:** None.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -13,11 +12,11 @@ add a defensible player decision.
 
 ## Product return
 
-The accepted hands-off panel will remain stable while cache-miss scans yield
-more recovery frames. Fresh start, Megafactory, Compact expansion, and Sphere /
-energy cards will answer distinct player questions in brief natural language.
-Dark Fog will move to neutral status metadata, and redundant trait conclusions
-will disappear.
+The accepted hands-off panel remains stable while cache-miss scans move their
+expensive terrain phase off the render thread. Fresh start, Megafactory,
+Compact expansion, and Sphere / energy cards answer distinct player questions
+in brief natural language. Dark Fog moved to neutral status metadata, and
+redundant trait conclusions were removed.
 
 ## Governing presentation rules
 
@@ -58,7 +57,9 @@ within that phase.
 
 ### RFIN-01: Add scan recovery frames
 
-**State:** Accepted on 2026-08-12 without semantic change.
+**State:** Accepted on 2026-08-12 without semantic change. Its initial
+recovery-frame implementation was superseded during RFIN-10 validation by the
+scanner-owned terrain-worker correction.
 
 As a player inspecting a new seed, I want the automatic scan to disrupt the
 preview less, even if complete conclusions arrive later.
@@ -95,12 +96,12 @@ receives its recovery frame before evaluation and publication.
 - the Release solution and installed-game plugin built with zero warnings, all
   14 conclusion checks passed, and all 49 runtime-boundary checks passed.
 
-**Produced:** A recovery-frame phase in `CompleteClusterRawOperation`, an
-explicit orchestration contract documenting alternating planet and recovery
-frames, and strengthened cadence, equivalence, cancellation, failure, and
-serialization fixtures. Per the roadmap validation policy, installed-game
-smoothness and cache-miss duration remain deferred to RFIN-10's sole human
-validation phase.
+**Produced at this gate:** A recovery-frame phase in
+`CompleteClusterRawOperation`, an explicit orchestration contract documenting
+alternating planet and recovery frames, and strengthened cadence, equivalence,
+cancellation, failure, and serialization fixtures. RFIN-10's installed-game
+work later demonstrated that delay alone did not provide acceptable pacing and
+replaced this tactic without changing scan evidence or conclusions.
 
 ### RFIN-02: Preserve planet attribution
 
@@ -553,8 +554,8 @@ viewport geometry, ordering policy, filter, or new interaction was introduced.
 
 ### RFIN-10: Validate the refined experience
 
-**State:** Automated release-candidate gate passed on 2026-08-12; awaiting the
-single installed-game human validation phase and product acceptance.
+**State:** Accepted on 2026-08-12 after the single installed-game human
+validation phase passed.
 
 As a player installing the refined package, I want smoother scanning and the
 revised conclusions to work together in the supported New Game flow.
@@ -584,9 +585,8 @@ The focused fixtures collectively cover every approved copy outcome,
 three-example aggregation bounds, deterministic ordering, unknown omission,
 schema-6 rejection by schema 7, duplicate coalescing, replacement, exit,
 cancellation, progress, restoration, and cache identity behavior. The
-seven-step [human validation sequence](RFIN-10-HUMAN-VALIDATION.md) owns the
-remaining installed 4K observations and explicitly requires recorded cache-miss
-duration and perceived smoothness.
+seven-step [human validation sequence](RFIN-10-HUMAN-VALIDATION.md) recorded the
+installed 4K observations, including cache-miss pacing and responsiveness.
 
 **Automated evidence:**
 
@@ -597,9 +597,14 @@ duration and perceived smoothness.
   validators passed; and
 - no human result was inferred from compilation, fixtures, or packaging.
 
-**Produced:** A validated release-candidate contract and a seven-step installed
-4K human-validation handoff. RFIN-10 and the roadmap remain unaccepted until
-that sequence is observed and its residual issues are recorded.
+**Human evidence:** All seven installed 4K steps passed. The accepted build
+showed monotonic planet progress with no observed frame drops, readable and
+scrollable four-context conclusions, correct Dark Fog metadata boundaries,
+cache reuse, safe seed replacement, safe preview exit, and correct Peace-mode
+behavior.
+
+**Produced:** A validated release-candidate contract, the passed seven-step
+installed 4K record, and the accepted refined presentation experience.
 
 ## Context contracts
 
@@ -726,7 +731,7 @@ replaced it in the status area.
 
 | Refinement requirement | Covered by |
 | --- | --- |
-| Twice the current safe recovery frames with visible progress | RFIN-01 |
+| Smooth cache-miss scanning with visible progress | RFIN-01, RFIN-10 |
 | Evidence-backed planet names and gas-giant ownership | RFIN-02 |
 | Up to three evidence-backed system candidates | RFIN-03 |
 | Fresh start natural-language conclusions | RFIN-04 |
@@ -740,11 +745,32 @@ replaced it in the status area.
 ## Roadmap-wide exclusions
 
 This roadmap does not change evidence thresholds or accepted role predicates.
-It adds no scoring,
-preferences, comparison, route planning, raw-data view, new Dark Fog judgment,
-background generation, localization, publication, or compatibility expansion.
+It adds no scoring, preferences, comparison, route planning, raw-data view,
+new Dark Fog judgment, localization, publication, or compatibility expansion.
+The scanner-owned terrain worker added during RFIN-10 was the bounded
+correction to the failed pacing tactic, not parallel seed generation.
 
 ## Completion
 
-The roadmap is complete only when RFIN-01 through RFIN-10 are individually
-accepted and RFIN-10 records the single installed-game validation.
+RFIN-01 through RFIN-10 were individually accepted, and RFIN-10 recorded the
+passing single installed-game validation on 2026-08-12. No story remains
+active.
+
+## Refinement and validation record
+
+The presentation was refined through direct 4K observation: layout and copy
+were bounded, conclusion families were rewritten and grouped, unsupported
+output was removed, and lifecycle and cache behavior were exercised in the
+real New Game preview. Cache-miss tests then showed that adding recovery frames
+could not prevent synchronous planet generation from starving the renderer.
+Investigation isolated terrain generation as the dominant cost and confirmed
+DSP's native modeling path, but a first queue-based adaptation temporarily
+exposed candidate game state and caused renderer faults.
+
+The final correction kept candidate state private, ran only DSP's terrain
+algorithm on a scanner-owned background worker, and performed the short vein
+generation and summarization step synchronously under immediately restored
+runtime globals. The obsolete delay-yield and native-queue mechanisms were
+removed. Automated equivalence, restoration, presentation, build, and package
+checks passed, followed by all seven installed 4K steps with the original
+progress sequence intact and no observed frame drops.

@@ -8,8 +8,8 @@ authority.
 
 - [Project steering](../PROJECT.md): Authoritative accepted decisions and
   current tracked project status.
-- [Presentation refinement roadmap](../management/ROADMAP.md): Active story
-  state, acceptance gates, sequencing, and history.
+- [Presentation refinement roadmap](../management/ROADMAP.md): Completed story
+  scope, acceptance evidence, sequencing, and history.
 
 ## Archived documents
 

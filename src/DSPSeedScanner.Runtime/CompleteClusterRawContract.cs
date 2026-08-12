@@ -199,9 +199,15 @@ namespace DSPSeedScanner.Runtime
     {
         bool StateRestored { get; }
 
-        NormalizedRawPlanetEvidence GeneratePlanet(
+        void StartPlanet(
             CompleteClusterPlanetTarget target,
             CancellationToken cancellationToken,
             Action<string> recordTrace);
+
+        bool TryCompletePlanet(
+            CompleteClusterPlanetTarget target,
+            CancellationToken cancellationToken,
+            Action<string> recordTrace,
+            out NormalizedRawPlanetEvidence? evidence);
     }
 }

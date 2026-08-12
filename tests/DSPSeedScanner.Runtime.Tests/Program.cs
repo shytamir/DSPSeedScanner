@@ -48,7 +48,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete cluster incompatibility remains explicit", CompleteClusterIncompatibilityIsExplicit),
                 ("complete cluster bound rejects before raw generation", CompleteClusterBoundRejectsBeforeGeneration),
                 ("complete cluster shares runtime serialization", CompleteClusterSharesSerialization),
-                ("incremental cluster doubles safe recovery frames without changing results", IncrementalClusterMatchesSynchronousExecution),
+                ("incremental cluster polls terrain workers without changing results", IncrementalClusterMatchesSynchronousExecution),
                 ("incremental cluster cancellation and failure restore state", IncrementalClusterExitPathsRestoreState),
                 ("incremental cluster keeps serialization between yields", IncrementalClusterKeepsSerializationBetweenYields),
                 ("complete cache keys cover the full supported identity", CompleteCacheKeysCoverSupportedIdentity),
@@ -68,6 +68,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
+                ("fresh start resources group by metric and outcome", FreshStartResourcesGroupByMetricAndOutcome),
                 ("Megafactory copy is natural bounded and grouped", MegafactoryCopyIsNaturalBoundedAndGrouped),
                 ("Compact routes are natural deduplicated and bounded", CompactRoutesAreNaturalDeduplicatedAndBounded),
                 ("Sphere candidates are natural deterministic and bounded", SphereCandidatesAreNaturalDeterministicAndBounded),
@@ -920,9 +921,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 int before = operation.CompletedPlanets;
                 operation.Advance();
                 advances++;
-                True(operation.IsYieldStateRestored);
                 Equal(
-                    advances % 2 == 1 ? before + 1 : before,
+                    advances % 3 == 0 ? before + 1 : before,
                     operation.CompletedPlanets);
                 Equal(
                     operation.State == CompleteClusterRawOperationState.Ready
@@ -932,7 +932,9 @@ namespace DSPSeedScanner.Runtime.Tests
             }
 
             CompleteClusterRawResult incremental = operation.Result!;
-            Equal(6, advances);
+            Equal(
+                9,
+                advances);
             Equal(RuntimeScanStatus.Success, incremental.Status);
             Equal(synchronous.Coverage, incremental.Coverage);
             True(synchronous.RareResources.SequenceEqual(incremental.RareResources));
@@ -951,7 +953,7 @@ namespace DSPSeedScanner.Runtime.Tests
             }
             Equal(3, incremental.Trace.Count(value =>
                 value.StartsWith("cluster-step:yield:", StringComparison.Ordinal)));
-            Equal(3, incremental.Trace.Count(value =>
+            Equal(0, incremental.Trace.Count(value =>
                 value.StartsWith("cluster-step:recovery:", StringComparison.Ordinal)));
             Equal(3, gateway.YieldRestoreChecks);
             Equal(1, gateway.SessionDisposeCalls);
@@ -973,11 +975,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 operation.Advance();
                 CompleteClusterRawResult cancelled = operation.Result!;
                 Equal(RuntimeScanStatus.Cancelled, cancelled.Status);
-                Equal(CoverageState.Partial, cancelled.Coverage.State);
-                Equal(1, cancelled.Coverage.CompletedPlanets);
+                Equal(CoverageState.Unavailable, cancelled.Coverage.State);
+                Equal(0, cancelled.Coverage.CompletedPlanets);
                 Equal(0, cancelled.Reports.Count);
                 True(cancelled.StateRestored);
-                Equal(1, cancellationGateway.YieldRestoreChecks);
+                Equal(0, cancellationGateway.YieldRestoreChecks);
                 Equal("original", cancellationGateway.StateMarker);
                 Equal(1, cancellationGateway.SessionDisposeCalls);
                 Equal(1, cancellationGateway.RestoreCalls);
@@ -988,6 +990,12 @@ namespace DSPSeedScanner.Runtime.Tests
                 new CompleteClusterRawCoordinator(failureGateway).TryStart(
                     Request(), CancellationToken.None))
             {
+                operation.Advance();
+                Equal(CompleteClusterRawOperationState.Ready, operation.State);
+                operation.Advance();
+                Equal(CompleteClusterRawOperationState.Ready, operation.State);
+                operation.Advance();
+                Equal(CompleteClusterRawOperationState.Ready, operation.State);
                 operation.Advance();
                 Equal(CompleteClusterRawOperationState.Ready, operation.State);
                 operation.Advance();
@@ -1032,19 +1040,15 @@ namespace DSPSeedScanner.Runtime.Tests
             operation.Advance();
             Equal(RuntimeScanStatus.Busy,
                 preview.TryScan(Request(), CancellationToken.None).Status);
-            operation.Advance();
-            Equal(RuntimeScanStatus.Busy,
-                preview.TryScan(Request(), CancellationToken.None).Status);
-            operation.Advance();
-            Equal(RuntimeScanStatus.Busy,
-                preview.TryScan(Request(), CancellationToken.None).Status);
-            operation.Advance();
-            Equal(RuntimeScanStatus.Busy,
-                preview.TryScan(Request(), CancellationToken.None).Status);
-            operation.Advance();
-            Equal(RuntimeScanStatus.Busy,
-                preview.TryScan(Request(), CancellationToken.None).Status);
-            operation.Advance();
+            while (operation.State == CompleteClusterRawOperationState.Ready)
+            {
+                operation.Advance();
+                if (operation.State == CompleteClusterRawOperationState.Ready)
+                {
+                    Equal(RuntimeScanStatus.Busy,
+                        preview.TryScan(Request(), CancellationToken.None).Status);
+                }
+            }
             Equal(RuntimeScanStatus.Success, operation.Result?.Status);
             Equal(RuntimeScanStatus.Success,
                 preview.TryScan(Request(), CancellationToken.None).Status);
@@ -1620,6 +1624,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 completeFailure.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
                 PreviewResolutionAttempt rawAttempt = completeFailure.CurrentPublishedAttempt!;
                 completeFailure.AdvanceCurrent();
+                completeFailure.AdvanceCurrent();
+                completeFailure.AdvanceCurrent();
                 Equal(PreviewResolutionState.Failed, rawAttempt.State);
                 completeFailure.AdvanceCurrent();
                 Equal(1, rawAttempt.TerminalTransitionCount);
@@ -2018,6 +2024,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(scanning.ImmediateGroups.SelectMany(group => group.Cards)
                     .All(card => !card.Line.Contains(":star:", StringComparison.Ordinal)));
                 resolver.AdvanceCurrent();
+                resolver.AdvanceCurrent();
+                resolver.AdvanceCurrent();
                 panel.Update(attempt, PreviewPanelCorner.BottomRight, 1);
                 True(ReferenceEquals(scanning, panel.Conclusions));
                 Equal("Planets 1 / 3", panel.Current.Detail);
@@ -2050,10 +2058,13 @@ namespace DSPSeedScanner.Runtime.Tests
                     group.Context == ConclusionContext.FreshStart);
                 string completedFreshText = String.Join("\n",
                     completedFresh.Cards.Select(card => card.Line));
-                True(completedFreshText.Contains("Iron scarce", StringComparison.Ordinal));
-                True(completedFreshText.Contains(
-                    "Iron has few vein groups",
-                    StringComparison.Ordinal));
+                True(completedFreshText.Contains("Iron", StringComparison.Ordinal));
+                True(completedFreshText.Contains("scarce", StringComparison.Ordinal));
+                True(completedFreshText.Contains("few vein groups", StringComparison.Ordinal));
+                Equal(1, completedFresh.Cards.Count(card =>
+                    card.Line.Contains("scarce", StringComparison.Ordinal)));
+                Equal(1, completedFresh.Cards.Count(card =>
+                    card.Line.Contains("few vein groups", StringComparison.Ordinal)));
                 True(completedFreshText.Contains("No Fire Ice veins", StringComparison.Ordinal));
                 False(completedFreshText.Contains(
                     "Combined starter deposits",
@@ -2166,6 +2177,66 @@ namespace DSPSeedScanner.Runtime.Tests
                 False(rendered.Contains("permanent solar", StringComparison.OrdinalIgnoreCase));
                 True(rendered.Contains("gas giant neighbors", StringComparison.OrdinalIgnoreCase));
             });
+        }
+
+        private static void FreshStartResourcesGroupByMetricAndOutcome()
+        {
+            var reports = new List<ConclusionReport>();
+            foreach ((string resource, ComponentOutcome amount, ComponentOutcome groups) in
+                new[]
+                {
+                    ("iron", ComponentOutcome.Supports, ComponentOutcome.Supports),
+                    ("oil", ComponentOutcome.Supports, ComponentOutcome.Supports),
+                    ("copper", ComponentOutcome.PreferenceSensitive,
+                        ComponentOutcome.PreferenceSensitive),
+                    ("silicon", ComponentOutcome.PreferenceSensitive,
+                        ComponentOutcome.PreferenceSensitive),
+                    ("stone", ComponentOutcome.PreferenceSensitive,
+                        ComponentOutcome.PreferenceSensitive),
+                    ("titanium", ComponentOutcome.PreferenceSensitive,
+                        ComponentOutcome.PreferenceSensitive),
+                    ("coal", ComponentOutcome.DoesNotSupport,
+                        ComponentOutcome.DoesNotSupport)
+                })
+            {
+                reports.Add(PresentationReport(
+                    ConclusionContext.FreshStart,
+                    amount,
+                    EvidenceStage.BirthSystemRaw,
+                    "FS-RESOURCES.amount:" + resource,
+                    new ConclusionSubject(SubjectKind.Resource, resource)));
+                reports.Add(PresentationReport(
+                    ConclusionContext.FreshStart,
+                    groups,
+                    EvidenceStage.BirthSystemRaw,
+                    "FS-RESOURCES.groups:" + resource,
+                    new ConclusionSubject(SubjectKind.Resource, resource)));
+            }
+            MethodInfo build = typeof(PreviewConclusionPresenter).GetMethod(
+                "BuildFreshStartCards",
+                BindingFlags.Static | BindingFlags.NonPublic) ??
+                throw new InvalidOperationException(
+                    "Fresh start presentation composer was not found.");
+            var cards = (IReadOnlyList<PresentedConclusionCard>)(build.Invoke(
+                null,
+                new object?[] { reports, null }) ??
+                throw new InvalidOperationException(
+                    "Fresh start presentation composer returned no cards."));
+            string[] lines = cards.Select(card => card.Line).ToArray();
+
+            True(lines.SequenceEqual(new[]
+            {
+                "Iron, Oil plentiful",
+                "Copper, Silicon, Stone, Titanium normal",
+                "Coal scarce",
+                "Iron, Oil has many vein groups",
+                "Copper, Silicon, Stone, Titanium has normal vein groups",
+                "Coal has few vein groups"
+            }));
+            Equal(6, cards.Count);
+            Equal(2, cards[0].SourceConclusionIds.Count);
+            Equal(4, cards[1].SourceConclusionIds.Count);
+            Equal(4, cards[4].SourceConclusionIds.Count);
         }
 
         private static void MegafactoryCopyIsNaturalBoundedAndGrouped()
@@ -3312,6 +3383,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 private readonly FakeCompleteClusterGateway owner;
                 private readonly int galaxySeed;
                 private readonly Action<string> recordTrace;
+                private CompleteClusterPlanetTarget? pendingTarget;
+                private int pendingPolls;
                 private bool disposed;
 
                 public Session(
@@ -3322,12 +3395,12 @@ namespace DSPSeedScanner.Runtime.Tests
                     this.owner = owner;
                     this.galaxySeed = galaxySeed;
                     this.recordTrace = recordTrace;
-                    StateRestored = true;
+                    StateRestored = false;
                 }
 
                 public bool StateRestored { get; private set; }
 
-                public NormalizedRawPlanetEvidence GeneratePlanet(
+                public void StartPlanet(
                     CompleteClusterPlanetTarget target,
                     CancellationToken cancellationToken,
                     Action<string> stepTrace)
@@ -3335,8 +3408,28 @@ namespace DSPSeedScanner.Runtime.Tests
                     if (disposed)
                         throw new ObjectDisposedException(nameof(Session));
                     cancellationToken.ThrowIfCancellationRequested();
+                    if (pendingTarget != null)
+                        throw new InvalidOperationException("fake scan already pending");
+                    pendingTarget = target;
+                    pendingPolls = 0;
+                    stepTrace("raw:terrain-worker:start:planet=" + target.PlanetId);
+                }
+
+                public bool TryCompletePlanet(
+                    CompleteClusterPlanetTarget target,
+                    CancellationToken cancellationToken,
+                    Action<string> stepTrace,
+                    out NormalizedRawPlanetEvidence? evidence)
+                {
+                    evidence = null;
+                    if (disposed)
+                        throw new ObjectDisposedException(nameof(Session));
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (pendingTarget?.PlanetId != target.PlanetId)
+                        throw new InvalidOperationException("fake scan target mismatch");
+                    if (pendingPolls++ == 0)
+                        return false;
                     owner.StateMarker = "candidate";
-                    StateRestored = false;
                     try
                     {
                         if (owner.GenerationFailure != null)
@@ -3344,17 +3437,19 @@ namespace DSPSeedScanner.Runtime.Tests
                         owner.OnPlanet?.Invoke();
                         if (owner.FailingPlanetId == target.PlanetId)
                             throw new InvalidOperationException("injected cluster planet failure");
-                        return target.PlanetId switch
+                        evidence = target.PlanetId switch
                         {
                             102 => ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 200),
                             103 => ClusterSnapshot(galaxySeed, target, "unipolar-magnet", 14, 1016, 300),
                             _ => ClusterSnapshot(galaxySeed, target, null, 0, 0, 0)
                         };
+                        pendingTarget = null;
+                        stepTrace("raw:terrain-worker:complete");
+                        return true;
                     }
                     finally
                     {
                         owner.StateMarker = "leased";
-                        StateRestored = true;
                         owner.YieldRestoreChecks++;
                     }
                 }

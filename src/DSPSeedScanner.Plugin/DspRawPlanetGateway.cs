@@ -339,6 +339,11 @@ namespace DSPSeedScanner.Plugin
             private readonly Action atomicCompleted;
             private readonly GameData? ambientData;
             private readonly GameDesc? ambientDescription;
+            private CompleteClusterPlanetTarget? pendingTarget;
+            private PlanetData? pendingPlanet;
+            private PlanetAlgorithm? pendingAlgorithm;
+            private Thread? terrainThread;
+            private Exception? terrainFailure;
             private bool disposed;
 
             public DspCompleteClusterRawSession(
@@ -359,25 +364,115 @@ namespace DSPSeedScanner.Plugin
                 this.atomicCompleted = atomicCompleted;
                 ambientData = GameMain.data;
                 ambientDescription = DSPGame.GameDesc;
+                PrepareRawGeneration(sessionTrace);
                 StateRestored = true;
+                sessionTrace("cluster-raw:terrain-worker:prepared");
             }
 
             public bool StateRestored { get; private set; }
 
-            public NormalizedRawPlanetEvidence GeneratePlanet(
+            public void StartPlanet(
                 CompleteClusterPlanetTarget target,
                 CancellationToken cancellationToken,
                 Action<string> recordTrace)
             {
                 if (disposed)
                     throw new ObjectDisposedException(nameof(DspCompleteClusterRawSession));
+                if (pendingTarget != null)
+                    throw new InvalidOperationException("A terrain generation step is already pending.");
                 cancellationToken.ThrowIfCancellationRequested();
+                PlanetData planet = ResolveTarget(target);
+                PlanetAlgorithm algorithm = PlanetModelingManager.Algorithm(planet);
+                planet.data = new PlanetRawData(planet.precision);
+                planet.modData = planet.data.InitModData(planet.modData);
+                planet.data.CalcVerts();
+                planet.aux = new PlanetAuxData(planet);
+
+                pendingTarget = target;
+                pendingPlanet = planet;
+                pendingAlgorithm = algorithm;
+                terrainFailure = null;
+                terrainThread = new Thread(() =>
+                {
+                    try
+                    {
+                        algorithm.GenerateTerrain(planet.mod_x, planet.mod_y);
+                    }
+                    catch (Exception exception)
+                    {
+                        terrainFailure = exception;
+                    }
+                })
+                {
+                    IsBackground = true,
+                    Name = "DSP Seed Scanner Terrain"
+                };
+                recordTrace("raw:terrain-worker:start:planet=" +
+                    planet.id.ToString(CultureInfo.InvariantCulture) +
+                    ":algorithm=" + planet.algoId.ToString(CultureInfo.InvariantCulture));
+                terrainThread.Start();
+            }
+
+            public bool TryCompletePlanet(
+                CompleteClusterPlanetTarget target,
+                CancellationToken cancellationToken,
+                Action<string> recordTrace,
+                out NormalizedRawPlanetEvidence? evidence)
+            {
+                evidence = null;
+                if (disposed)
+                    throw new ObjectDisposedException(nameof(DspCompleteClusterRawSession));
+                cancellationToken.ThrowIfCancellationRequested();
+                if (pendingTarget == null || pendingTarget.PlanetId != target.PlanetId)
+                    throw new InvalidOperationException("The terrain completion target is not pending.");
+                if (terrainThread == null || pendingPlanet == null || pendingAlgorithm == null)
+                    throw new InvalidOperationException("The terrain worker state is incomplete.");
+                if (terrainThread.IsAlive)
+                    return false;
+                terrainThread.Join();
+                if (terrainFailure != null)
+                    throw new InvalidOperationException(
+                        "Background terrain generation failed.", terrainFailure);
+
+                PlanetData planet = pendingPlanet;
+                PlanetAlgorithm algorithm = pendingAlgorithm;
+                recordTrace("raw:terrain-worker:complete:planet=" +
+                    planet.id.ToString(CultureInfo.InvariantCulture));
+                StateRestored = false;
+                try
+                {
+                    GameMain.data = candidateData;
+                    DSPGame.GameDesc = descriptor;
+                    planet.data.veinCursor = 1;
+                    algorithm.GenerateVeins();
+                    planet.SummarizeVeinGroups();
+                    evidence = NormalizeGroups(galaxySeed, planet);
+                }
+                finally
+                {
+                    GameMain.data = ambientData;
+                    DSPGame.GameDesc = ambientDescription;
+                    StateRestored =
+                        ReferenceEquals(GameMain.data, ambientData) &&
+                        ReferenceEquals(DSPGame.GameDesc, ambientDescription);
+                }
+                if (!StateRestored)
+                    throw new InvalidOperationException("Terrain completion state restoration failed.");
+
+                recordTrace("raw:veins:complete:groups=" +
+                    evidence.Groups.Count.ToString(CultureInfo.InvariantCulture));
+                ReleasePendingPlanet();
+                atomicCompleted();
+                return true;
+            }
+
+            private PlanetData ResolveTarget(CompleteClusterPlanetTarget target)
+            {
                 if (!ReferenceEquals(GameMain.data, ambientData) ||
                     !ReferenceEquals(DSPGame.GameDesc, ambientDescription))
                 {
-                    StateRestored = false;
                     throw new InvalidOperationException(
-                        "Ambient DSP state changed between complete-cluster steps.");
+                        "Ambient DSP state changed during the complete-cluster session.");
                 }
                 if (!planets.TryGetValue(target.PlanetId, out var item))
                 {
@@ -400,66 +495,7 @@ namespace DSPSeedScanner.Plugin
                         "A generated planet no longer matches its complete-cluster plan.",
                         "planet=" + target.PlanetId.ToString(CultureInfo.InvariantCulture));
                 }
-
-                KeyValuePair<FieldInfo, object?>[] preparationState =
-                    CapturePreparationStaticState();
-                StateRestored = false;
-                Exception? restorationFailure = null;
-                try
-                {
-                    GameMain.data = candidateData;
-                    DSPGame.GameDesc = descriptor;
-                    PrepareRawGeneration(recordTrace);
-                    recordTrace("raw:atomic:start:planet=" +
-                        planet.id.ToString(CultureInfo.InvariantCulture) +
-                        ":algorithm=" + planet.algoId.ToString(CultureInfo.InvariantCulture));
-                    planet.RegenerateRawDataImmediately();
-                    recordTrace("raw:atomic:complete");
-                    atomicCompleted();
-                    cancellationToken.ThrowIfCancellationRequested();
-                    NormalizedRawPlanetEvidence evidence = Normalize(galaxySeed, planet);
-                    recordTrace("raw:normalized:nodes=" +
-                        evidence.Nodes.Count.ToString(CultureInfo.InvariantCulture) +
-                        ":groups=" + evidence.Groups.Count.ToString(CultureInfo.InvariantCulture));
-                    return evidence;
-                }
-                finally
-                {
-                    bool preparationRestored = restorationFailure == null;
-                    try
-                    {
-                        foreach (KeyValuePair<FieldInfo, object?> pair in preparationState)
-                            pair.Key.SetValue(null, pair.Value);
-                    }
-                    catch (Exception exception)
-                    {
-                        restorationFailure = exception;
-                        preparationRestored = false;
-                    }
-
-                    GameMain.data = ambientData;
-                    DSPGame.GameDesc = ambientDescription;
-                    try
-                    {
-                        preparationRestored &= preparationState.All(pair =>
-                            ReferenceEquals(pair.Key.GetValue(null), pair.Value));
-                    }
-                    catch (Exception exception)
-                    {
-                        preparationRestored = false;
-                        if (restorationFailure == null)
-                            restorationFailure = exception;
-                    }
-                    StateRestored = preparationRestored &&
-                        ReferenceEquals(GameMain.data, ambientData) &&
-                        ReferenceEquals(DSPGame.GameDesc, ambientDescription);
-                    if (restorationFailure != null || !StateRestored)
-                    {
-                        throw new InvalidOperationException(
-                            "Complete-cluster step state restoration failed.",
-                            restorationFailure);
-                    }
-                }
+                return planet;
             }
 
             public void Dispose()
@@ -467,19 +503,41 @@ namespace DSPSeedScanner.Plugin
                 if (disposed)
                     return;
                 disposed = true;
-                GameMain.data = ambientData;
-                DSPGame.GameDesc = ambientDescription;
                 try
                 {
+                    if (terrainThread != null && terrainThread.IsAlive)
+                        terrainThread.Join();
+                    ReleasePendingPlanet();
                     galaxy.Free();
                 }
                 finally
                 {
+                    GameMain.data = ambientData;
+                    DSPGame.GameDesc = ambientDescription;
                     sessionTrace("cluster-raw:candidate:released");
-                    StateRestored = StateRestored &&
+                    StateRestored =
                         ReferenceEquals(GameMain.data, ambientData) &&
                         ReferenceEquals(DSPGame.GameDesc, ambientDescription);
                 }
+            }
+
+            private void ReleasePendingPlanet()
+            {
+                if (pendingPlanet?.data != null)
+                {
+                    pendingPlanet.data.Free();
+                    pendingPlanet.data = null;
+                }
+                if (pendingPlanet?.aux != null)
+                {
+                    pendingPlanet.aux.Free();
+                    pendingPlanet.aux = null;
+                }
+                pendingPlanet = null;
+                pendingAlgorithm = null;
+                pendingTarget = null;
+                terrainThread = null;
+                terrainFailure = null;
             }
         }
 
@@ -558,6 +616,40 @@ namespace DSPSeedScanner.Plugin
                 groups);
         }
 
+        private static NormalizedRawPlanetEvidence NormalizeGroups(
+            int galaxySeed,
+            PlanetData planet)
+        {
+            if (planet.veinGroups == null)
+                throw new InvalidOperationException("DSP returned no summarized vein groups.");
+            var groups = new List<NormalizedRawVeinGroup>();
+            for (int index = 1; index < planet.veinGroups.Length; index++)
+            {
+                VeinGroup group = planet.veinGroups[index];
+                if (group.type == EVeinType.None)
+                    continue;
+                int type = (int)group.type;
+                groups.Add(new NormalizedRawVeinGroup(
+                    index,
+                    type,
+                    ResourceId(type),
+                    Semantics(type),
+                    group.count,
+                    group.amount,
+                    Convert.ToDecimal(group.pos.x),
+                    Convert.ToDecimal(group.pos.y),
+                    Convert.ToDecimal(group.pos.z)));
+            }
+            return new NormalizedRawPlanetEvidence(
+                galaxySeed,
+                planet.id,
+                planet.theme,
+                planet.algoId,
+                RawPlanetCoverage.Complete(),
+                Array.Empty<NormalizedRawVeinNode>(),
+                groups);
+        }
+
         private static string ResourceId(int type)
         {
             if (!Enum.IsDefined(typeof(EVeinType), (byte)type) ||
@@ -583,10 +675,17 @@ namespace DSPSeedScanner.Plugin
             {
                 (typeof(PlanetData), "RegenerateRawDataImmediately", MemberTypes.Method),
                 (typeof(PlanetData), "data", MemberTypes.Field),
+                (typeof(PlanetData), "aux", MemberTypes.Field),
                 (typeof(PlanetData), "veinGroups", MemberTypes.Field),
+                (typeof(PlanetData), "SummarizeVeinGroups", MemberTypes.Method),
+                (typeof(PlanetRawData), "InitModData", MemberTypes.Method),
+                (typeof(PlanetRawData), "CalcVerts", MemberTypes.Method),
                 (typeof(PlanetRawData), "Free", MemberTypes.Method),
                 (typeof(PlanetRawData), "veinPool", MemberTypes.Field),
                 (typeof(PlanetRawData), "veinCursor", MemberTypes.Field),
+                (typeof(PlanetAuxData), "Free", MemberTypes.Method),
+                (typeof(PlanetAlgorithm), "GenerateTerrain", MemberTypes.Method),
+                (typeof(PlanetAlgorithm), "GenerateVeins", MemberTypes.Method),
                 (typeof(VeinData), "type", MemberTypes.Field),
                 (typeof(VeinData), "productId", MemberTypes.Field),
                 (typeof(VeinData), "amount", MemberTypes.Field),
@@ -597,6 +696,7 @@ namespace DSPSeedScanner.Plugin
                 (typeof(VeinGroup), "count", MemberTypes.Field),
                 (typeof(VeinGroup), "amount", MemberTypes.Field),
                 (typeof(VeinGroup), "pos", MemberTypes.Field),
+                (typeof(PlanetModelingManager), "Algorithm", MemberTypes.Method),
                 (typeof(RandomTable), "Init", MemberTypes.Method)
             };
             foreach ((Type type, string member, MemberTypes kind) in required)

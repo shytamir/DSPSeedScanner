@@ -4,15 +4,13 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
-**Current status:** The scanner core and New Game presentation roadmaps were
-completed and accepted on 2026-08-11 and 2026-08-12 respectively. The approved
-presentation refinement roadmap is active. RFIN-01 through RFIN-09 were
-accepted on 2026-08-12; RFIN-01's installed-game smoothness and duration
-validation remains deferred to the roadmap's final human phase. RFIN-10 passed
-its automated release-candidate gate and now awaits the documented seven-step
-installed 4K human validation; no human result or product acceptance has been
-recorded. One
-packaging refinement remains tracked as non-blocking technical debt.
+**Current status:** The scanner core, New Game presentation, and presentation
+refinement roadmaps were completed and accepted on 2026-08-11 and 2026-08-12.
+The refinement release candidate passed its seven-step installed 4K human
+validation on 2026-08-12, including smooth cache-miss scanning through a
+scanner-owned terrain worker. No roadmap or user story is active while the
+next version progression is planned. One packaging refinement remains tracked
+as non-blocking technical debt.
 
 ## Product decision
 
@@ -109,9 +107,10 @@ decision and corresponding roadmap change.
 
 ## Management and documentation
 
-The active [presentation refinement roadmap](management/ROADMAP.md) owns its
-story scope, acceptance gates, sequencing, and history. The completed New Game
-presentation roadmap is retained in the [archive](archive/INDEX.md). The
+The completed [presentation refinement roadmap](management/ROADMAP.md) owns its
+story scope, acceptance evidence, sequencing, and history. No management
+roadmap is active. The completed New Game presentation roadmap is retained in
+the [archive](archive/INDEX.md). The
 [technical debt register](management/TECHNICAL-DEBT.md) owns explicitly
 deferred obligations and their closure gates; recording debt does not weaken
 the accepted safety contract. The completed scanner-core, New Game

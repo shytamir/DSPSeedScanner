@@ -461,17 +461,57 @@ namespace DSPSeedScanner.Runtime
                 Reports(reports, SharedSatelliteEvaluator.ConclusionId),
                 TopologyLine(reports));
 
-            foreach (ConclusionReport report in reports.Where(report =>
-                report.ConclusionId.StartsWith("FS-RESOURCES.amount:", StringComparison.Ordinal) ||
-                report.ConclusionId.StartsWith("FS-RESOURCES.groups:", StringComparison.Ordinal) ||
-                report.ConclusionId == "FS-RESOURCES.fire-ice"))
+            AddGroupedResourceCards(
+                cards,
+                reports,
+                "FS-RESOURCES.amount:",
+                " ",
+                "plentiful",
+                "normal",
+                "scarce");
+            AddGroupedResourceCards(
+                cards,
+                reports,
+                "FS-RESOURCES.groups:",
+                " has ",
+                "many vein groups",
+                "normal vein groups",
+                "few vein groups");
+            ConclusionReport? fireIce = SingleReport(reports, "FS-RESOURCES.fire-ice");
+            if (fireIce != null)
+                AddFreshCard(cards, new[] { fireIce }, ResourceLine(fireIce));
+            return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static void AddGroupedResourceCards(
+            ICollection<PresentedConclusionCard> cards,
+            IReadOnlyList<ConclusionReport> reports,
+            string conclusionPrefix,
+            string separator,
+            string strong,
+            string middle,
+            string weak)
+        {
+            foreach (ComponentOutcome outcome in CandidateOutcomes())
             {
+                ConclusionReport[] matching = reports.Where(report =>
+                    report.ConclusionId.StartsWith(
+                        conclusionPrefix,
+                        StringComparison.Ordinal) &&
+                    report.Outcome == outcome).ToArray();
+                if (matching.Length == 0)
+                    continue;
+                string resources = String.Join(", ", matching.Select(report =>
+                    ResourceLabel(report.ConclusionId)));
                 AddFreshCard(
                     cards,
-                    new[] { report },
-                    ResourceLine(report));
+                    matching,
+                    resources + separator + OutcomeWord(
+                        outcome,
+                        strong,
+                        middle,
+                        weak));
             }
-            return Array.AsReadOnly(cards.ToArray());
         }
 
         private static IReadOnlyList<PresentedConclusionCard> BuildMegafactoryCards(
@@ -1132,22 +1172,6 @@ namespace DSPSeedScanner.Runtime
         private static string? ResourceLine(ConclusionReport report)
         {
             string resource = ResourceLabel(report.ConclusionId);
-            if (report.ConclusionId.StartsWith("FS-RESOURCES.amount:", StringComparison.Ordinal))
-            {
-                return resource + " " + OutcomeWord(
-                    report.Outcome,
-                    "plentiful",
-                    "normal",
-                    "scarce");
-            }
-            if (report.ConclusionId.StartsWith("FS-RESOURCES.groups:", StringComparison.Ordinal))
-            {
-                return resource + " has " + OutcomeWord(
-                    report.Outcome,
-                    "many vein groups",
-                    "normal vein groups",
-                    "few vein groups");
-            }
             if (report.ConclusionId == "FS-RESOURCES.fire-ice")
             {
                 return report.Outcome == ComponentOutcome.Supports
