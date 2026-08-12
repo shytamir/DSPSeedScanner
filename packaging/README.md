@@ -1,16 +1,16 @@
 # DSP Seed Scanner
 
-DSP Seed Scanner is a BepInEx mod core for evaluating whether one procedurally
+DSP Seed Scanner is a BepInEx mod for evaluating whether one procedurally
 generated Dyson Sphere Program cluster suits a player's intended run. It uses
 the installed game runtime to generate evidence and returns bounded,
 context-specific conclusions rather than a universal seed score.
 
 ## Status
 
-This package contains the conformant presentation-neutral scanner core. It has
-no player-facing panel, controls, or automatic scan trigger yet. Installation
-is useful for integration development and the documented developer probes;
-ordinary players will not see an interface.
+This package automatically resolves each completed New Game cluster preview.
+A small non-interactive corner panel shows waiting, cache reuse, scan progress,
+completion, cancellation, unsupported-runtime, and failure states. The next
+presentation phase will add the neutral context conclusions themselves.
 
 ## Supported runtime
 
@@ -24,8 +24,8 @@ generation compatibility is not established.
 
 - Immediate preview conclusions cover accepted topology, power, gas-product,
   energy-system, sphere-geometry, Dark Fog, grouping, role, and trait cases.
-- Explicit on-demand operations return exact birth-system common resources
-  and complete-cluster rare-resource access.
+- The New Game workflow automatically reuses valid complete conclusions or
+  runs one cooperative complete-cluster scan at one solid planet per frame.
 - Unsupported settings or evidence remain explicit unknown or not-applicable
   results. No score or hidden weighting is produced.
 - Generation is serialized, cancellable at safe boundaries, and limited to
@@ -41,9 +41,9 @@ assemblies belong under:
 BepInEx/plugins/DSPSeedScanner/
 ```
 
-The public report-returning methods on `DSPSeedScannerPlugin` are the
-integration boundary for a separately reviewed future New Game presentation
-modification. Developer probe invocation and build requirements are documented
-in the repository. Batch search, parallel generation, persistence, exports,
+The panel defaults to the bottom-right. Set `Presentation.PanelCorner` to `2`
+for bottom-left, `3` for top-left, or `4` for top-right in the generated BepInEx
+configuration file. Developer probe invocation and build requirements are
+documented in the repository. Batch search, parallel generation, exports,
 telemetry, publication automation, and wider runtime compatibility are not
 included.

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using BepInEx;
+using BepInEx.Configuration;
 using DSPSeedScanner.Core;
 using DSPSeedScanner.Runtime;
 using HarmonyLib;
@@ -30,8 +31,13 @@ namespace DSPSeedScanner.Plugin
         private DspRawPlanetGateway? rawGateway;
         private PreviewSessionLifecycle? previewLifecycle;
         private PreviewResolutionCoordinator? previewResolution;
+        private readonly PreviewPanelController previewPanel = new PreviewPanelController();
+        private readonly PreviewStatusPanelRenderer previewPanelRenderer =
+            new PreviewStatusPanelRenderer();
+        private ConfigEntry<int>? previewPanelCorner;
         private Harmony? harmony;
         private long previewLoadSequence;
+        private int previewPanelSpinnerStep;
         private bool probeAttempted;
         private CompleteClusterRawOperation? cooperativeProbeOperation;
         private CompleteClusterRawResult? cooperativeProbeReference;
@@ -61,6 +67,11 @@ namespace DSPSeedScanner.Plugin
                 coordinator,
                 completeClusterCoordinator,
                 completeClusterCache);
+            previewPanelCorner = Config.Bind(
+                "Presentation",
+                "PanelCorner",
+                PreviewPanelLayout.DefaultCornerCode,
+                "Panel corner: 1 bottom-right, 2 bottom-left, 3 top-left, 4 top-right.");
             PreviewUiPatches.Plugin = this;
             harmony = new Harmony(PluginGuid);
             harmony.PatchAll(typeof(PreviewUiPatches));
@@ -71,6 +82,17 @@ namespace DSPSeedScanner.Plugin
         private void Update()
         {
             previewResolution?.AdvanceCurrent();
+            PreviewResolutionAttempt? visibleAttempt =
+                previewResolution?.CurrentPublishedAttempt;
+            if (visibleAttempt != null && previewPanel.Current.Visible)
+            {
+                previewPanelSpinnerStep =
+                    (previewPanelSpinnerStep + 1) & Int32.MaxValue;
+                previewPanel.Update(
+                    visibleAttempt,
+                    ConfiguredPanelCorner(),
+                    previewPanelSpinnerStep);
+            }
 
             string? output = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_OUTPUT");
             if (String.IsNullOrWhiteSpace(output) ||
@@ -134,8 +156,14 @@ namespace DSPSeedScanner.Plugin
         private void OnDestroy()
         {
             previewResolution?.Dispose();
+            previewPanel.HideCurrent();
             PreviewUiPatches.Plugin = null;
             harmony?.UnpatchSelf();
+        }
+
+        private void OnGUI()
+        {
+            previewPanelRenderer.Draw(previewPanel.Current, Screen.width, Screen.height);
         }
 
         internal void OnPreviewLoadCompleted(GameDesc descriptor)
@@ -173,13 +201,24 @@ namespace DSPSeedScanner.Plugin
                     request.CombatSettingsKey,
                     request.InitialColonize,
                     request.MaxDensity);
-                previewResolution.ObserveCompletedLoad(
+                PreviewLoadTransition transition = previewResolution.ObserveCompletedLoad(
                     checked(++previewLoadSequence),
                     identity,
                     request);
+                if (transition.Disposition == PreviewLoadDisposition.SessionCreated &&
+                    transition.CurrentSession != null)
+                {
+                    previewPanelSpinnerStep = 0;
+                    previewPanel.BeginSession(
+                        transition.CurrentSession.SessionId,
+                        ConfiguredPanelCorner(),
+                        previewPanelSpinnerStep);
+                }
             }
             catch (Exception exception)
             {
+                previewResolution.ExitPreview();
+                previewPanel.HideCurrent();
                 Logger.LogError("Completed preview load could not be resolved: " + exception);
             }
         }
@@ -187,6 +226,13 @@ namespace DSPSeedScanner.Plugin
         internal void OnPreviewClosed()
         {
             previewResolution?.ExitPreview();
+            previewPanel.HideCurrent();
+        }
+
+        private PreviewPanelCorner ConfiguredPanelCorner()
+        {
+            return PreviewPanelLayout.ParseCorner(
+                previewPanelCorner?.Value ?? PreviewPanelLayout.DefaultCornerCode);
         }
 
         private void AdvanceCooperativeProbe(string path)

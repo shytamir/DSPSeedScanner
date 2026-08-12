@@ -1,10 +1,10 @@
 # New Game Presentation Roadmap
 
-**Status:** In progress. PRES-01 through PRES-03 are accepted; PRES-04 is
+**Status:** In progress. PRES-01 through PRES-04 are accepted; PRES-05 is
 implemented and pending acceptance.
 
-**Active user story:** PRES-04 is at its acceptance gate. PRES-05 remains
-inactive until PRES-04 is accepted.
+**Active user story:** PRES-05 is at its acceptance gate. PRES-06 remains
+inactive until PRES-05 is accepted.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -281,7 +281,7 @@ in-game validation remained outside this story.
 
 ### PRES-04: Resolve every preview automatically once
 
-**State:** Implemented on 2026-08-12; pending acceptance.
+**State:** Accepted on 2026-08-12.
 
 As a player entering a cluster preview, I want its available conclusions
 resolved automatically so that using the mod requires no scan command.
@@ -343,8 +343,8 @@ identities, and human in-game validation remained outside this story.
 
 ### PRES-05: Show current operational state
 
-**State:** Approved; inactive. The corner-anchor requirement was resolved on
-2026-08-12.
+**State:** Implemented on 2026-08-12; pending acceptance. The corner-anchor
+requirement was resolved on 2026-08-12.
 
 As a player viewing a cluster preview, I want a small panel to show what the
 scanner is doing so that waiting, cache reuse, completion, and failure are
@@ -366,6 +366,48 @@ agreed text bounds at each configured corner.
 **Out of scope:** Adaptive placement, dragging, overlap detection, non-corner
 anchors, conclusion cards, raw evidence tables, preferences, manual retry, and
 visual redesign of DSP controls.
+
+**Implemented:** A presentation-neutral panel model now maps the current
+resolution attempt to waiting, cached, scanning, complete, cancelled,
+unsupported, or failed operational state. Active states use a four-frame ASCII
+spinner and scanning includes completed-versus-expected planet progress.
+Rendered copy is limited to one 32-character title and one 64-character detail
+line; raw diagnostics and conclusion wording do not enter this layer.
+
+`PreviewPanelController` admits updates only from its active, non-retired
+session and hides exactly that session or the current preview. The plugin binds
+`Presentation.PanelCorner` through BepInEx configuration, defaults invalid or
+absent values to `1`, advances the spinner once per Unity update, and renders a
+non-interactive 520-by-116 IMGUI panel with a 24-pixel corner margin. The panel
+is hidden on preview close and plugin destruction without modifying DSP's UI
+hierarchy or controls.
+
+**Acceptance evidence:**
+
+- mapping fixtures covered waiting, cached, scanning, complete, cancelled,
+  unsupported, busy-as-unavailable, and failed inputs; only active states
+  carried a spinner, and planning remained visibly distinct from planet
+  progress;
+- successive active steps selected different spinner frames and scanning
+  exposed quiet completed-versus-expected planet counts;
+- configuration values `1` through `4` mapped exactly to bottom-right,
+  bottom-left, top-left, and top-right, while out-of-range values returned the
+  bottom-right default;
+- 4K placement fixtures kept all four rectangles within their selected corner,
+  outside both screen center axes, and away from every border center;
+- every rendered title and detail remained inside its fixed single-line bound;
+  and obsolete, retired, mismatched, and exited sessions could not replace or
+  hide the current view; and
+- the Release solution and installed-game plugin builds completed with zero
+  warnings, all 14 conclusion checks and 46 runtime-boundary checks passed,
+  the hosted-reference build completed, and the semantic-versioned DLL and
+  Thunderstore package validators accepted the three-assembly package.
+
+**Produced:** `PreviewPanelStateMapper`, `PreviewPanelLayout`,
+`PreviewPanelController`, `PreviewStatusPanelRenderer`, the numeric BepInEx
+corner setting, and focused state, placement, spinner, text-bound, and stale
+publication fixtures. Conclusion cards, raw evidence tables, adaptive layout,
+player controls, and human in-game validation remained outside this story.
 
 ### PRES-06: Present concise neutral conclusions
 

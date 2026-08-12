@@ -88,8 +88,8 @@ bundles may be read, stored, or cleared through `TryGetCachedCompleteCluster`,
 `TryStoreCompleteCluster`, and `ClearCompleteClusterCache`. The start method
 returns a disposable presentation-neutral operation; each `Advance` call
 completes at most one solid planet and restores shared DSP state before
-returning. Inputs and outputs are presentation-neutral Core and Runtime
-contracts. The approved New Game presentation roadmap consumes these reports
-without moving presentation policy into the scanner core. The currently
-accepted scanner-core package contains no panel, hooks, controls, or
-presentation copy.
+returning. Inputs and outputs remain presentation-neutral Core and Runtime
+contracts. The plugin now consumes them automatically from the New Game
+preview lifecycle and shows bounded operational state in a non-interactive
+corner panel without moving presentation policy into the scanner core.
+Context-grouped conclusion copy remains a later presentation story.

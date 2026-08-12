@@ -1,10 +1,18 @@
 # DSP Seed Scanner
 
-DSP Seed Scanner is an upcoming
+DSP Seed Scanner is a
 [Dyson Sphere Program](https://store.steampowered.com/app/1366540/Dyson_Sphere_Program/)
 mod for evaluating whether a procedurally generated cluster suits a player's
 intended run. It uses the installed game runtime as its generation authority
 and reports context-specific conclusions rather than a universal seed score.
+
+The current implementation automatically resolves each completed New Game
+cluster preview and shows a small operational panel while it checks the local
+cache or scans the cluster. Neutral conclusion cards are the next presentation
+story and are not yet displayed.
+
+The BepInEx setting `Presentation.PanelCorner` selects the panel corner: `1`
+bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.
 
 ## Project status
 

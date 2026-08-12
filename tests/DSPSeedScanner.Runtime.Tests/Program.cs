@@ -58,6 +58,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("automatic resolution uses cache once per completed load", AutomaticResolutionUsesCacheOncePerLoad),
                 ("automatic resolution cancels replacement and exit", AutomaticResolutionCancelsReplacementAndExit),
                 ("automatic resolution terminal failures never retry", AutomaticResolutionFailuresNeverRetry),
+                ("panel maps every operational state within text bounds", PanelMapsEveryOperationalState),
+                ("panel corners map clockwise and avoid border centers", PanelCornersMapClockwise),
+                ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -1332,6 +1335,146 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void PanelMapsEveryOperationalState()
+        {
+            PreviewPanelView waiting = PreviewPanelStateMapper.Waiting(
+                1,
+                PreviewPanelCorner.BottomRight,
+                0);
+            Equal(PreviewPanelOperationalState.Waiting, waiting.State);
+            True(waiting.Spinner.HasValue);
+            False(waiting.Spinner == PreviewPanelStateMapper.Waiting(
+                1,
+                PreviewPanelCorner.BottomRight,
+                1).Spinner);
+
+            var expected = new[]
+            {
+                (PreviewResolutionState.Scanning, 10, 3, PreviewPanelOperationalState.Scanning, true),
+                (PreviewResolutionState.Cached, 10, 10, PreviewPanelOperationalState.Cached, false),
+                (PreviewResolutionState.Complete, 10, 10, PreviewPanelOperationalState.Complete, false),
+                (PreviewResolutionState.Cancelled, 10, 3, PreviewPanelOperationalState.Cancelled, false),
+                (PreviewResolutionState.Incompatible, 0, 0, PreviewPanelOperationalState.Unsupported, false),
+                (PreviewResolutionState.Busy, 0, 0, PreviewPanelOperationalState.Failed, false),
+                (PreviewResolutionState.Failed, 10, 3, PreviewPanelOperationalState.Failed, false)
+            };
+            foreach ((PreviewResolutionState source, int total, int done,
+                PreviewPanelOperationalState state, bool spins) in expected)
+            {
+                PreviewPanelView view = PreviewPanelStateMapper.Project(
+                    2,
+                    source,
+                    total,
+                    done,
+                    PreviewPanelCorner.TopLeft,
+                    2);
+                True(view.Visible);
+                Equal(state, view.State);
+                Equal(spins, view.Spinner.HasValue);
+                int renderedTitleLength = view.Title.Length +
+                    (view.Spinner.HasValue ? 3 : 0);
+                True(renderedTitleLength <= PreviewPanelLayout.MaximumTitleCharacters);
+                True(view.Detail.Length <= PreviewPanelLayout.MaximumDetailCharacters);
+                False(view.Title.Contains('\n'));
+                False(view.Detail.Contains('\n'));
+            }
+
+            PreviewPanelView planning = PreviewPanelStateMapper.Project(
+                3,
+                PreviewResolutionState.Scanning,
+                0,
+                0,
+                PreviewPanelCorner.BottomLeft,
+                3);
+            Equal(PreviewPanelOperationalState.Waiting, planning.State);
+            True(planning.Spinner.HasValue);
+            False(planning.Spinner == PreviewPanelStateMapper.Project(
+                3,
+                PreviewResolutionState.Scanning,
+                1,
+                0,
+                PreviewPanelCorner.BottomLeft,
+                0).Spinner);
+        }
+
+        private static void PanelCornersMapClockwise()
+        {
+            Equal(1, PreviewPanelLayout.DefaultCornerCode);
+            Equal(PreviewPanelCorner.BottomRight, PreviewPanelLayout.ParseCorner(1));
+            Equal(PreviewPanelCorner.BottomLeft, PreviewPanelLayout.ParseCorner(2));
+            Equal(PreviewPanelCorner.TopLeft, PreviewPanelLayout.ParseCorner(3));
+            Equal(PreviewPanelCorner.TopRight, PreviewPanelLayout.ParseCorner(4));
+            Equal(PreviewPanelCorner.BottomRight, PreviewPanelLayout.ParseCorner(0));
+            Equal(PreviewPanelCorner.BottomRight, PreviewPanelLayout.ParseCorner(5));
+
+            const int width = 3840;
+            const int height = 2160;
+            var expected = new[]
+            {
+                (PreviewPanelCorner.BottomRight, 3296, 2020),
+                (PreviewPanelCorner.BottomLeft, 24, 2020),
+                (PreviewPanelCorner.TopLeft, 24, 24),
+                (PreviewPanelCorner.TopRight, 3296, 24)
+            };
+            foreach ((PreviewPanelCorner corner, int x, int y) in expected)
+            {
+                PreviewPanelBounds bounds = PreviewPanelLayout.Place(corner, width, height);
+                Equal(x, bounds.X);
+                Equal(y, bounds.Y);
+                Equal(PreviewPanelLayout.Width, bounds.Width);
+                Equal(PreviewPanelLayout.Height, bounds.Height);
+                True(bounds.X > 0 && bounds.Y > 0);
+                True(bounds.Right < width && bounds.Bottom < height);
+                True(bounds.Right < width / 2 || bounds.X > width / 2);
+                True(bounds.Bottom < height / 2 || bounds.Y > height / 2);
+            }
+        }
+
+        private static void PanelRejectsObsoleteSessions()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway(), gate),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway(), gate),
+                    new CompleteClusterConclusionCache(path));
+                var panel = new PreviewPanelController();
+
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt first = resolver.CurrentPublishedAttempt!;
+                panel.BeginSession(first.Session.SessionId, PreviewPanelCorner.BottomRight, 0);
+                Equal(PreviewPanelOperationalState.Waiting, panel.Current.State);
+                True(panel.Update(first, PreviewPanelCorner.BottomRight, 1));
+                Equal(PreviewPanelOperationalState.Scanning, panel.Current.State);
+                PreviewPanelView firstVisible = panel.Current;
+
+                resolver.ObserveCompletedLoad(
+                    2,
+                    PreviewIdentity(73_339_583),
+                    RequestForSeed(73_339_583));
+                PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
+                False(panel.Update(first, PreviewPanelCorner.TopLeft, 2));
+                True(ReferenceEquals(firstVisible, panel.Current));
+
+                panel.BeginSession(
+                    replacement.Session.SessionId,
+                    PreviewPanelCorner.TopLeft,
+                    2);
+                PreviewPanelView replacementWaiting = panel.Current;
+                False(panel.Update(first, PreviewPanelCorner.BottomRight, 3));
+                True(ReferenceEquals(replacementWaiting, panel.Current));
+                False(panel.Hide(first.Session.SessionId));
+                True(panel.Current.Visible);
+                True(panel.Update(replacement, PreviewPanelCorner.TopLeft, 3));
+                Equal(replacement.Session.SessionId, panel.Current.SessionId);
+                True(panel.Hide(replacement.Session.SessionId));
+                False(panel.Current.Visible);
+                Equal(PreviewPanelOperationalState.Hidden, panel.Current.State);
+            });
+        }
+
         private static void RuntimeBoundaryExposesNoGameObjects()
         {
             Assembly assembly = typeof(PreviewScanCoordinator).Assembly;
@@ -1361,7 +1504,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(PreviewLoadTransition),
                 typeof(PreviewSessionLifecycle),
                 typeof(PreviewResolutionAttempt),
-                typeof(PreviewResolutionCoordinator)
+                typeof(PreviewResolutionCoordinator),
+                typeof(PreviewPanelBounds),
+                typeof(PreviewPanelView),
+                typeof(PreviewPanelController)
             })
             {
                 foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
