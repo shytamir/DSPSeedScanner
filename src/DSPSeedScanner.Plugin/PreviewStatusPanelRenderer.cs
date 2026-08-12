@@ -9,6 +9,10 @@ namespace DSPSeedScanner.Plugin
 {
     internal sealed class PreviewStatusPanelRenderer
     {
+        private const float ColumnGap = 12f;
+        private const float ScrollbarReserve = 18f;
+        private const float CardGap = 10f;
+
         private GUIStyle? titleStyle;
         private GUIStyle? detailStyle;
         private GUIStyle? contextStyle;
@@ -18,6 +22,10 @@ namespace DSPSeedScanner.Plugin
         private GUIStyle? strengthHeaderStyle;
         private GUIStyle? preferenceHeaderStyle;
         private GUIStyle? limitationHeaderStyle;
+        private GUIStyle? panelStyle;
+        private GUIStyle? contextCardStyle;
+        private Vector2 scrollPosition;
+        private long scrollSessionId;
 
         public void Draw(
             PreviewPanelView view,
@@ -29,6 +37,11 @@ namespace DSPSeedScanner.Plugin
                 return;
 
             EnsureStyles();
+            if (view.SessionId != scrollSessionId)
+            {
+                scrollSessionId = view.SessionId;
+                scrollPosition = Vector2.zero;
+            }
             if (conclusions != null && conclusions.ImmediateGroups
                 .Concat(conclusions.DetailGroups)
                 .SelectMany(group => group.Cards)
@@ -92,16 +105,11 @@ namespace DSPSeedScanner.Plugin
             int screenHeight)
         {
             ContextCard[] cards = BuildContextCards(conclusions);
-            float columnWidth = (PreviewPanelLayout.ConclusionWidth -
-                PreviewPanelLayout.DocumentPadding * 2 - 24) / 3f;
-            int contentHeight = (int)Math.Ceiling(cards.Sum(card =>
-                MeasureContextCard(card, columnWidth)));
-            int height = PreviewPanelLayout.DocumentPadding * 2 + 98 + contentHeight;
             double scale = PreviewPanelLayout.ScaleForScreen(
                 screenWidth,
                 screenHeight,
                 PreviewPanelLayout.ConclusionWidth,
-                height);
+                PreviewPanelLayout.ConclusionHeight);
             Matrix4x4 previousMatrix = BeginScaledDrawing(scale);
             try
             {
@@ -109,8 +117,6 @@ namespace DSPSeedScanner.Plugin
                     view,
                     conclusions,
                     cards,
-                    columnWidth,
-                    height,
                     Logical(screenWidth, scale),
                     Logical(screenHeight, scale));
             }
@@ -124,28 +130,32 @@ namespace DSPSeedScanner.Plugin
             PreviewPanelView view,
             PreviewConclusionPresentation conclusions,
             IReadOnlyList<ContextCard> cards,
-            float columnWidth,
-            int height,
             int screenWidth,
             int screenHeight)
         {
-            PreviewPanelBounds bounds = PreviewPanelLayout.PlaceSized(
+            PreviewPanelBounds bounds = PreviewPanelLayout.PlaceConclusion(
                 view.Corner,
                 screenWidth,
-                screenHeight,
-                PreviewPanelLayout.ConclusionWidth,
-                height);
+                screenHeight);
+            GUI.Box(
+                new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height),
+                GUIContent.none,
+                panelStyle);
             float x = bounds.X + PreviewPanelLayout.DocumentPadding;
             float y = bounds.Y + PreviewPanelLayout.DocumentPadding;
+            float viewportWidth = bounds.Width -
+                PreviewPanelLayout.DocumentPadding * 2;
+            float contentWidth = viewportWidth - ScrollbarReserve;
+            float columnWidth = (contentWidth - ColumnGap * 2) / 3f;
             GUI.Label(
-                new Rect(x, y, bounds.Width - PreviewPanelLayout.DocumentPadding * 2, 28),
+                new Rect(x, y, viewportWidth, 28),
                 conclusions.IdentityLine,
                 titleStyle);
             string status = view.Spinner.HasValue
                 ? view.Spinner.Value + "  " + view.Title + " - " + view.Detail
                 : view.Title + " - " + view.Detail;
             GUI.Label(
-                new Rect(x, y + 28, bounds.Width - PreviewPanelLayout.DocumentPadding * 2, 24),
+                new Rect(x, y + 28, viewportWidth, 24),
                 status,
                 detailStyle);
 
@@ -153,19 +163,37 @@ namespace DSPSeedScanner.Plugin
             foreach (PreviewConclusionColumn column in Enum.GetValues(
                 typeof(PreviewConclusionColumn)))
             {
-                float columnX = x + (int)column * (columnWidth + 12);
+                float columnX = x + (int)column * (columnWidth + ColumnGap);
                 GUIStyle style = HeaderStyle(column);
                 GUI.Label(
                     new Rect(columnX, columnY, columnWidth, 30),
                     ColumnTitle(column),
                     style);
             }
-            columnY += 36;
-            foreach (ContextCard card in cards)
+            float scrollY = columnY + 36f;
+            float scrollHeight = bounds.Bottom -
+                PreviewPanelLayout.DocumentPadding - scrollY;
+            PackedLayout layout = PackContextCards(cards, columnWidth);
+            Rect viewport = new Rect(x, scrollY, viewportWidth, scrollHeight);
+            Rect document = new Rect(
+                0f,
+                0f,
+                contentWidth,
+                Math.Max(scrollHeight, layout.Height));
+            scrollPosition = GUI.BeginScrollView(
+                viewport,
+                scrollPosition,
+                document,
+                false,
+                layout.Height > scrollHeight);
+            try
             {
-                float cardHeight = MeasureContextCard(card, columnWidth);
-                DrawContextCard(card, x, columnY, columnWidth, cardHeight);
-                columnY += cardHeight;
+                foreach (PackedContextCard card in layout.Cards)
+                    DrawContextCard(card, columnWidth);
+            }
+            finally
+            {
+                GUI.EndScrollView();
             }
         }
 
@@ -211,23 +239,80 @@ namespace DSPSeedScanner.Plugin
             return 36f + maximum + 14f;
         }
 
-        private void DrawContextCard(
-            ContextCard card,
-            float x,
-            float y,
-            float columnWidth,
-            float height)
+        private PackedLayout PackContextCards(
+            IReadOnlyList<ContextCard> cards,
+            float columnWidth)
         {
+            var packed = new List<PackedContextCard>();
+            float y = 0f;
+            foreach (ContextCard card in cards.Where(value =>
+                value.PopulatedColumnCount == 3))
+            {
+                float height = MeasureContextCard(card, columnWidth);
+                packed.Add(new PackedContextCard(card, 0, 2, y, height));
+                y += height + CardGap;
+            }
+
+            var rows = new List<PackedRow>();
+            foreach (ContextCard card in cards.Where(value =>
+                value.PopulatedColumnCount < 3))
+            {
+                int first = card.FirstColumn;
+                int last = card.LastColumn;
+                int spanMask = ((1 << (last - first + 1)) - 1) << first;
+                PackedRow? row = rows.FirstOrDefault(value =>
+                    (value.OccupiedMask & spanMask) == 0);
+                if (row == null)
+                {
+                    row = new PackedRow();
+                    rows.Add(row);
+                }
+                float height = MeasureContextCard(card, columnWidth);
+                row.Add(card, first, last, height, spanMask);
+            }
+
+            foreach (PackedRow row in rows)
+            {
+                foreach (PackedRowCard card in row.Cards)
+                {
+                    packed.Add(new PackedContextCard(
+                        card.Card,
+                        card.FirstColumn,
+                        card.LastColumn,
+                        y,
+                        card.Height));
+                }
+                y += row.Height + CardGap;
+            }
+            return new PackedLayout(
+                packed,
+                Math.Max(0f, y - CardGap));
+        }
+
+        private void DrawContextCard(
+            PackedContextCard packed,
+            float columnWidth)
+        {
+            ContextCard card = packed.Card;
+            float x = packed.FirstColumn * (columnWidth + ColumnGap);
+            float width = (packed.LastColumn - packed.FirstColumn + 1) *
+                columnWidth + (packed.LastColumn - packed.FirstColumn) * ColumnGap;
+            float y = packed.Y;
+            GUI.Box(
+                new Rect(x, y, width, packed.Height),
+                GUIContent.none,
+                contextCardStyle);
             GUI.Label(
-                new Rect(x, y, PreviewPanelLayout.ConclusionWidth -
-                    PreviewPanelLayout.DocumentPadding * 2, 28),
+                new Rect(x + 8f, y + 4f, width - 16f, 28f),
                 card.Title,
                 contextStyle);
             float contentY = y + 34f;
             foreach (PreviewConclusionColumn column in Enum.GetValues(
                 typeof(PreviewConclusionColumn)))
             {
-                float columnX = x + (int)column * (columnWidth + 12);
+                if (!card.HasColumn(column))
+                    continue;
+                float columnX = (int)column * (columnWidth + ColumnGap);
                 float itemY = contentY;
                 GUIStyle style = CardStyle(column);
                 foreach (PresentedConclusionCard conclusion in card.Cards(column))
@@ -313,7 +398,7 @@ namespace DSPSeedScanner.Plugin
                 fontSize = 15,
                 fontStyle = FontStyle.Normal,
                 wordWrap = true,
-                clipping = TextClipping.Overflow,
+                clipping = TextClipping.Clip,
                 normal = { textColor = new Color(0.50f, 0.95f, 0.58f) }
             };
             preferenceStyle = new GUIStyle(strengthStyle)
@@ -339,6 +424,23 @@ namespace DSPSeedScanner.Plugin
             {
                 normal = { textColor = limitationStyle.normal.textColor }
             };
+            panelStyle = new GUIStyle(GUI.skin.box);
+            panelStyle.normal.background = MakeTexture(
+                new Color(0.015f, 0.035f, 0.045f, 0.76f));
+            contextCardStyle = new GUIStyle(GUI.skin.box);
+            contextCardStyle.normal.background = MakeTexture(
+                new Color(0.07f, 0.10f, 0.11f, 0.38f));
+        }
+
+        private static Texture2D MakeTexture(Color color)
+        {
+            var texture = new Texture2D(1, 1)
+            {
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            texture.SetPixel(0, 0, color);
+            texture.Apply();
+            return texture;
         }
 
         private sealed class ContextCard
@@ -360,12 +462,99 @@ namespace DSPSeedScanner.Plugin
             public ConclusionContext Context { get; }
             public string Title { get; }
             public int PopulatedColumnCount => cards.Count;
+            public int FirstColumn => cards.Keys.Min(value => (int)value);
+            public int LastColumn => cards.Keys.Max(value => (int)value);
+
+            public bool HasColumn(PreviewConclusionColumn column) =>
+                cards.ContainsKey(column);
 
             public IReadOnlyList<PresentedConclusionCard> Cards(
                 PreviewConclusionColumn column) =>
                 cards.TryGetValue(column, out IReadOnlyList<PresentedConclusionCard>? values)
                     ? values
                     : Array.Empty<PresentedConclusionCard>();
+        }
+
+        private sealed class PackedRow
+        {
+            private readonly List<PackedRowCard> cards = new List<PackedRowCard>();
+
+            public IReadOnlyList<PackedRowCard> Cards => cards;
+            public int OccupiedMask { get; private set; }
+            public float Height { get; private set; }
+
+            public void Add(
+                ContextCard card,
+                int firstColumn,
+                int lastColumn,
+                float height,
+                int spanMask)
+            {
+                cards.Add(new PackedRowCard(
+                    card,
+                    firstColumn,
+                    lastColumn,
+                    height));
+                OccupiedMask |= spanMask;
+                Height = Math.Max(Height, height);
+            }
+        }
+
+        private sealed class PackedRowCard
+        {
+            public PackedRowCard(
+                ContextCard card,
+                int firstColumn,
+                int lastColumn,
+                float height)
+            {
+                Card = card;
+                FirstColumn = firstColumn;
+                LastColumn = lastColumn;
+                Height = height;
+            }
+
+            public ContextCard Card { get; }
+            public int FirstColumn { get; }
+            public int LastColumn { get; }
+            public float Height { get; }
+        }
+
+        private sealed class PackedContextCard
+        {
+            public PackedContextCard(
+                ContextCard card,
+                int firstColumn,
+                int lastColumn,
+                float y,
+                float height)
+            {
+                Card = card;
+                FirstColumn = firstColumn;
+                LastColumn = lastColumn;
+                Y = y;
+                Height = height;
+            }
+
+            public ContextCard Card { get; }
+            public int FirstColumn { get; }
+            public int LastColumn { get; }
+            public float Y { get; }
+            public float Height { get; }
+        }
+
+        private sealed class PackedLayout
+        {
+            public PackedLayout(
+                IReadOnlyList<PackedContextCard> cards,
+                float height)
+            {
+                Cards = cards;
+                Height = height;
+            }
+
+            public IReadOnlyList<PackedContextCard> Cards { get; }
+            public float Height { get; }
         }
     }
 }

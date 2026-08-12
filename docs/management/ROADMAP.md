@@ -572,6 +572,38 @@ This second repair passed all 14 conclusion and 49 runtime-boundary checks and
 the installed-game plugin build with zero warnings. Human revalidation and the
 pushed package/CI gates remain required before PRES-07 acceptance.
 
+**Bounded-viewport repair note (approved 2026-08-12):** The second human image
+showed that content-sized placement could not converge: a verbose seed grew
+the document across most of the preview, transparent conclusion text crossed
+the stellar legend, and one full three-column row per context left large blank
+bands. PRES-07 therefore no longer permits seed content to determine the
+panel's outer dimensions.
+
+The repaired presentation uses one fixed-size viewport for each supported
+screen scale. Its corner placement applies stable safe-area clearance for the
+top-right legend and bottom-left Back control. A lightly tinted translucent
+surface separates conclusion text from the cluster map without hiding it. The
+identity, progress line, and three conclusion-class headings remain fixed;
+only the clipped card document scrolls, and its position resets for each new
+preview session. Content length can now affect only the document's scrollable
+extent, never the panel footprint.
+
+Contexts containing all three conclusion classes remain full-width cards at
+the top. Sparse contexts retain their actual class-column positions and are
+packed into complementary spaces in shared rows below, so a strength-only
+context can share a row with a preference-and-limitation context. Each card
+keeps one centered neutral title, bounded wrapped copy, and its existing class
+colors. This repair introduces no tabs, collapsing, automatic paging,
+preference controls, or changes to Dark Fog conclusions. Human validation must
+still confirm the safe areas, scrolling, readability, and lifecycle behavior
+in the installed game before PRES-07 can be accepted.
+
+Focused placement fixtures now lock the fixed 4K geometry and the top-right
+and bottom-left safe clearances. The repaired code passed all 14 conclusion
+and 49 runtime-boundary checks plus installed-game and hosted-reference plugin
+builds with zero warnings. Human revalidation and the pushed package/CI gates
+remain open.
+
 ## Roadmap coverage
 
 | Accepted presentation requirement | Covered by |

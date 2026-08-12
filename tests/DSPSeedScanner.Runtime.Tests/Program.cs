@@ -1502,6 +1502,45 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(bounds.Right < width / 2 || bounds.X > width / 2);
                 True(bounds.Bottom < height / 2 || bounds.Y > height / 2);
             }
+
+            const int logical4KWidth = 2560;
+            const int logical4KHeight = 1440;
+            var conclusionExpected = new[]
+            {
+                (PreviewPanelCorner.BottomRight, 1496, 640),
+                (PreviewPanelCorner.BottomLeft, 24, 608),
+                (PreviewPanelCorner.TopLeft, 24, 120),
+                (PreviewPanelCorner.TopRight, 1496, 384)
+            };
+            foreach ((PreviewPanelCorner corner, int x, int y) in conclusionExpected)
+            {
+                PreviewPanelBounds bounds = PreviewPanelLayout.PlaceConclusion(
+                    corner,
+                    logical4KWidth,
+                    logical4KHeight);
+                Equal(x, bounds.X);
+                Equal(y, bounds.Y);
+                Equal(PreviewPanelLayout.ConclusionWidth, bounds.Width);
+                Equal(PreviewPanelLayout.ConclusionHeight, bounds.Height);
+                True(bounds.Right <= logical4KWidth - PreviewPanelLayout.Margin);
+                True(bounds.Bottom <= logical4KHeight - PreviewPanelLayout.Margin);
+            }
+
+            PreviewPanelBounds topRight = PreviewPanelLayout.PlaceConclusion(
+                PreviewPanelCorner.TopRight,
+                1920,
+                1080);
+            Equal(
+                PreviewPanelLayout.Margin + PreviewPanelLayout.TopRightClearance,
+                topRight.Y);
+            PreviewPanelBounds bottomLeft = PreviewPanelLayout.PlaceConclusion(
+                PreviewPanelCorner.BottomLeft,
+                1920,
+                1080);
+            Equal(
+                1080 - PreviewPanelLayout.Margin -
+                    PreviewPanelLayout.BottomLeftClearance,
+                bottomLeft.Bottom);
         }
 
         private static void PanelRejectsObsoleteSessions()

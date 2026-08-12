@@ -93,9 +93,14 @@ namespace DSPSeedScanner.Runtime
         public const int Height = 116;
         public const int Margin = 24;
         public const int ConclusionWidth = 1040;
+        public const int ConclusionHeight = 680;
         public const int DocumentPadding = 20;
         public const int DocumentLineHeight = 22;
         public const int BottomClearance = 96;
+        public const int TopLeftClearance = 96;
+        public const int TopRightClearance = 360;
+        public const int BottomLeftClearance = 128;
+        public const int BottomRightClearance = 96;
         public const int MaximumTitleCharacters = 32;
         public const int MaximumDetailCharacters = 64;
 
@@ -169,6 +174,40 @@ namespace DSPSeedScanner.Runtime
                 bottom ? screenHeight - Margin - BottomClearance - height : Margin,
                 width,
                 height);
+        }
+
+        public static PreviewPanelBounds PlaceConclusion(
+            PreviewPanelCorner corner,
+            int screenWidth,
+            int screenHeight)
+        {
+            if (!Enum.IsDefined(typeof(PreviewPanelCorner), corner))
+                throw new ArgumentOutOfRangeException(nameof(corner));
+
+            bool right = corner == PreviewPanelCorner.BottomRight ||
+                corner == PreviewPanelCorner.TopRight;
+            bool bottom = corner == PreviewPanelCorner.BottomRight ||
+                corner == PreviewPanelCorner.BottomLeft;
+            int clearance = corner switch
+            {
+                PreviewPanelCorner.BottomRight => BottomRightClearance,
+                PreviewPanelCorner.BottomLeft => BottomLeftClearance,
+                PreviewPanelCorner.TopLeft => TopLeftClearance,
+                PreviewPanelCorner.TopRight => TopRightClearance,
+                _ => throw new ArgumentOutOfRangeException(nameof(corner))
+            };
+            if (screenWidth < ConclusionWidth + Margin * 2)
+                throw new ArgumentOutOfRangeException(nameof(screenWidth));
+            if (screenHeight < ConclusionHeight + Margin + clearance)
+                throw new ArgumentOutOfRangeException(nameof(screenHeight));
+
+            return new PreviewPanelBounds(
+                right ? screenWidth - Margin - ConclusionWidth : Margin,
+                bottom
+                    ? screenHeight - Margin - clearance - ConclusionHeight
+                    : Margin + clearance,
+                ConclusionWidth,
+                ConclusionHeight);
         }
     }
 

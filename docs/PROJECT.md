@@ -10,10 +10,13 @@ PRES-01 through PRES-06 were accepted. PRES-07 reached human validation and
 its first installed pass accepted scan responsiveness and duration while
 identifying presentation defects. The resulting compact three-column repair
 received a second human review. Context-card formatting, transparency,
-typography, and cache reuse defects found in that review are repaired and
-await human revalidation. Panel anchoring uses the accepted four-corner
-configuration with bottom-right as the default. One packaging refinement
-remains tracked as non-blocking technical debt.
+typography, and cache reuse defects found in that review were repaired. A
+subsequent image showed that content-sized placement still could not avoid UI
+collisions. The resulting fixed translucent viewport, safe-area clearance,
+internal scrolling, and sparse-card packing repair awaits human revalidation.
+Panel anchoring uses the accepted four-corner configuration with bottom-right
+as the default. One packaging refinement remains tracked as non-blocking
+technical debt.
 
 ## Product decision
 

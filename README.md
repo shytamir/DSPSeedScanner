@@ -12,8 +12,10 @@ grouped for fresh starts, megafactories, Dark Fog farming, compact expansion,
 sphere or energy goals, and decision-relevant traits. The compact panel uses
 color-coded strength, preference-sensitive, and limitation columns; omits
 unknown components; and identifies systems by DSP display name and star type.
-Each context spans the three columns under one centered heading on a
-transparent surface.
+Each context has one centered heading in a fixed translucent viewport. Long
+results scroll inside the panel instead of expanding across the preview, and
+sparse contexts share complementary column space. Use the mouse wheel over the
+panel to inspect conclusions below the visible viewport.
 
 The BepInEx setting `Presentation.PanelCorner` selects the panel corner: `1`
 bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.

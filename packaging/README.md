@@ -8,14 +8,16 @@ context-specific conclusions rather than a universal seed score.
 ## Status
 
 This package automatically resolves each completed New Game cluster preview.
-A small non-interactive corner panel shows waiting, cache reuse, scan progress,
+A compact corner panel shows waiting, cache reuse, scan progress,
 completion, cancellation, unsupported-runtime, and failure states. It also
 groups bounded neutral conclusions for fresh starts, megafactories, Dark Fog
 farming, compact expansion, sphere or energy goals, and decision-relevant
 traits into color-coded strength, preference-sensitive, and limitation
 columns. Unknown components are omitted, while system and distance cards use
 player-visible names and concise light-year values. Each context is aligned
-once across the columns on a transparent surface.
+once across the columns in a fixed translucent viewport. Long results scroll
+inside the panel, and sparse contexts share complementary column space. Use
+the mouse wheel over the panel to inspect conclusions below the viewport.
 
 ## Supported runtime
 
