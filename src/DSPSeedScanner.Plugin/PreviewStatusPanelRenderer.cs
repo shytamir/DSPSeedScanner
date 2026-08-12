@@ -62,6 +62,7 @@ namespace DSPSeedScanner.Plugin
                 DrawStatus(
                     view,
                     conclusions?.IdentityLine,
+                    conclusions?.DarkFogStatusLine,
                     Logical(screenWidth, scale),
                     Logical(screenHeight, scale));
             }
@@ -74,6 +75,7 @@ namespace DSPSeedScanner.Plugin
         private void DrawStatus(
             PreviewPanelView view,
             string? identity,
+            string? darkFogStatus,
             int screenWidth,
             int screenHeight)
         {
@@ -96,6 +98,13 @@ namespace DSPSeedScanner.Plugin
                 new Rect(bounds.X + 20, bounds.Y + 58, bounds.Width - 40, 30),
                 detail,
                 detailStyle);
+            if (darkFogStatus != null)
+            {
+                GUI.Label(
+                    new Rect(bounds.X + 20, bounds.Y + 86, bounds.Width - 40, 30),
+                    darkFogStatus,
+                    detailStyle);
+            }
         }
 
         private void DrawDocument(
@@ -160,6 +169,15 @@ namespace DSPSeedScanner.Plugin
                 detailStyle);
 
             float columnY = y + 62;
+            if (conclusions.DarkFogStatusLine != null)
+            {
+                GUI.Label(
+                    new Rect(x, y + 52, viewportWidth, 24),
+                    conclusions.DarkFogStatusLine,
+                    detailStyle);
+                columnY += 24f;
+            }
+
             foreach (PreviewConclusionColumn column in Enum.GetValues(
                 typeof(PreviewConclusionColumn)))
             {

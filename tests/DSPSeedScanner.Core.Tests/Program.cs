@@ -19,7 +19,7 @@ namespace DSPSeedScanner.Core.Tests
                 ("range endpoint directions", RangeEndpointDirections),
                 ("starter resource fixtures", StarterResourceFixtures),
                 ("sphere geometry fixtures", SphereGeometryFixtures),
-                ("Dark Fog outcomes and tradeoff", DarkFogOutcomesAndTradeoff),
+                ("Dark Fog evidence remains nonjudgmental", DarkFogEvidenceRemainsNonjudgmental),
                 ("grouping and rare-access fixtures", GroupingAndRareAccessFixtures),
                 ("roles and trait registry", RolesAndTraitRegistry),
                 ("settings boundaries", SettingsBoundaries),
@@ -236,24 +236,20 @@ namespace DSPSeedScanner.Core.Tests
             AssertRadius(64_181_741, 234_200, ComponentOutcome.Supports);
         }
 
-        private static void DarkFogOutcomesAndTradeoff()
+        private static void DarkFogEvidenceRemainsNonjudgmental()
         {
-            AssertFog(90_632_151, 27, false, ComponentOutcome.DoesNotSupport);
-            AssertFog(38_386_316, 34, false, ComponentOutcome.PreferenceSensitive);
-            AssertFog(67_937_149, 39, true, ComponentOutcome.Supports);
-            AssertFog(22_372_643, 50, false, ComponentOutcome.Supports);
+            FixtureOptions options = FogOptions(67_937_149, 39, true);
+            NormalizedClusterEvidence evidence = BuildEvidence(options);
+            Equal(1, evidence.Systems.Single(system => system.IsBirthSystem)
+                .InitialHiveCount);
+            Equal(39, evidence.Systems.Sum(system => system.InitialHiveCount ?? 0));
 
-            FixtureOptions tradeoff = FogOptions(67_937_149, 39, true);
-            IReadOnlyList<ConclusionReport> reports = Evaluate(tradeoff);
-            Equal(ComponentOutcome.Caution,
-                Find(reports, "DF-OCCUPATION.birth-exposure").Outcome);
-            Equal(ComponentOutcome.Tradeoff,
-                Find(reports, "DF-OCCUPATION.tradeoff").Outcome);
-            Equal(ComponentOutcome.Supports,
-                Find(reports, "DF-OCCUPATION.opportunity").Outcome);
-            Equal(ComponentOutcome.DoesNotSupport,
-                Find(Evaluate(FogOptions(90_632_151, 27, false)),
-                    "DF-OCCUPATION.birth-exposure").Outcome);
+            IReadOnlyList<ConclusionReport> reports = ConclusionEngine.Evaluate(evidence);
+            False(reports.Any(report =>
+                report.ConclusionId.StartsWith("DF-", StringComparison.Ordinal) ||
+                report.Context == ConclusionContext.DarkFogFarming ||
+                report.ConclusionId.Contains("fog-opportunity", StringComparison.Ordinal)),
+                "Dark Fog evidence must not produce judgments or roles.");
         }
 
         private static void GroupingAndRareAccessFixtures()
@@ -312,8 +308,8 @@ namespace DSPSeedScanner.Core.Tests
                 "Supporting radius should create a large-shell role.");
             True(HasRole(roleReports, "orbit-containment"),
                 "Supporting containment should create an orbit-containment role.");
-            True(HasRole(roleReports, "fog-opportunity"),
-                "Supporting occupation should create a fog-opportunity role.");
+            False(HasRole(roleReports, "fog-opportunity"),
+                "Occupation evidence must not create a Megafactory role.");
             True(HasRole(roleReports, "rare-access"),
                 "Supporting rare access should create a rare-access role.");
             True(roleReports.Any(report => report.ConclusionId ==
@@ -370,24 +366,6 @@ namespace DSPSeedScanner.Core.Tests
                 Find(resourceReports, "FS-RESOURCES.amount:iron").DecisiveFact?.Value);
             Equal(ComponentOutcome.Supports,
                 Find(resourceReports, "FS-RESOURCES.fire-ice").Outcome);
-
-            FixtureOptions alteredCombat = FogOptions(12_345_678, 50, true);
-            alteredCombat.CombatSettingsKey = "altered-initial-colonization";
-            IReadOnlyList<ConclusionReport> combatReports = Evaluate(alteredCombat);
-            Equal(ComponentOutcome.Unknown,
-                Find(combatReports, "DF-OCCUPATION.opportunity").Outcome);
-            Equal("50",
-                Find(combatReports, "DF-OCCUPATION.opportunity").DecisiveFact?.Value);
-            Equal(ComponentOutcome.Caution,
-                Find(combatReports, "DF-OCCUPATION.birth-exposure").Outcome);
-
-            FixtureOptions peace = Options(12_345_678);
-            peace.CombatMode = CombatMode.Peace;
-            IReadOnlyList<ConclusionReport> peaceReports = Evaluate(peace);
-            Equal(ComponentOutcome.NotApplicable,
-                Find(peaceReports, "DF-OCCUPATION.opportunity").Outcome);
-            Equal(ComponentOutcome.NotApplicable,
-                Find(peaceReports, "DF-OCCUPATION.birth-exposure").Outcome);
 
             FixtureOptions otherStarCount = Options(12_345_678);
             otherStarCount.RequestedStarCount = 32;
@@ -616,18 +594,6 @@ namespace DSPSeedScanner.Core.Tests
             options.OtherMaximumShellRadius = radius;
             options.BirthMaximumShellRadius = 50_000;
             AssertOutcome(options, "MF-SPHERE-GEOMETRY.radius", outcome);
-        }
-
-        private static void AssertFog(
-            int seed,
-            int total,
-            bool birthExposure,
-            ComponentOutcome outcome)
-        {
-            AssertOutcome(
-                FogOptions(seed, total, birthExposure),
-                "DF-OCCUPATION.opportunity",
-                outcome);
         }
 
         private static FixtureOptions FogOptions(int seed, int total, bool birthExposure)

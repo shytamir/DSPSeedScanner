@@ -358,6 +358,47 @@ namespace DSPSeedScanner.Runtime
         public int? UnknownEnumValue { get; }
     }
 
+    public sealed record RuntimeDarkFogOccupation
+    {
+        internal RuntimeDarkFogOccupation(
+            int clusterInitialHiveCount,
+            int birthSystemInitialHiveCount)
+        {
+            if (clusterInitialHiveCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(clusterInitialHiveCount));
+            if (birthSystemInitialHiveCount < 0 ||
+                birthSystemInitialHiveCount > clusterInitialHiveCount)
+            {
+                throw new ArgumentOutOfRangeException(nameof(birthSystemInitialHiveCount));
+            }
+
+            ClusterInitialHiveCount = clusterInitialHiveCount;
+            BirthSystemInitialHiveCount = birthSystemInitialHiveCount;
+        }
+
+        public int ClusterInitialHiveCount { get; }
+        public int BirthSystemInitialHiveCount { get; }
+
+        internal static RuntimeDarkFogOccupation? Project(
+            CombatMode combatMode,
+            IReadOnlyList<NormalizedSystemEvidence> systems)
+        {
+            if (combatMode == CombatMode.Peace || systems.Count == 0 ||
+                systems.Any(system => !system.InitialHiveCount.HasValue))
+            {
+                return null;
+            }
+
+            NormalizedSystemEvidence? birth = systems.SingleOrDefault(system =>
+                system.IsBirthSystem);
+            if (birth?.InitialHiveCount == null)
+                return null;
+
+            int total = checked(systems.Sum(system => system.InitialHiveCount!.Value));
+            return new RuntimeDarkFogOccupation(total, birth.InitialHiveCount.Value);
+        }
+    }
+
     public abstract class RuntimeStateLease : IDisposable
     {
         public abstract bool Restored { get; }

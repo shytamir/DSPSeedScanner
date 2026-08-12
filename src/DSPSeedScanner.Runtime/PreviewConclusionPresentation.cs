@@ -105,12 +105,14 @@ namespace DSPSeedScanner.Runtime
         internal PreviewConclusionPresentation(
             long sessionId,
             string identityLine,
+            string? darkFogStatusLine,
             bool isCached,
             IEnumerable<PresentedContextGroup> immediateGroups,
             IEnumerable<PresentedContextGroup> detailGroups)
         {
             SessionId = sessionId;
             IdentityLine = identityLine;
+            DarkFogStatusLine = darkFogStatusLine;
             IsCached = isCached;
             ImmediateGroups = Array.AsReadOnly(immediateGroups.ToArray());
             DetailGroups = Array.AsReadOnly(detailGroups.ToArray());
@@ -118,6 +120,7 @@ namespace DSPSeedScanner.Runtime
 
         public long SessionId { get; }
         public string IdentityLine { get; }
+        public string? DarkFogStatusLine { get; }
         public bool IsCached { get; }
         public IReadOnlyList<PresentedContextGroup> ImmediateGroups { get; }
         public IReadOnlyList<PresentedContextGroup> DetailGroups { get; }
@@ -146,7 +149,6 @@ namespace DSPSeedScanner.Runtime
         {
             ConclusionContext.FreshStart,
             ConclusionContext.Megafactory,
-            ConclusionContext.DarkFogFarming,
             ConclusionContext.CompactExpansion,
             ConclusionContext.SphereShowcase,
             ConclusionContext.DecisionRelevantTraits
@@ -165,6 +167,7 @@ namespace DSPSeedScanner.Runtime
             return new PreviewConclusionPresentation(
                 attempt.Session.SessionId,
                 IdentityLine(identity),
+                DarkFogStatusLine(attempt.DarkFogOccupation),
                 attempt.State == PreviewResolutionState.Cached,
                 Group(
                     attempt.PreviewReports.Where(report =>
@@ -230,6 +233,13 @@ namespace DSPSeedScanner.Runtime
             lines.Add(new PreviewPanelLine(PreviewPanelLineKind.Status, status));
             if (conclusions == null)
                 return new PreviewPanelDocument(lines);
+
+            if (conclusions.DarkFogStatusLine != null)
+            {
+                lines.Add(new PreviewPanelLine(
+                    PreviewPanelLineKind.Status,
+                    conclusions.DarkFogStatusLine));
+            }
 
             AddGroups(lines, conclusions.ImmediateGroups);
             AddGroups(lines, conclusions.DetailGroups);
@@ -635,11 +645,26 @@ namespace DSPSeedScanner.Runtime
             return Bound(value, MaximumLineCharacters);
         }
 
+        private static string? DarkFogStatusLine(RuntimeDarkFogOccupation? occupation)
+        {
+            if (occupation == null)
+                return null;
+
+            int total = occupation.ClusterInitialHiveCount;
+            int starter = occupation.BirthSystemInitialHiveCount;
+            string totalText = total.ToString(CultureInfo.InvariantCulture) +
+                (total == 1 ? " initial hive" : " initial hives");
+            string starterText = starter == 0
+                ? "none in starter system"
+                : starter.ToString(CultureInfo.InvariantCulture) + " in starter system";
+            return Bound("Dark Fog: " + totalText + "; " + starterText,
+                MaximumLineCharacters);
+        }
+
         private static string ContextTitle(ConclusionContext context) => context switch
         {
             ConclusionContext.FreshStart => "Fresh start",
             ConclusionContext.Megafactory => "Megafactory",
-            ConclusionContext.DarkFogFarming => "Dark Fog farming",
             ConclusionContext.CompactExpansion => "Compact expansion",
             ConclusionContext.SphereShowcase => "Sphere / energy",
             ConclusionContext.DecisionRelevantTraits => "Decision-relevant traits",
@@ -658,7 +683,6 @@ namespace DSPSeedScanner.Runtime
                 "MF-SPHERE-GEOMETRY",
                 "MF-SYSTEM-ROLE",
                 "MF-RESOURCE-SCOPE",
-                "DF-OCCUPATION",
                 "CX-GROUPING",
                 "RR-ACCESS",
                 "TRAIT-SUMMARY"
@@ -677,8 +701,6 @@ namespace DSPSeedScanner.Runtime
 
         private static string FamilyTitle(string family, ConclusionReport report)
         {
-            if (report.Outcome == ComponentOutcome.Tradeoff && family == "DF-OCCUPATION")
-                return "Farming opportunity and birth exposure";
             return family switch
             {
                 "FS-TOPOLOGY" => "Birth-system topology",
@@ -689,7 +711,6 @@ namespace DSPSeedScanner.Runtime
                 "MF-SPHERE-GEOMETRY" => "Sphere geometry",
                 "MF-SYSTEM-ROLE" => "Supported system roles",
                 "MF-RESOURCE-SCOPE" => "Cluster resource scale",
-                "DF-OCCUPATION" => "Generated Dark Fog occupation",
                 "CX-GROUPING" => "Supported-role grouping",
                 "RR-ACCESS" => "Rare-resource access",
                 "TRAIT-SUMMARY" => "Decision-relevant traits",
@@ -768,10 +789,6 @@ namespace DSPSeedScanner.Runtime
                     Pretty(id.Substring("MF-SYSTEM-ROLE.role:".Length)) + " @ " + system;
             if (id == "MF-RESOURCE-SCOPE.strength")
                 return "Complete cluster";
-            if (id == "DF-OCCUPATION.opportunity")
-                return "Cluster opportunity";
-            if (id == "DF-OCCUPATION.birth-exposure")
-                return "Birth-system exposure";
             if (id.StartsWith("RR-ACCESS.distance:", StringComparison.Ordinal))
             {
                 string? distance = DistanceLabel(report.DecisiveFact);

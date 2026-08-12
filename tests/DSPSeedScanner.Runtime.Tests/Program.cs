@@ -27,8 +27,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("patcher and in-memory generation uncertainty reject safely", PatcherAndMethodUncertaintyRejectSafely),
                 ("unsupported request identity rejects safely", UnsupportedRequestIdentityRejectsSafely),
                 ("other star count preserves fixed and declines quantitative", OtherStarCountIsBounded),
-                ("peace preview makes Dark Fog not applicable", PeacePreviewIsNotApplicable),
-                ("altered combat preview retains facts as unknown", AlteredCombatPreviewIsUnknown),
+                ("peace preview omits Dark Fog status", PeacePreviewOmitsDarkFogStatus),
+                ("combat preview exposes neutral Dark Fog facts", CombatPreviewExposesNeutralDarkFogFacts),
                 ("incomplete normalized preview fails closed", IncompleteNormalizedPreviewFailsClosed),
                 ("unknown enum preserves raw diagnostic", UnknownEnumPreservesRawDiagnostic),
                 ("thread affinity rejects before runtime access", ThreadAffinityRejectsBeforeRuntimeAccess),
@@ -308,8 +308,11 @@ namespace DSPSeedScanner.Runtime.Tests
             AssertReport(result, "FS-GAS-ROUTE.product:hydrogen", ComponentOutcome.Supports);
             AssertReport(result, "MF-ENERGY-SYSTEM.output", ComponentOutcome.Supports);
             AssertReport(result, "MF-SPHERE-GEOMETRY.radius", ComponentOutcome.Supports);
-            AssertReport(result, "DF-OCCUPATION.opportunity", ComponentOutcome.Supports);
-            AssertReport(result, "DF-OCCUPATION.tradeoff", ComponentOutcome.Tradeoff);
+            Equal(40, result.DarkFogOccupation?.ClusterInitialHiveCount);
+            Equal(1, result.DarkFogOccupation?.BirthSystemInitialHiveCount);
+            False(result.Reports.Any(report =>
+                report.ConclusionId.StartsWith("DF-", StringComparison.Ordinal) ||
+                report.Context == ConclusionContext.DarkFogFarming));
             AssertReport(result, "CX-GROUPING.distance", ComponentOutcome.Supports);
             True(result.Reports.Any(report => report.ConclusionId ==
                 "MF-SYSTEM-ROLE.role:strong-energy"));
@@ -391,7 +394,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 FindReport(result, "FS-POWER.solar").DiagnosticCause?.Code);
         }
 
-        private static void PeacePreviewIsNotApplicable()
+        private static void PeacePreviewOmitsDarkFogStatus()
         {
             var request = new PreviewScanRequest(
                 16_315_224,
@@ -403,13 +406,12 @@ namespace DSPSeedScanner.Runtime.Tests
             RuntimeScanResult result = new PreviewScanCoordinator(new FakeGateway())
                 .TryScan(request, CancellationToken.None);
             Equal(RuntimeScanStatus.Success, result.Status);
-            AssertReport(result, "DF-OCCUPATION.opportunity", ComponentOutcome.NotApplicable);
-            AssertReport(result, "DF-OCCUPATION.birth-exposure", ComponentOutcome.NotApplicable);
+            True(result.DarkFogOccupation == null);
             False(result.Reports.Any(report =>
-                report.ConclusionId == "DF-OCCUPATION.tradeoff"));
+                report.Context == ConclusionContext.DarkFogFarming));
         }
 
-        private static void AlteredCombatPreviewIsUnknown()
+        private static void CombatPreviewExposesNeutralDarkFogFacts()
         {
             string key = PreviewScanRequest.CombatSettingsKeyFor(2m, 1m);
             var request = new PreviewScanRequest(
@@ -424,12 +426,39 @@ namespace DSPSeedScanner.Runtime.Tests
             RuntimeScanResult result = new PreviewScanCoordinator(new FakeGateway())
                 .TryScan(request, CancellationToken.None);
             Equal(RuntimeScanStatus.Success, result.Status);
-            ConclusionReport opportunity = FindReport(result, "DF-OCCUPATION.opportunity");
-            Equal(ComponentOutcome.Unknown, opportunity.Outcome);
-            Equal("unsupported-definition-scope", opportunity.DiagnosticCause?.Code);
-            True(opportunity.DecisiveFact != null);
-            Equal(key, opportunity.Settings.CombatSettingsKey);
-            AssertReport(result, "DF-OCCUPATION.birth-exposure", ComponentOutcome.Caution);
+            Equal(40, result.DarkFogOccupation?.ClusterInitialHiveCount);
+            Equal(1, result.DarkFogOccupation?.BirthSystemInitialHiveCount);
+            False(result.Reports.Any(report =>
+                report.ConclusionId.StartsWith("DF-", StringComparison.Ordinal) ||
+                report.ConclusionId.Contains("fog-opportunity", StringComparison.Ordinal)));
+
+            RuntimeScanResult incomplete = new PreviewScanCoordinator(new FakeGateway
+            {
+                Snapshot = Snapshot(missingHiveSystem: 7)
+            }).TryScan(request, CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, incomplete.Status);
+            True(incomplete.DarkFogOccupation == null);
+
+            WithTemporaryDirectory(path =>
+            {
+                var gateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(birthInitialHiveCount: 1, otherInitialHiveCount: 0)
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(gateway),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(
+                    1,
+                    PreviewIdentity(16_315_224, initialColonize: 2m),
+                    request);
+                Equal(
+                    "Dark Fog: 1 initial hive; 1 in starter system",
+                    PreviewConclusionPresenter.Project(
+                        resolver.CurrentPublishedAttempt!).DarkFogStatusLine);
+            });
         }
 
         private static void IncompleteNormalizedPreviewFailsClosed()
@@ -448,6 +477,7 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(RuntimeScanStatus.Failed, result.Status);
             Equal("normalized-distance-coverage-mismatch", result.Code);
             Equal(0, result.Reports.Count);
+            True(result.DarkFogOccupation == null);
             True(result.StateRestored);
         }
 
@@ -1261,7 +1291,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     using (var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true))
                         reader.ReadString();
                     using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
-                    writer.Write(999);
+                    writer.Write(3);
                 }
                 byte[] obsoleteEntry = File.ReadAllBytes(entry);
                 using (SHA256 sha = SHA256.Create())
@@ -1886,12 +1916,6 @@ namespace DSPSeedScanner.Runtime.Tests
                     new ConclusionSubject(SubjectKind.BirthSystem, "1")),
                     "Alpha (G type star)"),
                 (PresentationReport(
-                    ConclusionContext.DarkFogFarming,
-                    ComponentOutcome.Tradeoff,
-                    EvidenceStage.GalaxyPreview,
-                    "DF-OCCUPATION.tradeoff",
-                    new ConclusionSubject(SubjectKind.Cluster, "cluster")), "Cluster"),
-                (PresentationReport(
                     ConclusionContext.Megafactory,
                     ComponentOutcome.Supports,
                     EvidenceStage.CompleteClusterRaw,
@@ -1984,10 +2008,12 @@ namespace DSPSeedScanner.Runtime.Tests
                 PreviewConclusionPresentation scanning = panel.Conclusions!;
                 Equal("Seed 16315224 | 64 stars | resources x1 | Combat", scanning.IdentityLine);
                 Equal(0, scanning.DetailGroups.Count);
-                Equal(6, scanning.ImmediateGroups.Count);
+                Equal(5, scanning.ImmediateGroups.Count);
                 Equal(
-                    "Fresh start,Megafactory,Dark Fog farming,Compact expansion,Sphere / energy,Decision-relevant traits",
+                    "Fresh start,Megafactory,Compact expansion,Sphere / energy,Decision-relevant traits",
                     String.Join(",", scanning.ImmediateGroups.Select(group => group.Title)));
+                Equal("Dark Fog: 40 initial hives; 1 in starter system",
+                    scanning.DarkFogStatusLine);
                 True(scanning.ImmediateGroups.SelectMany(group => group.Cards)
                     .All(card => card.Stage == EvidenceStage.GalaxyPreview));
                 True(scanning.ImmediateGroups.SelectMany(group => group.Cards)
@@ -2170,7 +2196,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(
                     "|  Scanning complete cluster - Planets 0 / 3",
                     document.Lines[1].Text);
-                Equal("Fresh start", document.Lines[2].Text);
+                Equal("Dark Fog: 40 initial hives; 1 in starter system",
+                    document.Lines[2].Text);
+                Equal("Fresh start", document.Lines[3].Text);
                 False(document.Lines.Any(line => line.Text.Contains(
                     "conclusions",
                     StringComparison.OrdinalIgnoreCase)));
@@ -2438,7 +2466,10 @@ namespace DSPSeedScanner.Runtime.Tests
             IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null,
             IReadOnlyDictionary<int, (decimal Energy, long Radius, int Orbits)>?
                 systemCandidateFacts = null,
-            int? missingEnergySystem = null)
+            int? missingEnergySystem = null,
+            int birthInitialHiveCount = 1,
+            int otherInitialHiveCount = 39,
+            int? missingHiveSystem = null)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -2471,7 +2502,9 @@ namespace DSPSeedScanner.Runtime.Tests
                     systemId == missingEnergySystem ? null : energy,
                     radius,
                     orbits,
-                    birth ? 1 : leader ? 39 : 0,
+                    systemId == missingHiveSystem
+                        ? null
+                        : birth ? birthInitialHiveCount : leader ? otherInitialHiveCount : 0,
                     birth ? birthPlanetAttributions : null));
             }
 

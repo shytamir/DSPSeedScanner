@@ -1,10 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 through RFIN-03 were accepted on 2026-08-12.
-RFIN-04 reached its automated acceptance gate on 2026-08-12 and awaits product
+**Status:** Active. RFIN-01 through RFIN-04 were accepted on 2026-08-12.
+RFIN-05 reached its automated acceptance gate on 2026-08-12 and awaits product
 acceptance.
 
-**Active user story:** RFIN-04 is at its acceptance gate.
+**Active user story:** RFIN-05 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -204,8 +204,7 @@ contract version changed and existing valid entries remain cache-compatible.
 
 ### RFIN-04: Rewrite Fresh start conclusions
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want to know how this seed's conditions complement a fresh
 start.
@@ -259,7 +258,8 @@ are now included in the persisted presentation result.
 
 ### RFIN-05: Separate Dark Fog facts from judgments
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want the generated Dark Fog occupation reported without a
 farming verdict.
@@ -282,6 +282,40 @@ older semantic-cache entries safely.
 
 **Out of scope:** Farming suitability, bases, levels, loot, threat, attack
 timing, future occupation, icons, or combat-setting changes.
+
+**Implemented:** Dark Fog hive counts no longer enter the conclusion engine.
+The preview runtime instead projects one immutable occupation fact containing
+the exact cluster and starter-system initial-hive counts only when Combat mode
+and complete preview evidence make both counts authoritative. The panel renders
+that fact as a neutral status line above the outcome columns. Peace mode and
+incomplete, failed, or unsupported previews publish no line.
+
+Removing the Dark Fog conclusion family also removed its farming card,
+opportunity and exposure outcomes, tradeoff and caution, `fog-opportunity`
+Megafactory role, and every Compact expansion grouping it previously induced.
+Normalized per-system `InitialHiveCount` evidence remains unchanged for future
+specification work.
+
+**Acceptance evidence:**
+
+- core fixtures retained exact normalized hive counts while proving that no
+  `DF-` report, Dark Fog context, tradeoff, caution, or `fog-opportunity` role
+  was emitted or propagated into route grouping;
+- runtime fixtures projected `40` cluster hives and `1` starter-system hive as
+  `Dark Fog: 40 initial hives; 1 in starter system`, and covered the singular
+  `1 initial hive` form;
+- Peace mode and incomplete hive coverage omitted the status fact, while
+  altered Combat settings retained the same neutral counts without turning
+  them into a verdict;
+- presentation fixtures contained no Dark Fog card and placed the exact counts
+  only in the fixed status area; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks passed, and all 55 runtime-boundary checks passed.
+
+**Produced:** A presentation-safe `RuntimeDarkFogOccupation` projection and
+neutral status rendering independent of semantic conclusions. Cache schema
+version 4 invalidates schema-3 semantic entries as ordinary misses so cached
+Dark Fog judgments cannot survive the changed conclusion set.
 
 ### RFIN-06: Rewrite Megafactory candidates
 

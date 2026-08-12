@@ -21,13 +21,11 @@ namespace DSPSeedScanner.Core
             EvaluateEnergy(evidence, reports);
             EvaluateSphereGeometry(evidence, reports);
             EvaluateDeferredResourceScope(evidence, reports);
-            EvaluateDarkFog(evidence, reports);
             EvaluateRareAccess(evidence, reports);
 
             IReadOnlyList<RoleAssignment> roles = EvaluateRoles(evidence, reports);
             EvaluateGrouping(evidence, roles, reports);
             EvaluateTraits(reports);
-            EvaluateTradeoffs(evidence, reports);
 
             ConclusionReport[] ordered = reports
                 .OrderBy(report => report.ConclusionId, StringComparer.Ordinal)
@@ -421,91 +419,6 @@ namespace DSPSeedScanner.Core
                 unavailable ?? NoAcceptedRange("MF-RESOURCE-SCOPE")));
         }
 
-        private static void EvaluateDarkFog(
-            NormalizedClusterEvidence evidence,
-            ICollection<ConclusionReport> reports)
-        {
-            EvidenceCoverage coverage = evidence.Coverage(
-                EvidenceScope.ClusterOccupation,
-                EvidenceStage.GalaxyPreview);
-            NormalizedSystemEvidence? birth = BirthSystem(evidence);
-            if (evidence.Settings.CombatMode == CombatMode.Peace)
-            {
-                DiagnosticCause cause = new DiagnosticCause(
-                    "peace-mode",
-                    "Dark Fog occupation is not applicable in peace mode.");
-                reports.Add(Report(
-                    evidence,
-                    coverage,
-                    "DF-OCCUPATION.opportunity",
-                    ConclusionContext.DarkFogFarming,
-                    evidence.ClusterSubject,
-                    ComponentOutcome.NotApplicable,
-                    null,
-                    cause));
-                reports.Add(Report(
-                    evidence,
-                    coverage,
-                    "DF-OCCUPATION.birth-exposure",
-                    ConclusionContext.DarkFogFarming,
-                    birth?.Subject ?? BirthSubject(evidence),
-                    ComponentOutcome.NotApplicable,
-                    null,
-                    cause));
-                return;
-            }
-
-            bool allHiveCountsPresent = evidence.Systems.Count > 0 &&
-                evidence.Systems.All(system => system.InitialHiveCount.HasValue);
-            decimal? totalHives = allHiveCountsPresent
-                ? evidence.Systems.Sum(system => (decimal)system.InitialHiveCount!.Value)
-                : null;
-            bool acceptedSettings =
-                ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity) &&
-                String.Equals(
-                    evidence.Settings.CombatSettingsKey,
-                    ConclusionDefinition.ReferenceCombatSettingsKey,
-                    StringComparison.Ordinal);
-            AddRangeReport(
-                evidence,
-                reports,
-                coverage,
-                "DF-OCCUPATION.opportunity",
-                ConclusionContext.DarkFogFarming,
-                evidence.ClusterSubject,
-                "initialSpaceHiveCount",
-                totalHives,
-                ConclusionDefinition.FogOpportunity,
-                acceptedSettings);
-
-            DiagnosticCause? unavailable = UnavailableCause(evidence, coverage);
-            if (unavailable != null || birth?.InitialHiveCount == null)
-            {
-                reports.Add(Report(
-                    evidence,
-                    coverage,
-                    "DF-OCCUPATION.birth-exposure",
-                    ConclusionContext.DarkFogFarming,
-                    birth?.Subject ?? BirthSubject(evidence),
-                    ComponentOutcome.Unknown,
-                    null,
-                    unavailable ?? MissingFact("birthSystemInitialHiveCount")));
-            }
-            else
-            {
-                int hiveCount = birth.InitialHiveCount.Value;
-                reports.Add(Report(
-                    evidence,
-                    coverage,
-                    "DF-OCCUPATION.birth-exposure",
-                    ConclusionContext.DarkFogFarming,
-                    birth.Subject,
-                    hiveCount > 0 ? ComponentOutcome.Caution : ComponentOutcome.DoesNotSupport,
-                    IntegerFact("birthSystemInitialHiveCount", hiveCount, "hives"),
-                    null));
-            }
-        }
-
         private static void EvaluateRareAccess(
             NormalizedClusterEvidence evidence,
             ICollection<ConclusionReport> reports)
@@ -654,15 +567,6 @@ namespace DSPSeedScanner.Core
                             rare.NearestSystem, source.Coverage, source.ConclusionId);
                     }
                 }
-                else if (source.ConclusionId == "DF-OCCUPATION.opportunity")
-                {
-                    foreach (NormalizedSystemEvidence system in evidence.Systems.Where(
-                        system => system.InitialHiveCount > 0))
-                    {
-                        AddRole(evidence, reports, assignments, "fog-opportunity",
-                            system.Subject, source.Coverage, source.ConclusionId);
-                    }
-                }
             }
 
             return assignments;
@@ -805,33 +709,6 @@ namespace DSPSeedScanner.Core
                     Fact("trait", traitId, "trait-id"),
                     null,
                     source.ConclusionId));
-            }
-        }
-
-        private static void EvaluateTradeoffs(
-            NormalizedClusterEvidence evidence,
-            ICollection<ConclusionReport> reports)
-        {
-            ConclusionReport? opportunity = reports.SingleOrDefault(report =>
-                report.ConclusionId == "DF-OCCUPATION.opportunity");
-            ConclusionReport? exposure = reports.SingleOrDefault(report =>
-                report.ConclusionId == "DF-OCCUPATION.birth-exposure");
-            if (opportunity?.Outcome == ComponentOutcome.Supports &&
-                exposure?.Outcome == ComponentOutcome.Caution)
-            {
-                reports.Add(Report(
-                    evidence,
-                    opportunity.Coverage,
-                    "DF-OCCUPATION.tradeoff",
-                    ConclusionContext.DarkFogFarming,
-                    evidence.ClusterSubject,
-                    ComponentOutcome.Tradeoff,
-                    Fact(
-                        "conflictingComponents",
-                        "opportunity,birth-exposure",
-                        "component-ids"),
-                    null,
-                    opportunity.ConclusionId + "," + exposure.ConclusionId));
             }
         }
 

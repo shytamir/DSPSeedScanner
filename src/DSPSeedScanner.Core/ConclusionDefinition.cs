@@ -92,8 +92,6 @@ namespace DSPSeedScanner.Core
                 "radius-units");
         public static readonly AcceptedRange OrbitContainment =
             new AcceptedRange(1m, 2m, ThresholdDirection.Increasing, "orbits");
-        public static readonly AcceptedRange FogOpportunity =
-            new AcceptedRange(34m, 39m, ThresholdDirection.Increasing, "hives");
         public static readonly AcceptedRange CompactDistance =
             new AcceptedRange(2.5m, 10m, ThresholdDirection.Decreasing, "light-years");
         public static readonly AcceptedRange RareAccessDistance =
