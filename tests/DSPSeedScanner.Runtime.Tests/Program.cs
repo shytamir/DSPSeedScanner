@@ -875,6 +875,29 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(source.Reports.Any(report =>
                     report.Stage == EvidenceStage.GalaxyPreview));
                 True(restored.Reports.Count < source.Reports.Count);
+
+                ConclusionReport previewTemplate = source.Reports.First(report =>
+                    report.Stage == EvidenceStage.GalaxyPreview);
+                var expandedReports = source.Reports.Concat(
+                    Enumerable.Repeat(previewTemplate, 1_025)).ToArray();
+                var expanded = new CompleteClusterRawResult(
+                    source.Status,
+                    source.GalaxySeed,
+                    source.Code,
+                    source.Message,
+                    source.Fingerprint,
+                    source.Coverage,
+                    source.Progress,
+                    source.RareResources,
+                    expandedReports,
+                    source.Trace,
+                    source.StateRestored,
+                    source.ElapsedMilliseconds,
+                    source.ManagedMemoryDeltaBytes);
+                True(expanded.Reports.Count > 1_024);
+                True(cache.TryStore(identity, expanded));
+                True(cache.TryRead(identity, fingerprint, out restored));
+                Equal(expected.Length, restored?.Reports.Count);
                 False(typeof(CachedCompleteClusterConclusions).GetProperties()
                     .Any(property => property.Name == "RareResources" ||
                         property.Name == "Progress" || property.Name == "Trace" ||

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DSPSeedScanner.Core;
 using DSPSeedScanner.Runtime;
 using UnityEngine;
 
@@ -8,13 +9,15 @@ namespace DSPSeedScanner.Plugin
 {
     internal sealed class PreviewStatusPanelRenderer
     {
-        private GUIStyle? boxStyle;
         private GUIStyle? titleStyle;
         private GUIStyle? detailStyle;
         private GUIStyle? contextStyle;
         private GUIStyle? strengthStyle;
         private GUIStyle? preferenceStyle;
         private GUIStyle? limitationStyle;
+        private GUIStyle? strengthHeaderStyle;
+        private GUIStyle? preferenceHeaderStyle;
+        private GUIStyle? limitationHeaderStyle;
 
         public void Draw(
             PreviewPanelView view,
@@ -65,9 +68,6 @@ namespace DSPSeedScanner.Plugin
                 view.Corner,
                 screenWidth,
                 screenHeight);
-            var panel = new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height);
-            GUI.Box(panel, GUIContent.none, boxStyle);
-
             string title = identity ?? (view.Spinner.HasValue
                 ? view.Spinner.Value + "  " + view.Title
                 : view.Title);
@@ -91,17 +91,12 @@ namespace DSPSeedScanner.Plugin
             int screenWidth,
             int screenHeight)
         {
-            ColumnContent[] columns =
-            {
-                BuildColumn(conclusions, PreviewConclusionColumn.Strength),
-                BuildColumn(conclusions, PreviewConclusionColumn.PreferenceSensitive),
-                BuildColumn(conclusions, PreviewConclusionColumn.Limitation)
-            };
+            ContextCard[] cards = BuildContextCards(conclusions);
             float columnWidth = (PreviewPanelLayout.ConclusionWidth -
                 PreviewPanelLayout.DocumentPadding * 2 - 24) / 3f;
-            int contentHeight = (int)Math.Ceiling(columns.Max(column =>
-                MeasureColumn(column, columnWidth)));
-            int height = PreviewPanelLayout.DocumentPadding * 2 + 62 + contentHeight;
+            int contentHeight = (int)Math.Ceiling(cards.Sum(card =>
+                MeasureContextCard(card, columnWidth)));
+            int height = PreviewPanelLayout.DocumentPadding * 2 + 98 + contentHeight;
             double scale = PreviewPanelLayout.ScaleForScreen(
                 screenWidth,
                 screenHeight,
@@ -113,7 +108,7 @@ namespace DSPSeedScanner.Plugin
                 DrawDocumentAtScale(
                     view,
                     conclusions,
-                    columns,
+                    cards,
                     columnWidth,
                     height,
                     Logical(screenWidth, scale),
@@ -128,7 +123,7 @@ namespace DSPSeedScanner.Plugin
         private void DrawDocumentAtScale(
             PreviewPanelView view,
             PreviewConclusionPresentation conclusions,
-            IReadOnlyList<ColumnContent> columns,
+            IReadOnlyList<ContextCard> cards,
             float columnWidth,
             int height,
             int screenWidth,
@@ -140,11 +135,6 @@ namespace DSPSeedScanner.Plugin
                 screenHeight,
                 PreviewPanelLayout.ConclusionWidth,
                 height);
-            GUI.Box(
-                new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height),
-                GUIContent.none,
-                boxStyle);
-
             float x = bounds.X + PreviewPanelLayout.DocumentPadding;
             float y = bounds.Y + PreviewPanelLayout.DocumentPadding;
             GUI.Label(
@@ -159,72 +149,98 @@ namespace DSPSeedScanner.Plugin
                 status,
                 detailStyle);
 
-            float columnX = x;
             float columnY = y + 62;
-            for (int index = 0; index < columns.Count; index++)
+            foreach (PreviewConclusionColumn column in Enum.GetValues(
+                typeof(PreviewConclusionColumn)))
             {
-                DrawColumn(columns[index], columnX, columnY, columnWidth);
-                columnX += columnWidth + 12;
+                float columnX = x + (int)column * (columnWidth + 12);
+                GUIStyle style = HeaderStyle(column);
+                GUI.Label(
+                    new Rect(columnX, columnY, columnWidth, 30),
+                    ColumnTitle(column),
+                    style);
+            }
+            columnY += 36;
+            foreach (ContextCard card in cards)
+            {
+                float cardHeight = MeasureContextCard(card, columnWidth);
+                DrawContextCard(card, x, columnY, columnWidth, cardHeight);
+                columnY += cardHeight;
             }
         }
 
-        private ColumnContent BuildColumn(
-            PreviewConclusionPresentation presentation,
-            PreviewConclusionColumn column)
+        private static ContextCard[] BuildContextCards(
+            PreviewConclusionPresentation presentation)
         {
-            var groups = presentation.ImmediateGroups
+            return presentation.ImmediateGroups
                 .Concat(presentation.DetailGroups)
                 .GroupBy(group => group.Context)
-                .Select(group => new ColumnGroup(
+                .Select(group => new ContextCard(
+                    group.Key,
                     group.First().Title,
                     group.SelectMany(value => value.Cards)
-                        .Where(card => card.Column == column)
-                        .GroupBy(card => card.Line, StringComparer.Ordinal)
-                        .Select(cards => cards.First())
-                        .ToArray()))
-                .Where(group => group.Cards.Count != 0)
+                        .GroupBy(card => card.Column)
+                        .ToDictionary(
+                            cards => cards.Key,
+                            cards => (IReadOnlyList<PresentedConclusionCard>)cards
+                                .GroupBy(card => card.Line, StringComparer.Ordinal)
+                                .Select(values => values.First())
+                                .ToArray())))
+                .OrderByDescending(card => card.PopulatedColumnCount == 3)
+                .ThenByDescending(card => card.PopulatedColumnCount)
+                .ThenBy(card => card.Context)
                 .ToArray();
-            return new ColumnContent(ColumnTitle(column), column, groups);
         }
 
-        private float MeasureColumn(ColumnContent column, float width)
+        private float MeasureContextCard(ContextCard card, float columnWidth)
         {
-            float height = 30f;
-            GUIStyle cardStyle = CardStyle(column.Column);
-            foreach (ColumnGroup group in column.Groups)
+            float maximum = 0f;
+            foreach (PreviewConclusionColumn column in Enum.GetValues(
+                typeof(PreviewConclusionColumn)))
             {
-                height += 25f;
-                foreach (PresentedConclusionCard card in group.Cards)
-                    height += Math.Max(22f, cardStyle.CalcHeight(
-                        new GUIContent(card.Line),
-                        width)) + 5f;
-                height += 5f;
+                float columnHeight = 0f;
+                GUIStyle style = CardStyle(column);
+                foreach (PresentedConclusionCard conclusion in card.Cards(column))
+                {
+                    columnHeight += Math.Max(24f, style.CalcHeight(
+                        new GUIContent(conclusion.Line),
+                        columnWidth)) + 7f;
+                }
+                maximum = Math.Max(maximum, columnHeight);
             }
-            return height;
+            return 36f + maximum + 14f;
         }
 
-        private void DrawColumn(
-            ColumnContent column,
+        private void DrawContextCard(
+            ContextCard card,
             float x,
             float y,
-            float width)
+            float columnWidth,
+            float height)
         {
-            GUIStyle cardStyle = CardStyle(column.Column);
-            GUI.Label(new Rect(x, y, width, 26), column.Title, cardStyle);
-            y += 30f;
-            foreach (ColumnGroup group in column.Groups)
+            GUI.Label(
+                new Rect(x, y, PreviewPanelLayout.ConclusionWidth -
+                    PreviewPanelLayout.DocumentPadding * 2, 28),
+                card.Title,
+                contextStyle);
+            float contentY = y + 34f;
+            foreach (PreviewConclusionColumn column in Enum.GetValues(
+                typeof(PreviewConclusionColumn)))
             {
-                GUI.Label(new Rect(x, y, width, 22), group.Title, contextStyle);
-                y += 25f;
-                foreach (PresentedConclusionCard card in group.Cards)
+                float columnX = x + (int)column * (columnWidth + 12);
+                float itemY = contentY;
+                GUIStyle style = CardStyle(column);
+                foreach (PresentedConclusionCard conclusion in card.Cards(column))
                 {
-                    float cardHeight = Math.Max(22f, cardStyle.CalcHeight(
-                        new GUIContent(card.Line),
-                        width));
-                    GUI.Label(new Rect(x, y, width, cardHeight), card.Line, cardStyle);
-                    y += cardHeight + 5f;
+                    float itemHeight = Math.Max(24f, style.CalcHeight(
+                        new GUIContent(conclusion.Line),
+                        columnWidth));
+                    GUI.Label(
+                        new Rect(columnX, itemY, columnWidth, itemHeight),
+                        conclusion.Line,
+                        style);
+                    itemY += itemHeight + 7f;
                 }
-                y += 5f;
             }
         }
 
@@ -249,6 +265,14 @@ namespace DSPSeedScanner.Plugin
             _ => throw new ArgumentOutOfRangeException(nameof(column))
         };
 
+        private GUIStyle HeaderStyle(PreviewConclusionColumn column) => column switch
+        {
+            PreviewConclusionColumn.Strength => strengthHeaderStyle!,
+            PreviewConclusionColumn.PreferenceSensitive => preferenceHeaderStyle!,
+            PreviewConclusionColumn.Limitation => limitationHeaderStyle!,
+            _ => throw new ArgumentOutOfRangeException(nameof(column))
+        };
+
         private static string ColumnTitle(PreviewConclusionColumn column) => column switch
         {
             PreviewConclusionColumn.Strength => "Strengths",
@@ -259,19 +283,14 @@ namespace DSPSeedScanner.Plugin
 
         private void EnsureStyles()
         {
-            if (boxStyle != null)
+            if (titleStyle != null)
                 return;
 
-            boxStyle = new GUIStyle(GUI.skin.box)
-            {
-                alignment = TextAnchor.UpperLeft,
-                padding = new RectOffset(12, 12, 12, 12)
-            };
             titleStyle = new GUIStyle(GUI.skin.label)
             {
                 alignment = TextAnchor.MiddleLeft,
                 clipping = TextClipping.Clip,
-                fontSize = 18,
+                fontSize = 20,
                 fontStyle = FontStyle.Bold,
                 wordWrap = false
             };
@@ -279,17 +298,19 @@ namespace DSPSeedScanner.Plugin
             {
                 alignment = TextAnchor.MiddleLeft,
                 clipping = TextClipping.Clip,
-                fontSize = 15,
+                fontSize = 17,
                 wordWrap = false
             };
             contextStyle = new GUIStyle(detailStyle)
             {
-                fontSize = 14,
-                fontStyle = FontStyle.Bold
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 17,
+                fontStyle = FontStyle.Bold,
+                wordWrap = false
             };
             strengthStyle = new GUIStyle(detailStyle)
             {
-                fontSize = 13,
+                fontSize = 15,
                 fontStyle = FontStyle.Normal,
                 wordWrap = true,
                 clipping = TextClipping.Overflow,
@@ -303,35 +324,48 @@ namespace DSPSeedScanner.Plugin
             {
                 normal = { textColor = new Color(1.00f, 0.48f, 0.43f) }
             };
+            strengthHeaderStyle = new GUIStyle(strengthStyle)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 18,
+                fontStyle = FontStyle.Bold,
+                wordWrap = false
+            };
+            preferenceHeaderStyle = new GUIStyle(strengthHeaderStyle)
+            {
+                normal = { textColor = preferenceStyle.normal.textColor }
+            };
+            limitationHeaderStyle = new GUIStyle(strengthHeaderStyle)
+            {
+                normal = { textColor = limitationStyle.normal.textColor }
+            };
         }
 
-        private sealed class ColumnContent
+        private sealed class ContextCard
         {
-            public ColumnContent(
+            private readonly IReadOnlyDictionary<PreviewConclusionColumn,
+                IReadOnlyList<PresentedConclusionCard>> cards;
+
+            public ContextCard(
+                ConclusionContext context,
                 string title,
-                PreviewConclusionColumn column,
-                IEnumerable<ColumnGroup> groups)
+                IReadOnlyDictionary<PreviewConclusionColumn,
+                    IReadOnlyList<PresentedConclusionCard>> cards)
             {
+                Context = context;
                 Title = title;
-                Column = column;
-                Groups = groups.ToArray();
+                this.cards = cards;
             }
 
+            public ConclusionContext Context { get; }
             public string Title { get; }
-            public PreviewConclusionColumn Column { get; }
-            public IReadOnlyList<ColumnGroup> Groups { get; }
-        }
+            public int PopulatedColumnCount => cards.Count;
 
-        private sealed class ColumnGroup
-        {
-            public ColumnGroup(string title, IEnumerable<PresentedConclusionCard> cards)
-            {
-                Title = title;
-                Cards = cards.ToArray();
-            }
-
-            public string Title { get; }
-            public IReadOnlyList<PresentedConclusionCard> Cards { get; }
+            public IReadOnlyList<PresentedConclusionCard> Cards(
+                PreviewConclusionColumn column) =>
+                cards.TryGetValue(column, out IReadOnlyList<PresentedConclusionCard>? values)
+                    ? values
+                    : Array.Empty<PresentedConclusionCard>();
         }
     }
 }

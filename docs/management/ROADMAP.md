@@ -550,6 +550,28 @@ readable, wrapped cards contain no internal IDs or avoidable ellipses, and the
 previously required lifecycle, cache-hit, cancellation, replacement, and
 unsupported-state observations pass on the final installed candidate.
 
+**Second human pass and repair:** The first three-column candidate was readable
+and retained acceptable scan responsiveness, but repeated each context heading
+inside independently flowing columns, used an opaque full-panel background,
+and remained too small. The second pass also demonstrated that revisiting an
+identical seed did not use the cache. Investigation found that cache admission
+bounded every evaluator report before filtering to the complete-stage payload;
+large but valid preview role/grouping sets could therefore reject a small
+cacheable complete bundle.
+
+The repaired renderer now treats each context as one card spanning the three
+aligned outcome columns, centers one neutral context heading, orders cards
+with all three outcomes first, and packs sparser contexts afterward. The full
+surface has no background, while conclusion and class-heading fonts are
+larger. The cache applies its report-count ceiling to the complete-stage
+payload it actually serializes; a focused regression stores and reloads that
+payload from a successful result containing more than 1,024 total reports.
+Dark Fog conclusions remain unchanged pending broader seed sampling.
+
+This second repair passed all 14 conclusion and 49 runtime-boundary checks and
+the installed-game plugin build with zero warnings. Human revalidation and the
+pushed package/CI gates remain required before PRES-07 acceptance.
+
 ## Roadmap coverage
 
 | Accepted presentation requirement | Covered by |

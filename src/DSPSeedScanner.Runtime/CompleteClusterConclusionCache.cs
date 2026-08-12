@@ -327,6 +327,9 @@ namespace DSPSeedScanner.Runtime
             CompleteClusterCacheKey key,
             CompleteClusterRawResult result)
         {
+            ConclusionReport[] cachedReports = result.Reports
+                .Where(report => report.Stage == EvidenceStage.CompleteClusterRaw)
+                .ToArray();
             if (result.Status != RuntimeScanStatus.Success ||
                 result.Fingerprint == null ||
                 !result.StateRestored ||
@@ -335,8 +338,8 @@ namespace DSPSeedScanner.Runtime
                 result.GalaxySeed != key.Identity.GalaxyIdentity.GalaxySeed ||
                 result.AffectedPlanetId.HasValue ||
                 result.RawDiagnostic != null ||
-                result.Reports.Count == 0 ||
-                result.Reports.Count > MaximumReports)
+                cachedReports.Length == 0 ||
+                cachedReports.Length > MaximumReports)
             {
                 return false;
             }
@@ -355,12 +358,11 @@ namespace DSPSeedScanner.Runtime
                 key.Identity.CombatMode,
                 key.Identity.CombatSettingsKey);
             bool hasCompleteClusterReport = false;
-            foreach (ConclusionReport report in result.Reports)
+            foreach (ConclusionReport report in cachedReports)
             {
                 if (!IsCurrentReport(key, settings, report))
                     return false;
-                hasCompleteClusterReport |= report.Stage == EvidenceStage.CompleteClusterRaw &&
-                    report.Coverage.IsComplete;
+                hasCompleteClusterReport |= report.Coverage.IsComplete;
             }
             return hasCompleteClusterReport;
         }

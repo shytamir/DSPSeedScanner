@@ -14,7 +14,8 @@ groups bounded neutral conclusions for fresh starts, megafactories, Dark Fog
 farming, compact expansion, sphere or energy goals, and decision-relevant
 traits into color-coded strength, preference-sensitive, and limitation
 columns. Unknown components are omitted, while system and distance cards use
-player-visible names and concise light-year values.
+player-visible names and concise light-year values. Each context is aligned
+once across the columns on a transparent surface.
 
 ## Supported runtime
 

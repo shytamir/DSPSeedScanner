@@ -9,9 +9,11 @@ story scope, evidence, and history belong in the roadmap.
 PRES-01 through PRES-06 were accepted. PRES-07 reached human validation and
 its first installed pass accepted scan responsiveness and duration while
 identifying presentation defects. The resulting compact three-column repair
-is implemented and awaits human revalidation. Panel anchoring uses the
-accepted four-corner configuration with bottom-right as the default. One
-packaging refinement remains tracked as non-blocking technical debt.
+received a second human review. Context-card formatting, transparency,
+typography, and cache reuse defects found in that review are repaired and
+await human revalidation. Panel anchoring uses the accepted four-corner
+configuration with bottom-right as the default. One packaging refinement
+remains tracked as non-blocking technical debt.
 
 ## Product decision
 
@@ -79,7 +81,8 @@ The accepted semantics and thresholds are maintained in the
 - Its numeric corner setting defaults to `1` for
   bottom-right, then proceeds clockwise as `2` bottom-left, `3` top-left, and
   `4` top-right. Border-center placement is prohibited. The panel shows visible
-  activity and terminal failure states.
+  activity and terminal failure states. The conclusion surface is transparent
+  and groups each player context once across the three outcome columns.
 - The project resolves one current generation identity at a time. Batch search,
   parallel generation, unattended databases, shared caches, and exports
   require later steering decisions.
