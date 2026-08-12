@@ -266,6 +266,19 @@ namespace DSPSeedScanner.Core.Tests
             AssertRare(45_772, "unipolar-magnet", 38.495m,
                 ComponentOutcome.DoesNotSupport);
 
+            FixtureOptions rawRole = Options(73_339_583);
+            rawRole.RareResources.Add(new NormalizedRareResourceEvidence(
+                "kimberlite",
+                true,
+                OtherSubject(rawRole.Seed),
+                2m,
+                1_000,
+                2));
+            ConclusionReport rareGrouping = Evaluate(rawRole).Single(report =>
+                report.ConclusionId == "CX-GROUPING.distance" &&
+                report.SourceConclusionId?.Contains("rare-access") == true);
+            Equal(EvidenceStage.CompleteClusterRaw, rareGrouping.Stage);
+
             FixtureOptions absent = Options(12_345_678);
             absent.RareResources.Add(new NormalizedRareResourceEvidence(
                 "unipolar-magnet",

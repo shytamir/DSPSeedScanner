@@ -651,10 +651,19 @@ namespace DSPSeedScanner.Core
                     var pairSubject = new ConclusionSubject(
                         SubjectKind.SystemPair,
                         pairIdentifier + ":" + first.RoleId + "+" + second.RoleId);
+                    EvidenceStage pairStage = first.Report.Stage > second.Report.Stage
+                        ? first.Report.Stage
+                        : second.Report.Stage;
+                    var pairCoverage = new EvidenceCoverage(
+                        pairStage,
+                        coverage.Scope,
+                        coverage.State,
+                        coverage.ExpectedSubjects,
+                        coverage.CompletedSubjects);
                     AddRangeReport(
                         evidence,
                         reports,
-                        coverage,
+                        pairCoverage,
                         "CX-GROUPING.distance",
                         ConclusionContext.CompactExpansion,
                         pairSubject,

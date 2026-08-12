@@ -69,6 +69,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
                 ("Megafactory copy is natural bounded and grouped", MegafactoryCopyIsNaturalBoundedAndGrouped),
+                ("Compact routes are natural deduplicated and bounded", CompactRoutesAreNaturalDeduplicatedAndBounded),
                 ("conclusion panel separates contexts stages and conflicts", ConclusionPanelSeparatesContextsAndConflicts),
                 ("conclusion panel snapshot stays bounded and neutral", ConclusionPanelSnapshotIsBoundedAndNeutral),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
@@ -1296,7 +1297,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     using (var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true))
                         reader.ReadString();
                     using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
-                    writer.Write(4);
+                    writer.Write(5);
                 }
                 byte[] obsoleteEntry = File.ReadAllBytes(entry);
                 using (SHA256 sha = SHA256.Create())
@@ -2349,6 +2350,101 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void CompactRoutesAreNaturalDeduplicatedAndBounded()
+        {
+            var energyOnly = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+            {
+                [2] = (2.70m, 60_000, 0)
+            };
+            True(CompleteCompactText(Snapshot(
+                systemCandidateFacts: energyOnly,
+                primaryDistanceLy: 2m)).Contains(
+                    "Short routes: starter, energy, rares"));
+            True(CompleteCompactText(Snapshot(
+                systemCandidateFacts: energyOnly,
+                primaryDistanceLy: 4m)).SequenceEqual(new[]
+                {
+                    "Short routes: starter, rares",
+                    "Normal routes: energy"
+                }));
+            True(CompleteCompactText(Snapshot(
+                systemCandidateFacts: energyOnly,
+                primaryDistanceLy: 20m)).SequenceEqual(new[]
+                {
+                    "Short routes: starter, rares",
+                    "Long routes: energy"
+                }));
+
+            var repeatedOrbitRole = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+            {
+                [2] = (1m, 60_000, 3),
+                [3] = (1m, 60_000, 2)
+            };
+            string[] deduplicated = CompleteCompactText(Snapshot(
+                systemCandidateFacts: repeatedOrbitRole,
+                primaryDistanceLy: 2m));
+            Equal("Short routes: starter, orbits, rares", deduplicated.Single());
+
+            var noPreviewRoles = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+            {
+                [2] = (1m, 60_000, 0)
+            };
+            string[] withRare = CompleteCompactText(Snapshot(
+                systemCandidateFacts: noPreviewRoles,
+                primaryDistanceLy: 2m));
+            Equal("Short routes: starter, rares", withRare.Single());
+
+            var allRoles = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+            {
+                [2] = (2.70m, 250_000, 4)
+            };
+            string bounded = CompleteCompactText(Snapshot(
+                systemCandidateFacts: allRoles,
+                primaryDistanceLy: 2m)).Single();
+            Equal("Short routes: starter, energy, sphere", bounded);
+            foreach (string forbidden in new[]
+            {
+                "ly", "<->", "Star ", "type star", "starter-anchor",
+                "strong-energy", "large-shell", "orbit-containment",
+                "rare-access", "CX-", "@"
+            })
+            {
+                False(bounded.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        private static string[] CompleteCompactText(RuntimePreviewSnapshot snapshot)
+        {
+            string[]? result = null;
+            WithTemporaryDirectory(path =>
+            {
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway { Snapshot = snapshot }),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                while (!attempt.IsTerminal)
+                    resolver.AdvanceCurrent();
+                PresentedContextGroup compact = PreviewConclusionPresenter.Project(attempt)
+                    .DetailGroups.Single(group =>
+                        group.Context == ConclusionContext.CompactExpansion);
+                result = compact.Cards.Select(card => card.Line).ToArray();
+
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt cached = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, cached.State);
+                True(result.SequenceEqual(
+                    PreviewConclusionPresenter.Project(cached)
+                        .DetailGroups.Single(group =>
+                            group.Context == ConclusionContext.CompactExpansion)
+                        .Cards.Select(card => card.Line)));
+            });
+            return result ?? throw new InvalidOperationException(
+                "Compact route fixture did not publish a result.");
+        }
+
         private static void ConclusionPanelSnapshotIsBoundedAndNeutral()
         {
             WithTemporaryDirectory(path =>
@@ -2646,7 +2742,8 @@ namespace DSPSeedScanner.Runtime.Tests
             int? missingEnergySystem = null,
             int birthInitialHiveCount = 1,
             int otherInitialHiveCount = 39,
-            int? missingHiveSystem = null)
+            int? missingHiveSystem = null,
+            decimal primaryDistanceLy = 2m)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -2693,7 +2790,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     distances.Add(new NormalizedSystemDistance(
                         (first + 1).ToString(),
                         (second + 1).ToString(),
-                        first == 0 && second == 1 ? 2m : 20m));
+                        first == 0 && second == 1 ? primaryDistanceLy : 20m));
                 }
             }
             return new RuntimePreviewSnapshot(

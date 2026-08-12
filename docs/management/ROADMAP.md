@@ -1,10 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 through RFIN-05 were accepted on 2026-08-12.
-RFIN-06 reached its automated acceptance gate on 2026-08-12 and awaits product
+**Status:** Active. RFIN-01 through RFIN-06 were accepted on 2026-08-12.
+RFIN-07 reached its automated acceptance gate on 2026-08-12 and awaits product
 acceptance.
 
-**Active user story:** RFIN-06 is at its acceptance gate.
+**Active user story:** RFIN-07 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -318,8 +318,7 @@ Dark Fog judgments cannot survive the changed conclusion set.
 
 ### RFIN-06: Rewrite Megafactory candidates
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want to know which candidates exist for each supported
 megafactory role.
@@ -383,7 +382,8 @@ needed by the presentation contract.
 
 ### RFIN-07: Summarize Compact expansion routes
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want to know how easy or difficult expansion is for the roles
 this seed supports.
@@ -395,10 +395,51 @@ this seed supports.
 **Acceptance gate:** Roles are deduplicated deterministically into one approved
 distance class, copy matches the Compact contract below, and no exact distance,
 pair, system, star type, internal role, or intermediate predicate appears. The
-open role-class reduction rule below must be settled before activation.
+resolved shortest-eligible-route rule below is applied consistently.
 
 **Out of scope:** Route planning, travel time, throughput, system-pair display,
 or new role predicates.
+
+**Implemented:** Compact expansion now reduces pair-level distance conclusions
+to one natural route class per supported role. `starter-anchor`,
+`strong-energy`, `large-shell`, `orbit-containment`, and `rare-access` map only
+to `starter`, `energy`, `sphere`, `orbits`, and `rares`. The presenter emits
+`Short routes`, `Normal routes`, or `Long routes` with at most three role names
+in that fixed order; pair subjects and system names never enter the copy.
+
+Derived grouping reports now inherit the latest evidence stage of their two
+source roles. A route involving a complete-scan rare role is therefore retained
+with complete results and in the semantic cache, while preview-only routes
+remain live preview evidence. At presentation time both sets are reduced
+together so a completed scan and its cache hit publish the same final role
+classes.
+
+**Resolved reduction decision:** For each natural role, choose the shortest
+eligible route class in the accepted predicate order: `Short`, then `Normal`,
+then `Long`. Exact distance breaks no further tie because routes within one
+class produce the same conclusion. A role appears once even when it participates
+in many pairs. The final line names only the first three roles in the approved
+order and does not explain omitted roles.
+
+**Acceptance evidence:**
+
+- focused fixtures covered short, normal, and long classes at the accepted
+  distance predicates without exposing an exact distance;
+- a role participating in several pair reports was deduplicated to its shortest
+  eligible class, and repeated orbit roles appeared only once;
+- fixtures combined preview roles with a complete-scan rare role, reproduced
+  the same summary from cache, and verified that rare-derived grouping retained
+  complete-cluster attribution;
+- a five-role fixture enforced the three-role display bound and approved role
+  order; no pair, system, star type, internal role, conclusion ID, or `@`
+  notation reached the rendered text; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks passed, and all 57 runtime-boundary checks passed.
+
+**Produced:** A Compact expansion route composer, deterministic role-class
+reduction, and source-stage preservation for derived grouping reports. Cache
+schema version 6 invalidates schema-5 entries as ordinary misses because older
+entries omitted complete-scan rare routes from their persisted grouping set.
 
 ### RFIN-08: Rewrite Sphere / energy candidates
 
@@ -548,10 +589,10 @@ by up to three roles: `Short routes: starter, energy, sphere`.
 **Never show:** Exact figures, pairs, systems, star types, inputs, intermediate
 predicates, internal identifiers, or non-final conclusions.
 
-**Open reduction decision:** When one role participates in pair reports across
-multiple distance classes, choose one deterministic final class. The recommended
-rule is the shortest eligible route for that role; this must be approved before
-RFIN-07 begins.
+**Resolved reduction decision:** When one role participates in pair reports
+across multiple distance classes, use its shortest eligible route class:
+`Short`, then `Normal`, then `Long`. Within-class exact distance does not alter
+the conclusion.
 
 ### Sphere / energy
 
@@ -600,8 +641,8 @@ replaces it in the status area.
 
 ## Roadmap-wide exclusions
 
-This roadmap does not change evidence thresholds unless the open energy-role
-decision explicitly revises that role predicate. It adds no scoring,
+This roadmap does not change evidence thresholds or accepted role predicates.
+It adds no scoring,
 preferences, comparison, route planning, raw-data view, new Dark Fog judgment,
 background generation, localization, publication, or compatibility expansion.
 

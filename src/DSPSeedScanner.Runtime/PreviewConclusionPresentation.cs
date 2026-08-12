@@ -164,23 +164,35 @@ namespace DSPSeedScanner.Runtime
                 attempt.SystemDisplays.ToDictionary(
                     value => value.Identifier,
                     StringComparer.Ordinal);
+            ConclusionReport[] completedCompact = attempt.CompleteReports.Where(report =>
+                report.Context == ConclusionContext.CompactExpansion).ToArray();
+            IEnumerable<ConclusionReport> immediateReports = attempt.PreviewReports.Where(report =>
+                report.Stage == EvidenceStage.GalaxyPreview &&
+                (completedCompact.Length == 0 ||
+                    report.Context != ConclusionContext.CompactExpansion));
+            IEnumerable<ConclusionReport> detailReports = attempt.CompleteReports.Where(report =>
+                report.Stage == EvidenceStage.BirthSystemRaw ||
+                report.Stage == EvidenceStage.CompleteClusterRaw);
+            if (completedCompact.Length != 0)
+            {
+                detailReports = detailReports.Concat(attempt.PreviewReports.Where(report =>
+                    report.Context == ConclusionContext.CompactExpansion &&
+                    report.Stage == EvidenceStage.GalaxyPreview));
+            }
             return new PreviewConclusionPresentation(
                 attempt.Session.SessionId,
                 IdentityLine(identity),
                 DarkFogStatusLine(attempt.DarkFogOccupation),
                 attempt.State == PreviewResolutionState.Cached,
                 Group(
-                    attempt.PreviewReports.Where(report =>
-                        report.Stage == EvidenceStage.GalaxyPreview),
+                    immediateReports,
                     displays,
                     attempt.SystemCandidates,
                     attempt.HasCompleteBirthPlanetAttribution
                         ? attempt.BirthPlanetAttributions
                         : null),
                 Group(
-                    attempt.CompleteReports.Where(report =>
-                        report.Stage == EvidenceStage.BirthSystemRaw ||
-                        report.Stage == EvidenceStage.CompleteClusterRaw),
+                    detailReports,
                     displays,
                     attempt.SystemCandidates,
                     attempt.HasCompleteBirthPlanetAttribution
@@ -291,6 +303,20 @@ namespace DSPSeedScanner.Runtime
                             context,
                             ContextTitle(context),
                             megafactory));
+                    }
+                    continue;
+                }
+
+                if (context == ConclusionContext.CompactExpansion)
+                {
+                    IReadOnlyList<PresentedConclusionCard> compact =
+                        BuildCompactExpansionCards(contextReports);
+                    if (compact.Count != 0)
+                    {
+                        groups.Add(new PresentedContextGroup(
+                            context,
+                            ContextTitle(context),
+                            compact));
                     }
                     continue;
                 }
@@ -581,6 +607,120 @@ namespace DSPSeedScanner.Runtime
                 AddMegaCard(cards, role.Sources, line);
             }
             return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static IReadOnlyList<PresentedConclusionCard> BuildCompactExpansionCards(
+            IReadOnlyList<ConclusionReport> reports)
+        {
+            var bestByRole = new Dictionary<string, CompactRoleRoute>(StringComparer.Ordinal);
+            foreach (ConclusionReport report in reports.Where(report =>
+                report.ConclusionId == "CX-GROUPING.distance" &&
+                (report.Outcome == ComponentOutcome.Supports ||
+                 report.Outcome == ComponentOutcome.PreferenceSensitive ||
+                 report.Outcome == ComponentOutcome.DoesNotSupport)))
+            {
+                foreach (string role in CompactRoles(report.Subject.Identifier))
+                {
+                    var candidate = new CompactRoleRoute(role, report.Outcome, report);
+                    if (!bestByRole.TryGetValue(role, out CompactRoleRoute? current) ||
+                        RoutePriority(candidate.Outcome) < RoutePriority(current.Outcome))
+                    {
+                        bestByRole[role] = candidate;
+                    }
+                }
+            }
+
+            var cards = new List<PresentedConclusionCard>();
+            foreach ((ComponentOutcome outcome, string title) in new[]
+            {
+                (ComponentOutcome.Supports, "Short routes"),
+                (ComponentOutcome.PreferenceSensitive, "Normal routes"),
+                (ComponentOutcome.DoesNotSupport, "Long routes")
+            })
+            {
+                CompactRoleRoute[] routes = bestByRole.Values
+                    .Where(value => value.Outcome == outcome)
+                    .OrderBy(value => CompactRoleOrder(value.Role))
+                    .ToArray();
+                if (routes.Length == 0)
+                    continue;
+                string[] namedRoles = routes
+                    .Take(MaximumSubjectsPerCard)
+                    .Select(value => CompactRoleLabel(value.Role))
+                    .ToArray();
+                string line = title + (namedRoles.Length == 0
+                    ? String.Empty
+                    : ": " + String.Join(", ", namedRoles));
+                EvidenceStage stage = routes.Max(value => value.Source.Stage);
+                cards.Add(new PresentedConclusionCard(
+                    ConclusionContext.CompactExpansion,
+                    stage,
+                    outcome,
+                    "COMPACT-ROUTES",
+                    title,
+                    Array.Empty<string>(),
+                    Bound(line, MaximumLineCharacters),
+                    routes.Select(value => value.Source.ConclusionId).Distinct(
+                        StringComparer.Ordinal)));
+            }
+            return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static IEnumerable<string> CompactRoles(string pairIdentifier)
+        {
+            int separator = pairIdentifier.LastIndexOf(':');
+            if (separator < 0 || separator == pairIdentifier.Length - 1)
+                yield break;
+            foreach (string role in pairIdentifier.Substring(separator + 1).Split('+'))
+            {
+                if (CompactRoleOrder(role) != Int32.MaxValue)
+                    yield return role;
+            }
+        }
+
+        private static int RoutePriority(ComponentOutcome outcome) => outcome switch
+        {
+            ComponentOutcome.Supports => 0,
+            ComponentOutcome.PreferenceSensitive => 1,
+            ComponentOutcome.DoesNotSupport => 2,
+            _ => Int32.MaxValue
+        };
+
+        private static int CompactRoleOrder(string role) => role switch
+        {
+            "starter-anchor" => 0,
+            "strong-energy" => 1,
+            "large-shell" => 2,
+            "orbit-containment" => 3,
+            "rare-access" => 4,
+            _ => Int32.MaxValue
+        };
+
+        private static string CompactRoleLabel(string role) => role switch
+        {
+            "starter-anchor" => "starter",
+            "strong-energy" => "energy",
+            "large-shell" => "sphere",
+            "orbit-containment" => "orbits",
+            "rare-access" => "rares",
+            _ => throw new ArgumentOutOfRangeException(nameof(role))
+        };
+
+        private sealed class CompactRoleRoute
+        {
+            public CompactRoleRoute(
+                string role,
+                ComponentOutcome outcome,
+                ConclusionReport source)
+            {
+                Role = role;
+                Outcome = outcome;
+                Source = source;
+            }
+
+            public string Role { get; }
+            public ComponentOutcome Outcome { get; }
+            public ConclusionReport Source { get; }
         }
 
         private static void AddRareAccessCards(
