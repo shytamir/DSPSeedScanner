@@ -1,3 +1,5 @@
+<p align="center"><img alt="Before you choose a star, let the galaxy tell you what kind of future it holds." src="https://shytamir.github.io/DSP_Guide/assets/images/mod/before-you-choose-a-star-let-the-galaxy-tell-you-what-kind-of-future-it-holds.png"><br><small><em><span style="color:#b8b8b8">Before you choose a star, let the galaxy tell you what kind of future it holds.</span></em></small></p>
+
 # DSP Seed Scanner
 
 DSP Seed Scanner helps you choose a cluster before starting a new game. It
