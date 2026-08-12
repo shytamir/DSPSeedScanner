@@ -1,9 +1,10 @@
 # New Game Presentation Roadmap
 
-**Status:** In progress. PRES-01 through PRES-06 are accepted; PRES-07 has a
-repaired candidate at its human revalidation gate.
+**Status:** Completed and accepted on 2026-08-12. PRES-01 through PRES-07 are
+accepted.
 
-**Active user story:** PRES-07.
+**Active user story:** None. Presentation refinement planning follows this
+completed roadmap.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -486,7 +487,7 @@ localization, and human in-game validation remained outside this story.
 
 ### PRES-07: Validate the complete New Game experience
 
-**State:** Implemented on 2026-08-12; pending human revalidation.
+**State:** Accepted on 2026-08-12.
 
 As a player installing DSP Seed Scanner, I want the hands-off panel to behave
 correctly through real New Game preview changes so that I can rely on what it
@@ -526,7 +527,7 @@ the player-visible system name when the report identifies one. Wrapped cards
 replace list-era ellipses. Unsupported states now distinguish other-plugin or
 preloader uncertainty from a DSP-version or generation-runtime mismatch.
 
-**Human evidence so far:** In the isolated supported runtime, the panel became
+**Earlier human evidence:** In the isolated supported runtime, the panel became
 readable at 4K, cache-miss progress remained visibly active, controls remained
 usable despite the expected performance cost, and a 204-solid-planet scan
 completed within the previously estimated acceptable duration. The completed
@@ -542,13 +543,8 @@ and focused fixtures enforce outcome-to-column mapping, suppression of unknown
 and not-applicable cards, player-visible system labels, short distance values,
 bottom clearance, stale-state rejection, and bounded copy. The installed- and
 hosted-reference plugin builds and the exact semantic-versioned package
-validation also pass locally; pushed CI remains part of the final gate.
-
-**Remaining gate:** Human revalidation must confirm the compact panel clears
-the right-side legend and Back control, the three columns and colors are
-readable, wrapped cards contain no internal IDs or avoidable ellipses, and the
-previously required lifecycle, cache-hit, cancellation, replacement, and
-unsupported-state observations pass on the final installed candidate.
+validation also passed locally; pushed CI was still part of the final gate at
+that stage.
 
 **Second human pass and repair:** The first three-column candidate was readable
 and retained acceptable scan responsiveness, but repeated each context heading
@@ -570,7 +566,7 @@ Dark Fog conclusions remain unchanged pending broader seed sampling.
 
 This second repair passed all 14 conclusion and 49 runtime-boundary checks and
 the installed-game plugin build with zero warnings. Human revalidation and the
-pushed package/CI gates remain required before PRES-07 acceptance.
+pushed package/CI gates were still required before PRES-07 acceptance.
 
 **Bounded-viewport repair note (approved 2026-08-12):** The second human image
 showed that content-sized placement could not converge: a verbose seed grew
@@ -579,8 +575,8 @@ the stellar legend, and one full three-column row per context left large blank
 bands. PRES-07 therefore no longer permits seed content to determine the
 panel's outer dimensions.
 
-The repaired presentation uses one fixed-size viewport for each supported
-screen scale. Its corner placement applies stable safe-area clearance for the
+The repaired presentation uses one resolution-relative viewport. Its corner
+placement applies stable safe-area clearance for the
 top-right legend and bottom-left Back control. A lightly tinted translucent
 surface separates conclusion text from the cluster map without hiding it. The
 identity, progress line, and three conclusion-class headings remain fixed;
@@ -594,15 +590,57 @@ packed into complementary spaces in shared rows below, so a strength-only
 context can share a row with a preference-and-limitation context. Each card
 keeps one centered neutral title, bounded wrapped copy, and its existing class
 colors. This repair introduces no tabs, collapsing, automatic paging,
-preference controls, or changes to Dark Fog conclusions. Human validation must
-still confirm the safe areas, scrolling, readability, and lifecycle behavior
-in the installed game before PRES-07 can be accepted.
+preference controls, or changes to Dark Fog conclusions. At that stage, human
+validation still had to confirm the safe areas, scrolling, readability, and
+lifecycle behavior in the installed game before PRES-07 could be accepted.
 
-Focused placement fixtures now lock the fixed 4K geometry and the top-right
-and bottom-left safe clearances. The repaired code passed all 14 conclusion
-and 49 runtime-boundary checks plus installed-game and hosted-reference plugin
-builds with zero warnings. Human revalidation and the pushed package/CI gates
-remain open.
+Focused placement fixtures now lock the resolution-relative geometry and the
+top-right and bottom-left safe clearances. The accepted viewport occupies 37%
+of the resolution width and 37% of its height, rounded to the nearest logical
+pixel. The repaired code passed all 14 conclusion and 49 runtime-boundary
+checks plus installed-game and hosted-reference plugin builds with zero
+warnings.
+
+**Final human evidence:** The accepted 4K candidate kept its bottom-right
+anchor, cleared the stellar legend and bottom controls, remained readable, and
+presented a bounded scrollable document on its translucent surface. Scrolling
+worked; complete results joined the immediate conclusions as expected; a
+revisited identity reused its cache; a replacement seed could not receive the
+previous session's result; and leaving the preview retired the current work.
+The accepted local `0.1.4104` test package also passed exact DLL and
+Thunderstore-package validation. These observations closed the PRES-07 human
+gate without asserting that the current conclusion wording needs no further
+refinement.
+
+## Refinement planning handoff
+
+The completed panel exposed presentation issues that did not invalidate its
+workflow acceptance:
+
+- five semantic outcomes currently collapse into three visual classes;
+  tradeoffs share preference-sensitive presentation and cautions share
+  limitations without an explicit outcome label;
+- birth-topology conclusions identify the system without naming the decisive
+  arrangement;
+- compact-expansion conclusions show distances but omit the system roles whose
+  grouping was classified;
+- sphere conclusions omit the contained-orbit count, and rare-resource access
+  omits the destination system when the available subject attribution does not
+  identify it;
+- Dark Fog opportunity text can be identical across different outcome classes,
+  birth exposure remains terse, and broader real-seed sampling is needed
+  before changing or removing the context;
+- decision-relevant traits expose mechanically formatted identifiers; and
+- three examples plus `+N` favors breadth over explaining why the examples
+  received their class. The native scrollbar is also visually heavier than
+  the rest of the panel, but is cosmetic.
+
+The next roadmap must also contain a bounded scan-cadence story. It may accept
+a longer cache-miss duration in exchange for yielding more frequently and
+reducing visible frame disruption. It must preserve main-thread generation,
+serialization, cancellation, progress, restoration of runtime statics, and
+the one-attempt lifecycle; it is not authorization for parallel or background
+DSP generation.
 
 ## Roadmap coverage
 
@@ -627,7 +665,7 @@ does not block this roadmap.
 
 ## Completion
 
-The roadmap is complete only when PRES-01 through PRES-07 are individually
-accepted and PRES-07 records the sole human in-game validation of the installed
-experience. Roadmap completion does not authorize external publication or
-additional presentation features.
+PRES-01 through PRES-07 were individually accepted, and PRES-07 recorded the
+sole human in-game validation of the installed experience. This roadmap was
+completed on 2026-08-12. Its completion did not authorize external publication
+or the refinement work listed above.

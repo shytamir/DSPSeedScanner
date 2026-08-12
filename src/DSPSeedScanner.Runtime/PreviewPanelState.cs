@@ -92,8 +92,8 @@ namespace DSPSeedScanner.Runtime
         public const int Width = 520;
         public const int Height = 116;
         public const int Margin = 24;
-        public const int ConclusionWidth = 1040;
-        public const int ConclusionHeight = 680;
+        public const double ConclusionWidthRatio = 0.37;
+        public const double ConclusionHeightRatio = 0.37;
         public const int DocumentPadding = 20;
         public const int DocumentLineHeight = 22;
         public const int BottomClearance = 96;
@@ -188,6 +188,12 @@ namespace DSPSeedScanner.Runtime
                 corner == PreviewPanelCorner.TopRight;
             bool bottom = corner == PreviewPanelCorner.BottomRight ||
                 corner == PreviewPanelCorner.BottomLeft;
+            int width = (int)Math.Round(
+                screenWidth * ConclusionWidthRatio,
+                MidpointRounding.AwayFromZero);
+            int height = (int)Math.Round(
+                screenHeight * ConclusionHeightRatio,
+                MidpointRounding.AwayFromZero);
             int clearance = corner switch
             {
                 PreviewPanelCorner.BottomRight => BottomRightClearance,
@@ -196,18 +202,19 @@ namespace DSPSeedScanner.Runtime
                 PreviewPanelCorner.TopRight => TopRightClearance,
                 _ => throw new ArgumentOutOfRangeException(nameof(corner))
             };
-            if (screenWidth < ConclusionWidth + Margin * 2)
+            if (width <= DocumentPadding * 2)
                 throw new ArgumentOutOfRangeException(nameof(screenWidth));
-            if (screenHeight < ConclusionHeight + Margin + clearance)
+            if (height <= DocumentPadding * 2 ||
+                screenHeight < height + Margin + clearance)
                 throw new ArgumentOutOfRangeException(nameof(screenHeight));
 
             return new PreviewPanelBounds(
-                right ? screenWidth - Margin - ConclusionWidth : Margin,
+                right ? screenWidth - Margin - width : Margin,
                 bottom
-                    ? screenHeight - Margin - clearance - ConclusionHeight
+                    ? screenHeight - Margin - clearance - height
                     : Margin + clearance,
-                ConclusionWidth,
-                ConclusionHeight);
+                width,
+                height);
         }
     }
 

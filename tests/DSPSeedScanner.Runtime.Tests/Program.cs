@@ -1453,20 +1453,21 @@ namespace DSPSeedScanner.Runtime.Tests
                 2160,
                 PreviewPanelLayout.Width,
                 PreviewPanelLayout.Height));
+            const int legacyDocumentWidth = 1040;
             double fittedScale = PreviewPanelLayout.ScaleForScreen(
                 3840,
                 2160,
-                PreviewPanelLayout.ConclusionWidth,
+                legacyDocumentWidth,
                 1600);
             True(fittedScale > 1.0 && fittedScale < 1.5);
-            True((PreviewPanelLayout.ConclusionWidth + PreviewPanelLayout.Margin * 2) *
+            True((legacyDocumentWidth + PreviewPanelLayout.Margin * 2) *
                 fittedScale <= 3840);
             True((1600 + PreviewPanelLayout.Margin * 2) * fittedScale <= 2160);
 
             double presentationScale = PreviewPanelLayout.ScaleForScreen(
                 3840,
                 2160,
-                PreviewPanelLayout.ConclusionWidth,
+                legacyDocumentWidth,
                 600);
             int logicalWidth = (int)Math.Floor(3840 / presentationScale);
             int logicalHeight = (int)Math.Floor(2160 / presentationScale);
@@ -1474,7 +1475,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 PreviewPanelCorner.BottomRight,
                 logicalWidth,
                 logicalHeight,
-                PreviewPanelLayout.ConclusionWidth,
+                legacyDocumentWidth,
                 600);
             True(presentationBounds.X >= logicalWidth / 2);
             True(presentationBounds.Y >= logicalHeight / 2);
@@ -1507,10 +1508,10 @@ namespace DSPSeedScanner.Runtime.Tests
             const int logical4KHeight = 1440;
             var conclusionExpected = new[]
             {
-                (PreviewPanelCorner.BottomRight, 1496, 640),
-                (PreviewPanelCorner.BottomLeft, 24, 608),
+                (PreviewPanelCorner.BottomRight, 1589, 787),
+                (PreviewPanelCorner.BottomLeft, 24, 755),
                 (PreviewPanelCorner.TopLeft, 24, 120),
-                (PreviewPanelCorner.TopRight, 1496, 384)
+                (PreviewPanelCorner.TopRight, 1589, 384)
             };
             foreach ((PreviewPanelCorner corner, int x, int y) in conclusionExpected)
             {
@@ -1520,8 +1521,18 @@ namespace DSPSeedScanner.Runtime.Tests
                     logical4KHeight);
                 Equal(x, bounds.X);
                 Equal(y, bounds.Y);
-                Equal(PreviewPanelLayout.ConclusionWidth, bounds.Width);
-                Equal(PreviewPanelLayout.ConclusionHeight, bounds.Height);
+                Equal(947, bounds.Width);
+                Equal(533, bounds.Height);
+                Equal(
+                    (int)Math.Round(
+                        logical4KWidth * PreviewPanelLayout.ConclusionWidthRatio,
+                        MidpointRounding.AwayFromZero),
+                    bounds.Width);
+                Equal(
+                    (int)Math.Round(
+                        logical4KHeight * PreviewPanelLayout.ConclusionHeightRatio,
+                        MidpointRounding.AwayFromZero),
+                    bounds.Height);
                 True(bounds.Right <= logical4KWidth - PreviewPanelLayout.Margin);
                 True(bounds.Bottom <= logical4KHeight - PreviewPanelLayout.Margin);
             }
@@ -1789,16 +1800,12 @@ namespace DSPSeedScanner.Runtime.Tests
                     complete);
                 True(completeDocument.Lines.Count <=
                     PreviewConclusionPresenter.MaximumDocumentLines);
-                int completeHeight = PreviewPanelLayout.DocumentPadding * 2 +
-                    completeDocument.Lines.Count * PreviewPanelLayout.DocumentLineHeight;
                 foreach (PreviewPanelCorner corner in Enum.GetValues<PreviewPanelCorner>())
                 {
-                    PreviewPanelBounds bounds = PreviewPanelLayout.PlaceSized(
+                    PreviewPanelBounds bounds = PreviewPanelLayout.PlaceConclusion(
                         corner,
                         3840,
-                        2160,
-                        PreviewPanelLayout.ConclusionWidth,
-                        completeHeight);
+                        2160);
                     True(bounds.X > 0 && bounds.Y > 0);
                     True(bounds.Right < 3840 && bounds.Bottom < 2160);
                 }
@@ -1859,14 +1866,10 @@ namespace DSPSeedScanner.Runtime.Tests
                     False(rendered.IndexOf(forbidden, StringComparison.OrdinalIgnoreCase) >= 0);
                 }
 
-                int height = PreviewPanelLayout.DocumentPadding * 2 +
-                    document.Lines.Count * PreviewPanelLayout.DocumentLineHeight;
-                PreviewPanelBounds bounds = PreviewPanelLayout.PlaceSized(
+                PreviewPanelBounds bounds = PreviewPanelLayout.PlaceConclusion(
                     PreviewPanelCorner.TopRight,
                     3840,
-                    2160,
-                    PreviewPanelLayout.ConclusionWidth,
-                    height);
+                    2160);
                 True(bounds.X > 1920);
                 True(bounds.Y > 0);
                 True(bounds.Right < 3840);

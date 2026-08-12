@@ -108,8 +108,8 @@ namespace DSPSeedScanner.Plugin
             double scale = PreviewPanelLayout.ScaleForScreen(
                 screenWidth,
                 screenHeight,
-                PreviewPanelLayout.ConclusionWidth,
-                PreviewPanelLayout.ConclusionHeight);
+                PreviewPanelLayout.Width,
+                PreviewPanelLayout.Height);
             Matrix4x4 previousMatrix = BeginScaledDrawing(scale);
             try
             {

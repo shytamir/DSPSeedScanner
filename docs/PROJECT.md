@@ -4,19 +4,12 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 story scope, evidence, and history belong in the roadmap.
 
-**Current status:** The scanner core roadmap was completed and accepted on
-2026-08-11. The New Game presentation roadmap was approved on 2026-08-12.
-PRES-01 through PRES-06 were accepted. PRES-07 reached human validation and
-its first installed pass accepted scan responsiveness and duration while
-identifying presentation defects. The resulting compact three-column repair
-received a second human review. Context-card formatting, transparency,
-typography, and cache reuse defects found in that review were repaired. A
-subsequent image showed that content-sized placement still could not avoid UI
-collisions. The resulting fixed translucent viewport, safe-area clearance,
-internal scrolling, and sparse-card packing repair awaits human revalidation.
-Panel anchoring uses the accepted four-corner configuration with bottom-right
-as the default. One packaging refinement remains tracked as non-blocking
-technical debt.
+**Current status:** The scanner core roadmap and New Game presentation roadmap
+were completed and accepted on 2026-08-11 and 2026-08-12 respectively. No user
+story is active. Presentation refinement planning is in progress using the
+accepted installed workflow, the recorded residual copy and semantic issues,
+and a planned smoother scan-cadence tradeoff. One packaging refinement remains
+tracked as non-blocking technical debt.
 
 ## Product decision
 
@@ -84,8 +77,9 @@ The accepted semantics and thresholds are maintained in the
 - Its numeric corner setting defaults to `1` for
   bottom-right, then proceeds clockwise as `2` bottom-left, `3` top-left, and
   `4` top-right. Border-center placement is prohibited. The panel shows visible
-  activity and terminal failure states. The conclusion surface is transparent
-  and groups each player context once across the three outcome columns.
+  activity and terminal failure states. Its translucent scrollable conclusion
+  viewport occupies 37% of resolution width and height and groups each player
+  context once across the three outcome columns.
 - The project resolves one current generation identity at a time. Batch search,
   parallel generation, unattended databases, shared caches, and exports
   require later steering decisions.
@@ -112,8 +106,9 @@ decision and corresponding roadmap change.
 
 ## Management and documentation
 
-The active [New Game presentation roadmap](management/ROADMAP.md) owns story
-scope, acceptance evidence, sequencing, and history. The
+The completed [New Game presentation roadmap](management/ROADMAP.md) owns its
+story scope, acceptance evidence, sequencing, and history while the refinement
+roadmap is planned. The
 [technical debt register](management/TECHNICAL-DEBT.md) owns explicitly
 deferred obligations and their closure gates; recording debt does not weaken
 the accepted safety contract. The completed scanner-core and product-planning

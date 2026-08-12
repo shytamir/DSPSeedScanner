@@ -23,9 +23,9 @@ bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.
 ## Project status
 
 [docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current
-project status and steering decisions. Story state, acceptance evidence, and
-implementation sequencing are maintained in the active
-[roadmap](docs/management/ROADMAP.md).
+project status and steering decisions. The current
+[roadmap](docs/management/ROADMAP.md) records the completed presentation work
+and its refinement-planning handoff.
 
 The [documentation index](docs/INDEX.md) lists the accepted specifications,
 delivery notes, management documents, and archived planning material.
@@ -49,7 +49,7 @@ integration boundary are documented in the
 [Thunderstore package contract](docs/THUNDERSTORE-PACKAGE.md).
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
-[project steering document](docs/PROJECT.md), and the active
+[project steering document](docs/PROJECT.md), and the current
 [roadmap](docs/management/ROADMAP.md) before changing scope or behavior.
 
 ## License

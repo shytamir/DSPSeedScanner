@@ -1,14 +1,14 @@
 # Documentation Index
 
 This index provides navigation only. `PROJECT.md` owns project steering and
-current status; the active roadmap owns story state and history.
+current status; the current roadmap records story state and history.
 
 ## Steering and management
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [New Game presentation roadmap](management/ROADMAP.md): Approved hands-off
-  panel stories, acceptance gates, sequencing, and story history.
+- [New Game presentation roadmap](management/ROADMAP.md): Completed PRES-01
+  through PRES-07 hands-off panel record and refinement-planning handoff.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
