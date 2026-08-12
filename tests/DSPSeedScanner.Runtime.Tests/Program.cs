@@ -66,6 +66,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("panel corners map clockwise and avoid border centers", PanelCornersMapClockwise),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
+                ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
+                ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
                 ("conclusion panel separates contexts stages and conflicts", ConclusionPanelSeparatesContextsAndConflicts),
                 ("conclusion panel snapshot stays bounded and neutral", ConclusionPanelSnapshotIsBoundedAndNeutral),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
@@ -1078,13 +1080,17 @@ namespace DSPSeedScanner.Runtime.Tests
                     fingerprint,
                     out CachedCompleteClusterConclusions? restored));
                 ConclusionReport[] expected = source.Reports
-                    .Where(report => report.Stage == EvidenceStage.CompleteClusterRaw)
+                    .Where(report => (report.Stage == EvidenceStage.BirthSystemRaw &&
+                            report.Context == ConclusionContext.FreshStart) ||
+                        report.Stage == EvidenceStage.CompleteClusterRaw)
                     .ToArray();
                 Equal(identity, restored?.Identity);
                 Equal(key.Hash, restored?.CacheKeyHash);
                 Equal(source.Coverage, restored?.Coverage);
                 True(expected.SequenceEqual(restored!.Reports));
                 True(restored.Reports.All(report =>
+                    (report.Stage == EvidenceStage.BirthSystemRaw &&
+                        report.Context == ConclusionContext.FreshStart) ||
                     report.Stage == EvidenceStage.CompleteClusterRaw));
                 True(source.Reports.Any(report =>
                     report.Stage == EvidenceStage.GalaxyPreview));
@@ -2018,8 +2024,21 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(PreviewResolutionState.Complete, attempt.State);
                 PreviewConclusionPresentation complete = panel.Conclusions!;
                 True(complete.DetailGroups.Count > 0);
+                PresentedContextGroup completedFresh = complete.DetailGroups.Single(group =>
+                    group.Context == ConclusionContext.FreshStart);
+                string completedFreshText = String.Join("\n",
+                    completedFresh.Cards.Select(card => card.Line));
+                True(completedFreshText.Contains("Iron scarce", StringComparison.Ordinal));
+                True(completedFreshText.Contains(
+                    "Iron has few vein groups",
+                    StringComparison.Ordinal));
+                True(completedFreshText.Contains("No Fire Ice veins", StringComparison.Ordinal));
+                False(completedFreshText.Contains(
+                    "Combined starter deposits",
+                    StringComparison.Ordinal));
                 True(complete.DetailGroups.SelectMany(group => group.Cards)
-                    .All(card => card.Stage == EvidenceStage.CompleteClusterRaw));
+                    .All(card => card.Stage == EvidenceStage.BirthSystemRaw ||
+                        card.Stage == EvidenceStage.CompleteClusterRaw));
                 True(complete.ImmediateGroups.SelectMany(group => group.Cards)
                     .All(card => card.Stage == EvidenceStage.GalaxyPreview));
                 PreviewPanelDocument completeDocument = PreviewConclusionPresenter.Compose(
@@ -2047,6 +2066,83 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(PreviewResolutionState.Cached, cachedAttempt.State);
                 True(panel.Conclusions!.IsCached);
                 True(panel.Conclusions.DetailGroups.Count > 0);
+                string cachedFreshText = String.Join("\n", panel.Conclusions.DetailGroups
+                    .Single(group => group.Context == ConclusionContext.FreshStart)
+                    .Cards.Select(card => card.Line));
+                Equal(completedFreshText, cachedFreshText);
+            });
+        }
+
+        private static void FreshStartCopyIsNaturalBoundedAndAttributed()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(birthPlanetAttributions: new[]
+                    {
+                        SolidAttribution(101, "Aspidiske I", 1.35m, 1.5m, true),
+                        SolidAttribution(102, "Aspidiske II", 1.20m, 1.1m, false),
+                        SolidAttribution(103, "Aspidiske III", 0.9m, 0.8m, false),
+                        GasAttribution(104, "Aspidiske IV", "hydrogen"),
+                        GasAttribution(105, "Aspidiske V", "hydrogen")
+                    })
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(gateway),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                PreviewConclusionPresentation presentation =
+                    PreviewConclusionPresenter.Project(attempt);
+                PresentedContextGroup fresh = presentation.ImmediateGroups.Single(group =>
+                    group.Context == ConclusionContext.FreshStart);
+                string rendered = String.Join("\n", fresh.Cards.Select(card => card.Line));
+
+                True(rendered.Contains("Starter gas giants have Hydrogen", StringComparison.Ordinal));
+                True(rendered.Contains("Starter gas giants lack Deuterium / Fire Ice", StringComparison.Ordinal));
+                True(rendered.Contains("Aspidiske I has bright solar", StringComparison.Ordinal));
+                True(rendered.Contains("Aspidiske I has strong wind", StringComparison.Ordinal));
+                True(rendered.Contains("Permanent solar source on Aspidiske I", StringComparison.Ordinal));
+                True(rendered.Contains("2 gas giant neighbors", StringComparison.Ordinal));
+                False(rendered.Contains("Combined starter deposits", StringComparison.Ordinal));
+                foreach (string forbidden in new[]
+                {
+                    "@", "type star", "%", "ratio", "amount", "distribution",
+                    "Birth-system", "collection rate", "+"
+                })
+                {
+                    False(rendered.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
+                }
+                True(fresh.Cards.All(card => card.Line.Length <=
+                    PreviewConclusionPresenter.MaximumLineCharacters));
+            });
+        }
+
+        private static void FreshStartOmitsUnavailableAttribution()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway()),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PresentedContextGroup fresh = PreviewConclusionPresenter
+                    .Project(resolver.CurrentPublishedAttempt!)
+                    .ImmediateGroups.Single(group =>
+                        group.Context == ConclusionContext.FreshStart);
+                string rendered = String.Join("\n", fresh.Cards.Select(card => card.Line));
+
+                False(rendered.Contains("solar", StringComparison.OrdinalIgnoreCase));
+                False(rendered.Contains("wind", StringComparison.OrdinalIgnoreCase));
+                False(rendered.Contains("gas giant has", StringComparison.OrdinalIgnoreCase));
+                False(rendered.Contains("gas giants have", StringComparison.OrdinalIgnoreCase));
+                False(rendered.Contains("permanent solar", StringComparison.OrdinalIgnoreCase));
+                True(rendered.Contains("gas giant neighbors", StringComparison.OrdinalIgnoreCase));
             });
         }
 
@@ -2720,13 +2816,14 @@ namespace DSPSeedScanner.Runtime.Tests
                 for (int index = 0; index < TargetCount; index++)
                 {
                     int planetId = 101 + index;
+                    bool birth = index == 0;
                     targets.Add(new CompleteClusterPlanetTarget(
                         planetId,
                         index + 1,
                         new ConclusionSubject(
-                            index == 0 ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
-                            (index + 1).ToString()),
-                        index == 0 ? 0m : index == 1 ? 2m : 20m));
+                            birth ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                            birth ? Snapshot().BirthSystemIdentifier : (index + 1).ToString()),
+                        birth ? 0m : index == 1 ? 2m : 20m));
                 }
                 return new CompleteClusterRawPlan(
                     Snapshot(),

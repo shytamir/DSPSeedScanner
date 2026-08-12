@@ -335,6 +335,14 @@ namespace DSPSeedScanner.Runtime
 
             IReadOnlyList<NormalizedRareResourceEvidence> rareResources =
                 aggregate.RareResources();
+            NormalizedStarterResourceEvidence starterResources =
+                aggregate.StarterResources(completedPlan.Preview.BirthSystemIdentifier);
+            var starterCoverage = new EvidenceCoverage(
+                EvidenceStage.BirthSystemRaw,
+                EvidenceScope.BirthSystemResources,
+                CoverageState.Complete,
+                aggregate.BirthPlanetCount,
+                aggregate.BirthPlanetCount);
             EvidenceCoverage rareCoverage = Complete(
                 EvidenceScope.CompleteClusterRareResources,
                 expected);
@@ -345,6 +353,8 @@ namespace DSPSeedScanner.Runtime
                 request,
                 fingerprint ?? throw new InvalidOperationException("A successful scan requires a fingerprint."),
                 completedPlan.Preview,
+                starterResources,
+                starterCoverage,
                 rareResources: rareResources,
                 rareCoverage: rareCoverage,
                 clusterCommonResourceTotal: aggregate.CommonTotal,
@@ -520,13 +530,36 @@ namespace DSPSeedScanner.Runtime
                     resourceId => resourceId,
                     _ => new RareAggregate(),
                     StringComparer.Ordinal);
+            private readonly Dictionary<string, StarterAggregate> starter =
+                ConclusionDefinition.CommonResourceIds.ToDictionary(
+                    resourceId => resourceId,
+                    _ => new StarterAggregate(),
+                    StringComparer.Ordinal);
 
             public long CommonTotal { get; private set; }
+            public int BirthPlanetCount { get; private set; }
+            private bool birthContainsFireIce;
 
             public void Add(
                 CompleteClusterPlanetTarget target,
                 NormalizedRawPlanetEvidence planet)
             {
+                if (target.System.Kind == SubjectKind.BirthSystem)
+                {
+                    BirthPlanetCount++;
+                    foreach (NormalizedRawVeinNode node in planet.Nodes)
+                    {
+                        if (starter.TryGetValue(node.ResourceId, out StarterAggregate? resource))
+                            resource.Amount = checked(resource.Amount + node.Amount);
+                        if (String.Equals(node.ResourceId, "fire-ice", StringComparison.Ordinal))
+                            birthContainsFireIce = true;
+                    }
+                    foreach (NormalizedRawVeinGroup group in planet.Groups)
+                    {
+                        if (starter.TryGetValue(group.ResourceId, out StarterAggregate? resource))
+                            resource.Groups = checked(resource.Groups + 1);
+                    }
+                }
                 foreach (NormalizedRawVeinNode node in planet.Nodes)
                 {
                     if (ConclusionDefinition.StarterTotalResourceIds.Contains(node.ResourceId))
@@ -566,6 +599,30 @@ namespace DSPSeedScanner.Runtime
                             null,
                             null))
                     .ToArray();
+
+            public NormalizedStarterResourceEvidence StarterResources(
+                string birthSystemIdentifier)
+            {
+                if (BirthPlanetCount == 0)
+                    throw new InvalidOperationException(
+                        "Complete coverage did not include a solid birth-system planet.");
+                return new NormalizedStarterResourceEvidence(
+                    new ConclusionSubject(
+                        SubjectKind.BirthSystem,
+                        birthSystemIdentifier),
+                    starter.OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                        .Select(pair => new StarterResourceMetric(
+                            pair.Key,
+                            pair.Value.Amount,
+                            pair.Value.Groups)),
+                    birthContainsFireIce);
+            }
+
+            private sealed class StarterAggregate
+            {
+                public long Amount { get; set; }
+                public int Groups { get; set; }
+            }
 
             private sealed class RareAggregate
             {

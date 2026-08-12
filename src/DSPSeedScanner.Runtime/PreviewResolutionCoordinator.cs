@@ -232,6 +232,8 @@ namespace DSPSeedScanner.Runtime
             if (result.Status == RuntimeScanStatus.Success)
             {
                 attempt.SetCompleteReports(result.Reports.Where(report =>
+                    (report.Stage == EvidenceStage.BirthSystemRaw &&
+                        report.Context == ConclusionContext.FreshStart) ||
                     report.Stage == EvidenceStage.CompleteClusterRaw));
                 attempt.CacheStored = cache.TryStore(identity, result);
                 Finish(

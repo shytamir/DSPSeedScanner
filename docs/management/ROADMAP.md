@@ -1,10 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 and RFIN-02 were accepted on 2026-08-12. RFIN-03
-reached its automated acceptance gate on 2026-08-12 and awaits product
+**Status:** Active. RFIN-01 through RFIN-03 were accepted on 2026-08-12.
+RFIN-04 reached its automated acceptance gate on 2026-08-12 and awaits product
 acceptance.
 
-**Active user story:** RFIN-03 is at its acceptance gate.
+**Active user story:** RFIN-04 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -154,8 +154,7 @@ remain reusable and attribution is always regenerated from the loaded preview.
 
 ### RFIN-03: Preserve bounded system candidates
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want the panel to name several useful systems when the evidence
 supports more than one candidate.
@@ -205,7 +204,8 @@ contract version changed and existing valid entries remain cache-compatible.
 
 ### RFIN-04: Rewrite Fresh start conclusions
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want to know how this seed's conditions complement a fresh
 start.
@@ -217,11 +217,45 @@ local Fire Ice.
 **Acceptance gate:** Every known family and outcome has deterministic bounded
 copy, planet names appear only with RFIN-02 attribution, and no raw quantities,
 star-type suffixes, `@`, or unsupported output claims appear. Unknowns remain
-omitted. The open Fresh start decisions below must be settled before this story
-is activated.
+omitted. The Fresh start wording decisions were resolved during implementation.
 
 **Out of scope:** New predicates, changed ranges, resource viability, mining
 performance, or raw evidence views.
+
+**Implemented:** Fresh start now has a dedicated natural-language presenter.
+It uses starter-gas-giant singular or plural product presence and known
+absence; attributed planet-first Solar, Wind, and permanent-solar-source
+statements; gas-giant-neighbor conclusions; and concise per-resource amount,
+vein-group, and local Fire Ice statements. Solar and Wind remain separate
+cards. The combined starter-deposit total is intentionally omitted because it
+duplicates the individual resource decisions.
+
+The automatic complete scan now retains a bounded starter-resource aggregate
+from the birth-system planets it already generates. Those accepted predicates
+are published with the complete result and persisted as semantic conclusions,
+so cache hits reproduce the same completed Fresh start presentation without a
+new scan.
+
+**Acceptance evidence:**
+
+- focused fixtures covered singular and plural gas wording, known product
+  absence, attributed Solar, Wind, and tidal-lock sentences, topology,
+  resource amount and vein-group outcomes, and Fire Ice presence or absence;
+- planet names appeared only when complete RFIN-02 attribution identified the
+  qualifying planets; missing attribution omitted gas, power, and tidal copy
+  without fabricating a fallback;
+- no Fresh start line contained star-type suffixes, `@`, percentages, ratios,
+  raw amounts, mechanical distribution labels, omitted counts, or the combined
+  starter-deposit total;
+- automatic complete-scan and cache-hit fixtures produced identical completed
+  Fresh start text; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks passed, and all 55 runtime-boundary checks passed.
+
+**Produced:** The Fresh start sentence composer and bounded automatic
+birth-system resource aggregation. Cache schema version 3 invalidates older
+semantic entries as misses because completed Fresh start resource conclusions
+are now included in the persisted presentation result.
 
 ### RFIN-05: Separate Dark Fog facts from judgments
 
@@ -361,8 +395,8 @@ or unrelated technical debt.
 - Gas products: `Starter gas giant has Fire Ice / Hydrogen`; use `Starter gas
   giants have/lack ...` when multiple giants exist. Known absence may be a
   limitation; incomplete coverage is omitted unknown.
-- Solar and Wind are separate. Solar uses `bright`, `mid`, or `dim`; Wind uses
-  `strong`, `mid`, or `weak`. Percentages are omitted and planet names require
+- Solar and Wind are separate. Solar uses `bright`, `normal`, or `dim`; Wind uses
+  `strong`, `normal`, or `weak`. Percentages are omitted and planet names require
   RFIN-02 attribution.
 - Tidal lock: `Permanent solar source on Aspidiske II` or `No permanent solar
   sources`.
@@ -383,12 +417,10 @@ outcome. Never combine Solar and Wind classifications.
 superfluous numbers, fabricated attribution, realized power, mining performance,
 or universal starter viability.
 
-**Open wording decisions:**
-
-1. Choose the exact Solar/Wind fragments using the approved adjectives, such
-   as `Bright solar on Aspidiske II` versus `Aspidiske II has bright solar`.
-2. Choose the middle resource-amount and vein-group words, and decide whether
-   the combined starter-deposit total receives its own concise sentence.
+**Resolved wording decisions:** Planet-first power uses `Aspidiske II has
+bright solar` and the corresponding Wind form. Middle resource amount and
+vein-group outcomes use `normal`. The combined starter-deposit total is not
+displayed because the individual resource conclusions are more actionable.
 
 ### Megafactory
 

@@ -148,7 +148,7 @@ namespace DSPSeedScanner.Runtime
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 2;
+        internal const int SchemaVersion = 3;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;
@@ -242,7 +242,7 @@ namespace DSPSeedScanner.Runtime
                 try
                 {
                     ConclusionReport[] cachedReports = result.Reports
-                        .Where(report => report.Stage == EvidenceStage.CompleteClusterRaw)
+                        .Where(IsCompleteScanSemanticReport)
                         .ToArray();
                     Directory.CreateDirectory(DirectoryPath);
                     string destination = Path.Combine(DirectoryPath, key.FileName);
@@ -328,7 +328,7 @@ namespace DSPSeedScanner.Runtime
             CompleteClusterRawResult result)
         {
             ConclusionReport[] cachedReports = result.Reports
-                .Where(report => report.Stage == EvidenceStage.CompleteClusterRaw)
+                .Where(IsCompleteScanSemanticReport)
                 .ToArray();
             if (result.Status != RuntimeScanStatus.Success ||
                 result.Fingerprint == null ||
@@ -386,10 +386,15 @@ namespace DSPSeedScanner.Runtime
                 key.Identity.CombatMode,
                 key.Identity.CombatSettingsKey);
             return result.Reports.All(report =>
-                report.Stage == EvidenceStage.CompleteClusterRaw &&
+                IsCompleteScanSemanticReport(report) &&
                 report.Coverage.IsComplete &&
                 IsCurrentReport(key, settings, report));
         }
+
+        private static bool IsCompleteScanSemanticReport(ConclusionReport report) =>
+            (report.Stage == EvidenceStage.BirthSystemRaw &&
+                report.Context == ConclusionContext.FreshStart) ||
+            report.Stage == EvidenceStage.CompleteClusterRaw;
 
         private static bool IsCurrentReport(
             CompleteClusterCacheKey key,

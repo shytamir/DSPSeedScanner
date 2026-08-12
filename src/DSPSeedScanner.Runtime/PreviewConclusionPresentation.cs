@@ -169,11 +169,18 @@ namespace DSPSeedScanner.Runtime
                 Group(
                     attempt.PreviewReports.Where(report =>
                         report.Stage == EvidenceStage.GalaxyPreview),
-                    displays),
+                    displays,
+                    attempt.HasCompleteBirthPlanetAttribution
+                        ? attempt.BirthPlanetAttributions
+                        : null),
                 Group(
                     attempt.CompleteReports.Where(report =>
+                        report.Stage == EvidenceStage.BirthSystemRaw ||
                         report.Stage == EvidenceStage.CompleteClusterRaw),
-                    displays));
+                    displays,
+                    attempt.HasCompleteBirthPlanetAttribution
+                        ? attempt.BirthPlanetAttributions
+                        : null));
         }
 
         public static PresentedConclusionCard MapCard(ConclusionReport report)
@@ -231,7 +238,8 @@ namespace DSPSeedScanner.Runtime
 
         private static IReadOnlyList<PresentedContextGroup> Group(
             IEnumerable<ConclusionReport> source,
-            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays,
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
         {
             ConclusionReport[] reports = source
                 .Where(report => report.Outcome != ComponentOutcome.Unknown &&
@@ -245,6 +253,20 @@ namespace DSPSeedScanner.Runtime
                     .ToArray();
                 if (contextReports.Length == 0)
                     continue;
+
+                if (context == ConclusionContext.FreshStart)
+                {
+                    IReadOnlyList<PresentedConclusionCard> freshStart =
+                        BuildFreshStartCards(contextReports, birthPlanets);
+                    if (freshStart.Count != 0)
+                    {
+                        groups.Add(new PresentedContextGroup(
+                            context,
+                            ContextTitle(context),
+                            freshStart));
+                    }
+                    continue;
+                }
 
                 var cards = new List<PresentedConclusionCard>();
                 var ordinary = new Dictionary<string, List<ConclusionReport>>(StringComparer.Ordinal);
@@ -275,7 +297,9 @@ namespace DSPSeedScanner.Runtime
                 }
                 foreach (string key in order)
                 {
-                    PresentedConclusionCard? card = BuildCard(ordinary[key], displays);
+                    PresentedConclusionCard? card = BuildCard(
+                        ordinary[key],
+                        displays);
                     if (card != null)
                         cards.Add(card);
                 }
@@ -324,6 +348,258 @@ namespace DSPSeedScanner.Runtime
                 subjects,
                 line,
                 reports.Select(report => report.ConclusionId));
+        }
+
+        private static IReadOnlyList<PresentedConclusionCard> BuildFreshStartCards(
+            IReadOnlyList<ConclusionReport> reports,
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
+        {
+            var cards = new List<PresentedConclusionCard>();
+            foreach (ComponentOutcome outcome in new[]
+            {
+                ComponentOutcome.Supports,
+                ComponentOutcome.PreferenceSensitive,
+                ComponentOutcome.DoesNotSupport
+            })
+            {
+                ConclusionReport[] gasReports = reports.Where(report =>
+                    report.ConclusionId.StartsWith(
+                        "FS-GAS-ROUTE.product:",
+                        StringComparison.Ordinal) &&
+                    report.Outcome == outcome).ToArray();
+                AddFreshCard(cards, gasReports, GasLine(gasReports, birthPlanets));
+            }
+            AddFreshCard(cards, Reports(reports, "FS-POWER.solar"), PowerLine(
+                reports,
+                birthPlanets,
+                "FS-POWER.solar",
+                "solar",
+                "bright",
+                "normal",
+                "dim",
+                planet => planet.SolarRatio));
+            AddFreshCard(cards, Reports(reports, "FS-POWER.wind"), PowerLine(
+                reports,
+                birthPlanets,
+                "FS-POWER.wind",
+                "wind",
+                "strong",
+                "normal",
+                "weak",
+                planet => planet.WindRatio));
+            AddFreshCard(cards, Reports(reports, "FS-POWER.birth-tidal"), TidalLine(
+                reports,
+                birthPlanets));
+            AddFreshCard(
+                cards,
+                Reports(reports, SharedSatelliteEvaluator.ConclusionId),
+                TopologyLine(reports));
+
+            foreach (ConclusionReport report in reports.Where(report =>
+                report.ConclusionId.StartsWith("FS-RESOURCES.amount:", StringComparison.Ordinal) ||
+                report.ConclusionId.StartsWith("FS-RESOURCES.groups:", StringComparison.Ordinal) ||
+                report.ConclusionId == "FS-RESOURCES.fire-ice"))
+            {
+                AddFreshCard(
+                    cards,
+                    new[] { report },
+                    ResourceLine(report));
+            }
+            return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static void AddFreshCard(
+            ICollection<PresentedConclusionCard> destination,
+            IReadOnlyList<ConclusionReport> sources,
+            string? line)
+        {
+            if (line == null || sources.Count == 0)
+                return;
+            ComponentOutcome outcome = sources[0].Outcome;
+            destination.Add(new PresentedConclusionCard(
+                ConclusionContext.FreshStart,
+                sources[0].Stage,
+                outcome,
+                Family(sources[0].ConclusionId),
+                line,
+                Array.Empty<string>(),
+                Bound(line, MaximumLineCharacters),
+                sources.Select(source => source.ConclusionId)));
+        }
+
+        private static ConclusionReport[] Reports(
+            IEnumerable<ConclusionReport> reports,
+            string conclusionId)
+        {
+            return reports.Where(report => report.ConclusionId == conclusionId).ToArray();
+        }
+
+        private static string? GasLine(
+            IReadOnlyList<ConclusionReport> reports,
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
+        {
+            if (birthPlanets == null)
+                return null;
+            NormalizedBirthPlanetEvidence[] giants = birthPlanets
+                .Where(planet => planet.IsGasGiant)
+                .ToArray();
+            if (giants.Length == 0)
+                return null;
+
+            if (reports.Count == 0)
+                return null;
+            string[] products = reports
+                .Where(report => giants.Any(giant =>
+                    giant.GasProductIds.Contains(
+                        report.ConclusionId.Substring(
+                            "FS-GAS-ROUTE.product:".Length),
+                        StringComparer.Ordinal)) ==
+                    (report.Outcome == ComponentOutcome.Supports))
+                .Select(report => ResourceLabel(report.ConclusionId))
+                .ToArray();
+            if (products.Length == 0)
+                return null;
+            bool present = reports[0].Outcome == ComponentOutcome.Supports;
+            string subject = giants.Length == 1
+                ? "Starter gas giant"
+                : "Starter gas giants";
+            string verb = present
+                ? (giants.Length == 1 ? " has " : " have ")
+                : (giants.Length == 1 ? " lacks " : " lack ");
+            return subject + verb + String.Join(" / ", products);
+        }
+
+        private static string? PowerLine(
+            IReadOnlyList<ConclusionReport> reports,
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets,
+            string conclusionId,
+            string noun,
+            string strong,
+            string middle,
+            string weak,
+            Func<NormalizedBirthPlanetEvidence, decimal?> selectValue)
+        {
+            ConclusionReport? report = reports.SingleOrDefault(value =>
+                value.ConclusionId == conclusionId);
+            if (report == null || birthPlanets == null)
+                return null;
+            AcceptedRange range = noun == "solar"
+                ? ConclusionDefinition.Solar
+                : ConclusionDefinition.Wind;
+            NormalizedBirthPlanetEvidence[] matching = birthPlanets
+                .Where(planet => !planet.IsGasGiant && selectValue(planet).HasValue &&
+                    ConclusionDefinition.Evaluate(selectValue(planet)!.Value, range) ==
+                        report.Outcome)
+                .OrderBy(planet => planet.PlanetId)
+                .ToArray();
+            if (matching.Length == 0)
+                return null;
+            string adjective = report.Outcome switch
+            {
+                ComponentOutcome.Supports => strong,
+                ComponentOutcome.PreferenceSensitive => middle,
+                ComponentOutcome.DoesNotSupport => weak,
+                _ => throw new ArgumentOutOfRangeException(nameof(report.Outcome))
+            };
+            if (matching.Length > MaximumSubjectsPerCard)
+                return "Many planets have " + adjective + " " + noun;
+            return JoinNames(matching.Select(planet => planet.DisplayName)) +
+                (matching.Length == 1 ? " has " : " have ") + adjective + " " + noun;
+        }
+
+        private static string? TidalLine(
+            IReadOnlyList<ConclusionReport> reports,
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
+        {
+            ConclusionReport? report = reports.SingleOrDefault(value =>
+                value.ConclusionId == "FS-POWER.birth-tidal");
+            if (report == null || birthPlanets == null)
+                return null;
+            if (report.Outcome == ComponentOutcome.DoesNotSupport)
+                return "No permanent solar sources";
+            NormalizedBirthPlanetEvidence[] tidal = birthPlanets
+                .Where(planet => !planet.IsGasGiant && planet.IsTidalLocked == true)
+                .OrderBy(planet => planet.PlanetId)
+                .ToArray();
+            return tidal.Length == 0
+                ? null
+                : tidal.Length > MaximumSubjectsPerCard
+                    ? "Many permanent solar sources"
+                : (tidal.Length == 1 ? "Permanent solar source on " :
+                    "Permanent solar sources on ") +
+                    JoinNames(tidal.Select(planet => planet.DisplayName));
+        }
+
+        private static string? TopologyLine(IReadOnlyList<ConclusionReport> reports)
+        {
+            ConclusionReport? report = reports.SingleOrDefault(value =>
+                value.ConclusionId == SharedSatelliteEvaluator.ConclusionId);
+            if (report?.DecisiveFact == null ||
+                !Int32.TryParse(
+                    report.DecisiveFact.Value,
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out int sharedBodies))
+            {
+                return null;
+            }
+            int neighbors = Math.Max(0, sharedBodies - 1);
+            return neighbors == 0
+                ? "No gas giant neighbors"
+                : neighbors.ToString(CultureInfo.InvariantCulture) +
+                    (neighbors == 1 ? " gas giant neighbor" : " gas giant neighbors");
+        }
+
+        private static string? ResourceLine(ConclusionReport report)
+        {
+            string resource = ResourceLabel(report.ConclusionId);
+            if (report.ConclusionId.StartsWith("FS-RESOURCES.amount:", StringComparison.Ordinal))
+            {
+                return resource + " " + OutcomeWord(
+                    report.Outcome,
+                    "plentiful",
+                    "normal",
+                    "scarce");
+            }
+            if (report.ConclusionId.StartsWith("FS-RESOURCES.groups:", StringComparison.Ordinal))
+            {
+                return resource + " has " + OutcomeWord(
+                    report.Outcome,
+                    "many vein groups",
+                    "normal vein groups",
+                    "few vein groups");
+            }
+            if (report.ConclusionId == "FS-RESOURCES.fire-ice")
+            {
+                return report.Outcome == ComponentOutcome.Supports
+                    ? "Found Fire Ice veins"
+                    : "No Fire Ice veins";
+            }
+            return null;
+        }
+
+        private static string OutcomeWord(
+            ComponentOutcome outcome,
+            string strong,
+            string middle,
+            string weak) => outcome switch
+            {
+                ComponentOutcome.Supports => strong,
+                ComponentOutcome.PreferenceSensitive => middle,
+                ComponentOutcome.DoesNotSupport => weak,
+                _ => throw new ArgumentOutOfRangeException(nameof(outcome))
+            };
+
+        private static string JoinNames(IEnumerable<string> names)
+        {
+            string[] values = names.Take(MaximumSubjectsPerCard).ToArray();
+            return values.Length switch
+            {
+                0 => String.Empty,
+                1 => values[0],
+                2 => values[0] + " and " + values[1],
+                _ => values[0] + ", " + values[1] + ", and " + values[2]
+            };
         }
 
         private static void AddSection(
