@@ -1,7 +1,7 @@
 # Technical Debt Register
 
-**Status:** One active entry. TD-001 and TD-002 were closed by IMPL-08;
-TD-003 was recorded at IMPL-09 acceptance on 2026-08-11.
+**Status:** No active entries. TD-001 and TD-002 were closed by IMPL-08;
+TD-003 was reviewed and closed during the 0.9 release-candidate pass.
 
 This register records deliberately deferred engineering obligations that are
 too important to disappear into story prose. A debt entry does not weaken the
@@ -72,14 +72,14 @@ claimed.
 
 **Introduced:** IMPL-09 acceptance, 2026-08-11.
 
-**State:** Active; non-blocking during maintenance mode.
+**State:** Closed as declined on 2026-08-12.
 
 **Deferred obligation:** Determine whether the three scanner-owned assemblies
 can be merged into one delivered `DSPSeedScanner.dll` without collapsing the
 source-project boundaries between the plugin adapter, runtime orchestration,
 and pure conclusion core.
 
-**Current evidence:** The accepted three-assembly package loads and executes
+**Evidence at review:** The accepted three-assembly package loaded and executed
 all core operations correctly. Separate assemblies keep the Core and Runtime
 projects independently testable without DSP, Unity, or BepInEx. Assembly
 merging would be a packaging refinement, not a functional requirement.
@@ -99,8 +99,17 @@ preview and raw invocation successfully, or document that the demonstrated
 cost or risk is disproportionate and close the refinement as declined. The
 three-DLL package remains acceptable until that decision.
 
-**Required by:** Review before any publication-ready package is approved. It
-did not block the completed presentation specification or implementation.
+**Closure decision:** The 0.9 release-candidate review retained the accepted
+three-DLL package. Consolidation would add a new assembly-merging or dependency-
+resolution step solely to reduce visible package clutter, while risking public
+type identities, stack traces, deterministic output, BepInEx discovery, and the
+independently tested project boundaries. The validated package contains only
+the three scanner-owned assemblies and excludes game, framework, and CI
+reference binaries. That cost and release risk were disproportionate to the
+cosmetic benefit, so no publication blocker remained.
+
+**Required by:** Satisfied by the 0.9 release-candidate review. The entry did
+not block the completed presentation specification or implementation.
 
 Return to the [maintenance roadmap](ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).
