@@ -70,6 +70,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
                 ("Megafactory copy is natural bounded and grouped", MegafactoryCopyIsNaturalBoundedAndGrouped),
                 ("Compact routes are natural deduplicated and bounded", CompactRoutesAreNaturalDeduplicatedAndBounded),
+                ("Sphere candidates are natural deterministic and bounded", SphereCandidatesAreNaturalDeterministicAndBounded),
                 ("conclusion panel separates contexts stages and conflicts", ConclusionPanelSeparatesContextsAndConflicts),
                 ("conclusion panel snapshot stays bounded and neutral", ConclusionPanelSnapshotIsBoundedAndNeutral),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
@@ -2443,6 +2444,90 @@ namespace DSPSeedScanner.Runtime.Tests
             });
             return result ?? throw new InvalidOperationException(
                 "Compact route fixture did not publish a result.");
+        }
+
+        private static void SphereCandidatesAreNaturalDeterministicAndBounded()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+                {
+                    [1] = (1m, 60_000, 0),
+                    [2] = (1m, 250_000, 4),
+                    [3] = (1m, 100_000, 1)
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway
+                    {
+                        Snapshot = Snapshot(systemCandidateFacts: facts)
+                    }),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                PresentedContextGroup sphere = PreviewConclusionPresenter.Project(attempt)
+                    .ImmediateGroups.Single(group =>
+                        group.Context == ConclusionContext.SphereShowcase);
+                string[] lines = sphere.Cards.Select(card => card.Line).ToArray();
+
+                True(lines.SequenceEqual(new[]
+                {
+                    "Grand shell at Star 2",
+                    "Normal shell at Star 3",
+                    "Tiny shell at Alpha",
+                    "Many contained orbits at Star 2",
+                    "1 contained orbit at Star 3",
+                    "No contained orbits at Alpha"
+                }));
+                Equal(
+                    String.Join("\n", lines),
+                    String.Join("\n", PreviewConclusionPresenter.Project(attempt)
+                        .ImmediateGroups.Single(group =>
+                            group.Context == ConclusionContext.SphereShowcase)
+                        .Cards.Select(card => card.Line)));
+                True(sphere.Cards.All(card => card.Line.Length <=
+                    PreviewConclusionPresenter.MaximumLineCharacters));
+                foreach (string forbidden in new[]
+                {
+                    "radius", "orbit distance", "+", "@", "geometry",
+                    "receiver", "output", "type star", "MF-"
+                })
+                {
+                    False(String.Join("\n", lines).Contains(
+                        forbidden,
+                        StringComparison.OrdinalIgnoreCase));
+                }
+            });
+
+            WithTemporaryDirectory(path =>
+            {
+                var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+                {
+                    [2] = (1m, 250_000, 4),
+                    [3] = (1m, 240_000, 3),
+                    [4] = (1m, 230_000, 2)
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway
+                    {
+                        Snapshot = Snapshot(systemCandidateFacts: facts)
+                    }),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                string[] lines = PreviewConclusionPresenter
+                    .Project(resolver.CurrentPublishedAttempt!)
+                    .ImmediateGroups.Single(group =>
+                        group.Context == ConclusionContext.SphereShowcase)
+                    .Cards.Select(card => card.Line).ToArray();
+                True(lines.Contains(
+                    "Grand shells at Star 2, Star 3, and Star 4"));
+                True(lines.Contains(
+                    "Many contained orbits at Star 2, Star 3, and Star 4"));
+                True(lines.All(line => line.Count(character => character == ',') <= 2));
+            });
         }
 
         private static void ConclusionPanelSnapshotIsBoundedAndNeutral()

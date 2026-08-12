@@ -6,12 +6,12 @@ story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core and New Game presentation roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12 respectively. The approved
-presentation refinement roadmap is active. RFIN-01 through RFIN-06 were
+presentation refinement roadmap is active. RFIN-01 through RFIN-07 were
 accepted on 2026-08-12; RFIN-01's installed-game smoothness and duration
-validation remains deferred to the roadmap's final human phase. RFIN-07 now
-awaits product acceptance after its Compact expansion route summaries passed
-the automated acceptance gate. One packaging refinement remains tracked as
-non-blocking technical debt.
+validation remains deferred to the roadmap's final human phase. RFIN-08 now
+awaits product acceptance after its Sphere / energy candidate rewrite passed
+the automated acceptance gate without changing scan or cache semantics. One
+packaging refinement remains tracked as non-blocking technical debt.
 
 ## Product decision
 

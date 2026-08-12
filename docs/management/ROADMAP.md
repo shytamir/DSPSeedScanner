@@ -1,10 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 through RFIN-06 were accepted on 2026-08-12.
-RFIN-07 reached its automated acceptance gate on 2026-08-12 and awaits product
+**Status:** Active. RFIN-01 through RFIN-07 were accepted on 2026-08-12.
+RFIN-08 reached its automated acceptance gate on 2026-08-12 and awaits product
 acceptance.
 
-**Active user story:** RFIN-07 is at its acceptance gate.
+**Active user story:** RFIN-08 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -382,8 +382,7 @@ needed by the presentation contract.
 
 ### RFIN-07: Summarize Compact expansion routes
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want to know how easy or difficult expansion is for the roles
 this seed supports.
@@ -443,7 +442,8 @@ entries omitted complete-scan rare routes from their persisted grouping set.
 
 ### RFIN-08: Rewrite Sphere / energy candidates
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want to know how favorable this seed is for sphere construction.
 
@@ -458,6 +458,37 @@ lists remain deterministic and bounded, and no internal radius, orbit distance,
 
 **Out of scope:** Sphere design, receiver effectiveness, aesthetics, composite
 ranking, or threshold changes.
+
+**Implemented:** Sphere / energy now applies the accepted radius and
+contained-orbit predicates independently to the existing bounded candidate
+lanes. Shell results read `Grand shell`, `Normal shell`, or `Tiny shell`;
+containment results read `Many contained orbits`, `1 contained orbit`, or `No
+contained orbits`. Each conclusion attaches up to three evidence-backed system
+names with natural `at` phrasing. Systems sharing one outcome are grouped while
+the two components remain independent.
+
+Candidate order continues to be radius or contained-orbit count descending,
+with stable system identity resolving ties before the three-candidate bound.
+The presenter introduces no score, threshold, cache field, or additional scan
+work.
+
+**Acceptance evidence:**
+
+- one focused fixture rendered all three accepted shell outcomes and all three
+  accepted containment outcomes from real bounded candidate values;
+- a grouped fixture retained exactly the top three systems for each component
+  in deterministic candidate order;
+- repeated projection produced identical copy, and every emitted line remained
+  within the established presentation bound;
+- focused assertions excluded internal radius, orbit distance, `+N`, `@`, raw
+  geometry, star type, conclusion IDs, and receiver/output language; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks and 58 runtime-boundary checks passed, and the local
+  versioned artifact and Thunderstore package validators passed.
+
+**Produced:** A dedicated Sphere / energy candidate composer over the existing
+immutable candidate projection. The scan, accepted predicates, semantic cache,
+and runtime evidence contract were unchanged.
 
 ## Phase 3 - Reconcile and validate the panel
 

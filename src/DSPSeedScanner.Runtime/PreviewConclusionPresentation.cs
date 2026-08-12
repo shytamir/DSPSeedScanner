@@ -321,6 +321,20 @@ namespace DSPSeedScanner.Runtime
                     continue;
                 }
 
+                if (context == ConclusionContext.SphereShowcase)
+                {
+                    IReadOnlyList<PresentedConclusionCard> sphere =
+                        BuildSphereCards(contextReports, candidates);
+                    if (sphere.Count != 0)
+                    {
+                        groups.Add(new PresentedContextGroup(
+                            context,
+                            ContextTitle(context),
+                            sphere));
+                    }
+                    continue;
+                }
+
                 var cards = new List<PresentedConclusionCard>();
                 var ordinary = new Dictionary<string, List<ConclusionReport>>(StringComparer.Ordinal);
                 var order = new List<string>();
@@ -664,6 +678,101 @@ namespace DSPSeedScanner.Runtime
                         StringComparer.Ordinal)));
             }
             return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static IReadOnlyList<PresentedConclusionCard> BuildSphereCards(
+            IReadOnlyList<ConclusionReport> reports,
+            RuntimeSystemCandidates? candidates)
+        {
+            var cards = new List<PresentedConclusionCard>();
+            ConclusionReport? radiusSource = SingleReport(
+                reports,
+                "MF-SPHERE-GEOMETRY.radius");
+            if (radiusSource != null && candidates?.ShellRadius != null)
+            {
+                foreach (ComponentOutcome outcome in CandidateOutcomes())
+                {
+                    RuntimeSystemCandidate[] matching = candidates.ShellRadius
+                        .Where(candidate => ConclusionDefinition.Evaluate(
+                            candidate.DecisiveValue,
+                            ConclusionDefinition.SphereRadius) == outcome)
+                        .ToArray();
+                    if (matching.Length == 0)
+                        continue;
+                    string shell = OutcomeWord(
+                        outcome,
+                        "Grand shell",
+                        "Normal shell",
+                        "Tiny shell");
+                    string line = matching.Length == 1
+                        ? shell + " at " + matching[0].DisplayName
+                        : shell + "s at " + JoinNames(
+                            matching.Select(candidate => candidate.DisplayName));
+                    AddSphereCard(cards, outcome, new[] { radiusSource }, line);
+                }
+            }
+
+            ConclusionReport[] containmentSources = reports.Where(report =>
+                report.ConclusionId == "MF-SPHERE-GEOMETRY.containment").ToArray();
+            if (containmentSources.Length != 0 && candidates?.ContainedOrbits != null)
+            {
+                foreach (ComponentOutcome outcome in CandidateOutcomes())
+                {
+                    RuntimeSystemCandidate[] matching = candidates.ContainedOrbits
+                        .Where(candidate => ConclusionDefinition.Evaluate(
+                            candidate.DecisiveValue,
+                            ConclusionDefinition.OrbitContainment) == outcome)
+                        .Where(candidate => containmentSources.Any(report =>
+                            report.Subject.Identifier == candidate.Identifier &&
+                            report.Outcome == outcome))
+                        .ToArray();
+                    if (matching.Length == 0)
+                        continue;
+                    string conclusion = OutcomeWord(
+                        outcome,
+                        "Many contained orbits",
+                        "1 contained orbit",
+                        "No contained orbits");
+                    string line = conclusion + " at " + JoinNames(
+                        matching.Select(candidate => candidate.DisplayName));
+                    AddSphereCard(
+                        cards,
+                        outcome,
+                        containmentSources.Where(report => matching.Any(candidate =>
+                            candidate.Identifier == report.Subject.Identifier &&
+                            report.Outcome == outcome)),
+                        line);
+                }
+            }
+            return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static IEnumerable<ComponentOutcome> CandidateOutcomes()
+        {
+            yield return ComponentOutcome.Supports;
+            yield return ComponentOutcome.PreferenceSensitive;
+            yield return ComponentOutcome.DoesNotSupport;
+        }
+
+        private static void AddSphereCard(
+            ICollection<PresentedConclusionCard> cards,
+            ComponentOutcome outcome,
+            IEnumerable<ConclusionReport> sources,
+            string line)
+        {
+            ConclusionReport[] values = sources.ToArray();
+            if (values.Length == 0)
+                return;
+            cards.Add(new PresentedConclusionCard(
+                ConclusionContext.SphereShowcase,
+                EvidenceStage.GalaxyPreview,
+                outcome,
+                "SPHERE-CANDIDATES",
+                line,
+                Array.Empty<string>(),
+                Bound(line, MaximumLineCharacters),
+                values.Select(value => value.ConclusionId).Distinct(
+                    StringComparer.Ordinal)));
         }
 
         private static IEnumerable<string> CompactRoles(string pairIdentifier)
