@@ -20,10 +20,14 @@ and no other loaded BepInEx plugins or preloader assemblies. The loaded IL for
 `PlanetData.RegenerateRawDataImmediately()` had combined SHA-256
 `A0CC806F17FD8A88468AA8CF05CDD4C1A8728A33BA1A4C0FA967C2EF50775C9B`.
 
-Any exact identity mismatch, missing required member, other plugin, preloader
-assembly, or changed generation-method digest is rejected before evaluation.
-This is a conservative compatibility boundary, not proof that every detected
-mod would actually change generation.
+At IMPL-08 acceptance, any exact identity mismatch, missing required member,
+other plugin, preloader assembly, or changed generation-method digest was
+rejected before evaluation. The later 1.0 coexistence correction retained
+those observed values as cache identity but stopped treating plugin presence
+or generation changes as incompatibility. Unsupported game versions and
+missing required members remain rejected; runtime failures and incomplete
+evidence still publish no complete result. The accepted isolated probes do not
+prove compatibility with every plugin combination.
 
 ## Validation layers
 
@@ -47,6 +51,17 @@ Compilation and pure tests did not substitute for the in-game probes.
 | Full-cluster repeat and cleanup | Seeds `73339583`, `96178012`, and `45772` repeated exactly across independent processes with 218, 196, and 216 solid planets. Cancellation stopped at `3/218`; injected incompatibility stopped at `1/218`; neither exposed conclusions or candidate objects. |
 | Derivation parity | Light-year conversion and maximum-shell rounding matched the supported runtime boundary fixtures established in IMPL-04. |
 | Compatibility failure paths | Missing members, changed catalogues, unknown resource enums, raw planet failure, incomplete coverage, and altered settings retained seed, stage, provenance, subject, component independence, and explicit unknown or not-applicable outcomes. |
+
+The controlled preloader rejection in the table above records the IMPL-08 gate
+as it was executed. Under the 1.0 coexistence policy, plugin inventory and
+observed generation changes are accepted and isolate cache entries instead of
+rejecting the scan.
+
+The 1.0 coexistence correction was then validated in the normal multi-plugin
+installation on 2026-08-12. One cache-miss scan completed, one cache hit was
+reused, preview replacement retired obsolete work, and preview exit hid and
+retired the active session. This validates that installed combination; it does
+not claim compatibility with every possible plugin set.
 
 The two independent IMPL-08 conformance records were byte-identical with
 SHA-256

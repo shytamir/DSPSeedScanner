@@ -43,9 +43,12 @@ game folder.
 
 ## Compatibility
 
-This release supports Dyson Sphere Program `0.10.34.28529`. If the game or
-another mod changes cluster generation, DSP Seed Scanner may report that the
-runtime is unsupported instead of showing unreliable results.
+This release supports Dyson Sphere Program `0.10.34.28529`. Other game
+versions or missing required game APIs are reported as unsupported.
+
+DSP Seed Scanner can run alongside other BepInEx plugins. Their changes may
+affect the generated cluster, scan results, or runtime behavior, and conflicts
+cannot always be detected automatically.
 
 ## Useful links
 

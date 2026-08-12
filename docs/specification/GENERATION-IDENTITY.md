@@ -135,11 +135,18 @@ displayed alongside this identity but must not replace it.
 Generation must be rejected as unsupported rather than silently reused when:
 
 - the DSP build or generation catalogue is not recognized;
-- the requested galaxy algorithm falls outside the runtime's supported range;
-- a generation-affecting patch or mod makes the compatibility identity
-  uncertain;
+- the DSP game version is unsupported or a required runtime member is missing;
 - required resource or combat inputs are unavailable;
 - evidence from different generation stages is compared as if equivalent.
+
+Loaded plugin and preloader inventories remain part of the cache identity but
+their presence or detected generation changes do not reject a scan. The
+observed assembly, algorithm, catalogue, and generation-method identities also
+remain in the cache key. This permits BepInEx co-installation while preventing
+cached conclusions from crossing different recorded environments. A plugin
+may still alter generation or runtime behavior in a way the scanner cannot
+identify; that interaction risk is accepted and does not imply that every mod
+combination has been validated.
 
 ## Unresolved boundaries
 

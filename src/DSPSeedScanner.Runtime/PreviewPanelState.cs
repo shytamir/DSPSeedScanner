@@ -345,10 +345,6 @@ namespace DSPSeedScanner.Runtime
         private static string UnsupportedDetail(string? diagnosticCode) =>
             diagnosticCode switch
             {
-                "generation-mod-uncertain" =>
-                    "Other loaded plugins require an isolated scanner run",
-                "generation-patcher-uncertain" =>
-                    "A loaded preloader patch requires an isolated scanner run",
                 "game-version-mismatch" or "request-identity-unsupported" =>
                     "This DSP version is outside the supported contract",
                 _ => "Generation runtime differs from the supported contract"

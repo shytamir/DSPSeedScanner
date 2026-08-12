@@ -68,6 +68,13 @@ rejected a changed in-memory method digest.
 limited to the one recorded runtime identity; no general mod compatibility is
 claimed.
 
+**Later policy:** The 1.0 coexistence correction retained plugin and preloader
+inventory plus observed assembly, algorithm, catalogue, and method identity in
+the cache key, but stopped treating plugin presence or generation changes as
+incompatibility. Unsupported game versions and missing required members still
+reject; undetected plugin interaction remains an accepted risk rather than an
+isolation requirement.
+
 ## TD-003: Evaluate single-assembly packaging
 
 **Introduced:** IMPL-09 acceptance, 2026-08-11.

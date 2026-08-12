@@ -21,6 +21,10 @@ panel to inspect conclusions below the visible viewport.
 The BepInEx setting `Presentation.PanelCorner` selects the panel corner: `1`
 bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.
 
+Other BepInEx plugins may be installed alongside DSP Seed Scanner. The scanner
+uses the live runtime it receives; generation changes or conflicts introduced
+by another plugin may affect its results and are not always detectable.
+
 ## Project status
 
 [docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current

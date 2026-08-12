@@ -9,8 +9,8 @@ refinement roadmaps were completed and accepted on 2026-08-11 and 2026-08-12.
 The refinement release candidate passed its seven-step installed 4K human
 validation on 2026-08-12, including smooth cache-miss scanning through a
 scanner-owned terrain worker. The repository is in maintenance mode; no
-roadmap or user story is active. One packaging refinement remains tracked as
-non-blocking technical debt.
+roadmap or user story is active. The technical debt register has no active
+entries.
 
 ## Product decision
 
@@ -94,6 +94,13 @@ The accepted semantics and thresholds are maintained in the
   boundaries, and attributable to its seed and stage.
 - DSP, Unity, and BepInEx assemblies remain external dependencies and are not
   redistributed.
+- Co-installed BepInEx plugins and preloader assemblies do not by themselves
+  make the scanner unsupported, including when they alter generation. Their
+  inventory and the observed assembly, algorithm, catalogue, and generation-
+  method identity remain part of the cache key. Unsupported game versions,
+  missing required members, incomplete evidence, and runtime failures still
+  fail closed. Plugin interactions are an accepted compatibility risk rather
+  than a reason to require an isolated installation.
 
 ## Current scope exclusions
 

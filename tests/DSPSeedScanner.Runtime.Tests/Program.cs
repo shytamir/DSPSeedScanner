@@ -22,9 +22,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("birth planet attribution distinguishes gas cardinality and unknown", BirthPlanetAttributionDistinguishesCardinalityAndUnknown),
                 ("system candidates are bounded deterministic and owned", SystemCandidatesAreBoundedDeterministicAndOwned),
                 ("incomplete system candidate evidence stays unknown", IncompleteSystemCandidateEvidenceStaysUnknown),
-                ("identity mismatches reject safely", IdentityMismatchesRejectSafely),
-                ("member and mod uncertainty reject safely", MemberAndModUncertaintyRejectSafely),
-                ("patcher and in-memory generation uncertainty reject safely", PatcherAndMethodUncertaintyRejectSafely),
+                ("unsupported game identity rejects safely", UnsupportedGameIdentityRejectsSafely),
+                ("missing members reject while plugins coexist", MissingMembersRejectWhilePluginsCoexist),
+                ("generation changes coexist and remain identified", GenerationChangesCoexistAndRemainIdentified),
                 ("unsupported request identity rejects safely", UnsupportedRequestIdentityRejectsSafely),
                 ("other star count preserves fixed and declines quantitative", OtherStarCountIsBounded),
                 ("peace preview omits Dark Fog status", PeacePreviewOmitsDarkFogStatus),
@@ -340,28 +340,27 @@ namespace DSPSeedScanner.Runtime.Tests
             }
         }
 
-        private static void IdentityMismatchesRejectSafely()
+        private static void UnsupportedGameIdentityRejectsSafely()
         {
-            AssertRejected(Fingerprint(assembly: "BAD"), "assembly-mismatch");
-            AssertRejected(Fingerprint(themes: ConclusionDefinition.ReferenceOrderedThemeIds.Split(',').Reverse()), "theme-catalogue-mismatch");
             AssertRejected(Fingerprint(gameVersion: "0.10.34.0"), "game-version-mismatch");
-            AssertRejected(Fingerprint(algorithm: 1), "galaxy-algorithm-mismatch");
+            True(CompatibilityPolicy.Evaluate(Fingerprint(assembly: "MODIFIED")).Supported);
         }
 
-        private static void MemberAndModUncertaintyRejectSafely()
+        private static void MissingMembersRejectWhilePluginsCoexist()
         {
             AssertRejected(Fingerprint(members: false, missing: "UniverseGen.CreateGalaxy"), "missing-runtime-member");
-            AssertRejected(Fingerprint(mods: new[] { "example.generation.patch" }), "generation-mod-uncertain");
+            True(CompatibilityPolicy.Evaluate(
+                Fingerprint(mods: new[] { "example.unrelated.plugin" })).Supported);
         }
 
-        private static void PatcherAndMethodUncertaintyRejectSafely()
+        private static void GenerationChangesCoexistAndRemainIdentified()
         {
-            AssertRejected(
-                Fingerprint(patchers: new[] { "example-preloader.dll:ABC" }),
-                "generation-patcher-uncertain");
-            AssertRejected(
-                Fingerprint(methodIl: "BAD"),
-                "generation-method-il-mismatch");
+            True(CompatibilityPolicy.Evaluate(
+                Fingerprint(patchers: new[] { "example-preloader.dll:ABC" })).Supported);
+            True(CompatibilityPolicy.Evaluate(Fingerprint(methodIl: "MODIFIED")).Supported);
+            True(CompatibilityPolicy.Evaluate(Fingerprint(algorithm: 1)).Supported);
+            True(CompatibilityPolicy.Evaluate(Fingerprint(
+                themes: ConclusionDefinition.ReferenceOrderedThemeIds.Split(',').Reverse())).Supported);
         }
 
         private static void UnsupportedRequestIdentityRejectsSafely()
@@ -1082,14 +1081,25 @@ namespace DSPSeedScanner.Runtime.Tests
             False(String.Equals(first?.Hash, differentResources?.Hash, StringComparison.Ordinal));
             False(String.Equals(first?.Hash, differentSeed?.Hash, StringComparison.Ordinal));
 
-            False(CompleteClusterCacheKey.TryCreate(
+            True(CompleteClusterCacheKey.TryCreate(
                 PreviewIdentity(16_315_224),
                 Fingerprint(methodIl: "obsolete"),
-                out _));
-            False(CompleteClusterCacheKey.TryCreate(
+                out CompleteClusterCacheKey? changedMethod));
+            False(first!.Equals(changedMethod));
+            False(String.Equals(first.Hash, changedMethod?.Hash, StringComparison.Ordinal));
+            True(CompleteClusterCacheKey.TryCreate(
                 PreviewIdentity(16_315_224),
                 Fingerprint(mods: new[] { "generation-mod" }),
-                out _));
+                out CompleteClusterCacheKey? modded));
+            False(first!.Equals(modded));
+            False(String.Equals(first.Hash, modded?.Hash, StringComparison.Ordinal));
+
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224),
+                Fingerprint(patchers: new[] { "example-preloader.dll:ABC" }),
+                out CompleteClusterCacheKey? patched));
+            False(first.Equals(patched));
+            False(String.Equals(first.Hash, patched?.Hash, StringComparison.Ordinal));
         }
 
         private static void CompleteCacheRoundTripsAndReplacesAtomically()
@@ -1243,8 +1253,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     RuntimeScanStatus.Success,
                     source.GalaxySeed,
                     "success",
-                    "incompatible fixture",
-                    Fingerprint(methodIl: "obsolete"),
+                    "unsupported fixture",
+                    Fingerprint(gameVersion: "unsupported"),
                     source.Coverage,
                     source.Progress,
                     source.RareResources,
@@ -1676,17 +1686,6 @@ namespace DSPSeedScanner.Runtime.Tests
                 False(view.Title.Contains('\n'));
                 False(view.Detail.Contains('\n'));
             }
-
-            PreviewPanelView modUncertainty = PreviewPanelStateMapper.Project(
-                4,
-                PreviewResolutionState.Incompatible,
-                0,
-                0,
-                PreviewPanelCorner.BottomRight,
-                0,
-                "generation-mod-uncertain");
-            True(modUncertainty.Detail.Contains("loaded plugins"));
-            True(modUncertainty.Detail.Length <= PreviewPanelLayout.MaximumDetailCharacters);
 
             PreviewPanelView planning = PreviewPanelStateMapper.Project(
                 3,

@@ -44,9 +44,10 @@ namespace DSPSeedScanner.Plugin
             string[] themes = descriptor.savedThemeIds
                 .Select(value => value.ToString(CultureInfo.InvariantCulture))
                 .ToArray();
-            string[] otherPlugins = Chainloader.PluginInfos.Keys
-                .Where(id => !String.Equals(id, ownPluginGuid, StringComparison.Ordinal))
-                .OrderBy(id => id, StringComparer.Ordinal)
+            string[] otherPlugins = Chainloader.PluginInfos
+                .Where(pair => !String.Equals(pair.Key, ownPluginGuid, StringComparison.Ordinal))
+                .Select(pair => pair.Key + "@" + pair.Value.Metadata.Version)
+                .OrderBy(value => value, StringComparer.Ordinal)
                 .ToArray();
             string[] patchers = CapturePatcherInventory();
             string methodHash = CaptureGenerationMethodHash();
