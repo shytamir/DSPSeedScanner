@@ -1,9 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 was accepted on 2026-08-12. RFIN-02 reached its
-automated acceptance gate on 2026-08-12 and awaits product acceptance.
+**Status:** Active. RFIN-01 and RFIN-02 were accepted on 2026-08-12. RFIN-03
+reached its automated acceptance gate on 2026-08-12 and awaits product
+acceptance.
 
-**Active user story:** RFIN-02 is at its acceptance gate.
+**Active user story:** RFIN-03 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -103,8 +104,7 @@ validation phase.
 
 ### RFIN-02: Preserve planet attribution
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want every named planet to own the fact that qualified it.
 
@@ -154,7 +154,8 @@ remain reusable and attribution is always regenerated from the loaded preview.
 
 ### RFIN-03: Preserve bounded system candidates
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want the panel to name several useful systems when the evidence
 supports more than one candidate.
@@ -171,6 +172,34 @@ is versioned and incompatible entries fail as cache misses.
 
 **Out of scope:** New thresholds, composite scores, changed role predicates,
 copy, or displaying more than three candidates.
+
+**Implemented:** A presentation-safe candidate projection now derives three
+independent lanes from complete normalized preview evidence: Dyson luminosity,
+maximum shell radius, and contained-orbit count. Each lane retains at most
+three systems with its DSP display name, stable system identity, and the one
+decisive value for that lane. Values remain attached to their source system;
+ranking is descending by the decisive value and then by stable identity.
+
+**Acceptance evidence:**
+
+- focused fixtures independently ranked energy, shell-radius, and
+  contained-orbit candidates and capped every lane at three systems;
+- deliberately different measurements proved that a system's name and value
+  stayed together across all lanes, while equal measurements used stable
+  identity as the deterministic tie-breaker;
+- a missing energy fact made only the energy lane unknown while complete shell
+  and containment lanes remained available;
+- a cached conclusion reload retained the freshly projected live-preview
+  candidates without starting another complete scan or persisting candidate
+  evidence; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks passed, and all 53 runtime-boundary checks passed.
+
+**Produced:** Bounded immutable `RuntimeSystemCandidates` lanes available to
+the active presentation resolution. The projection exposes no star type,
+all-system evidence collection, composite score, new predicate, or copy. Since
+the semantic conclusion set and cache payload remain unchanged, no persisted
+contract version changed and existing valid entries remain cache-compatible.
 
 ## Phase 2 - Rewrite decision presentation
 

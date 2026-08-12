@@ -30,6 +30,125 @@ namespace DSPSeedScanner.Runtime
         }
     }
 
+    public sealed record RuntimeSystemCandidate
+    {
+        public RuntimeSystemCandidate(
+            string identifier,
+            string displayName,
+            decimal decisiveValue)
+        {
+            Identifier = Required(identifier, nameof(identifier));
+            DisplayName = Required(displayName, nameof(displayName));
+            if (decisiveValue < 0)
+                throw new ArgumentOutOfRangeException(nameof(decisiveValue));
+            DecisiveValue = decisiveValue;
+        }
+
+        public string Identifier { get; }
+        public string DisplayName { get; }
+        public decimal DecisiveValue { get; }
+
+        private static string Required(string value, string parameterName)
+        {
+            if (String.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Value is required.", parameterName);
+            return value;
+        }
+    }
+
+    public sealed class RuntimeSystemCandidates
+    {
+        private const int MaximumCandidates = 3;
+        private readonly RuntimeSystemCandidate[]? energy;
+        private readonly RuntimeSystemCandidate[]? shellRadius;
+        private readonly RuntimeSystemCandidate[]? containedOrbits;
+
+        private RuntimeSystemCandidates(
+            RuntimeSystemCandidate[]? energy,
+            RuntimeSystemCandidate[]? shellRadius,
+            RuntimeSystemCandidate[]? containedOrbits)
+        {
+            this.energy = energy;
+            this.shellRadius = shellRadius;
+            this.containedOrbits = containedOrbits;
+        }
+
+        public IReadOnlyList<RuntimeSystemCandidate>? Energy => ReadOnly(energy);
+        public IReadOnlyList<RuntimeSystemCandidate>? ShellRadius => ReadOnly(shellRadius);
+        public IReadOnlyList<RuntimeSystemCandidate>? ContainedOrbits =>
+            ReadOnly(containedOrbits);
+
+        internal static RuntimeSystemCandidates Project(
+            IReadOnlyList<NormalizedSystemEvidence> systems,
+            IReadOnlyList<RuntimeSystemDisplay> displays)
+        {
+            var displayByIdentifier = displays.ToDictionary(
+                value => value.Identifier,
+                StringComparer.Ordinal);
+            return new RuntimeSystemCandidates(
+                Rank(systems, displayByIdentifier, system => system.DysonLuminosity),
+                Rank(systems, displayByIdentifier, system => system.MaximumShellRadius),
+                Rank(systems, displayByIdentifier, system => system.ContainedOrbitCount));
+        }
+
+        private static RuntimeSystemCandidate[]? Rank(
+            IReadOnlyList<NormalizedSystemEvidence> systems,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays,
+            Func<NormalizedSystemEvidence, decimal?> selectValue)
+        {
+            if (systems.Count == 0 || systems.Any(system =>
+                !selectValue(system).HasValue ||
+                !displays.ContainsKey(system.Subject.Identifier)))
+            {
+                return null;
+            }
+
+            return systems
+                .OrderByDescending(system => selectValue(system)!.Value)
+                .ThenBy(system => system.Subject.Identifier, StringComparer.Ordinal)
+                .Take(MaximumCandidates)
+                .Select(system => new RuntimeSystemCandidate(
+                    system.Subject.Identifier,
+                    displays[system.Subject.Identifier].DisplayName,
+                    selectValue(system)!.Value))
+                .ToArray();
+        }
+
+        private static RuntimeSystemCandidate[]? Rank(
+            IReadOnlyList<NormalizedSystemEvidence> systems,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays,
+            Func<NormalizedSystemEvidence, long?> selectValue)
+        {
+            return Rank(
+                systems,
+                displays,
+                system => selectValue(system).HasValue
+                    ? Convert.ToDecimal(selectValue(system)!.Value)
+                    : null);
+        }
+
+        private static RuntimeSystemCandidate[]? Rank(
+            IReadOnlyList<NormalizedSystemEvidence> systems,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays,
+            Func<NormalizedSystemEvidence, int?> selectValue)
+        {
+            return Rank(
+                systems,
+                displays,
+                system => selectValue(system).HasValue
+                    ? Convert.ToDecimal(selectValue(system)!.Value)
+                    : null);
+        }
+
+        private static IReadOnlyList<RuntimeSystemCandidate>? ReadOnly(
+            RuntimeSystemCandidate[]? candidates)
+        {
+            return candidates == null
+                ? null
+                : Array.AsReadOnly((RuntimeSystemCandidate[])candidates.Clone());
+        }
+    }
+
     public sealed class PreviewScanRequest
     {
         public PreviewScanRequest(
@@ -212,6 +331,9 @@ namespace DSPSeedScanner.Runtime
             }
             if (this.systems.Length == 0 && unknownEnumType == null)
                 throw new ArgumentException("At least one generated system is required.", nameof(systems));
+            SystemCandidates = RuntimeSystemCandidates.Project(
+                this.systems,
+                this.systemDisplays);
             BirthSystemIdentifier = birthSystemIdentifier;
             GeneratedStarCount = generatedStarCount;
             UnknownEnumType = unknownEnumType;
@@ -226,6 +348,7 @@ namespace DSPSeedScanner.Runtime
             Array.AsReadOnly((NormalizedSystemDistance[])systemDistances.Clone());
         public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays =>
             Array.AsReadOnly((RuntimeSystemDisplay[])systemDisplays.Clone());
+        public RuntimeSystemCandidates SystemCandidates { get; }
         public IReadOnlyList<NormalizedBirthPlanetEvidence>? BirthPlanetAttributions =>
             birthPlanetAttributions == null
                 ? null

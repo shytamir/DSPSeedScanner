@@ -20,6 +20,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete preview reaches all immediate families", CompletePreviewReachesAllImmediateFamilies),
                 ("birth planet attribution is deterministic and owned", BirthPlanetAttributionIsDeterministicAndOwned),
                 ("birth planet attribution distinguishes gas cardinality and unknown", BirthPlanetAttributionDistinguishesCardinalityAndUnknown),
+                ("system candidates are bounded deterministic and owned", SystemCandidatesAreBoundedDeterministicAndOwned),
+                ("incomplete system candidate evidence stays unknown", IncompleteSystemCandidateEvidenceStaysUnknown),
                 ("identity mismatches reject safely", IdentityMismatchesRejectSafely),
                 ("member and mod uncertainty reject safely", MemberAndModUncertaintyRejectSafely),
                 ("patcher and in-memory generation uncertainty reject safely", PatcherAndMethodUncertaintyRejectSafely),
@@ -227,6 +229,68 @@ namespace DSPSeedScanner.Runtime.Tests
                 PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
                 False(attempt.HasCompleteBirthPlanetAttribution);
                 Equal(0, attempt.BirthPlanetAttributions.Count);
+            });
+        }
+
+        private static void SystemCandidatesAreBoundedDeterministicAndOwned()
+        {
+            var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+            {
+                [2] = (10m, 1_000_000, 5),
+                [3] = (9m, 3_000_000, 4),
+                [4] = (8m, 2_000_000, 7),
+                [5] = (7m, 4_000_000, 6),
+                [6] = (7m, 4_000_000, 6)
+            };
+            var gateway = new FakeGateway
+            {
+                Snapshot = Snapshot(systemCandidateFacts: facts)
+            };
+
+            RuntimeScanResult result = new PreviewScanCoordinator(gateway)
+                .TryScan(Request(), CancellationToken.None);
+            RuntimeSystemCandidates candidates = result.SystemCandidates!;
+
+            Equal(RuntimeScanStatus.Success, result.Status);
+            Equal("2,3,4", CandidateIds(candidates.Energy));
+            Equal("5,6,3", CandidateIds(candidates.ShellRadius));
+            Equal("4,5,6", CandidateIds(candidates.ContainedOrbits));
+            Equal(3, candidates.Energy!.Count);
+            Equal("Star 2", candidates.Energy[0].DisplayName);
+            Equal(10m, candidates.Energy[0].DecisiveValue);
+            Equal(3_000_000m, candidates.ShellRadius!
+                .Single(value => value.Identifier == "3").DecisiveValue);
+            Equal(6m, candidates.ContainedOrbits!
+                .Single(value => value.Identifier == "5").DecisiveValue);
+        }
+
+        private static void IncompleteSystemCandidateEvidenceStaysUnknown()
+        {
+            var gateway = new FakeGateway
+            {
+                Snapshot = Snapshot(missingEnergySystem: 7)
+            };
+            RuntimeScanResult result = new PreviewScanCoordinator(gateway)
+                .TryScan(Request(), CancellationToken.None);
+
+            Equal(RuntimeScanStatus.Success, result.Status);
+            True(result.SystemCandidates != null);
+            True(result.SystemCandidates!.Energy == null);
+            Equal(3, result.SystemCandidates.ShellRadius!.Count);
+            Equal(3, result.SystemCandidates.ContainedOrbits!.Count);
+
+            WithTemporaryDirectory(path =>
+            {
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle,
+                    new PreviewScanCoordinator(gateway),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                True(attempt.SystemCandidates != null);
+                True(attempt.SystemCandidates!.Energy == null);
             });
         }
 
@@ -1053,7 +1117,8 @@ namespace DSPSeedScanner.Runtime.Tests
                         property.Name == "Progress" || property.Name == "Trace" ||
                         property.Name == "ElapsedMilliseconds" ||
                         property.Name == "ManagedMemoryDeltaBytes" ||
-                        property.Name == "BirthPlanetAttributions"));
+                        property.Name == "BirthPlanetAttributions" ||
+                        property.Name == "SystemCandidates"));
                 True(new FileInfo(entry).Length <= 256 * 1024);
             });
         }
@@ -1398,6 +1463,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(cached.HasCompleteBirthPlanetAttribution);
                 Equal("Alpha I,Alpha II", String.Join(",",
                     cached.BirthPlanetAttributions.Select(value => value.DisplayName)));
+                True(cached.SystemCandidates?.Energy?.Count == 3);
                 Equal(scanned.CompleteReports.Count, cached.CompleteReports.Count);
                 True(cached.CompleteReports.Select(report =>
                     report.ConclusionId + "\t" + report.Outcome).SequenceEqual(
@@ -2051,6 +2117,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(RuntimeFingerprint),
                 typeof(RuntimePreviewSnapshot),
                 typeof(RuntimeSystemDisplay),
+                typeof(RuntimeSystemCandidate),
+                typeof(RuntimeSystemCandidates),
                 typeof(RawPlanetResult),
                 typeof(NormalizedRawPlanetEvidence),
                 typeof(NormalizedRawVeinNode),
@@ -2271,13 +2339,29 @@ namespace DSPSeedScanner.Runtime.Tests
 
         private static RuntimePreviewSnapshot Snapshot(
             int generatedStarCount = 64,
-            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null)
+            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null,
+            IReadOnlyDictionary<int, (decimal Energy, long Radius, int Orbits)>?
+                systemCandidateFacts = null,
+            int? missingEnergySystem = null)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
             {
                 bool birth = index == 0;
                 bool leader = index == 1;
+                int systemId = index + 1;
+                decimal energy = leader ? 2.698m : 1m;
+                long radius = leader ? 234_200 : 50_000;
+                int orbits = leader ? 4 : 0;
+                if (systemCandidateFacts != null &&
+                    systemCandidateFacts.TryGetValue(
+                        systemId,
+                        out (decimal Energy, long Radius, int Orbits) facts))
+                {
+                    energy = facts.Energy;
+                    radius = facts.Radius;
+                    orbits = facts.Orbits;
+                }
                 systems.Add(new NormalizedSystemEvidence(
                     new ConclusionSubject(
                         birth ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
@@ -2288,9 +2372,9 @@ namespace DSPSeedScanner.Runtime.Tests
                     birth ? 1.35m : null,
                     birth ? 1.5m : null,
                     birth ? new[] { new NormalizedGasProduct("hydrogen", 0.5m) } : null,
-                    leader ? 2.698m : 1m,
-                    leader ? 234_200 : 50_000,
-                    leader ? 4 : 0,
+                    systemId == missingEnergySystem ? null : energy,
+                    radius,
+                    orbits,
                     birth ? 1 : leader ? 39 : 0,
                     birth ? birthPlanetAttributions : null));
             }
@@ -2348,6 +2432,13 @@ namespace DSPSeedScanner.Runtime.Tests
                 null,
                 null,
                 products);
+        }
+
+        private static string CandidateIds(
+            IReadOnlyList<RuntimeSystemCandidate>? candidates)
+        {
+            True(candidates != null);
+            return String.Join(",", candidates!.Select(value => value.Identifier));
         }
 
         private static ConclusionReport FindReport(

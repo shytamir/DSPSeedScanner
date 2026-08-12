@@ -44,6 +44,7 @@ namespace DSPSeedScanner.Runtime
         public IReadOnlyList<NormalizedBirthPlanetEvidence> BirthPlanetAttributions =>
             birthPlanetAttributions.AsReadOnly();
         public bool HasCompleteBirthPlanetAttribution { get; private set; }
+        public RuntimeSystemCandidates? SystemCandidates { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
         public bool CacheStored { get; internal set; }
@@ -75,6 +76,11 @@ namespace DSPSeedScanner.Runtime
             HasCompleteBirthPlanetAttribution = attributions != null;
             if (attributions != null)
                 birthPlanetAttributions.AddRange(attributions);
+        }
+
+        internal void SetSystemCandidates(RuntimeSystemCandidates? candidates)
+        {
+            SystemCandidates = candidates;
         }
     }
 
@@ -137,6 +143,7 @@ namespace DSPSeedScanner.Runtime
             currentAttempt.SetPreviewReports(preview.Reports);
             currentAttempt.SetSystemDisplays(preview.SystemDisplays);
             currentAttempt.SetBirthPlanetAttributions(preview.BirthPlanetAttributions);
+            currentAttempt.SetSystemCandidates(preview.SystemCandidates);
             if (preview.Status != RuntimeScanStatus.Success || preview.Fingerprint == null)
             {
                 Finish(currentAttempt, preview.Status, preview.Code, preview.Message);
