@@ -35,7 +35,8 @@ lease restored. The record SHA-256 was
 `7ACF7AD82CB1A17C1C759922F92A6584F6DE5FAEC67C5CC0CD5A0FC7BACBF09A`.
 
 **Closure gate:** Satisfied for IMPL-08. Player-facing invocation and package
-replacement remain separately scoped to later work.
+replacement were separately scoped at closure and were completed by later
+presentation work.
 
 ## TD-002: Detect preloader and in-memory generation patch uncertainty
 
@@ -71,7 +72,7 @@ claimed.
 
 **Introduced:** IMPL-09 acceptance, 2026-08-11.
 
-**State:** Active; non-blocking for presentation planning.
+**State:** Active; non-blocking during maintenance mode.
 
 **Deferred obligation:** Determine whether the three scanner-owned assemblies
 can be merged into one delivered `DSPSeedScanner.dll` without collapsing the
@@ -99,4 +100,7 @@ cost or risk is disproportionate and close the refinement as declined. The
 three-DLL package remains acceptable until that decision.
 
 **Required by:** Review before any publication-ready package is approved. It
-does not block presentation specification or implementation.
+did not block the completed presentation specification or implementation.
+
+Return to the [maintenance roadmap](ROADMAP.md),
+[project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

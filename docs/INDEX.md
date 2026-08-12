@@ -1,14 +1,15 @@
 # Documentation Index
 
-This index provides navigation only. `PROJECT.md` owns project steering and
-current status; the current roadmap records story state and history.
+This index provides navigation only. [Project steering](PROJECT.md) owns
+current status and decisions; completed roadmap history resides in the
+[archive](archive/INDEX.md).
 
 ## Steering and management
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [Presentation refinement roadmap](management/ROADMAP.md): Completed RFIN-01
-  through RFIN-10 scope, sequencing, acceptance evidence, and history.
+- [Maintenance roadmap](management/ROADMAP.md): Inactive placeholder recording
+  that no roadmap or user story is active.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
 - [RFIN-10 human validation](management/RFIN-10-HUMAN-VALIDATION.md): Passed
@@ -57,3 +58,6 @@ current status; the current roadmap records story state and history.
 - [New Game presentation roadmap](archive/PRESENTATION-ROADMAP.md): Completed
   PRES-01 through PRES-07 hands-off panel implementation, validation, and
   refinement handoff.
+- [Presentation refinement roadmap](archive/PRESENTATION-REFINEMENT-ROADMAP.md):
+  Completed RFIN-01 through RFIN-10 scope, implementation history, and passed
+  acceptance gates.

@@ -25,8 +25,10 @@ bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.
 
 [docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current
 project status and steering decisions. The completed
-[presentation refinement roadmap](docs/management/ROADMAP.md) records its
-stories, acceptance gates, and implementation history. No roadmap is active.
+[presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
+records its stories, acceptance gates, and implementation history. The current
+[roadmap placeholder](docs/management/ROADMAP.md) confirms that no roadmap is
+active and the repository is in maintenance mode.
 
 The [documentation index](docs/INDEX.md) lists the accepted specifications,
 delivery notes, management documents, and archived planning material.
@@ -51,7 +53,8 @@ integration boundary are documented in the
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
 [project steering document](docs/PROJECT.md), and the current
-[roadmap record](docs/management/ROADMAP.md) before changing scope or behavior.
+[roadmap placeholder](docs/management/ROADMAP.md) before changing scope or
+behavior.
 
 ## License
 

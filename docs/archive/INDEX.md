@@ -8,8 +8,8 @@ authority.
 
 - [Project steering](../PROJECT.md): Authoritative accepted decisions and
   current tracked project status.
-- [Presentation refinement roadmap](../management/ROADMAP.md): Completed story
-  scope, acceptance evidence, sequencing, and history.
+- [Maintenance roadmap](../management/ROADMAP.md): Inactive placeholder
+  recording that no roadmap or user story is active.
 
 ## Archived documents
 
@@ -21,5 +21,8 @@ authority.
 - [New Game presentation roadmap](PRESENTATION-ROADMAP.md): Completed PRES-01
   through PRES-07 hands-off panel implementation, validation, and refinement
   handoff.
+- [Presentation refinement roadmap](PRESENTATION-REFINEMENT-ROADMAP.md):
+  Completed RFIN-01 through RFIN-10 implementation, acceptance evidence, and
+  final installed-game validation record.
 
 Return to the [documentation index](../INDEX.md) for all current documents.

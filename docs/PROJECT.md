@@ -2,22 +2,21 @@
 
 This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
-story scope, evidence, and history belong in the roadmap.
+completed story scope, evidence, and history belong in archived roadmaps.
 
 **Current status:** The scanner core, New Game presentation, and presentation
 refinement roadmaps were completed and accepted on 2026-08-11 and 2026-08-12.
 The refinement release candidate passed its seven-step installed 4K human
 validation on 2026-08-12, including smooth cache-miss scanning through a
-scanner-owned terrain worker. No roadmap or user story is active while the
-next version progression is planned. One packaging refinement remains tracked
-as non-blocking technical debt.
+scanner-owned terrain worker. The repository is in maintenance mode; no
+roadmap or user story is active. One packaging refinement remains tracked as
+non-blocking technical debt.
 
 ## Product decision
 
-DSP Seed Scanner will help players decide whether a procedurally generated
-Dyson Sphere Program cluster suits the run they intend to play. It will present
-bounded, context-specific conclusions and will not define a universally best
-seed.
+DSP Seed Scanner helps players decide whether a procedurally generated Dyson
+Sphere Program cluster suits the run they intend to play. It presents bounded,
+context-specific conclusions and does not define a universally best seed.
 
 ## Accepted steering decisions
 
@@ -73,7 +72,7 @@ The accepted semantics and thresholds are maintained in the
 - The panel presents concise natural-language strengths,
   preference-sensitive results, and limitations without requiring player
   input. Unknown and not-applicable components remain omitted. Named candidates
-  must retain evidence-backed attribution; the panel will not expose internal
+  must retain evidence-backed attribution; the panel does not expose internal
   identifiers, raw runtime units, or mechanical evidence summaries.
 - Its numeric corner setting defaults to `1` for
   bottom-right, then proceeds clockwise as `2` bottom-left, `3` top-left, and
@@ -107,10 +106,11 @@ decision and corresponding roadmap change.
 
 ## Management and documentation
 
-The completed [presentation refinement roadmap](management/ROADMAP.md) owns its
-story scope, acceptance evidence, sequencing, and history. No management
-roadmap is active. The completed New Game presentation roadmap is retained in
-the [archive](archive/INDEX.md). The
+The [maintenance roadmap placeholder](management/ROADMAP.md) records that no
+management roadmap is active. The completed
+[presentation refinement roadmap](archive/PRESENTATION-REFINEMENT-ROADMAP.md)
+and earlier roadmap records are retained in the [archive](archive/INDEX.md).
+The
 [technical debt register](management/TECHNICAL-DEBT.md) owns explicitly
 deferred obligations and their closure gates; recording debt does not weaken
 the accepted safety contract. The completed scanner-core, New Game
