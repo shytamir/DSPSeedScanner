@@ -1,58 +1,53 @@
 # DSP Seed Scanner
 
-DSP Seed Scanner is a BepInEx mod for evaluating whether one procedurally
-generated Dyson Sphere Program cluster suits a player's intended run. It uses
-the installed game runtime to generate evidence and returns bounded,
-context-specific conclusions rather than a universal seed score.
+DSP Seed Scanner helps you choose a cluster before starting a new game. It
+automatically scans the seed shown in the New Game preview and gives you a
+simple summary of its strengths, tradeoffs, and limitations.
 
-## Status
+## Quick start
 
-This package automatically resolves each completed New Game cluster preview.
-A compact corner panel shows waiting, cache reuse, scan progress,
-completion, cancellation, unsupported-runtime, and failure states. It also
-groups bounded neutral conclusions for fresh starts, megafactories, compact
-expansion, and sphere or energy goals into color-coded strength,
-preference-sensitive, and limitation columns. Dark Fog occupation appears only
-as neutral status metadata. Unknown components are omitted, while candidates
-use player-visible names and concise natural language. Each context is aligned
-once across the columns in a fixed translucent viewport. Long results scroll
-inside the panel, and sparse contexts share complementary column space. Use
-the mouse wheel over the panel to inspect conclusions below the viewport.
+Install the mod and open the **New Game** cluster preview. That is all you need
+to do.
 
-## Supported runtime
+The scanner starts automatically whenever a new cluster preview loads. While it
+works, the panel shows its progress. When the scan finishes, scroll through the
+results to see how the seed looks for:
 
-The current compatibility contract is limited to Dyson Sphere Program
-`0.10.34.28529`, galaxy algorithm `20200403`, the recorded Assembly-CSharp and
-generation-method identities, ordered themes `1..25`, and BepInEx `5.4.17`.
-Other plugins or preloader assemblies are conservatively rejected because
-generation compatibility is not established.
+- A fresh start
+- A megafactory
+- Compact expansion
+- Dyson sphere construction and energy
 
-## Implemented core
+Previously scanned seeds load from the local cache automatically.
 
-- Immediate preview conclusions cover accepted topology, power, gas-product,
-  energy-system, sphere-geometry, grouping, and role cases.
-- The New Game workflow automatically reuses valid complete conclusions or
-  runs one cooperative complete-cluster scan with two safe recovery frames per
-  solid planet while retaining visible progress.
-- Unsupported settings or evidence remain explicit in the evaluation contract
-  but are omitted from the decision panel. No score or hidden weighting is
-  produced.
-- Generation is serialized, cancellable at safe boundaries, and limited to
-  one requested 64-star identity; a complete-cluster operation rejects more
-  than 256 solid planets before raw generation.
+The panel appears in the bottom-right corner by default. You can move it by
+changing `Presentation.PanelCorner` in the generated configuration file:
 
-## Install
+- `1` — Bottom right
+- `2` — Bottom left
+- `3` — Top left
+- `4` — Top right
 
-Extract the archive into the Dyson Sphere Program directory. The three scanner
-assemblies belong under:
+## Installation
 
-```text
-BepInEx/plugins/DSPSeedScanner/
-```
+The simplest option is a Thunderstore-compatible mod manager. Install
+DSP Seed Scanner and launch the game with mods enabled; its BepInEx dependency
+will be handled for you.
 
-The panel defaults to the bottom-right. Set `Presentation.PanelCorner` to `2`
-for bottom-left, `3` for top-left, or `4` for top-right in the generated BepInEx
-configuration file. Developer probe invocation and build requirements are
-documented in the repository. Batch search, parallel generation, exports,
-telemetry, publication automation, and wider runtime compatibility are not
-included.
+For a manual installation, install
+[BepInEx 5](https://thunderstore.io/c/dyson-sphere-program/p/xiaoye97/BepInEx/)
+first, then copy the package's `BepInEx` folder into the Dyson Sphere Program
+game folder.
+
+## Compatibility
+
+This release supports Dyson Sphere Program `0.10.34.28529`. If the game or
+another mod changes cluster generation, DSP Seed Scanner may report that the
+runtime is unsupported instead of showing unreliable results.
+
+## Useful links
+
+- [View the source and report problems](https://github.com/shytamir/DSPSeedScanner)
+
+DSP Seed Scanner is an unofficial community project. Dyson Sphere Program and
+its assets belong to their respective owners.

@@ -2,7 +2,7 @@
   "name": "DSPSeedScanner",
   "version_number": "{{VERSION_NUMBER}}",
   "website_url": "https://github.com/shytamir/DSPSeedScanner",
-  "description": "Automatically scans one Dyson Sphere Program New Game cluster preview at a time and shows bounded context-specific conclusions.",
+  "description": "Automatically scans Dyson Sphere Program New Game clusters and shows clear conclusions for fresh starts, megafactories, expansion, and Dyson spheres.",
   "dependencies": [
     "xiaoye97-BepInEx-5.4.17"
   ]
