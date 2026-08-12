@@ -267,7 +267,17 @@ namespace DSPSeedScanner.Plugin
         {
             var packed = new List<PackedContextCard>();
             float y = 0f;
+            ContextCard? freshStart = cards.FirstOrDefault(value =>
+                value.Context == ConclusionContext.FreshStart);
+            if (freshStart != null)
+            {
+                float height = MeasureContextCard(freshStart, columnWidth);
+                packed.Add(new PackedContextCard(freshStart, 0, 2, y, height));
+                y += height + CardGap;
+            }
+
             foreach (ContextCard card in cards.Where(value =>
+                value.Context != ConclusionContext.FreshStart &&
                 value.PopulatedColumnCount == 3))
             {
                 float height = MeasureContextCard(card, columnWidth);
@@ -277,6 +287,7 @@ namespace DSPSeedScanner.Plugin
 
             var rows = new List<PackedRow>();
             foreach (ContextCard card in cards.Where(value =>
+                value.Context != ConclusionContext.FreshStart &&
                 value.PopulatedColumnCount < 3))
             {
                 int first = card.FirstColumn;
