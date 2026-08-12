@@ -8,8 +8,9 @@ and reports context-specific conclusions rather than a universal seed score.
 
 The current implementation automatically resolves each completed New Game
 cluster preview and shows operational state plus bounded neutral conclusions
-grouped for fresh starts, megafactories, Dark Fog farming, compact expansion,
-sphere or energy goals, and decision-relevant traits. The compact panel uses
+grouped for fresh starts, megafactories, compact expansion, and sphere or
+energy goals. Dark Fog occupation appears as neutral status metadata
+rather than a farming judgment. The compact panel uses
 color-coded strength, preference-sensitive, and limitation columns; omits
 unknown components; and identifies systems by DSP display name and star type.
 Each context has one centered heading in a fixed translucent viewport. Long

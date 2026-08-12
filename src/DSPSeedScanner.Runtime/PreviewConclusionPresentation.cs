@@ -150,8 +150,7 @@ namespace DSPSeedScanner.Runtime
             ConclusionContext.FreshStart,
             ConclusionContext.Megafactory,
             ConclusionContext.CompactExpansion,
-            ConclusionContext.SphereShowcase,
-            ConclusionContext.DecisionRelevantTraits
+            ConclusionContext.SphereShowcase
         };
 
         public static PreviewConclusionPresentation Project(PreviewResolutionAttempt attempt)
@@ -1237,7 +1236,6 @@ namespace DSPSeedScanner.Runtime
             ConclusionContext.Megafactory => "Megafactory",
             ConclusionContext.CompactExpansion => "Compact expansion",
             ConclusionContext.SphereShowcase => "Sphere / energy",
-            ConclusionContext.DecisionRelevantTraits => "Decision-relevant traits",
             _ => throw new ArgumentOutOfRangeException(nameof(context))
         };
 
@@ -1254,8 +1252,7 @@ namespace DSPSeedScanner.Runtime
                 "MF-SYSTEM-ROLE",
                 "MF-RESOURCE-SCOPE",
                 "CX-GROUPING",
-                "RR-ACCESS",
-                "TRAIT-SUMMARY"
+                "RR-ACCESS"
             };
             foreach (string family in accepted)
             {
@@ -1283,7 +1280,6 @@ namespace DSPSeedScanner.Runtime
                 "MF-RESOURCE-SCOPE" => "Cluster resource scale",
                 "CX-GROUPING" => "Supported-role grouping",
                 "RR-ACCESS" => "Rare-resource access",
-                "TRAIT-SUMMARY" => "Decision-relevant traits",
                 _ => throw new ArgumentOutOfRangeException(nameof(family))
             };
         }
@@ -1317,7 +1313,6 @@ namespace DSPSeedScanner.Runtime
                 SubjectKind.Cluster => "Cluster",
                 SubjectKind.Resource => ResourceLabel(report.ConclusionId),
                 SubjectKind.SystemPair => PairLabel(identifier, displays),
-                SubjectKind.Trait => Pretty(identifier.Split('@')[0]),
                 _ => throw new ArgumentOutOfRangeException(nameof(report.Subject.Kind))
             };
         }

@@ -43,11 +43,11 @@ The first implementation target evaluates one explicitly requested generation
 identity at a time. It is not an exhaustive seed search, background database,
 or parallel generator.
 
-Its context set is exactly the six accepted lenses: fresh start, megafactory,
-Dark Fog farming, compact expansion, sphere showcase or energy focus, and
-decision-relevant traits. No speedrun, difficulty, theme, or universal-quality
-profile is implied. Only the active components below can produce a positive,
-negative, caution, preference-sensitive, or tradeoff result.
+Its historical context set included fresh start, megafactory, Dark Fog farming,
+compact expansion, sphere showcase or energy focus, and decision-relevant
+traits. The later presentation refinement retired Dark Fog judgments and the
+redundant trait registry. No speedrun, difficulty, theme, or universal-quality
+profile was implied.
 
 ### Immediate preview surface
 
@@ -60,9 +60,8 @@ applicable component of:
 - `MF-ENERGY-SYSTEM`: cluster energy output and leader separation;
 - `MF-SPHERE-GEOMETRY`: maximum radius and orbital containment;
 - `MF-SYSTEM-ROLE`: only roles inherited from stable upstream components;
-- `DF-OCCUPATION`: initial-hive opportunity and birth-system exposure;
 - `CX-GROUPING`: distance between independently supported roles; and
-- `TRAIT-SUMMARY`: only the accepted derived trait registry.
+- the subsequently retired Dark Fog and trait families.
 
 These components must be evaluated independently. A family may return several
 component outcomes; no score, grade, hidden weight, or context-free verdict is
@@ -81,8 +80,8 @@ historical implementation surface contained:
 
 The request declared its raw coverage before work began. Progress and
 cancellation occurred at safe runtime boundaries, at minimum between planets.
-Partial coverage did not produce a complete-scope conclusion. Roles, grouping,
-and trait summaries were evaluated again in a new attributed report after
+Partial coverage did not produce a complete-scope conclusion. Roles and grouping
+were evaluated again in a new attributed report after
 eligible raw evidence became complete; raw evidence did not silently change an
 earlier preview report. The current automatic New Game delivery policy is
 owned by [project steering](../PROJECT.md).

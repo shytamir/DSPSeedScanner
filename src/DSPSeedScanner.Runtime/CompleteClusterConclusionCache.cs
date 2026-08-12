@@ -148,7 +148,7 @@ namespace DSPSeedScanner.Runtime
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 6;
+        internal const int SchemaVersion = 7;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;

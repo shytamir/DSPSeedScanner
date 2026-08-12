@@ -318,13 +318,10 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(40, result.DarkFogOccupation?.ClusterInitialHiveCount);
             Equal(1, result.DarkFogOccupation?.BirthSystemInitialHiveCount);
             False(result.Reports.Any(report =>
-                report.ConclusionId.StartsWith("DF-", StringComparison.Ordinal) ||
-                report.Context == ConclusionContext.DarkFogFarming));
+                report.ConclusionId.StartsWith("DF-", StringComparison.Ordinal)));
             AssertReport(result, "CX-GROUPING.distance", ComponentOutcome.Supports);
             True(result.Reports.Any(report => report.ConclusionId ==
                 "MF-SYSTEM-ROLE.role:strong-energy"));
-            True(result.Reports.Any(report => report.ConclusionId ==
-                "TRAIT-SUMMARY.registry:close-strong-energy-system"));
             AssertReport(result, "FS-RESOURCES.common-total", ComponentOutcome.Unknown);
             False(result.Trace.Any(value =>
                 value.IndexOf("raw", StringComparison.OrdinalIgnoreCase) >= 0));
@@ -415,7 +412,7 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(RuntimeScanStatus.Success, result.Status);
             True(result.DarkFogOccupation == null);
             False(result.Reports.Any(report =>
-                report.Context == ConclusionContext.DarkFogFarming));
+                report.ConclusionId.StartsWith("DF-", StringComparison.Ordinal)));
         }
 
         private static void CombatPreviewExposesNeutralDarkFogFacts()
@@ -807,8 +804,6 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal("30000", cluster.DecisiveFact?.Value);
             True(result.Reports.Any(report => report.ConclusionId ==
                 "MF-SYSTEM-ROLE.role:rare-access"));
-            True(result.Reports.Any(report => report.ConclusionId ==
-                "TRAIT-SUMMARY.registry:close-rare-access:kimberlite"));
             Equal(1, gateway.RestoreCalls);
             Equal("original", gateway.StateMarker);
         }
@@ -1298,7 +1293,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     using (var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true))
                         reader.ReadString();
                     using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
-                    writer.Write(5);
+                    writer.Write(6);
                 }
                 byte[] obsoleteEntry = File.ReadAllBytes(entry);
                 using (SHA256 sha = SHA256.Create())
@@ -1941,13 +1936,6 @@ namespace DSPSeedScanner.Runtime.Tests
                     new DecisiveFact("systemDistance", "2.34567", "light-years")),
                     "2.35 ly between Beta (O type star) / Iota (K type star)"),
                 (PresentationReport(
-                    ConclusionContext.DecisionRelevantTraits,
-                    ComponentOutcome.Supports,
-                    EvidenceStage.GalaxyPreview,
-                    "TRAIT-SUMMARY.registry:shared-birth-satellites",
-                    new ConclusionSubject(SubjectKind.Trait, "shared-birth-satellites@1")),
-                    "Shared Birth Satellites"),
-                (PresentationReport(
                     ConclusionContext.FreshStart,
                     ComponentOutcome.Supports,
                     EvidenceStage.GalaxyPreview,
@@ -2015,9 +2003,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 PreviewConclusionPresentation scanning = panel.Conclusions!;
                 Equal("Seed 16315224 | 64 stars | resources x1 | Combat", scanning.IdentityLine);
                 Equal(0, scanning.DetailGroups.Count);
-                Equal(5, scanning.ImmediateGroups.Count);
+                Equal(4, scanning.ImmediateGroups.Count);
                 Equal(
-                    "Fresh start,Megafactory,Compact expansion,Sphere / energy,Decision-relevant traits",
+                    "Fresh start,Megafactory,Compact expansion,Sphere / energy",
                     String.Join(",", scanning.ImmediateGroups.Select(group => group.Title)));
                 Equal("Dark Fog: 40 initial hives; 1 in starter system",
                     scanning.DarkFogStatusLine);

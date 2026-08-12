@@ -100,7 +100,7 @@ Every applicable conclusion family resolves without player input:
 | **Tradeoff** | Complete evidence establishes invariant material strengths and drawbacks that must remain visible together. |
 | **Caution** | Complete evidence establishes an invariant context-specific exposure or limitation without predicting that harm will occur. |
 | **Unknown** | Required evidence, compatibility, coverage, predicate, or accepted range is missing or incomplete. Unknown is not a negative result or preference ambiguity. |
-| **Not applicable** | Authoritative settings make the context question irrelevant, such as Dark Fog farming in peace mode. |
+| **Not applicable** | Authoritative settings make a context question irrelevant. |
 
 No numeric confidence, letter grade, aggregate score, or universal verdict is
 allowed by version `0.1.0`.
@@ -155,16 +155,17 @@ by the outcome and its interval, not by lowering confidence.
 
 ## Automatically evaluated contexts
 
-The first contract evaluates six bounded contexts:
+The implemented product retains four bounded decision contexts. Dark Fog
+occupation remains neutral status metadata; the former Dark Fog judgment and
+decision-relevant trait contexts were retired because neither added a neutral,
+distinct player decision.
 
 | Context | Neutral decision supported | Required boundary |
 | --- | --- | --- |
 | Fresh start | Identify robust structural conveniences, early power and gas-product opportunities, and starter-resource limitations or strengths | Convenience is not viability; exact deposits require complete raw generation. |
 | Megafactory | Identify robust energy, sphere-geometry, system-role, and resource-scale candidates | Production capacity, hardware suitability, and logistics throughput remain unknown. |
-| Dark Fog farming | Identify initial farming opportunity, unwanted exposure, and role-separation tradeoffs | Combat must be enabled; farm performance and evolving state remain unknown. |
 | Compact expansion | Identify robust or preference-sensitive geometric grouping of supported system roles | Distance is not travel time or throughput. |
 | Sphere showcase or energy-focused | Identify strong stellar and shell-geometry options under product-owned comparisons | Receiver performance, realized output, and attractiveness remain unknown. |
-| Decision-relevant traits | Identify supported factual arrangements that materially affect at least one accepted context | The contract may describe the arrangement, not whether it is rare, beautiful, fun, or challenging. |
 
 Scarce-resource and maximum-difficulty play qualify the fresh-start, resource,
 and Dark Fog evaluations using their authoritative game settings. They do not
@@ -176,7 +177,7 @@ accepted category, route, game version, split objective, and predicate set.
 
 ## Conclusion catalogue
 
-The catalogue retains twelve semantic families. Each evaluates automatically;
+The catalogue retains ten active semantic families. Each evaluates automatically;
 the player is never required to provide its predicate.
 
 | ID | Neutral question | Evidence | Product-owned evaluation | Required boundary |
@@ -189,10 +190,8 @@ the player is never required to provide its predicate.
 | `MF-SPHERE-GEOMETRY` | Which systems provide robust shell-radius or orbital-containment opportunities? | Preview and derived sphere geometry | Fixed runtime containment predicates and accepted geometry ranges identify opportunities and ties. | State the containment predicate. Never infer receiver effectiveness. |
 | `MF-SYSTEM-ROLE` | Which systems robustly satisfy the contract's supported factual roles? | Preview composition, topology, distance, and eligible conclusions | Versioned role predicates are evaluated for every system without a player-supplied role. | Buildable area, factory capacity, and logistics performance cannot define a role in this version. |
 | `MF-RESOURCE-SCOPE` | Is system or cluster supply robustly strong, limited, or preference-sensitive for long-horizon scale? | Complete raw resources and vein structure | Setting-specific amount, distribution, and coverage intervals produce separate conclusions. | Keep amount, node/group structure, and distance separate. Never predict lifetime or throughput. |
-| `DF-OCCUPATION` | Does generated Dark Fog occupation create robust farming opportunity, exposure, or a role-separation tradeoff? | Preview hive counts, orbits, safety fields, and combat settings | Product-owned occupation ranges are evaluated separately for farming opportunity and protected-role exposure. | **Not applicable** in peace mode. Never predict bases, levels, yield, threat, or attack timing. |
 | `CX-GROUPING` | Are supported system roles robustly compact, dispersed, or preference-sensitive? | Preview distances and role conclusions; raw evidence when a role requires it | Product-owned roles and distance intervals evaluate the complete cluster automatically. | **Unknown** when a dependent role lacks evidence. Never infer travel time or throughput. |
 | `RR-ACCESS` | Is rare-resource access robustly close, abundant, limited, or preference-sensitive? | Complete raw rare veins and derived distances | Separate setting-specific amount and distance intervals are evaluated together without merging their outcomes. | Preserve nearby convenience versus distant abundance as a possible **tradeoff**. |
-| `TRAIT-SUMMARY` | Which accepted decision-relevant structural traits materially distinguish this cluster's options? | Eligible preview or raw evidence | A versioned registry emits only factual traits connected to another supported context. | No subjective quality or undefined rarity. Diagnostic facts without a decision remain excluded. |
 
 ## Robust quantitative behavior
 
@@ -240,7 +239,6 @@ The following conflicts remain visible whenever both sides are established:
 - nearby access versus potentially greater distant resource abundance;
 - resource amount versus vein/node distribution;
 - concentrated roles versus deliberate system separation;
-- Dark Fog farming opportunity versus protected-infrastructure exposure;
 - sphere-energy potential versus practical need and performance budget; and
 - factual optimization versus discovery-first disclosure.
 

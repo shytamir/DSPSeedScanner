@@ -6,11 +6,12 @@ story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core and New Game presentation roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12 respectively. The approved
-presentation refinement roadmap is active. RFIN-01 through RFIN-07 were
+presentation refinement roadmap is active. RFIN-01 through RFIN-08 were
 accepted on 2026-08-12; RFIN-01's installed-game smoothness and duration
-validation remains deferred to the roadmap's final human phase. RFIN-08 now
-awaits product acceptance after its Sphere / energy candidate rewrite passed
-the automated acceptance gate without changing scan or cache semantics. One
+validation remains deferred to the roadmap's final human phase. RFIN-09 now
+awaits product acceptance after redundant traits were removed, the four
+retained contexts were reconciled, and cache schema 7 plus the harmonized
+native scrollbar passed automated validation. One
 packaging refinement remains tracked as non-blocking technical debt.
 
 ## Product decision
@@ -44,9 +45,8 @@ documents.
 ### Decision contract
 
 - The retained decision contexts are fresh start, megafactory, compact
-  expansion, and sphere or energy. Dark Fog occupation will be shown only as
-  neutral status metadata, and redundant decision-relevant traits will be
-  removed during the active roadmap.
+  expansion, and sphere or energy. Dark Fog occupation is shown only as
+  neutral status metadata. Redundant decision-relevant traits are not emitted.
 - Neutral outcomes must survive the complete accepted preference range.
   Optional preferences may filter or explain an outcome but cannot create or
   reverse it.

@@ -21,7 +21,7 @@ namespace DSPSeedScanner.Core.Tests
                 ("sphere geometry fixtures", SphereGeometryFixtures),
                 ("Dark Fog evidence remains nonjudgmental", DarkFogEvidenceRemainsNonjudgmental),
                 ("grouping and rare-access fixtures", GroupingAndRareAccessFixtures),
-                ("roles and trait registry", RolesAndTraitRegistry),
+                ("roles remain derived without redundant traits", RolesRemainWithoutTraits),
                 ("settings boundaries", SettingsBoundaries),
                 ("coverage and compatibility isolation", CoverageAndCompatibilityIsolation),
                 ("deferred components stay unknown", DeferredComponentsStayUnknown),
@@ -247,7 +247,6 @@ namespace DSPSeedScanner.Core.Tests
             IReadOnlyList<ConclusionReport> reports = ConclusionEngine.Evaluate(evidence);
             False(reports.Any(report =>
                 report.ConclusionId.StartsWith("DF-", StringComparison.Ordinal) ||
-                report.Context == ConclusionContext.DarkFogFarming ||
                 report.ConclusionId.Contains("fog-opportunity", StringComparison.Ordinal)),
                 "Dark Fog evidence must not produce judgments or roles.");
         }
@@ -289,7 +288,7 @@ namespace DSPSeedScanner.Core.Tests
                 Find(Evaluate(absent), "RR-ACCESS.distance:unipolar-magnet").Outcome);
         }
 
-        private static void RolesAndTraitRegistry()
+        private static void RolesRemainWithoutTraits()
         {
             FixtureOptions strong = Options(64_181_741);
             strong.OtherLuminosity = 2.698m;
@@ -325,42 +324,19 @@ namespace DSPSeedScanner.Core.Tests
                 "Occupation evidence must not create a Megafactory role.");
             True(HasRole(roleReports, "rare-access"),
                 "Supporting rare access should create a rare-access role.");
-            True(roleReports.Any(report => report.ConclusionId ==
-                "TRAIT-SUMMARY.registry:multiple-contained-orbits"),
-                "Supporting containment should create its registered trait.");
-            True(roleReports.Any(report => report.ConclusionId ==
-                "TRAIT-SUMMARY.registry:close-rare-access:unipolar-magnet"),
-                "Supporting rare access should create its registered trait.");
-
-            FixtureOptions traitFixture = Options(45_772);
-            traitFixture.SharedBirthGiantBodies = 3;
-            traitFixture.HasTidalLockedSolidPlanet = true;
-            traitFixture.GasProducts.Add(new NormalizedGasProduct("fire-ice", 0.5m));
-            string[] traits = Evaluate(traitFixture)
-                .Where(report => report.ConclusionId.StartsWith(
-                    "TRAIT-SUMMARY.registry:",
-                    StringComparison.Ordinal))
-                .Select(report => report.ConclusionId)
-                .OrderBy(id => id, StringComparer.Ordinal)
-                .ToArray();
-            SequenceEqual(
-                new[]
-                {
-                    "TRAIT-SUMMARY.registry:birth-system-gas-product:fire-ice",
-                    "TRAIT-SUMMARY.registry:birth-system-tidal-lock",
-                    "TRAIT-SUMMARY.registry:shared-birth-satellites"
-                },
-                traits);
-            True(traits.All(trait => !trait.Contains("O", StringComparison.Ordinal)),
-                "O-star count must not create a trait.");
-
-            foreach (ConclusionReport trait in Evaluate(traitFixture).Where(report =>
-                report.ConclusionId.StartsWith("TRAIT-SUMMARY", StringComparison.Ordinal)))
-            {
-                True(trait.SourceConclusionId != null,
-                    "Every trait must name its source conclusion.");
-                Equal(ComponentOutcome.Supports, trait.Outcome);
-            }
+            FixtureOptions formerTraitSources = Options(45_772);
+            formerTraitSources.SharedBirthGiantBodies = 3;
+            formerTraitSources.HasTidalLockedSolidPlanet = true;
+            formerTraitSources.GasProducts.Add(new NormalizedGasProduct(
+                "fire-ice",
+                0.5m));
+            IReadOnlyList<ConclusionReport> sourceReports = Evaluate(formerTraitSources);
+            Equal(ComponentOutcome.Supports,
+                Find(sourceReports, "FS-TOPOLOGY.shared-satellites").Outcome);
+            Equal(ComponentOutcome.Supports,
+                Find(sourceReports, "FS-POWER.birth-tidal").Outcome);
+            Equal(ComponentOutcome.Supports,
+                Find(sourceReports, "FS-GAS-ROUTE.product:fire-ice").Outcome);
         }
 
         private static void SettingsBoundaries()

@@ -8,18 +8,15 @@ namespace DSPSeedScanner.Core
         StarSystem,
         Cluster,
         Resource,
-        SystemPair,
-        Trait
+        SystemPair
     }
 
     public enum ConclusionContext
     {
         FreshStart,
         Megafactory,
-        DarkFogFarming,
         CompactExpansion,
-        SphereShowcase,
-        DecisionRelevantTraits
+        SphereShowcase
     }
 
     public enum ComponentOutcome

@@ -25,7 +25,6 @@ namespace DSPSeedScanner.Core
 
             IReadOnlyList<RoleAssignment> roles = EvaluateRoles(evidence, reports);
             EvaluateGrouping(evidence, roles, reports);
-            EvaluateTraits(reports);
 
             ConclusionReport[] ordered = reports
                 .OrderBy(report => report.ConclusionId, StringComparer.Ordinal)
@@ -673,54 +672,6 @@ namespace DSPSeedScanner.Core
                         ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity),
                         first.Report.ConclusionId + "," + second.Report.ConclusionId);
                 }
-            }
-        }
-
-        private static void EvaluateTraits(ICollection<ConclusionReport> reports)
-        {
-            foreach (ConclusionReport source in reports
-                .Where(report => report.Outcome == ComponentOutcome.Supports)
-                .ToArray())
-            {
-                string? traitId = null;
-                if (source.ConclusionId == "FS-TOPOLOGY.shared-satellites")
-                    traitId = "shared-birth-satellites";
-                else if (source.ConclusionId == "FS-POWER.birth-tidal")
-                    traitId = "birth-system-tidal-lock";
-                else if (source.ConclusionId.StartsWith(
-                    "FS-GAS-ROUTE.product:",
-                    StringComparison.Ordinal))
-                    traitId = "birth-system-gas-product:" +
-                        source.ConclusionId.Substring("FS-GAS-ROUTE.product:".Length);
-                else if (source.ConclusionId == "MF-SPHERE-GEOMETRY.containment")
-                    traitId = "multiple-contained-orbits";
-                else if (source.ConclusionId == "CX-GROUPING.distance" &&
-                    source.SourceConclusionId?.Contains("strong-energy") == true)
-                    traitId = "close-strong-energy-system";
-                else if (source.ConclusionId.StartsWith(
-                    "RR-ACCESS.distance:",
-                    StringComparison.Ordinal))
-                    traitId = "close-rare-access:" +
-                        source.ConclusionId.Substring("RR-ACCESS.distance:".Length);
-
-                if (traitId == null)
-                    continue;
-
-                reports.Add(new ConclusionReport(
-                    source.Identity,
-                    source.Settings,
-                    source.Coverage,
-                    "TRAIT-SUMMARY.registry:" + traitId,
-                    ConclusionContext.DecisionRelevantTraits,
-                    ConclusionDefinition.ContractVersion,
-                    ConclusionDefinition.DefinitionVersion,
-                    new ConclusionSubject(
-                        SubjectKind.Trait,
-                        traitId + "@" + source.Subject.Identifier),
-                    ComponentOutcome.Supports,
-                    Fact("trait", traitId, "trait-id"),
-                    null,
-                    source.ConclusionId));
             }
         }
 

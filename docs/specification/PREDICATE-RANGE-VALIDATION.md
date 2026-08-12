@@ -93,9 +93,7 @@ generation routines.
 | `FS-GAS-ROUTE.product` | Birth-system giant contains each registered runtime product ID | Present **supports** that product opportunity; absent **does not support** it | Evaluate hydrogen, deuterium, and fire ice automatically and separately. Collection prerequisites remain explicit. Rates have no accepted range. |
 | `FS-RESOURCES.fire-ice` | Complete birth-system raw generation contains fire-ice veins | Present **supports** local deposit access; absent **does not support** it | Exact raw coverage. Presence is separate from abundance. |
 | `MF-SPHERE-GEOMETRY.containment` | Number of planetary orbit radii no greater than the system's derived maximum shell radius | Uses adjustable count range `[1, 2]`: 2 or more **supports**, 0 **does not support**, and 1 is **preference-sensitive** | Complete preview orbits and versioned radius derivation. It does not imply receiver effectiveness. |
-| `MF-SYSTEM-ROLE.role` | A system satisfies an upstream accepted component predicate | The upstream outcome is preserved for `strong-energy`, `large-shell`, `orbit-containment`, `rare-access`, or `fog-opportunity`; the birth system is the fixed `starter-anchor` | A role adds no threshold and cannot upgrade sensitive or unknown evidence. Multiple roles remain separate. |
-| `DF-OCCUPATION.birth-exposure` | Combat is enabled and the birth system has at least one initial hive | Present is **caution**; absent **does not support** an exposure caution | Preview occupation and complete combat settings. This predicts no attack, base, level, or yield. |
-| `TRAIT-SUMMARY.registry` | An active predicate establishes a decision-relevant arrangement | Emit only `shared birth satellites`, `birth-system tidal lock`, `birth-system gas product`, `multiple contained orbits`, `close strong-energy system`, or `close rare access` | The source conclusion and subject must be named. O-star count, visual quality, and undefined rarity are excluded. |
+| `MF-SYSTEM-ROLE.role` | A system satisfies an upstream accepted component predicate | The upstream outcome is preserved for `strong-energy`, `large-shell`, `orbit-containment`, or `rare-access`; the birth system is the fixed `starter-anchor` | A role adds no threshold and cannot upgrade sensitive or unknown evidence. Multiple roles remain separate. |
 
 The containment count uses an interval because player research distinguished
 one contained orbit from multiple contained orbits. It is not aggregated with
@@ -113,7 +111,6 @@ All increasing ranges use the increasing rule above unless stated otherwise.
 | `MF-ENERGY-SYSTEM.output` | Highest Dyson luminosity in the cluster | `[2.4489998817, 2.4900000095]` | Complete preview cluster; reference identity only |
 | `MF-ENERGY-SYSTEM.separation` | Highest Dyson luminosity divided by the second highest | `[1.1104599329, 1.2183275480]` | Complete preview cluster; reference identity only |
 | `MF-SPHERE-GEOMETRY.radius` | Largest derived maximum shell radius in the cluster | `[76,200, 191,400]` radius units | Complete preview cluster; reference identity only |
-| `DF-OCCUPATION.opportunity` | Total initial space-hive count | `[34, 39]` hives | Complete preview cluster; reference default combat settings only |
 | `CX-GROUPING.distance` | Distance between the starter anchor and, or between, independently supported roles | `[2.5, 10]` light-years, decreasing | Complete role evidence; all role subjects must be known |
 | `RR-ACCESS.distance` | Birth-system distance to a system containing a specified rare resource | `[2.5, 10]` light-years, decreasing | Complete cluster raw coverage for that resource; evaluate each resource separately |
 
@@ -181,10 +178,8 @@ evaluation code.
 | `MF-SPHERE-GEOMETRY` | `52322682`: radius `76,200`; `74250347`: `191,400`; `64181741`: `234,200` | Lower endpoint **preference-sensitive**; upper endpoint and high case **support** |
 | `MF-SYSTEM-ROLE` | `64181741`: strong-energy component supports; `61571387`: energy output is sensitive | Emit a `strong-energy` role only for `64181741`; do not upgrade `61571387` |
 | `MF-RESOURCE-SCOPE` | `61571387`: selected-set-high common total `32,048,044,700`; `96178012`: `19,481,451,769` | Strength remains **unknown** for both because the selected set supplies no accepted range |
-| `DF-OCCUPATION` | `90632151`: 27 initial hives; `38386316`: 34; `67937149`: 39; `22372643`: 50 | **Does not support**, **preference-sensitive**, **supports**, **supports** farming opportunity |
 | `CX-GROUPING` | `1369`: supported strong-energy system `2.274181` ly from birth; `61224745`: `4.621132` ly; `64181741`: `19.521508` ly | **Supports**, **preference-sensitive**, **does not support** compact grouping |
 | `RR-ACCESS` | `73339583`: several rare resources about `2.028` ly away; `96178012`: unipolar magnets `7.353` ly away; `45772`: unipolar magnets `38.495` ly away | Distance **supports**, is **preference-sensitive**, and **does not support**, respectively; abundance remains **unknown** |
-| `TRAIT-SUMMARY` | `45772`: shared birth satellites, birth tidal lock, birth-system fire ice; `61571387`: 10 O stars | Emit the three accepted traits for `45772`; emit no O-count trait for `61571387` |
 
 Seed `1369` was independently suggested by
 [DSPSeedScanner's published seed lists](https://github.com/Selsion/DSPSeedScanner/tree/main/seed_lists).
@@ -201,7 +196,6 @@ questions as test inputs, not either tool's generator, labels, or thresholds.
 | --- | --- |
 | Seed `12345678`, resource multipliers `1`, `0.5`, `0.1`, and infinite | Multiplier `1` may use starter ranges. Other amount conclusions are **unknown**; exact attributed facts remain available. No silent scaling. |
 | Seed `12345678`, default combat versus altered initial colonization or maximum density | The default occupation range is not reused. Exact counts remain facts; opportunity strength is **unknown** until a matching settings range exists. |
-| Any seed in peace mode | `DF-OCCUPATION` is **not applicable**, not negative and not zero-opportunity evidence. |
 | Seed `67937149`, default combat | Farming opportunity supports while birth-system exposure is a caution. Preserve both as a **tradeoff** when those decisions are compared. |
 | Seed `96178012` | Starter common total supports, while its fully generated cluster total was lower than the other selected full-cluster cases. Preserve the early strength and long-horizon **unknown**; do not infer or score a reversal. |
 | Complete preview with one required raw planet omitted | Preview-only families remain eligible. Every conclusion depending on the omitted raw scope is **unknown**. |

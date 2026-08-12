@@ -24,6 +24,7 @@ namespace DSPSeedScanner.Plugin
         private GUIStyle? limitationHeaderStyle;
         private GUIStyle? panelStyle;
         private GUIStyle? contextCardStyle;
+        private GUISkin? scrollSkin;
         private Vector2 scrollPosition;
         private long scrollSessionId;
 
@@ -198,6 +199,8 @@ namespace DSPSeedScanner.Plugin
                 0f,
                 contentWidth,
                 Math.Max(scrollHeight, layout.Height));
+            GUISkin previousSkin = GUI.skin;
+            GUI.skin = scrollSkin!;
             scrollPosition = GUI.BeginScrollView(
                 viewport,
                 scrollPosition,
@@ -212,6 +215,7 @@ namespace DSPSeedScanner.Plugin
             finally
             {
                 GUI.EndScrollView();
+                GUI.skin = previousSkin;
             }
         }
 
@@ -448,6 +452,29 @@ namespace DSPSeedScanner.Plugin
             contextCardStyle = new GUIStyle(GUI.skin.box);
             contextCardStyle.normal.background = MakeTexture(
                 new Color(0.07f, 0.10f, 0.11f, 0.38f));
+            scrollSkin = UnityEngine.Object.Instantiate(GUI.skin);
+            scrollSkin.hideFlags = HideFlags.HideAndDontSave;
+            scrollSkin.verticalScrollbar = new GUIStyle(GUI.skin.verticalScrollbar)
+            {
+                fixedWidth = 10f
+            };
+            scrollSkin.verticalScrollbar.normal.background = MakeTexture(
+                new Color(0.07f, 0.10f, 0.11f, 0.38f));
+            scrollSkin.verticalScrollbar.hover.background =
+                scrollSkin.verticalScrollbar.normal.background;
+            scrollSkin.verticalScrollbar.active.background =
+                scrollSkin.verticalScrollbar.normal.background;
+            scrollSkin.verticalScrollbarThumb = new GUIStyle(
+                GUI.skin.verticalScrollbarThumb)
+            {
+                fixedWidth = 8f
+            };
+            scrollSkin.verticalScrollbarThumb.normal.background = MakeTexture(
+                new Color(0.50f, 0.62f, 0.64f, 0.68f));
+            scrollSkin.verticalScrollbarThumb.hover.background = MakeTexture(
+                new Color(0.62f, 0.76f, 0.78f, 0.82f));
+            scrollSkin.verticalScrollbarThumb.active.background =
+                scrollSkin.verticalScrollbarThumb.hover.background;
         }
 
         private static Texture2D MakeTexture(Color color)

@@ -10,11 +10,11 @@ context-specific conclusions rather than a universal seed score.
 This package automatically resolves each completed New Game cluster preview.
 A compact corner panel shows waiting, cache reuse, scan progress,
 completion, cancellation, unsupported-runtime, and failure states. It also
-groups bounded neutral conclusions for fresh starts, megafactories, Dark Fog
-farming, compact expansion, sphere or energy goals, and decision-relevant
-traits into color-coded strength, preference-sensitive, and limitation
-columns. Unknown components are omitted, while system and distance cards use
-player-visible names and concise light-year values. Each context is aligned
+groups bounded neutral conclusions for fresh starts, megafactories, compact
+expansion, and sphere or energy goals into color-coded strength,
+preference-sensitive, and limitation columns. Dark Fog occupation appears only
+as neutral status metadata. Unknown components are omitted, while candidates
+use player-visible names and concise natural language. Each context is aligned
 once across the columns in a fixed translucent viewport. Long results scroll
 inside the panel, and sparse contexts share complementary column space. Use
 the mouse wheel over the panel to inspect conclusions below the viewport.
@@ -30,7 +30,7 @@ generation compatibility is not established.
 ## Implemented core
 
 - Immediate preview conclusions cover accepted topology, power, gas-product,
-  energy-system, sphere-geometry, Dark Fog, grouping, role, and trait cases.
+  energy-system, sphere-geometry, grouping, and role cases.
 - The New Game workflow automatically reuses valid complete conclusions or
   runs one cooperative complete-cluster scan at one solid planet per frame.
 - Unsupported settings or evidence remain explicit in the evaluation contract

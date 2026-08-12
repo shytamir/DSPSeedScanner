@@ -1,10 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 through RFIN-07 were accepted on 2026-08-12.
-RFIN-08 reached its automated acceptance gate on 2026-08-12 and awaits product
+**Status:** Active. RFIN-01 through RFIN-08 were accepted on 2026-08-12.
+RFIN-09 reached its automated acceptance gate on 2026-08-12 and awaits product
 acceptance.
 
-**Active user story:** RFIN-08 is at its acceptance gate.
+**Active user story:** RFIN-09 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -42,8 +42,8 @@ will disappear.
 
 RFIN-01 is independent. RFIN-02 supplies planet attribution needed by RFIN-04.
 RFIN-03 supplies bounded system candidates needed by RFIN-06 and RFIN-08.
-RFIN-05 removes Dark Fog roles before RFIN-06 rewrites Megafactory and RFIN-07
-summarizes the remaining route roles. RFIN-09 reconciles removals and panel
+RFIN-05 removed Dark Fog roles before RFIN-06 rewrote Megafactory and RFIN-07
+summarized the remaining route roles. RFIN-09 reconciled removals and panel
 finish after all context stories. Human in-game validation occurs only in
 RFIN-10.
 
@@ -442,8 +442,7 @@ entries omitted complete-scan rare routes from their persisted grouping set.
 
 ### RFIN-08: Rewrite Sphere / energy candidates
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want to know how favorable this seed is for sphere construction.
 
@@ -494,7 +493,8 @@ and runtime evidence contract were unchanged.
 
 ### RFIN-09: Remove redundant traits and finish the panel
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want every panel section to add a distinct decision and remain
 easy to scan.
@@ -512,6 +512,45 @@ older semantic-cache entries safely.
 
 **Out of scope:** New summaries, sorting, filters, tabs, charts, comparisons,
 final icons, or panel resizing.
+
+**Implemented:** The redundant trait registry, evaluator, subject and context
+enum values, presenter mappings, and positive trait fixtures were removed.
+Fresh start, Megafactory, Compact expansion, and Sphere / energy remain the
+only decision contexts. The former trait sources continue to emit unchanged in
+their owning contexts, while no duplicate trait identifier or report is
+produced or persisted.
+
+The established context-card aggregation now reconciles exactly those four
+contexts across immediate and complete evidence. Its deterministic line
+deduplication and per-context grouping were retained. The native Unity scroll
+view still owns wheel, drag, clipping, and overflow behavior; only its visual
+skin changed to a narrow translucent track and a discoverable muted thumb that
+fits the accepted panel surface.
+
+Cache schema version 7 invalidates schema-6 entries as ordinary misses because
+older payloads may contain retired complete-scan trait reports. No migration is
+attempted, and the next successful scan writes only current semantic reports.
+
+**Acceptance evidence:**
+
+- source fixtures kept shared topology, tidal lock, gas product, containment,
+  energy, and rare-access conclusions while asserting that no derived trait
+  report remained;
+- preview and complete-scan fixtures exposed exactly the four retained contexts
+  and no trait enum, subject kind, identifier, mapping, or rendered output;
+- the existing accepted copy, aggregation, deterministic ordering, three-item
+  bounds, cache reuse, and panel document checks remained green across every
+  retained context;
+- an obsolete schema-6 cache payload was rejected and removed before reuse;
+- the supported installed-game plugin compiled against Unity's native scroll
+  API with zero warnings, preserving its interaction path and accepted 37% by
+  37% viewport; and
+- the Release suites passed all 14 conclusion and 58 runtime-boundary checks,
+  and the local versioned artifact and Thunderstore package validators passed.
+
+**Produced:** A four-context conclusion surface, schema-7 semantic cache, and
+panel-matched native scrollbar skin. No source predicate, context copy,
+viewport geometry, ordering policy, filter, or new interaction was introduced.
 
 ### RFIN-10: Validate the refined experience
 
@@ -645,15 +684,15 @@ receiver effectiveness, realized output, or aesthetics.
 ### Dark Fog farming
 
 Hive counts do not support a neutral farming judgment because their direction
-depends on player preference. RFIN-05 removes the context and downstream roles.
+depends on player preference. RFIN-05 removed the context and downstream roles.
 Only exact initial occupation remains as neutral status metadata in eligible
 Combat previews.
 
 ### Decision-relevant traits
 
 Every trait repeats a Fresh start, Megafactory, Compact expansion, or Sphere /
-energy strength. RFIN-09 removes the registry and all derived output. Nothing
-replaces it in the status area.
+energy strength. RFIN-09 removed the registry and all derived output. Nothing
+replaced it in the status area.
 
 ## Roadmap coverage
 
