@@ -61,6 +61,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("panel maps every operational state within text bounds", PanelMapsEveryOperationalState),
                 ("panel corners map clockwise and avoid border centers", PanelCornersMapClockwise),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
+                ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
+                ("conclusion panel separates contexts stages and conflicts", ConclusionPanelSeparatesContextsAndConflicts),
+                ("conclusion panel snapshot stays bounded and neutral", ConclusionPanelSnapshotIsBoundedAndNeutral),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -1449,6 +1452,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(panel.Update(first, PreviewPanelCorner.BottomRight, 1));
                 Equal(PreviewPanelOperationalState.Scanning, panel.Current.State);
                 PreviewPanelView firstVisible = panel.Current;
+                PreviewConclusionPresentation firstConclusions = panel.Conclusions!;
 
                 resolver.ObserveCompletedLoad(
                     2,
@@ -1457,21 +1461,285 @@ namespace DSPSeedScanner.Runtime.Tests
                 PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
                 False(panel.Update(first, PreviewPanelCorner.TopLeft, 2));
                 True(ReferenceEquals(firstVisible, panel.Current));
+                True(ReferenceEquals(firstConclusions, panel.Conclusions));
 
                 panel.BeginSession(
                     replacement.Session.SessionId,
                     PreviewPanelCorner.TopLeft,
                     2);
                 PreviewPanelView replacementWaiting = panel.Current;
+                True(panel.Conclusions == null);
                 False(panel.Update(first, PreviewPanelCorner.BottomRight, 3));
                 True(ReferenceEquals(replacementWaiting, panel.Current));
+                True(panel.Conclusions == null);
                 False(panel.Hide(first.Session.SessionId));
                 True(panel.Current.Visible);
                 True(panel.Update(replacement, PreviewPanelCorner.TopLeft, 3));
                 Equal(replacement.Session.SessionId, panel.Current.SessionId);
                 True(panel.Hide(replacement.Session.SessionId));
                 False(panel.Current.Visible);
+                True(panel.Conclusions == null);
                 Equal(PreviewPanelOperationalState.Hidden, panel.Current.State);
+            });
+        }
+
+        private static void ConclusionCardsMapEveryOutcomeAndSubject()
+        {
+            var outcomes = new[]
+            {
+                (ComponentOutcome.Supports, "Strength:"),
+                (ComponentOutcome.DoesNotSupport, "Limitation:"),
+                (ComponentOutcome.PreferenceSensitive, "Preference-sensitive:"),
+                (ComponentOutcome.Tradeoff, "Tradeoff:"),
+                (ComponentOutcome.Caution, "Caution:"),
+                (ComponentOutcome.Unknown, "Unknown:"),
+                (ComponentOutcome.NotApplicable, "Not applicable:")
+            };
+            foreach ((ComponentOutcome outcome, string prefix) in outcomes)
+            {
+                ConclusionReport report = PresentationReport(
+                    ConclusionContext.Megafactory,
+                    outcome,
+                    EvidenceStage.GalaxyPreview,
+                    "MF-ENERGY-SYSTEM.output",
+                    new ConclusionSubject(SubjectKind.StarSystem, "7"));
+                PresentedConclusionCard card = PreviewConclusionPresenter.MapCard(report);
+                Equal(outcome, card.Outcome);
+                True(card.Line.StartsWith(prefix, StringComparison.Ordinal));
+                True(card.Line.Contains("System 7", StringComparison.Ordinal));
+                True(card.Line.Length <= PreviewConclusionPresenter.MaximumLineCharacters);
+                Equal(1, card.SourceConclusionIds.Count);
+                False(card.Line.Contains("987654321", StringComparison.Ordinal));
+            }
+
+            var subjectCases = new[]
+            {
+                (PresentationReport(
+                    ConclusionContext.FreshStart,
+                    ComponentOutcome.Supports,
+                    EvidenceStage.GalaxyPreview,
+                    "FS-TOPOLOGY.shared-satellites",
+                    new ConclusionSubject(SubjectKind.BirthSystem, "1")), "Birth system"),
+                (PresentationReport(
+                    ConclusionContext.DarkFogFarming,
+                    ComponentOutcome.Tradeoff,
+                    EvidenceStage.GalaxyPreview,
+                    "DF-OCCUPATION.tradeoff",
+                    new ConclusionSubject(SubjectKind.Cluster, "cluster")), "Cluster"),
+                (PresentationReport(
+                    ConclusionContext.Megafactory,
+                    ComponentOutcome.Supports,
+                    EvidenceStage.CompleteClusterRaw,
+                    "RR-ACCESS.distance:unipolar-magnet",
+                    new ConclusionSubject(SubjectKind.Resource, "seed:resource:unipolar-magnet")),
+                    "Unipolar Magnet distance"),
+                (PresentationReport(
+                    ConclusionContext.CompactExpansion,
+                    ComponentOutcome.PreferenceSensitive,
+                    EvidenceStage.GalaxyPreview,
+                    "CX-GROUPING.distance",
+                    new ConclusionSubject(SubjectKind.SystemPair, "2<->9:role-a+role-b")),
+                    "Systems 2 / 9"),
+                (PresentationReport(
+                    ConclusionContext.DecisionRelevantTraits,
+                    ComponentOutcome.Supports,
+                    EvidenceStage.GalaxyPreview,
+                    "TRAIT-SUMMARY.registry:shared-birth-satellites",
+                    new ConclusionSubject(SubjectKind.Trait, "shared-birth-satellites@1")),
+                    "Shared Birth Satellites"),
+                (PresentationReport(
+                    ConclusionContext.FreshStart,
+                    ComponentOutcome.Supports,
+                    EvidenceStage.GalaxyPreview,
+                    "FS-GAS-ROUTE.product:hydrogen",
+                    new ConclusionSubject(SubjectKind.BirthSystem, "1")),
+                    "Hydrogen presence"),
+                (PresentationReport(
+                    ConclusionContext.Megafactory,
+                    ComponentOutcome.Supports,
+                    EvidenceStage.GalaxyPreview,
+                    "MF-SYSTEM-ROLE.role:strong-energy",
+                    new ConclusionSubject(SubjectKind.StarSystem, "2")),
+                    "Strong Energy @ System 2"),
+                (PresentationReport(
+                    ConclusionContext.SphereShowcase,
+                    ComponentOutcome.Supports,
+                    EvidenceStage.GalaxyPreview,
+                    "MF-SPHERE-GEOMETRY.containment",
+                    new ConclusionSubject(SubjectKind.StarSystem, "4")),
+                    "Contained orbits @ System 4")
+            };
+            foreach ((ConclusionReport report, string subject) in subjectCases)
+            {
+                PresentedConclusionCard card = PreviewConclusionPresenter.MapCard(report);
+                True(card.Subjects.Contains(subject));
+                True(card.Line.Contains(subject, StringComparison.Ordinal));
+            }
+
+            bool unsupportedRejected = false;
+            try
+            {
+                PreviewConclusionPresenter.MapCard(PresentationReport(
+                    ConclusionContext.FreshStart,
+                    ComponentOutcome.Supports,
+                    EvidenceStage.GalaxyPreview,
+                    "UNACCEPTED.claim",
+                    new ConclusionSubject(SubjectKind.Cluster, "cluster")));
+            }
+            catch (InvalidOperationException)
+            {
+                unsupportedRejected = true;
+            }
+            True(unsupportedRejected);
+        }
+
+        private static void ConclusionPanelSeparatesContextsAndConflicts()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle,
+                    new PreviewScanCoordinator(new FakeGateway(), gate),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway(), gate),
+                    new CompleteClusterConclusionCache(path));
+                var panel = new PreviewPanelController();
+
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                panel.BeginSession(attempt.Session.SessionId, PreviewPanelCorner.BottomRight, 0);
+                True(panel.Update(attempt, PreviewPanelCorner.BottomRight, 0));
+                PreviewConclusionPresentation scanning = panel.Conclusions!;
+                Equal("Seed 16315224 | 64 stars | resources x1 | Combat", scanning.IdentityLine);
+                Equal("Detailed conclusions - scanning", scanning.DetailSectionTitle);
+                Equal(0, scanning.DetailGroups.Count);
+                Equal(6, scanning.ImmediateGroups.Count);
+                Equal(
+                    "Fresh start,Megafactory,Dark Fog farming,Compact expansion,Sphere / energy,Decision-relevant traits",
+                    String.Join(",", scanning.ImmediateGroups.Select(group => group.Title)));
+                True(scanning.ImmediateGroups.SelectMany(group => group.Cards)
+                    .All(card => card.Stage == EvidenceStage.GalaxyPreview));
+                resolver.AdvanceCurrent();
+                panel.Update(attempt, PreviewPanelCorner.BottomRight, 1);
+                True(ReferenceEquals(scanning, panel.Conclusions));
+                Equal("Planets 1 / 3", panel.Current.Detail);
+
+                ConclusionReport[] decisiveReports = attempt.PreviewReports.Where(report =>
+                    report.Stage == EvidenceStage.GalaxyPreview &&
+                    (report.Outcome == ComponentOutcome.Tradeoff ||
+                     report.Outcome == ComponentOutcome.Caution)).ToArray();
+                PresentedConclusionCard[] decisiveCards = scanning.ImmediateGroups
+                    .SelectMany(group => group.Cards)
+                    .Where(card => card.Outcome == ComponentOutcome.Tradeoff ||
+                        card.Outcome == ComponentOutcome.Caution)
+                    .ToArray();
+                Equal(decisiveReports.Length, decisiveCards.Length);
+                foreach (ConclusionReport report in decisiveReports)
+                {
+                    True(decisiveCards.Any(card =>
+                        card.SourceConclusionIds.Contains(report.ConclusionId)));
+                }
+
+                while (!attempt.IsTerminal)
+                {
+                    resolver.AdvanceCurrent();
+                    panel.Update(attempt, PreviewPanelCorner.BottomRight, 1);
+                }
+                Equal(PreviewResolutionState.Complete, attempt.State);
+                PreviewConclusionPresentation complete = panel.Conclusions!;
+                Equal("Detailed conclusions - complete", complete.DetailSectionTitle);
+                True(complete.DetailGroups.Count > 0);
+                True(complete.DetailGroups.SelectMany(group => group.Cards)
+                    .All(card => card.Stage == EvidenceStage.CompleteClusterRaw));
+                True(complete.ImmediateGroups.SelectMany(group => group.Cards)
+                    .All(card => card.Stage == EvidenceStage.GalaxyPreview));
+                PreviewPanelDocument completeDocument = PreviewConclusionPresenter.Compose(
+                    panel.Current,
+                    complete);
+                True(completeDocument.Lines.Count <=
+                    PreviewConclusionPresenter.MaximumDocumentLines);
+                int completeHeight = PreviewPanelLayout.DocumentPadding * 2 +
+                    completeDocument.Lines.Count * PreviewPanelLayout.DocumentLineHeight;
+                foreach (PreviewPanelCorner corner in Enum.GetValues<PreviewPanelCorner>())
+                {
+                    PreviewPanelBounds bounds = PreviewPanelLayout.PlaceSized(
+                        corner,
+                        3840,
+                        2160,
+                        PreviewPanelLayout.ConclusionWidth,
+                        completeHeight);
+                    True(bounds.X > 0 && bounds.Y > 0);
+                    True(bounds.Right < 3840 && bounds.Bottom < 2160);
+                }
+
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt cachedAttempt = resolver.CurrentPublishedAttempt!;
+                panel.BeginSession(
+                    cachedAttempt.Session.SessionId,
+                    PreviewPanelCorner.BottomRight,
+                    0);
+                True(panel.Update(cachedAttempt, PreviewPanelCorner.BottomRight, 0));
+                Equal(PreviewResolutionState.Cached, cachedAttempt.State);
+                True(panel.Conclusions!.IsCached);
+                Equal("Detailed conclusions - cached", panel.Conclusions.DetailSectionTitle);
+                True(panel.Conclusions.DetailGroups.Count > 0);
+            });
+        }
+
+        private static void ConclusionPanelSnapshotIsBoundedAndNeutral()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway(), gate),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway(), gate),
+                    new CompleteClusterConclusionCache(path));
+                var panel = new PreviewPanelController();
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                panel.BeginSession(attempt.Session.SessionId, PreviewPanelCorner.TopRight, 0);
+                panel.Update(attempt, PreviewPanelCorner.TopRight, 0);
+
+                PreviewPanelDocument document = PreviewConclusionPresenter.Compose(
+                    panel.Current,
+                    panel.Conclusions);
+                Equal(PreviewPanelLineKind.Identity, document.Lines[0].Kind);
+                Equal("Seed 16315224 | 64 stars | resources x1 | Combat", document.Lines[0].Text);
+                Equal(
+                    "|  Scanning complete cluster - Planets 0 / 3",
+                    document.Lines[1].Text);
+                Equal("Immediate preview", document.Lines[2].Text);
+                True(document.Lines.Any(line => line.Text == "Detailed conclusions - scanning"));
+                True(document.Lines.Count <= PreviewConclusionPresenter.MaximumDocumentLines);
+                True(document.Lines.All(line =>
+                    line.Text.Length <= PreviewConclusionPresenter.MaximumLineCharacters));
+
+                string rendered = String.Join("\n", document.Lines.Select(line => line.Text));
+                foreach (string forbidden in new[]
+                {
+                    "FS-", "MF-", "DF-", "CX-", "RR-", "TRAIT-",
+                    "runtime-amount", "score", "ranking", "universal verdict",
+                    "best seed"
+                })
+                {
+                    False(rendered.IndexOf(forbidden, StringComparison.OrdinalIgnoreCase) >= 0);
+                }
+
+                int height = PreviewPanelLayout.DocumentPadding * 2 +
+                    document.Lines.Count * PreviewPanelLayout.DocumentLineHeight;
+                PreviewPanelBounds bounds = PreviewPanelLayout.PlaceSized(
+                    PreviewPanelCorner.TopRight,
+                    3840,
+                    2160,
+                    PreviewPanelLayout.ConclusionWidth,
+                    height);
+                True(bounds.X > 1920);
+                True(bounds.Y > 0);
+                True(bounds.Right < 3840);
+                True(bounds.Bottom < 2160);
             });
         }
 
@@ -1507,7 +1775,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(PreviewResolutionCoordinator),
                 typeof(PreviewPanelBounds),
                 typeof(PreviewPanelView),
-                typeof(PreviewPanelController)
+                typeof(PreviewPanelController),
+                typeof(PresentedConclusionCard),
+                typeof(PresentedContextGroup),
+                typeof(PreviewConclusionPresentation),
+                typeof(PreviewPanelDocument)
             })
             {
                 foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -1551,6 +1823,41 @@ namespace DSPSeedScanner.Runtime.Tests
                 1m,
                 CombatMode.Combat,
                 ConclusionDefinition.ReferenceCombatSettingsKey);
+        }
+
+        private static ConclusionReport PresentationReport(
+            ConclusionContext context,
+            ComponentOutcome outcome,
+            EvidenceStage stage,
+            string conclusionId,
+            ConclusionSubject subject)
+        {
+            DiagnosticCause? cause = outcome == ComponentOutcome.Unknown ||
+                outcome == ComponentOutcome.NotApplicable
+                ? new DiagnosticCause("fixture", "Presentation fixture diagnostic.")
+                : null;
+            return new ConclusionReport(
+                PreviewIdentity(16_315_224).GalaxyIdentity,
+                new EvaluationSettings(
+                    1m,
+                    CombatMode.Combat,
+                    ConclusionDefinition.ReferenceCombatSettingsKey),
+                new EvidenceCoverage(
+                    stage,
+                    stage == EvidenceStage.CompleteClusterRaw
+                        ? EvidenceScope.CompleteClusterResources
+                        : EvidenceScope.ClusterEnergy,
+                    CoverageState.Complete,
+                    1,
+                    1),
+                conclusionId,
+                context,
+                ConclusionDefinition.ContractVersion,
+                ConclusionDefinition.DefinitionVersion,
+                subject,
+                outcome,
+                new DecisiveFact("fixture", "987654321", "fixture-units"),
+                cause);
         }
 
         private static CompleteClusterRawResult CompleteResult(decimal resourceMultiplier = 1m) =>

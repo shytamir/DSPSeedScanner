@@ -6,11 +6,12 @@ story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core roadmap was completed and accepted on
 2026-08-11. The New Game presentation roadmap was approved on 2026-08-12.
-PRES-01 through PRES-04 were accepted. PRES-05 implemented the configurable
-New Game operational-status panel and is at its acceptance gate. Neutral
-conclusion cards and their final wording remain unimplemented. Panel anchoring
-uses the accepted four-corner configuration with bottom-right as the default.
-One packaging refinement remains tracked as non-blocking technical debt.
+PRES-01 through PRES-05 were accepted. PRES-06 implemented the bounded,
+context-grouped neutral conclusion presentation and is at its acceptance gate.
+Panel anchoring uses the accepted four-corner configuration with bottom-right
+as the default. Human validation of the complete installed experience remains
+for PRES-07. One packaging refinement remains tracked as non-blocking
+technical debt.
 
 ## Product decision
 

@@ -92,6 +92,9 @@ namespace DSPSeedScanner.Runtime
         public const int Width = 520;
         public const int Height = 116;
         public const int Margin = 24;
+        public const int ConclusionWidth = 900;
+        public const int DocumentPadding = 20;
+        public const int DocumentLineHeight = 22;
         public const int MaximumTitleCharacters = 32;
         public const int MaximumDetailCharacters = 64;
 
@@ -109,11 +112,25 @@ namespace DSPSeedScanner.Runtime
             int screenWidth,
             int screenHeight)
         {
+            return PlaceSized(corner, screenWidth, screenHeight, Width, Height);
+        }
+
+        public static PreviewPanelBounds PlaceSized(
+            PreviewPanelCorner corner,
+            int screenWidth,
+            int screenHeight,
+            int width,
+            int height)
+        {
             if (!Enum.IsDefined(typeof(PreviewPanelCorner), corner))
                 throw new ArgumentOutOfRangeException(nameof(corner));
-            if (screenWidth < Width + Margin * 2)
+            if (width <= 0)
+                throw new ArgumentOutOfRangeException(nameof(width));
+            if (height <= 0)
+                throw new ArgumentOutOfRangeException(nameof(height));
+            if (screenWidth < width + Margin * 2)
                 throw new ArgumentOutOfRangeException(nameof(screenWidth));
-            if (screenHeight < Height + Margin * 2)
+            if (screenHeight < height + Margin * 2)
                 throw new ArgumentOutOfRangeException(nameof(screenHeight));
 
             bool right = corner == PreviewPanelCorner.BottomRight ||
@@ -121,10 +138,10 @@ namespace DSPSeedScanner.Runtime
             bool bottom = corner == PreviewPanelCorner.BottomRight ||
                 corner == PreviewPanelCorner.BottomLeft;
             return new PreviewPanelBounds(
-                right ? screenWidth - Margin - Width : Margin,
-                bottom ? screenHeight - Margin - Height : Margin,
-                Width,
-                Height);
+                right ? screenWidth - Margin - width : Margin,
+                bottom ? screenHeight - Margin - height : Margin,
+                width,
+                height);
         }
     }
 
@@ -261,8 +278,12 @@ namespace DSPSeedScanner.Runtime
     public sealed class PreviewPanelController
     {
         private long activeSessionId;
+        private PreviewResolutionState? presentedState;
+        private int presentedPreviewCount;
+        private int presentedCompleteCount;
 
         public PreviewPanelView Current { get; private set; } = PreviewPanelView.Hidden;
+        public PreviewConclusionPresentation? Conclusions { get; private set; }
 
         public void BeginSession(
             long sessionId,
@@ -271,6 +292,10 @@ namespace DSPSeedScanner.Runtime
         {
             activeSessionId = sessionId;
             Current = PreviewPanelStateMapper.Waiting(sessionId, corner, spinnerStep);
+            Conclusions = null;
+            presentedState = null;
+            presentedPreviewCount = 0;
+            presentedCompleteCount = 0;
         }
 
         public bool Update(
@@ -289,6 +314,16 @@ namespace DSPSeedScanner.Runtime
                 attempt.CompletedPlanets,
                 corner,
                 spinnerStep);
+            if (Conclusions == null ||
+                presentedState != attempt.State ||
+                presentedPreviewCount != attempt.PreviewReports.Count ||
+                presentedCompleteCount != attempt.CompleteReports.Count)
+            {
+                Conclusions = PreviewConclusionPresenter.Project(attempt);
+                presentedState = attempt.State;
+                presentedPreviewCount = attempt.PreviewReports.Count;
+                presentedCompleteCount = attempt.CompleteReports.Count;
+            }
             return true;
         }
 
@@ -298,6 +333,10 @@ namespace DSPSeedScanner.Runtime
                 return false;
             activeSessionId = 0;
             Current = PreviewPanelView.Hidden;
+            Conclusions = null;
+            presentedState = null;
+            presentedPreviewCount = 0;
+            presentedCompleteCount = 0;
             return true;
         }
 
@@ -305,6 +344,10 @@ namespace DSPSeedScanner.Runtime
         {
             activeSessionId = 0;
             Current = PreviewPanelView.Hidden;
+            Conclusions = null;
+            presentedState = null;
+            presentedPreviewCount = 0;
+            presentedCompleteCount = 0;
         }
     }
 }

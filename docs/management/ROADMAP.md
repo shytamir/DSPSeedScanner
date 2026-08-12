@@ -1,10 +1,10 @@
 # New Game Presentation Roadmap
 
-**Status:** In progress. PRES-01 through PRES-04 are accepted; PRES-05 is
+**Status:** In progress. PRES-01 through PRES-05 are accepted; PRES-06 is
 implemented and pending acceptance.
 
-**Active user story:** PRES-05 is at its acceptance gate. PRES-06 remains
-inactive until PRES-05 is accepted.
+**Active user story:** PRES-06 is at its acceptance gate. PRES-07 remains
+inactive until PRES-06 is accepted.
 
 This roadmap turns the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It is deliberately limited
@@ -343,7 +343,7 @@ identities, and human in-game validation remained outside this story.
 
 ### PRES-05: Show current operational state
 
-**State:** Implemented on 2026-08-12; pending acceptance. The corner-anchor
+**State:** Accepted on 2026-08-12. The corner-anchor
 requirement was resolved on 2026-08-12.
 
 As a player viewing a cluster preview, I want a small panel to show what the
@@ -411,7 +411,7 @@ player controls, and human in-game validation remained outside this story.
 
 ### PRES-06: Present concise neutral conclusions
 
-**State:** Approved; inactive.
+**State:** Implemented on 2026-08-12; pending acceptance.
 
 As a player deciding whether a seed suits an intended run, I want its supported
 conclusions grouped by context so that I can understand strengths, limitations,
@@ -432,6 +432,56 @@ unsupported claim, or raw-number wall is introduced.
 **Out of scope:** New predicates or ranges, player preference controls,
 discovery-mode controls, seed comparison, sorting, exports, charts, detailed
 evidence browsing, localization, and package-branding refinement.
+
+**Implemented:** `PreviewConclusionPresenter` now maps only the twelve accepted
+semantic families into the six accepted contexts. Each card carries an
+explicit strength, limitation, preference-sensitive, tradeoff, caution,
+unknown, or not-applicable outcome and a bounded subject summary. Repeated
+subject-level reports are collapsed only when their context, evidence stage,
+family, and outcome agree. Every tradeoff and caution remains an independent
+card, and non-rendered source IDs retain traceability without exposing contract
+identifiers to players.
+
+The panel document begins with seed, star count, resource multiplier, and
+combat mode. It keeps complete Galaxy Preview cards under `Immediate preview`
+and Complete Cluster Raw cards under a separately labelled detailed section.
+That section says scanning while work remains, complete after a successful
+scan, cached after reuse, or unavailable after a terminal rejection. Lines are
+limited to 112 characters and documents to 72 lines; decisive fact values,
+units, diagnostics, raw identifiers, and scores have no rendered path.
+
+The IMGUI renderer expands the existing corner panel to the bounded document
+size, applies separate identity, section, context, and card styles, and retains
+the configured anchor and operational spinner or progress line. It adds no
+interaction, sorting, preference, inspection, or comparison control.
+
+**Acceptance evidence:**
+
+- focused mapping fixtures covered all seven accepted outcomes and every
+  subject kind used by the conclusion contract, including birth systems, star
+  systems, clusters, resources, system pairs, and traits;
+- the live deterministic preview fixture produced all six context groups in
+  accepted order, and every rendered immediate card was attributable only to
+  Galaxy Preview evidence;
+- completed and cached fixtures replaced the pending detailed section with
+  Complete Cluster Raw cards, kept the immediate section unchanged, and
+  identified cache reuse explicitly;
+- the number of rendered caution and tradeoff cards exactly matched the
+  decisive source reports, with each source retained independently;
+- deterministic snapshots enforced the identity and section hierarchy, line
+  and document bounds, all four 4K corner fits, and absence of contract IDs,
+  raw units, scores, rankings, universal verdicts, or best-seed language; and
+- the Release solution and installed-game plugin builds completed with zero
+  warnings and all 14 conclusion and 49 runtime-boundary checks passed, while
+  the hosted-reference build completed and the semantic-versioned DLL and
+  Thunderstore package validators accepted the three-assembly package.
+
+**Produced:** `PresentedConclusionCard`, `PresentedContextGroup`,
+`PreviewConclusionPresentation`, `PreviewPanelDocument`, the accepted-family
+and outcome copy mapper, the expanded bounded renderer, and focused mapping,
+conflict, cache, stage-separation, snapshot, and placement fixtures. New
+predicates, preferences, comparisons, charts, detailed evidence browsing,
+localization, and human in-game validation remained outside this story.
 
 ## Phase 3 - Accept the installed experience
 

@@ -7,9 +7,10 @@ intended run. It uses the installed game runtime as its generation authority
 and reports context-specific conclusions rather than a universal seed score.
 
 The current implementation automatically resolves each completed New Game
-cluster preview and shows a small operational panel while it checks the local
-cache or scans the cluster. Neutral conclusion cards are the next presentation
-story and are not yet displayed.
+cluster preview and shows operational state plus bounded neutral conclusions
+grouped for fresh starts, megafactories, Dark Fog farming, compact expansion,
+sphere or energy goals, and decision-relevant traits. Immediate preview and
+detailed complete-scan conclusions remain visibly separate.
 
 The BepInEx setting `Presentation.PanelCorner` selects the panel corner: `1`
 bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.

@@ -9,8 +9,10 @@ context-specific conclusions rather than a universal seed score.
 
 This package automatically resolves each completed New Game cluster preview.
 A small non-interactive corner panel shows waiting, cache reuse, scan progress,
-completion, cancellation, unsupported-runtime, and failure states. The next
-presentation phase will add the neutral context conclusions themselves.
+completion, cancellation, unsupported-runtime, and failure states. It also
+groups bounded neutral conclusions for fresh starts, megafactories, Dark Fog
+farming, compact expansion, sphere or energy goals, and decision-relevant
+traits without producing a universal seed score.
 
 ## Supported runtime
 

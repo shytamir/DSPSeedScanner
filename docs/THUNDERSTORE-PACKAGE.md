@@ -90,6 +90,6 @@ returns a disposable presentation-neutral operation; each `Advance` call
 completes at most one solid planet and restores shared DSP state before
 returning. Inputs and outputs remain presentation-neutral Core and Runtime
 contracts. The plugin now consumes them automatically from the New Game
-preview lifecycle and shows bounded operational state in a non-interactive
-corner panel without moving presentation policy into the scanner core.
-Context-grouped conclusion copy remains a later presentation story.
+preview lifecycle and shows bounded operational state and context-grouped
+neutral conclusions in a non-interactive corner panel without moving
+presentation policy into the scanner core.

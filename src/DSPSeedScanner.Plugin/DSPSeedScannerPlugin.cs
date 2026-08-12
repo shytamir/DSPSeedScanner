@@ -163,7 +163,11 @@ namespace DSPSeedScanner.Plugin
 
         private void OnGUI()
         {
-            previewPanelRenderer.Draw(previewPanel.Current, Screen.width, Screen.height);
+            previewPanelRenderer.Draw(
+                previewPanel.Current,
+                previewPanel.Conclusions,
+                Screen.width,
+                Screen.height);
         }
 
         internal void OnPreviewLoadCompleted(GameDesc descriptor)
