@@ -36,7 +36,7 @@ Assembly/file version:  M.m.N.0
 Diagnostic label:       M.m.N.<short-commit>
 ```
 
-The current release line is `0.9`. The same generated semantic version is used
+The current release line is `1.0`. The same generated semantic version is used
 by the manifest and BepInEx plugin attribute; all three scanner assemblies use
 the generated four-part assembly/file version. The diagnostic commit suffix is
 kept in product metadata and build reports.
