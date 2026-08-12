@@ -90,10 +90,16 @@ public sealed class PlanetData
     public EPlanetType type;
     public int theme;
     public int algoId;
+    public int precision;
+    public double mod_x;
+    public double mod_y;
+    public byte[]? modData;
     public PlanetRawData? data;
+    public PlanetAuxData? aux;
     public VeinGroup[]? veinGroups;
 
     public void RegenerateRawDataImmediately() { }
+    public void SummarizeVeinGroups() { }
 }
 
 public sealed class GameData
@@ -182,9 +188,26 @@ public enum EVeinType : byte
 
 public sealed class PlanetRawData
 {
+    public PlanetRawData(int precision) { }
+
     public VeinData[] veinPool = System.Array.Empty<VeinData>();
     public int veinCursor;
+    public byte[] InitModData(byte[]? modData) => System.Array.Empty<byte>();
+    public void CalcVerts() { }
     public void Free() { }
+}
+
+public sealed class PlanetAuxData
+{
+    public PlanetAuxData(PlanetData planet) { }
+
+    public void Free() { }
+}
+
+public class PlanetAlgorithm
+{
+    public void GenerateTerrain(double modX, double modY) { }
+    public void GenerateVeins() { }
 }
 
 public struct VeinData
@@ -211,7 +234,10 @@ public static class RandomTable
     public static void Init() { }
 }
 
-public sealed class PlanetModelingManager { }
+public static class PlanetModelingManager
+{
+    public static PlanetAlgorithm Algorithm(PlanetData planet) => new PlanetAlgorithm();
+}
 
 public struct VectorLF3
 {

@@ -443,7 +443,7 @@ namespace DSPSeedScanner.Plugin
                 {
                     GameMain.data = candidateData;
                     DSPGame.GameDesc = descriptor;
-                    planet.data.veinCursor = 1;
+                    planet.data!.veinCursor = 1;
                     algorithm.GenerateVeins();
                     planet.SummarizeVeinGroups();
                     evidence = NormalizeGroups(galaxySeed, planet);
