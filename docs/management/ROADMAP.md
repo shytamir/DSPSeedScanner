@@ -1,8 +1,9 @@
 # Presentation Refinement Roadmap
 
-**Status:** Approved for implementation on 2026-08-12. RFIN-01 is pending.
+**Status:** Active. RFIN-01 reached its automated acceptance gate on
+2026-08-12 and awaits product acceptance.
 
-**Active user story:** RFIN-01 is pending implementation.
+**Active user story:** RFIN-01 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -56,7 +57,8 @@ within that phase.
 
 ### RFIN-01: Add scan recovery frames
 
-**State:** Pending implementation.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player inspecting a new seed, I want the automatic scan to disrupt the
 preview less, even if complete conclusions arrive later.
@@ -71,6 +73,34 @@ human gate records cache-miss smoothness and duration.
 
 **Out of scope:** Background or parallel generation, adaptive frame budgets,
 yielding while DSP generation statics are installed, or scan acceleration.
+
+**Implemented:** The cooperative complete-cluster operation now alternates each
+planet-generation advance with one recovery-only advance. The recovery advance
+does not enter DSP generation, does not change progress, and completes only
+after confirming the runtime session remains restored. The final planet also
+receives its recovery frame before evaluation and publication.
+
+**Acceptance evidence:**
+
+- the focused three-planet scheduling fixture required six advances: three
+  planet steps and three recovery-only steps in strict alternation;
+- completed-planet progress advanced only on planet steps and remained
+  monotonic, while synchronous and cooperative execution returned identical
+  coverage, rare-resource evidence, and conclusion reports;
+- cancellation at the recovery boundary published no complete conclusions,
+  injected failure remained attributable to the affected planet, and both
+  paths restored the runtime session and captured preparation state;
+- the shared runtime lease rejected competing preview work during planet and
+  recovery advances, then released it after the terminal recovery step; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks passed, and all 49 runtime-boundary checks passed.
+
+**Produced:** A recovery-frame phase in `CompleteClusterRawOperation`, an
+explicit orchestration contract documenting alternating planet and recovery
+frames, and strengthened cadence, equivalence, cancellation, failure, and
+serialization fixtures. Per the roadmap validation policy, installed-game
+smoothness and cache-miss duration remain deferred to RFIN-10's sole human
+validation phase.
 
 ### RFIN-02: Preserve planet attribution
 

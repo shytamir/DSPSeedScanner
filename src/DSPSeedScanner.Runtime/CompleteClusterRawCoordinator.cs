@@ -84,6 +84,7 @@ namespace DSPSeedScanner.Runtime
         private int? affectedPlanet;
         private string? rawDiagnostic;
         private bool advancing;
+        private bool recoveryFramePending;
 
         private CompleteClusterRawOperation(
             IRuntimeCompleteClusterRawGateway gateway,
@@ -144,6 +145,22 @@ namespace DSPSeedScanner.Runtime
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
+                if (recoveryFramePending)
+                {
+                    IsYieldStateRestored = runtimeSession.StateRestored;
+                    if (!IsYieldStateRestored)
+                    {
+                        throw new InvalidOperationException(
+                            "Runtime state was not restored during a recovery frame.");
+                    }
+
+                    recoveryFramePending = false;
+                    trace.Add("cluster-step:recovery:completed=" + completed);
+                    if (completed == expected)
+                        CompleteSuccessfully(plan);
+                    return;
+                }
+
                 CompleteClusterPlanetTarget target = plan.Targets[completed];
                 affectedPlanet = target.PlanetId;
                 Publish(new CompleteClusterRawProgress(
@@ -169,9 +186,7 @@ namespace DSPSeedScanner.Runtime
                     completed,
                     target.PlanetId));
                 trace.Add("cluster-step:yield:completed=" + completed);
-
-                if (completed == expected)
-                    CompleteSuccessfully(plan);
+                recoveryFramePending = true;
             }
             catch (OperationCanceledException)
             {

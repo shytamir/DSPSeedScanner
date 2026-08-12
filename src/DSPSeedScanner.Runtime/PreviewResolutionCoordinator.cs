@@ -66,7 +66,8 @@ namespace DSPSeedScanner.Runtime
 
     /// <summary>
     /// Owns one cache-or-scan resolution attempt for the current completed
-    /// preview load. The caller advances it once per Unity frame.
+    /// preview load. The caller advances it once per Unity frame. Planet work
+    /// alternates with a recovery-only frame while a complete scan is active.
     /// </summary>
     public sealed class PreviewResolutionCoordinator : IDisposable
     {

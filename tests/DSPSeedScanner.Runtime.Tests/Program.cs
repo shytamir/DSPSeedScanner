@@ -44,7 +44,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete cluster incompatibility remains explicit", CompleteClusterIncompatibilityIsExplicit),
                 ("complete cluster bound rejects before raw generation", CompleteClusterBoundRejectsBeforeGeneration),
                 ("complete cluster shares runtime serialization", CompleteClusterSharesSerialization),
-                ("incremental cluster matches synchronous execution and yields", IncrementalClusterMatchesSynchronousExecution),
+                ("incremental cluster doubles safe recovery frames without changing results", IncrementalClusterMatchesSynchronousExecution),
                 ("incremental cluster cancellation and failure restore state", IncrementalClusterExitPathsRestoreState),
                 ("incremental cluster keeps serialization between yields", IncrementalClusterKeepsSerializationBetweenYields),
                 ("complete cache keys cover the full supported identity", CompleteCacheKeysCoverSupportedIdentity),
@@ -686,9 +686,13 @@ namespace DSPSeedScanner.Runtime.Tests
             int advances = 0;
             while (operation.State == CompleteClusterRawOperationState.Ready)
             {
+                int before = operation.CompletedPlanets;
                 operation.Advance();
                 advances++;
                 True(operation.IsYieldStateRestored);
+                Equal(
+                    advances % 2 == 1 ? before + 1 : before,
+                    operation.CompletedPlanets);
                 Equal(
                     operation.State == CompleteClusterRawOperationState.Ready
                         ? "leased"
@@ -697,7 +701,7 @@ namespace DSPSeedScanner.Runtime.Tests
             }
 
             CompleteClusterRawResult incremental = operation.Result!;
-            Equal(3, advances);
+            Equal(6, advances);
             Equal(RuntimeScanStatus.Success, incremental.Status);
             Equal(synchronous.Coverage, incremental.Coverage);
             True(synchronous.RareResources.SequenceEqual(incremental.RareResources));
@@ -716,6 +720,8 @@ namespace DSPSeedScanner.Runtime.Tests
             }
             Equal(3, incremental.Trace.Count(value =>
                 value.StartsWith("cluster-step:yield:", StringComparison.Ordinal)));
+            Equal(3, incremental.Trace.Count(value =>
+                value.StartsWith("cluster-step:recovery:", StringComparison.Ordinal)));
             Equal(3, gateway.YieldRestoreChecks);
             Equal(1, gateway.SessionDisposeCalls);
             Equal(1, gateway.RestoreCalls);
@@ -740,6 +746,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(1, cancelled.Coverage.CompletedPlanets);
                 Equal(0, cancelled.Reports.Count);
                 True(cancelled.StateRestored);
+                Equal(1, cancellationGateway.YieldRestoreChecks);
                 Equal("original", cancellationGateway.StateMarker);
                 Equal(1, cancellationGateway.SessionDisposeCalls);
                 Equal(1, cancellationGateway.RestoreCalls);
@@ -750,6 +757,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 new CompleteClusterRawCoordinator(failureGateway).TryStart(
                     Request(), CancellationToken.None))
             {
+                operation.Advance();
+                Equal(CompleteClusterRawOperationState.Ready, operation.State);
                 operation.Advance();
                 Equal(CompleteClusterRawOperationState.Ready, operation.State);
                 operation.Advance();
@@ -787,6 +796,15 @@ namespace DSPSeedScanner.Runtime.Tests
                 new CompleteClusterRawCoordinator(clusterGateway, gate).TryStart(
                     Request(), CancellationToken.None);
 
+            Equal(RuntimeScanStatus.Busy,
+                preview.TryScan(Request(), CancellationToken.None).Status);
+            operation.Advance();
+            Equal(RuntimeScanStatus.Busy,
+                preview.TryScan(Request(), CancellationToken.None).Status);
+            operation.Advance();
+            Equal(RuntimeScanStatus.Busy,
+                preview.TryScan(Request(), CancellationToken.None).Status);
+            operation.Advance();
             Equal(RuntimeScanStatus.Busy,
                 preview.TryScan(Request(), CancellationToken.None).Status);
             operation.Advance();
