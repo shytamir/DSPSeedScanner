@@ -1,10 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 through RFIN-08 were accepted on 2026-08-12.
-RFIN-09 reached its automated acceptance gate on 2026-08-12 and awaits product
-acceptance.
+**Status:** Active. RFIN-01 through RFIN-09 were accepted on 2026-08-12.
+RFIN-10 passed its automated release-candidate gate on 2026-08-12 and awaits
+the authorized installed-game human validation phase.
 
-**Active user story:** RFIN-09 is at its acceptance gate.
+**Active user story:** RFIN-10 awaits human validation.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -493,8 +493,7 @@ and runtime evidence contract were unchanged.
 
 ### RFIN-09: Remove redundant traits and finish the panel
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want every panel section to add a distinct decision and remain
 easy to scan.
@@ -554,7 +553,8 @@ viewport geometry, ordering policy, filter, or new interaction was introduced.
 
 ### RFIN-10: Validate the refined experience
 
-**State:** Approved; inactive.
+**State:** Automated release-candidate gate passed on 2026-08-12; awaiting the
+single installed-game human validation phase and product acceptance.
 
 As a player installing the refined package, I want smoother scanning and the
 revised conclusions to work together in the supported New Game flow.
@@ -572,6 +572,34 @@ traits. Residual limits are documented without assuming product acceptance.
 
 **Out of scope:** Publication, wider compatibility, localization, comparison,
 or unrelated technical debt.
+
+**Automated result:** A release-candidate snapshot now drives one representative
+Combat identity through uncached completion and then cache reuse. It asserts
+identical final presentation text; exact Fresh start, Megafactory, Compact
+expansion, and Sphere / energy context coverage; neutral Dark Fog metadata;
+approved representative copy; and absence of retired contexts, mechanical
+identifiers, raw units, and unsupported notation.
+
+The focused fixtures collectively cover every approved copy outcome,
+three-example aggregation bounds, deterministic ordering, unknown omission,
+schema-6 rejection by schema 7, duplicate coalescing, replacement, exit,
+cancellation, progress, restoration, and cache identity behavior. The
+seven-step [human validation sequence](RFIN-10-HUMAN-VALIDATION.md) owns the
+remaining installed 4K observations and explicitly requires recorded cache-miss
+duration and perceived smoothness.
+
+**Automated evidence:**
+
+- the Release solution and supported installed-game plugin built with zero
+  warnings;
+- all 14 conclusion checks and 59 runtime-boundary checks passed;
+- the local semantic-versioned artifact and exact Thunderstore package
+  validators passed; and
+- no human result was inferred from compilation, fixtures, or packaging.
+
+**Produced:** A validated release-candidate contract and a seven-step installed
+4K human-validation handoff. RFIN-10 and the roadmap remain unaccepted until
+that sequence is observed and its residual issues are recorded.
 
 ## Context contracts
 

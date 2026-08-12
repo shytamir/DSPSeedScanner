@@ -32,7 +32,8 @@ generation compatibility is not established.
 - Immediate preview conclusions cover accepted topology, power, gas-product,
   energy-system, sphere-geometry, grouping, and role cases.
 - The New Game workflow automatically reuses valid complete conclusions or
-  runs one cooperative complete-cluster scan at one solid planet per frame.
+  runs one cooperative complete-cluster scan with two safe recovery frames per
+  solid planet while retaining visible progress.
 - Unsupported settings or evidence remain explicit in the evaluation contract
   but are omitted from the decision panel. No score or hidden weighting is
   produced.

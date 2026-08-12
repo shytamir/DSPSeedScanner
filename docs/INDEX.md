@@ -11,6 +11,8 @@ current status; the current roadmap records story state and history.
   through RFIN-10 story scope, sequencing, acceptance gates, and status.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
+- [RFIN-10 human validation](management/RFIN-10-HUMAN-VALIDATION.md): Seven-step
+  installed 4K acceptance sequence for the refined release candidate.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
   evidence, operating bounds, and residual limits for the implemented core.
 

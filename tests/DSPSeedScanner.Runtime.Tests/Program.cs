@@ -73,6 +73,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("Sphere candidates are natural deterministic and bounded", SphereCandidatesAreNaturalDeterministicAndBounded),
                 ("conclusion panel separates contexts stages and conflicts", ConclusionPanelSeparatesContextsAndConflicts),
                 ("conclusion panel snapshot stays bounded and neutral", ConclusionPanelSnapshotIsBoundedAndNeutral),
+                ("refined release candidate is coherent across scan and cache", RefinedReleaseCandidateIsCoherentAcrossScanAndCache),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
             };
 
@@ -2573,6 +2574,91 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(bounds.Bottom < 2160);
             });
         }
+
+        private static void RefinedReleaseCandidateIsCoherentAcrossScanAndCache()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var previewGateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(birthPlanetAttributions: new[]
+                    {
+                        SolidAttribution(101, "Alpha I", 1.35m, 1.5m, true),
+                        SolidAttribution(102, "Alpha II", 1.20m, 1.1m, false),
+                        GasAttribution(103, "Alpha III", "hydrogen")
+                    })
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(previewGateway),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt scanned = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Scanning, scanned.State);
+                while (!scanned.IsTerminal)
+                    resolver.AdvanceCurrent();
+                Equal(PreviewResolutionState.Complete, scanned.State);
+                PreviewConclusionPresentation complete =
+                    PreviewConclusionPresenter.Project(scanned);
+                Equal(
+                    "Fresh start,Megafactory,Compact expansion,Sphere / energy",
+                    String.Join(",", complete.ImmediateGroups
+                        .Concat(complete.DetailGroups)
+                        .Select(group => group.Title)
+                        .Distinct(StringComparer.Ordinal)
+                        .OrderBy(title => title == "Fresh start" ? 0 :
+                            title == "Megafactory" ? 1 :
+                            title == "Compact expansion" ? 2 : 3)));
+                Equal("Dark Fog: 40 initial hives; 1 in starter system",
+                    complete.DarkFogStatusLine);
+                True(CompleteContextText(complete, ConclusionContext.FreshStart)
+                    .Contains("Starter gas giant has Hydrogen", StringComparison.Ordinal));
+                True(CompleteContextText(complete, ConclusionContext.Megafactory)
+                    .Contains("outshines all", StringComparison.Ordinal));
+                True(CompleteContextText(complete, ConclusionContext.CompactExpansion)
+                    .Contains("Short routes", StringComparison.Ordinal));
+                True(CompleteContextText(complete, ConclusionContext.SphereShowcase)
+                    .Contains("Grand shell", StringComparison.Ordinal));
+
+                string rendered = CompletePresentationText(complete);
+                foreach (string forbidden in new[]
+                {
+                    "TRAIT-", "DF-", "Decision-relevant traits",
+                    "Dark Fog farming", "@", "+N", ":star:",
+                    "runtime-amount", "orbit distance", "radius-units"
+                })
+                {
+                    False(rendered.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
+                }
+
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt cachedAttempt = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, cachedAttempt.State);
+                PreviewConclusionPresentation cached =
+                    PreviewConclusionPresenter.Project(cachedAttempt);
+                True(cached.IsCached);
+                Equal(rendered, CompletePresentationText(cached));
+            });
+        }
+
+        private static string CompleteContextText(
+            PreviewConclusionPresentation presentation,
+            ConclusionContext context) => String.Join("\n", presentation.ImmediateGroups
+                .Concat(presentation.DetailGroups)
+                .Where(group => group.Context == context)
+                .SelectMany(group => group.Cards)
+                .Select(card => card.Line));
+
+        private static string CompletePresentationText(
+            PreviewConclusionPresentation presentation) => String.Join("\n",
+                presentation.ImmediateGroups
+                    .Concat(presentation.DetailGroups)
+                    .SelectMany(group => group.Cards.Select(card =>
+                        ((int)group.Context).ToString() + "|" +
+                        ((int)card.Stage).ToString() + "|" +
+                        ((int)card.Outcome).ToString() + "|" + card.Line)));
 
         private static void RuntimeBoundaryExposesNoGameObjects()
         {
