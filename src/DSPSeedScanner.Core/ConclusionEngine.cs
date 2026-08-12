@@ -456,7 +456,10 @@ namespace DSPSeedScanner.Core
 
             foreach (NormalizedRareResourceEvidence resource in evidence.RareResources)
             {
-                ConclusionSubject subject = ResourceSubject(evidence, resource.ResourceId);
+                ConclusionSubject subject = resource.IsPresent &&
+                    resource.NearestSystem != null
+                    ? resource.NearestSystem
+                    : ResourceSubject(evidence, resource.ResourceId);
                 string distanceId = "RR-ACCESS.distance:" + resource.ResourceId;
                 if (unavailable != null)
                 {

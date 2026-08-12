@@ -1,10 +1,10 @@
 # Presentation Refinement Roadmap
 
-**Status:** Active. RFIN-01 through RFIN-04 were accepted on 2026-08-12.
-RFIN-05 reached its automated acceptance gate on 2026-08-12 and awaits product
+**Status:** Active. RFIN-01 through RFIN-05 were accepted on 2026-08-12.
+RFIN-06 reached its automated acceptance gate on 2026-08-12 and awaits product
 acceptance.
 
-**Active user story:** RFIN-05 is at its acceptance gate.
+**Active user story:** RFIN-06 is at its acceptance gate.
 
 This roadmap refines the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaces mechanical
@@ -258,8 +258,7 @@ are now included in the persisted presentation result.
 
 ### RFIN-05: Separate Dark Fog facts from judgments
 
-**State:** Implemented through its automated acceptance gate on 2026-08-12;
-awaiting product acceptance.
+**State:** Accepted on 2026-08-12 without semantic change.
 
 As a player, I want the generated Dark Fog occupation reported without a
 farming verdict.
@@ -319,7 +318,8 @@ Dark Fog judgments cannot survive the changed conclusion set.
 
 ### RFIN-06: Rewrite Megafactory candidates
 
-**State:** Approved; inactive.
+**State:** Implemented through its automated acceptance gate on 2026-08-12;
+awaiting product acceptance.
 
 As a player, I want to know which candidates exist for each supported
 megafactory role.
@@ -331,11 +331,55 @@ candidates and group several roles belonging to one system.
 **Acceptance gate:** Each supported state uses approved copy and deterministic
 selection. Candidate lists do not exceed three, larger sets use approved
 `many` forms, and no internal roles, raw resource amounts, `@`, Dark Fog, or
-operational claims appear. The open strong-energy role rule below must be
-settled before this story is activated.
+operational claims appear. The resolved strong-energy role rule below remains
+unchanged.
 
 **Out of scope:** Factory capacity, throughput, logistics performance, new
 resource-abundance ranges, or new system roles.
+
+**Implemented:** Megafactory now has a dedicated natural-language presenter
+for energy, large-shell, contained-orbit, and rare-access candidates. It uses
+the existing accepted predicates against the bounded RFIN-03 candidate lanes,
+groups several supported roles under one DSP system name, and names no more
+than three examples. When more systems qualify, the retained supporting count
+selects the approved `many` form without retaining or exposing the omitted
+systems.
+
+Complete rare-access reports now retain their already known nearest-system
+subject when the resource is present. This allows `Nearby Fire Ice in
+Alsciaukat`, `Fire Ice in Alsciaukat`, and `Distant Fire Ice in Alsciaukat`
+forms without preserving raw amounts in the presentation layer. Known absence
+remains resource-scoped and renders as `No Fire Ice`; larger same-class sets use
+bounded natural qualifiers.
+
+**Resolved energy-role decision:** The accepted `strong-energy` role continues
+to depend only on a supporting `MF-ENERGY-SYSTEM.output` outcome. Leader
+separation does not create, remove, or upgrade the role. It is used only to
+choose the approved energy wording: `outshines all` or `unusually bright` for
+supporting output, and `brightest` or `bright` for preference-sensitive output.
+This preserves the accepted predicate while preventing presenter inference
+from changing Compact expansion inputs.
+
+**Acceptance evidence:**
+
+- focused fixtures covered `outshines all`, `unusually bright`, `brightest`,
+  `bright`, and `No bright stars` without changing energy-role predicates;
+- energy, large-sphere, and contained-orbit fixtures proved deterministic
+  candidate ordering, a three-name bound, and approved `many` forms when the
+  supporting count exceeded that bound;
+- system-first fixtures combined energy, large-sphere, and contained-orbit
+  roles under one DSP display name without star types or internal roles;
+- complete-scan fixtures rendered nearby and distant rare resources with their
+  retained destination, kept known absence distinct, and exposed no raw
+  resource amounts; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 conclusion checks passed, and all 56 runtime-boundary checks passed.
+
+**Produced:** A bounded Megafactory sentence composer, small supporting-count
+metadata on the existing candidate projection, and destination-attributed
+rare-access reports. Cache schema version 5 invalidates schema-4 entries as
+ordinary misses because cached rare-access subjects now carry the destination
+needed by the presentation contract.
 
 ### RFIN-07: Summarize Compact expansion routes
 
@@ -487,11 +531,9 @@ destinations. Never show an omitted count.
 **Never show:** Internal roles, Dark Fog roles, `@`, raw resource amounts,
 mechanical language, factory capacity, throughput, or logistics claims.
 
-**Open contract decision:** Define how output class and leader separation
-create the `energy` role used by Compact expansion. The accepted implementation
-uses output strength alone; the approved copy treats separation as evidence of
-a distinct leader. This must be an explicit predicate decision, not presenter
-inference.
+**Resolved contract decision:** Output strength alone creates the `energy` role
+used by Compact expansion. Leader separation selects natural energy wording
+but does not create, remove, or upgrade the role.
 
 ### Compact expansion
 

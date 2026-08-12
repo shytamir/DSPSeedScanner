@@ -173,6 +173,7 @@ namespace DSPSeedScanner.Runtime
                     attempt.PreviewReports.Where(report =>
                         report.Stage == EvidenceStage.GalaxyPreview),
                     displays,
+                    attempt.SystemCandidates,
                     attempt.HasCompleteBirthPlanetAttribution
                         ? attempt.BirthPlanetAttributions
                         : null),
@@ -181,6 +182,7 @@ namespace DSPSeedScanner.Runtime
                         report.Stage == EvidenceStage.BirthSystemRaw ||
                         report.Stage == EvidenceStage.CompleteClusterRaw),
                     displays,
+                    attempt.SystemCandidates,
                     attempt.HasCompleteBirthPlanetAttribution
                         ? attempt.BirthPlanetAttributions
                         : null));
@@ -249,6 +251,7 @@ namespace DSPSeedScanner.Runtime
         private static IReadOnlyList<PresentedContextGroup> Group(
             IEnumerable<ConclusionReport> source,
             IReadOnlyDictionary<string, RuntimeSystemDisplay> displays,
+            RuntimeSystemCandidates? candidates,
             IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
         {
             ConclusionReport[] reports = source
@@ -274,6 +277,20 @@ namespace DSPSeedScanner.Runtime
                             context,
                             ContextTitle(context),
                             freshStart));
+                    }
+                    continue;
+                }
+
+                if (context == ConclusionContext.Megafactory)
+                {
+                    IReadOnlyList<PresentedConclusionCard> megafactory =
+                        BuildMegafactoryCards(reports, candidates, displays);
+                    if (megafactory.Count != 0)
+                    {
+                        groups.Add(new PresentedContextGroup(
+                            context,
+                            ContextTitle(context),
+                            megafactory));
                     }
                     continue;
                 }
@@ -416,6 +433,310 @@ namespace DSPSeedScanner.Runtime
                     ResourceLine(report));
             }
             return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static IReadOnlyList<PresentedConclusionCard> BuildMegafactoryCards(
+            IReadOnlyList<ConclusionReport> reports,
+            RuntimeSystemCandidates? candidates,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
+        {
+            var cards = new List<PresentedConclusionCard>();
+            var roles = new Dictionary<string, MegaSystemCard>(StringComparer.Ordinal);
+
+            ConclusionReport? output = SingleReport(reports, "MF-ENERGY-SYSTEM.output");
+            ConclusionReport? separation = SingleReport(
+                reports,
+                "MF-ENERGY-SYSTEM.separation");
+            if (output != null && candidates?.Energy != null)
+            {
+                RuntimeSystemCandidate[] bright = candidates.Energy.Where(candidate =>
+                    ConclusionDefinition.Evaluate(
+                        candidate.DecisiveValue,
+                        ConclusionDefinition.EnergyOutput) == ComponentOutcome.Supports)
+                    .ToArray();
+                if (output.Outcome == ComponentOutcome.DoesNotSupport)
+                {
+                    AddMegaCard(cards, new[] { output }, "No bright stars");
+                }
+                else if (output.Outcome == ComponentOutcome.PreferenceSensitive)
+                {
+                    RuntimeSystemCandidate leader = candidates.Energy[0];
+                    string description = separation?.Outcome == ComponentOutcome.Supports
+                        ? "brightest"
+                        : "bright";
+                    AddMegaRole(roles, leader, output.Outcome, description, output,
+                        separation);
+                }
+                else if (output.Outcome == ComponentOutcome.Supports)
+                {
+                    if (candidates.EnergySupportingCount > MaximumSubjectsPerCard)
+                    {
+                        AddMegaCard(
+                            cards,
+                            new[] { output },
+                            "Many bright stars: " + JoinNames(
+                                bright.Select(candidate => candidate.DisplayName)));
+                    }
+                    else
+                    {
+                        for (int index = 0; index < bright.Length; index++)
+                        {
+                            string description = index == 0
+                                ? separation?.Outcome == ComponentOutcome.Supports
+                                    ? "outshines all"
+                                    : "unusually bright"
+                                : "bright";
+                            AddMegaRole(roles, bright[index], output.Outcome, description,
+                                output, index == 0 ? separation : null);
+                        }
+                    }
+                }
+            }
+
+            ConclusionReport? radius = SingleReport(
+                reports,
+                "MF-SPHERE-GEOMETRY.radius");
+            if (radius != null && candidates?.ShellRadius != null)
+            {
+                RuntimeSystemCandidate[] large = candidates.ShellRadius.Where(candidate =>
+                    ConclusionDefinition.Evaluate(
+                        candidate.DecisiveValue,
+                        ConclusionDefinition.SphereRadius) == ComponentOutcome.Supports)
+                    .ToArray();
+                if (radius.Outcome == ComponentOutcome.DoesNotSupport)
+                {
+                    AddMegaCard(cards, new[] { radius }, "No large spheres");
+                }
+                else if (radius.Outcome == ComponentOutcome.Supports)
+                {
+                    if (candidates.ShellRadiusSupportingCount > MaximumSubjectsPerCard)
+                    {
+                        AddMegaCard(
+                            cards,
+                            new[] { radius },
+                            "Many large spheres: " + JoinNames(
+                                large.Select(candidate => candidate.DisplayName)));
+                    }
+                    else
+                    {
+                        foreach (RuntimeSystemCandidate candidate in large)
+                            AddMegaRole(roles, candidate, radius.Outcome, "large sphere", radius);
+                    }
+                }
+            }
+
+            ConclusionReport[] containmentReports = reports.Where(report =>
+                report.ConclusionId == "MF-SPHERE-GEOMETRY.containment").ToArray();
+            if (containmentReports.Length != 0 && candidates?.ContainedOrbits != null)
+            {
+                RuntimeSystemCandidate[] contained = candidates.ContainedOrbits.Where(candidate =>
+                    ConclusionDefinition.Evaluate(
+                        candidate.DecisiveValue,
+                        ConclusionDefinition.OrbitContainment) == ComponentOutcome.Supports)
+                    .ToArray();
+                if (contained.Length == 0 && containmentReports.All(report =>
+                    report.Outcome == ComponentOutcome.DoesNotSupport))
+                {
+                    AddMegaCard(cards, containmentReports, "No contained orbits");
+                }
+                else if (candidates.ContainedOrbitsSupportingCount > MaximumSubjectsPerCard)
+                {
+                    AddMegaCard(
+                        cards,
+                        containmentReports.Where(report =>
+                            report.Outcome == ComponentOutcome.Supports).ToArray(),
+                        "Many contained-orbit systems: " + JoinNames(
+                            contained.Select(candidate => candidate.DisplayName)));
+                }
+                else
+                {
+                    foreach (RuntimeSystemCandidate candidate in contained)
+                    {
+                        ConclusionReport? report = containmentReports.SingleOrDefault(value =>
+                            value.Subject.Identifier == candidate.Identifier &&
+                            value.Outcome == ComponentOutcome.Supports);
+                        if (report == null)
+                            continue;
+                        int count = Decimal.ToInt32(candidate.DecisiveValue);
+                        AddMegaRole(
+                            roles,
+                            candidate,
+                            ComponentOutcome.Supports,
+                            count == 1 ? "contained orbit" :
+                                count.ToString(CultureInfo.InvariantCulture) +
+                                " contained orbits",
+                            report);
+                    }
+                }
+            }
+
+            AddRareAccessCards(cards, roles, reports, displays);
+            foreach (MegaSystemCard role in roles.Values
+                .OrderBy(value => value.Outcome)
+                .ThenBy(value => value.DisplayName, StringComparer.Ordinal))
+            {
+                string line = role.Descriptions.Count == 1
+                    ? SingleMegaRoleLine(role.DisplayName, role.Descriptions[0])
+                    : role.DisplayName + ": " + String.Join(", ", role.Descriptions);
+                AddMegaCard(cards, role.Sources, line);
+            }
+            return Array.AsReadOnly(cards.ToArray());
+        }
+
+        private static void AddRareAccessCards(
+            ICollection<PresentedConclusionCard> cards,
+            IDictionary<string, MegaSystemCard> roles,
+            IReadOnlyList<ConclusionReport> reports,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
+        {
+            ConclusionReport[] rareReports = reports.Where(report =>
+                report.ConclusionId.StartsWith("RR-ACCESS.distance:", StringComparison.Ordinal))
+                .ToArray();
+            foreach (IGrouping<(ComponentOutcome Outcome, bool IsAbsent), ConclusionReport>
+                group in rareReports.GroupBy(report =>
+                    (report.Outcome, report.Subject.Kind == SubjectKind.Resource)))
+            {
+                ConclusionReport[] values = group
+                    .OrderBy(report => report.ConclusionId, StringComparer.Ordinal)
+                    .ToArray();
+                if (values.Length > MaximumSubjectsPerCard)
+                {
+                    string qualifier = group.Key switch
+                    {
+                        (ComponentOutcome.Supports, false) => "Many nearby rares: ",
+                        (ComponentOutcome.PreferenceSensitive, false) => "Many rares: ",
+                        (ComponentOutcome.DoesNotSupport, false) => "Many distant rares: ",
+                        (ComponentOutcome.DoesNotSupport, true) =>
+                            "Many rare resources absent: ",
+                        _ => String.Empty
+                    };
+                    if (qualifier.Length != 0)
+                    {
+                        IEnumerable<string> examples = group.Key.IsAbsent
+                            ? values.Select(value => ResourceLabel(value.ConclusionId))
+                            : values.Select(value =>
+                                displays.TryGetValue(
+                                    value.Subject.Identifier,
+                                    out RuntimeSystemDisplay? display)
+                                    ? ResourceLabel(value.ConclusionId) + " in " +
+                                        display.DisplayName
+                                    : ResourceLabel(value.ConclusionId));
+                        AddMegaCard(cards, values, qualifier + JoinNames(examples));
+                    }
+                    continue;
+                }
+
+                foreach (ConclusionReport report in values)
+                {
+                    string resource = ResourceLabel(report.ConclusionId);
+                    if (report.Subject.Kind == SubjectKind.Resource)
+                    {
+                        AddMegaCard(cards, new[] { report }, "No " + resource);
+                        continue;
+                    }
+                    if (!displays.TryGetValue(
+                        report.Subject.Identifier,
+                        out RuntimeSystemDisplay? display))
+                    {
+                        continue;
+                    }
+                    string description = report.Outcome switch
+                    {
+                        ComponentOutcome.Supports => "nearby " + resource,
+                        ComponentOutcome.PreferenceSensitive => resource,
+                        ComponentOutcome.DoesNotSupport => "distant " + resource,
+                        _ => String.Empty
+                    };
+                    if (description.Length != 0)
+                    {
+                        AddMegaRole(
+                            roles,
+                            new RuntimeSystemCandidate(
+                                report.Subject.Identifier,
+                                display.DisplayName,
+                                0m),
+                            report.Outcome,
+                            description,
+                            report);
+                    }
+                }
+            }
+        }
+
+        private static ConclusionReport? SingleReport(
+            IEnumerable<ConclusionReport> reports,
+            string conclusionId) => reports.SingleOrDefault(report =>
+                report.ConclusionId == conclusionId);
+
+        private static void AddMegaRole(
+            IDictionary<string, MegaSystemCard> roles,
+            RuntimeSystemCandidate candidate,
+            ComponentOutcome outcome,
+            string description,
+            params ConclusionReport?[] sources)
+        {
+            string key = ((int)outcome).ToString(CultureInfo.InvariantCulture) + "\t" +
+                candidate.Identifier;
+            if (!roles.TryGetValue(key, out MegaSystemCard? role))
+            {
+                role = new MegaSystemCard(candidate.DisplayName, outcome);
+                roles.Add(key, role);
+            }
+            if (!role.Descriptions.Contains(description, StringComparer.Ordinal))
+                role.Descriptions.Add(description);
+            foreach (ConclusionReport? source in sources.Where(value => value != null))
+            {
+                if (!role.Sources.Contains(source!))
+                    role.Sources.Add(source!);
+            }
+        }
+
+        private static string SingleMegaRoleLine(string system, string description)
+        {
+            if (description.StartsWith("nearby ", StringComparison.Ordinal))
+                return "Nearby " + description.Substring("nearby ".Length) + " in " + system;
+            if (description.StartsWith("distant ", StringComparison.Ordinal))
+                return "Distant " + description.Substring("distant ".Length) + " in " + system;
+            if (description == "large sphere")
+                return "Large sphere at " + system;
+            if (description.EndsWith("contained orbit", StringComparison.Ordinal) ||
+                description.EndsWith("contained orbits", StringComparison.Ordinal))
+                return Char.ToUpperInvariant(description[0]) + description.Substring(1) +
+                    " at " + system;
+            return system + " " + description;
+        }
+
+        private static void AddMegaCard(
+            ICollection<PresentedConclusionCard> cards,
+            IEnumerable<ConclusionReport> sources,
+            string line)
+        {
+            ConclusionReport[] values = sources.ToArray();
+            if (values.Length == 0)
+                return;
+            cards.Add(new PresentedConclusionCard(
+                ConclusionContext.Megafactory,
+                values[0].Stage,
+                values[0].Outcome,
+                "MEGAFACTORY-CANDIDATES",
+                line,
+                Array.Empty<string>(),
+                Bound(line, MaximumLineCharacters),
+                values.Select(value => value.ConclusionId)));
+        }
+
+        private sealed class MegaSystemCard
+        {
+            public MegaSystemCard(string displayName, ComponentOutcome outcome)
+            {
+                DisplayName = displayName;
+                Outcome = outcome;
+            }
+
+            public string DisplayName { get; }
+            public ComponentOutcome Outcome { get; }
+            public List<string> Descriptions { get; } = new List<string>();
+            public List<ConclusionReport> Sources { get; } = new List<ConclusionReport>();
         }
 
         private static void AddFreshCard(

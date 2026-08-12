@@ -66,17 +66,26 @@ namespace DSPSeedScanner.Runtime
         private RuntimeSystemCandidates(
             RuntimeSystemCandidate[]? energy,
             RuntimeSystemCandidate[]? shellRadius,
-            RuntimeSystemCandidate[]? containedOrbits)
+            RuntimeSystemCandidate[]? containedOrbits,
+            int energySupportingCount,
+            int shellRadiusSupportingCount,
+            int containedOrbitsSupportingCount)
         {
             this.energy = energy;
             this.shellRadius = shellRadius;
             this.containedOrbits = containedOrbits;
+            EnergySupportingCount = energySupportingCount;
+            ShellRadiusSupportingCount = shellRadiusSupportingCount;
+            ContainedOrbitsSupportingCount = containedOrbitsSupportingCount;
         }
 
         public IReadOnlyList<RuntimeSystemCandidate>? Energy => ReadOnly(energy);
         public IReadOnlyList<RuntimeSystemCandidate>? ShellRadius => ReadOnly(shellRadius);
         public IReadOnlyList<RuntimeSystemCandidate>? ContainedOrbits =>
             ReadOnly(containedOrbits);
+        public int EnergySupportingCount { get; }
+        public int ShellRadiusSupportingCount { get; }
+        public int ContainedOrbitsSupportingCount { get; }
 
         internal static RuntimeSystemCandidates Project(
             IReadOnlyList<NormalizedSystemEvidence> systems,
@@ -88,7 +97,25 @@ namespace DSPSeedScanner.Runtime
             return new RuntimeSystemCandidates(
                 Rank(systems, displayByIdentifier, system => system.DysonLuminosity),
                 Rank(systems, displayByIdentifier, system => system.MaximumShellRadius),
-                Rank(systems, displayByIdentifier, system => system.ContainedOrbitCount));
+                Rank(systems, displayByIdentifier, system => system.ContainedOrbitCount),
+                SupportingCount(systems, system => system.DysonLuminosity,
+                    ConclusionDefinition.EnergyOutput),
+                SupportingCount(systems, system => system.MaximumShellRadius,
+                    ConclusionDefinition.SphereRadius),
+                SupportingCount(systems, system => system.ContainedOrbitCount,
+                    ConclusionDefinition.OrbitContainment));
+        }
+
+        private static int SupportingCount<T>(
+            IReadOnlyList<NormalizedSystemEvidence> systems,
+            Func<NormalizedSystemEvidence, T?> selectValue,
+            AcceptedRange range) where T : struct, IConvertible
+        {
+            if (systems.Count == 0 || systems.Any(system => !selectValue(system).HasValue))
+                return 0;
+            return systems.Count(system => ConclusionDefinition.Evaluate(
+                Convert.ToDecimal(selectValue(system)!.Value),
+                range) == ComponentOutcome.Supports);
         }
 
         private static RuntimeSystemCandidate[]? Rank(

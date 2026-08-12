@@ -6,12 +6,12 @@ story scope, evidence, and history belong in the roadmap.
 
 **Current status:** The scanner core and New Game presentation roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12 respectively. The approved
-presentation refinement roadmap is active. RFIN-01 through RFIN-04 were
+presentation refinement roadmap is active. RFIN-01 through RFIN-05 were
 accepted on 2026-08-12; RFIN-01's installed-game smoothness and duration
-validation remains deferred to the roadmap's final human phase. RFIN-05 now
-awaits product acceptance after neutral Dark Fog status metadata passed its
-automated acceptance gate. One packaging refinement remains tracked as
-non-blocking technical debt.
+validation remains deferred to the roadmap's final human phase. RFIN-06 now
+awaits product acceptance after its bounded Megafactory candidate presentation
+passed the automated acceptance gate. One packaging refinement remains tracked
+as non-blocking technical debt.
 
 ## Product decision
 

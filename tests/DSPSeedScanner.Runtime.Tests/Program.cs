@@ -68,6 +68,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
+                ("Megafactory copy is natural bounded and grouped", MegafactoryCopyIsNaturalBoundedAndGrouped),
                 ("conclusion panel separates contexts stages and conflicts", ConclusionPanelSeparatesContextsAndConflicts),
                 ("conclusion panel snapshot stays bounded and neutral", ConclusionPanelSnapshotIsBoundedAndNeutral),
                 ("runtime boundary exposes no game objects", RuntimeBoundaryExposesNoGameObjects)
@@ -258,6 +259,9 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal("5,6,3", CandidateIds(candidates.ShellRadius));
             Equal("4,5,6", CandidateIds(candidates.ContainedOrbits));
             Equal(3, candidates.Energy!.Count);
+            Equal(5, candidates.EnergySupportingCount);
+            Equal(5, candidates.ShellRadiusSupportingCount);
+            Equal(5, candidates.ContainedOrbitsSupportingCount);
             Equal("Star 2", candidates.Energy[0].DisplayName);
             Equal(10m, candidates.Energy[0].DecisiveValue);
             Equal(3_000_000m, candidates.ShellRadius!
@@ -278,6 +282,7 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(RuntimeScanStatus.Success, result.Status);
             True(result.SystemCandidates != null);
             True(result.SystemCandidates!.Energy == null);
+            Equal(0, result.SystemCandidates.EnergySupportingCount);
             Equal(3, result.SystemCandidates.ShellRadius!.Count);
             Equal(3, result.SystemCandidates.ContainedOrbits!.Count);
 
@@ -1291,7 +1296,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     using (var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true))
                         reader.ReadString();
                     using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
-                    writer.Write(3);
+                    writer.Write(4);
                 }
                 byte[] obsoleteEntry = File.ReadAllBytes(entry);
                 using (SHA256 sha = SHA256.Create())
@@ -2169,6 +2174,178 @@ namespace DSPSeedScanner.Runtime.Tests
                 False(rendered.Contains("gas giants have", StringComparison.OrdinalIgnoreCase));
                 False(rendered.Contains("permanent solar", StringComparison.OrdinalIgnoreCase));
                 True(rendered.Contains("gas giant neighbors", StringComparison.OrdinalIgnoreCase));
+            });
+        }
+
+        private static void MegafactoryCopyIsNaturalBoundedAndGrouped()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+                {
+                    [2] = (2.70m, 250_000, 4),
+                    [3] = (2.60m, 200_000, 3),
+                    [4] = (2.55m, 195_000, 2),
+                    [5] = (2.51m, 192_000, 2)
+                };
+                var previewGateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(systemCandidateFacts: facts)
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(previewGateway),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt attempt = resolver.CurrentPublishedAttempt!;
+                PreviewConclusionPresentation immediate =
+                    PreviewConclusionPresenter.Project(attempt);
+                string immediateText = String.Join("\n", immediate.ImmediateGroups
+                    .Single(group => group.Context == ConclusionContext.Megafactory)
+                    .Cards.Select(card => card.Line));
+
+                True(immediateText.Contains(
+                    "Many bright stars: Star 2, Star 3, and Star 4",
+                    StringComparison.Ordinal));
+                True(immediateText.Contains(
+                    "Many large spheres: Star 2, Star 3, and Star 4",
+                    StringComparison.Ordinal));
+                True(immediateText.Contains(
+                    "Many contained-orbit systems: Star 2, Star 3, and Star 4",
+                    StringComparison.Ordinal));
+
+                while (!attempt.IsTerminal)
+                    resolver.AdvanceCurrent();
+                PreviewConclusionPresentation complete =
+                    PreviewConclusionPresenter.Project(attempt);
+                string detailText = String.Join("\n", complete.DetailGroups
+                    .Single(group => group.Context == ConclusionContext.Megafactory)
+                    .Cards.Select(card => card.Line));
+                True(detailText.Contains("Nearby Kimberlite in Star 2", StringComparison.Ordinal));
+                True(detailText.Contains(
+                    "Distant Unipolar Magnet in Star 3",
+                    StringComparison.Ordinal));
+                True(detailText.Contains(
+                    "Many rare resources absent: Fire Ice, Fractal Silicon, and Optical Grating Crystal",
+                    StringComparison.Ordinal));
+
+                string rendered = immediateText + "\n" + detailText;
+                foreach (string forbidden in new[]
+                {
+                    "@", "type star", "MF-", "RR-", "strong-energy",
+                    "large-shell", "orbit-containment", "rare-access",
+                    "runtime-amount", "+"
+                })
+                {
+                    False(rendered.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
+                }
+                True(complete.ImmediateGroups.Concat(complete.DetailGroups)
+                    .Where(group => group.Context == ConclusionContext.Megafactory)
+                    .SelectMany(group => group.Cards)
+                    .All(card => card.Line.Length <=
+                        PreviewConclusionPresenter.MaximumLineCharacters));
+
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt cached = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, cached.State);
+                string cachedDetailText = String.Join("\n", PreviewConclusionPresenter
+                    .Project(cached)
+                    .DetailGroups.Single(group =>
+                        group.Context == ConclusionContext.Megafactory)
+                    .Cards.Select(card => card.Line));
+                Equal(detailText, cachedDetailText);
+            });
+
+            WithTemporaryDirectory(path =>
+            {
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway()),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                string text = String.Join("\n", PreviewConclusionPresenter
+                    .Project(resolver.CurrentPublishedAttempt!)
+                    .ImmediateGroups.Single(group =>
+                        group.Context == ConclusionContext.Megafactory)
+                    .Cards.Select(card => card.Line));
+                True(text.Contains(
+                    "Star 2: outshines all, large sphere, 4 contained orbits",
+                    StringComparison.Ordinal));
+            });
+
+            WithTemporaryDirectory(path =>
+            {
+                var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+                {
+                    [2] = (2.46m, 60_000, 0)
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway
+                    {
+                        Snapshot = Snapshot(systemCandidateFacts: facts)
+                    }),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                string text = String.Join("\n", PreviewConclusionPresenter
+                    .Project(resolver.CurrentPublishedAttempt!)
+                    .ImmediateGroups.Single(group =>
+                        group.Context == ConclusionContext.Megafactory)
+                    .Cards.Select(card => card.Line));
+                True(text.Contains("Star 2 brightest", StringComparison.Ordinal));
+                True(text.Contains("No large spheres", StringComparison.Ordinal));
+                True(text.Contains("No contained orbits", StringComparison.Ordinal));
+            });
+
+            WithTemporaryDirectory(path =>
+            {
+                var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+                {
+                    [2] = (2.60m, 60_000, 0),
+                    [3] = (2.59m, 60_000, 0)
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway
+                    {
+                        Snapshot = Snapshot(systemCandidateFacts: facts)
+                    }),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                string text = String.Join("\n", PreviewConclusionPresenter
+                    .Project(resolver.CurrentPublishedAttempt!)
+                    .ImmediateGroups.Single(group =>
+                        group.Context == ConclusionContext.Megafactory)
+                    .Cards.Select(card => card.Line));
+                True(text.Contains("Star 2 unusually bright", StringComparison.Ordinal));
+                True(text.Contains("Star 3 bright", StringComparison.Ordinal));
+            });
+
+            WithTemporaryDirectory(path =>
+            {
+                var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
+                {
+                    [2] = (2.40m, 60_000, 0)
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway
+                    {
+                        Snapshot = Snapshot(systemCandidateFacts: facts)
+                    }),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                string text = String.Join("\n", PreviewConclusionPresenter
+                    .Project(resolver.CurrentPublishedAttempt!)
+                    .ImmediateGroups.Single(group =>
+                        group.Context == ConclusionContext.Megafactory)
+                    .Cards.Select(card => card.Line));
+                True(text.Contains("No bright stars", StringComparison.Ordinal));
             });
         }
 
