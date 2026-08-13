@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -48,10 +50,23 @@ namespace DSPSeedScanner.Plugin
 
         private void Awake()
         {
+            Action<string> reportFilesystemFailure = diagnostic =>
+                Logger.LogWarning("Filesystem: " + diagnostic);
+            RuntimeFilesystemResolution filesystem = ResolveFilesystemContext();
+            if (!filesystem.Succeeded)
+                reportFilesystemFailure(filesystem.Diagnostic);
+            if (filesystem.Context?.PluginDiagnostic != null)
+                reportFilesystemFailure(filesystem.Context.PluginDiagnostic);
+            if (filesystem.Context?.PatcherDiagnostic != null)
+                reportFilesystemFailure(filesystem.Context.PatcherDiagnostic);
+            if (filesystem.Context?.ConfigurationDiagnostic != null)
+                reportFilesystemFailure(filesystem.Context.ConfigurationDiagnostic);
             var operationGate = new RuntimeOperationGate();
             previewGateway = new DspPreviewGateway(
                 Thread.CurrentThread.ManagedThreadId,
-                PluginGuid);
+                PluginGuid,
+                filesystem,
+                reportFilesystemFailure);
             rawGateway = new DspRawPlanetGateway(previewGateway);
             coordinator = new PreviewScanCoordinator(previewGateway, operationGate);
             rawCoordinator = new RawPlanetCoordinator(rawGateway, operationGate);
@@ -59,19 +74,27 @@ namespace DSPSeedScanner.Plugin
             completeClusterCoordinator = new CompleteClusterRawCoordinator(
                 rawGateway,
                 operationGate);
-            completeClusterCache = new CompleteClusterConclusionCache(
-                Path.Combine(Paths.ConfigPath, "DSPSeedScanner", "cache"));
+            completeClusterCache = CompleteClusterConclusionCache.CreateOrDisabled(
+                filesystem.Context?.CacheDirectoryPath,
+                reportFilesystemFailure);
             previewLifecycle = new PreviewSessionLifecycle();
             previewResolution = new PreviewResolutionCoordinator(
                 previewLifecycle,
                 coordinator,
                 completeClusterCoordinator,
                 completeClusterCache);
-            previewPanelCorner = Config.Bind(
-                "Presentation",
-                "PanelCorner",
-                PreviewPanelLayout.DefaultCornerCode,
-                "Panel corner: 1 bottom-right, 2 bottom-left, 3 top-left, 4 top-right.");
+            previewPanelCorner = filesystem.Context?.ConfigurationDirectoryPath == null
+                ? null
+                : RuntimeFilesystemGuard.ExecuteOrFallback<ConfigEntry<int>?>(
+                    () => Config.Bind(
+                        "Presentation",
+                        "PanelCorner",
+                        PreviewPanelLayout.DefaultCornerCode,
+                        "Panel corner: 1 bottom-right, 2 bottom-left, 3 top-left, 4 top-right."),
+                    null,
+                    "bind-setting",
+                    "active-config",
+                    reportFilesystemFailure);
             PreviewUiPatches.Plugin = this;
             harmony = new Harmony(PluginGuid);
             harmony.PatchAll(typeof(PreviewUiPatches));
@@ -220,6 +243,15 @@ namespace DSPSeedScanner.Plugin
                         previewPanelSpinnerStep);
                 }
             }
+            catch (RuntimeFilesystemException exception)
+            {
+                previewResolution.ExitPreview();
+                previewPanel.ShowUnavailable(
+                    sessionId,
+                    ConfiguredPanelCorner(),
+                    exception.Message);
+                Logger.LogError("Filesystem: " + exception.Diagnostic);
+            }
             catch (Exception exception)
             {
                 previewResolution.ExitPreview();
@@ -229,6 +261,35 @@ namespace DSPSeedScanner.Plugin
                     "Runtime identity could not be read");
                 Logger.LogError("Completed preview load could not be resolved: " + exception);
             }
+        }
+
+        private RuntimeFilesystemResolution ResolveFilesystemContext()
+        {
+            string? executablePath = null;
+            try
+            {
+                using Process process = Process.GetCurrentProcess();
+                executablePath = process.MainModule?.FileName;
+            }
+            catch (Exception exception) when (
+                exception is Win32Exception ||
+                exception is InvalidOperationException ||
+                RuntimeFilesystemDiagnostics.IsExpectedFailure(exception))
+            {
+                Logger.LogWarning("Filesystem: " + RuntimeFilesystemDiagnostics.Format(
+                    "read-process-executable",
+                    "active-process",
+                    exception));
+            }
+
+            return RuntimeFilesystemContextResolver.Resolve(
+                new RuntimeFilesystemInputs(
+                    executablePath,
+                    Paths.GameRootPath,
+                    typeof(DSPSeedScannerPlugin).Assembly.Location,
+                    typeof(UniverseGen).Assembly.Location,
+                    Paths.PatcherPluginPath,
+                    Paths.ConfigPath));
         }
 
         internal void OnPreviewClosed()

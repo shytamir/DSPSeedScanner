@@ -24,13 +24,54 @@ namespace DSPSeedScanner.Runtime
             return Unavailable;
         }
 
+        public static string RequiredSha256(string? path, string source)
+        {
+            if (String.IsNullOrWhiteSpace(source))
+                throw new ArgumentException("A filesystem source is required.", nameof(source));
+            if (String.IsNullOrWhiteSpace(path))
+            {
+                throw new RuntimeFilesystemException(
+                    "required-file-unavailable",
+                    source,
+                    "The required runtime file could not be read.",
+                    RuntimeFilesystemDiagnostics.Format(
+                        "hash-file",
+                        source,
+                        "InvalidPath: The file path was blank."));
+            }
+            try
+            {
+                using Stream stream = File.OpenRead(path);
+                using SHA256 hash = SHA256.Create();
+                return BitConverter.ToString(hash.ComputeHash(stream))
+                    .Replace("-", String.Empty);
+            }
+            catch (Exception exception) when (IsExpectedFileFailure(exception))
+            {
+                throw new RuntimeFilesystemException(
+                    "required-file-unavailable",
+                    source,
+                    "The required runtime file could not be read.",
+                    RuntimeFilesystemDiagnostics.Format(
+                        "hash-file",
+                        source,
+                        exception));
+            }
+        }
+
         public static IReadOnlyList<string> Inventory(
             string? directoryPath,
-            string searchPattern)
+            string searchPattern,
+            Action<string>? reportDiagnostic = null,
+            string source = "runtime-inventory")
         {
             if (String.IsNullOrWhiteSpace(directoryPath) ||
                 String.IsNullOrWhiteSpace(searchPattern))
             {
+                reportDiagnostic?.Invoke(RuntimeFilesystemDiagnostics.Format(
+                    "inventory-directory",
+                    source,
+                    "InvalidPath: The inventory path or pattern was blank."));
                 return Array.Empty<string>();
             }
 
@@ -38,7 +79,13 @@ namespace DSPSeedScanner.Runtime
             try
             {
                 if (!Directory.Exists(directoryPath))
-                    return Array.Empty<string>();
+                {
+                    reportDiagnostic?.Invoke(RuntimeFilesystemDiagnostics.Format(
+                        "inventory-directory",
+                        source,
+                        "DirectoryNotFound: The inventory directory was unavailable."));
+                    return new[] { "inventory:" + Unavailable };
+                }
                 paths = Directory.GetFiles(
                     directoryPath,
                     searchPattern,
@@ -46,15 +93,32 @@ namespace DSPSeedScanner.Runtime
             }
             catch (Exception exception) when (IsExpectedFileFailure(exception))
             {
+                reportDiagnostic?.Invoke(RuntimeFilesystemDiagnostics.Format(
+                    "inventory-directory",
+                    source,
+                    exception));
                 return new[] { "inventory:" + Unavailable };
             }
 
             return paths
                 .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
-                .Select(path => Path.GetFileName(path) + ":" +
-                    (TrySha256(path, File.OpenRead, out string digest)
-                        ? digest
-                        : Unavailable))
+                .Select(path =>
+                {
+                    bool readable = TrySha256(
+                        path,
+                        File.OpenRead,
+                        out string digest,
+                        out string? diagnostic);
+                    if (!readable && diagnostic != null)
+                    {
+                        reportDiagnostic?.Invoke(RuntimeFilesystemDiagnostics.Format(
+                            "inventory-file",
+                            source,
+                            diagnostic));
+                    }
+                    return Path.GetFileName(path) + ":" +
+                        (readable ? digest : Unavailable);
+                })
                 .ToArray();
         }
 
@@ -63,12 +127,28 @@ namespace DSPSeedScanner.Runtime
             Func<string, Stream> openRead,
             out string digest)
         {
+            return TrySha256(path, openRead, out digest, out _);
+        }
+
+        internal static bool TrySha256(
+            string? path,
+            Func<string, Stream> openRead,
+            out string digest,
+            out string? diagnostic)
+        {
             if (openRead == null)
                 throw new ArgumentNullException(nameof(openRead));
 
             digest = Unavailable;
+            diagnostic = null;
             if (String.IsNullOrWhiteSpace(path))
+            {
+                diagnostic = RuntimeFilesystemDiagnostics.Format(
+                    "hash-file",
+                    "runtime-file",
+                    "InvalidPath: The file path was blank.");
                 return false;
+            }
 
             try
             {
@@ -80,6 +160,10 @@ namespace DSPSeedScanner.Runtime
             }
             catch (Exception exception) when (IsExpectedFileFailure(exception))
             {
+                diagnostic = RuntimeFilesystemDiagnostics.Format(
+                    "hash-file",
+                    "runtime-file",
+                    exception);
                 return false;
             }
         }

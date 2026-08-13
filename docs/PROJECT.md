@@ -11,8 +11,10 @@ validation on 2026-08-12, including smooth cache-miss scanning through a
 scanner-owned terrain worker. The repository is in maintenance mode; no
 product roadmap is active. HOTFIX-01 corrected pathless runtime-assembly
 fingerprinting and is awaiting confirmation on the reporting user's affected
-installation. TD-004 is pending evaluation for developer-probe output failure
-containment and does not affect ordinary player behavior.
+installation. FSOR-01 completed local runtime-filesystem hardening on
+2026-08-13 without changing identity or conclusion semantics. TD-004 is
+pending evaluation for developer-probe output failure containment and does not
+affect ordinary player behavior.
 
 ## Product decision
 

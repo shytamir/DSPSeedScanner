@@ -12,7 +12,7 @@ current status and decisions; completed roadmap history resides in the
   active external confirmation gate.
 - [Runtime identity maintenance draft](management/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
   Pathless-assembly hotfix evidence, retired conclusion-gate proposal, and the
-  unauthorized filesystem-robustness story.
+  completed filesystem-robustness correction.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, including pending developer-probe failure
   containment, temporary constraints, and mandatory closure gates.

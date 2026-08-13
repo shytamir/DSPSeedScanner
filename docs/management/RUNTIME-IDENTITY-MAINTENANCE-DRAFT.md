@@ -1,8 +1,8 @@
 # Runtime Identity Maintenance Draft
 
 **Status:** HOTFIX-01 was implemented on 2026-08-13 and reached its external
-confirmation gate. COMPAT-02 was retired without implementation. FSOR-01 is a
-draft and is not authorized for implementation.
+confirmation gate. COMPAT-02 was retired without implementation. FSOR-01 was
+implemented and passed its acceptance gate on 2026-08-13.
 
 This draft records the completed path-resolution hotfix, the retired proposal
 to change conclusion eligibility, and a separate filesystem-robustness story.
@@ -101,76 +101,63 @@ investigation for the affected predicate, not as this compatibility story.
 
 ## FSOR-01: Make runtime filesystem access resilient
 
-**State:** Draft; not authorized for implementation.
+**State:** Implemented; acceptance gate passed on 2026-08-13.
 
 **User story:** As a player, I want scanner-owned file access to recover from
 missing, blank, stale, inaccessible, or concurrently changed paths, so a
 filesystem problem cannot make the preview panel disappear or abort an
 otherwise usable scan.
 
-**Return:** Resolve one active-runtime filesystem context and give consumers
-only its selected paths. Consumers must not receive candidate lists or repeat
-path ranking themselves.
+**Return:** Add one resolver that selects an active-runtime filesystem context
+and supplies its resolved paths to all consumers. Candidate selection must not
+be repeated outside the resolver.
 
-Establish the active game and BepInEx roots only from evidence loaded into the
-current process: BepInEx host paths, this plugin DLL's canonical location under
-`BepInEx/plugins/DSPSeedScanner`, and the loaded target assembly's canonical
-location. Normalize and de-duplicate that evidence. Agreeing evidence selects
-one context; conflicting evidence fails closed. A default Windows installation
-may corroborate an already established active root but must never establish,
-override, or compete with it. Mere existence or readability never qualifies a
-file from another DSP installation.
+Use the current DSP process executable location as the authoritative game
+root. Fall back to BepInEx's reported game root only when the executable path
+is unavailable. Normalize the selected root and require the expected DSP and
+BepInEx directory structure. A conflicting nonblank BepInEx game root or
+loaded `Assembly-CSharp` location fails closed. The loaded plugin location may
+corroborate the context but cannot select or displace it. Ignore unrelated
+installations, including the default Windows installation when it is not the
+active root.
 
-From the selected context, resolve and validate the game root, BepInEx root,
-managed `Assembly-CSharp.dll`, preloader directory, and configuration
-directory together with bounded provenance for the selection. Apply the
-selected read-only paths to game-assembly fingerprinting and BepInEx preloader
-inventory. Preserve the existing SHA-256 and inventory formats on success.
-Failure to read the required game assembly must produce a bounded `Scanner
-unavailable` result. Missing or unreadable optional preloader inventory must
-remain explicit unavailable provenance and must not abort the scan.
+Derive the managed assembly, BepInEx root, preloader directory, and canonical
+configuration directory from the selected root. Preserve existing assembly
+and preloader digest formats. An unavailable or unreadable required assembly
+produces a bounded `Scanner unavailable` result. An invalid or unreadable
+preloader path records unavailable optional provenance without aborting the
+scan.
 
-Keep the conclusion cache under the configuration directory selected from the
-active BepInEx context. Accept BepInEx's reported configuration path only when
-it belongs to that context; otherwise derive the canonical `BepInEx/config`
-directory from the same root. Do not redirect writes to another DSP
-installation, the managed directory, or the plugin directory. Cache path
-construction, initialization, reads, writes, atomic replacement, timestamp
-updates, trimming, deletion, and clearing must handle expected path, I/O,
-access, security, and concurrent-change failures. A cache read failure becomes
-a miss, a write failure leaves completed results usable but uncached, and an
-unavailable cache must not prevent plugin startup or scanning.
+Keep the conclusion cache under the active BepInEx configuration tree. A
+blank configuration path may use the canonical derived directory; a nonblank
+path outside the selected BepInEx root disables persistence instead of being
+followed or replaced. Cache initialization, read, write, replacement, touch,
+trim, delete, and clear failures must be contained. Reads degrade to misses;
+writes leave completed results usable but uncached; no cache failure may
+prevent plugin startup or scanning.
 
-Contain recognized filesystem failures raised while binding the panel-corner
-setting through BepInEx: retain the default corner and continue without
-inventing an alternate configuration destination. BepInEx configuration or
-logging failures outside scanner-controlled calls remain external.
-
-Every handled filesystem failure must emit only the operation, selected source
-and concise exception type/message needed to diagnose it. User-facing text
-stays bounded, and expected product-filesystem failures must not add full stack
-traces to panel or scanner-log output. Unexpected programming and runtime
-failures retain their existing diagnostic behavior.
+If scanner-controlled panel-setting binding raises a recognized filesystem
+failure, retain the default corner and continue without an alternate config
+destination. Report handled filesystem failures with a bounded operation,
+source, and exception type/message, without full stack traces. Preserve normal
+diagnostics for unexpected non-filesystem failures.
 
 **Acceptance gate:**
 
-- focused fixtures prove that consumers receive one selected context rather
-  than candidates; agreeing active-process evidence is normalized and
-  de-duplicated, conflicts fail closed, and a readable default or second
-  installation cannot override the active process;
-- path fixtures cover blank and malformed evidence, missing and locked files,
-  access denial, concurrent removal, canonical plugin and target-assembly
-  derivation, and BepInEx host-path fallback;
-- the selected game assembly retains the existing digest, optional patcher
-  failures retain bounded unavailable provenance, and inability to select or
-  read the active assembly produces a visible terminal panel state;
+- resolver fixtures prove the process executable selects one normalized
+  context, the BepInEx game root is only a fallback, required conflicts fail
+  closed, and another readable installation can never be selected;
+- blank, malformed, missing, locked, inaccessible, and concurrently removed
+  paths produce the defined required, optional, or persistence-only outcome;
+- the selected game assembly and preloader inventory retain their successful
+  digest formats, while required identity exhaustion remains visibly terminal;
 - cache fixtures cover construction, read, write, replacement, touch, trim,
   delete, and clear failures and prove scanning still completes without cache
   persistence;
-- a recognized panel-setting persistence failure retains the default corner
-  without preventing scanner initialization;
+- invalid external config paths are never written, and a panel-setting
+  persistence failure retains the default corner without blocking startup;
 - diagnostics identify the failed operation and selected source without an
-  expected-filesystem stack trace or unbounded path dump;
+  expected-filesystem stack trace or unbounded path disclosure;
 - conclusion eligibility, runtime identity fields, cache key/schema, and
   successful-path behavior remain unchanged; and
 - core/runtime suites, the game-linked build, artifact checks, and exact
@@ -178,15 +165,35 @@ failures retain their existing diagnostic behavior.
 
 **Out of scope:** Changing conclusion predicates or identity gates, accepting
 another DSP version, changing cache contents or migration, writing outside the
-active BepInEx config tree, searching Steam libraries or the registry,
+active BepInEx config tree, searching other installations or the registry,
 repairing BepInEx-owned config/log persistence outside scanner-controlled
 calls, developer-probe output hardening tracked as
 [TD-004](TECHNICAL-DEBT.md#td-004-contain-developer-probe-output-failures),
 changing build/package scripts, removing developer probes, UI redesign, or
 supporting another plugin manager.
 
+**Implemented:** One resolver now selects the active runtime context from the
+current DSP executable, with BepInEx game-root fallback only when that path is
+unavailable. Required root and assembly conflicts fail closed; plugin,
+preloader, and configuration paths cannot select another installation.
+Required assembly reads produce a visible bounded failure, optional preloader
+failures retain unavailable provenance, and cache or panel-setting persistence
+failures leave scanning operational without writing outside the active
+BepInEx configuration tree. Expected filesystem diagnostics are bounded and
+omit stack traces.
+
+**Validation evidence:** Resolver and failure-injection fixtures covered
+authoritative and fallback roots, conflicting installations, blank and
+malformed paths, missing and locked files, external optional paths, required
+hashing, optional inventory, cache initialization, read, write, replacement,
+touch, trim, delete, clear, and guarded setting failures. The Release solution
+built without warnings; 14 core checks and 66 runtime checks passed; the
+installed-game-linked plugin build passed; and exact versioned artifact and
+Thunderstore package validation passed for `1.0.0`.
+
 ## Sequence
 
 HOTFIX-01 retained the existing conclusion semantics. COMPAT-02 was retired
 after investigation and will not follow it into implementation. FSOR-01 is an
-unauthorized draft for a separate filesystem-robustness change.
+implemented filesystem-robustness correction that preserved the existing
+identity and conclusion contracts.

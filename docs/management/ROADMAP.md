@@ -17,7 +17,7 @@ completed
 [presentation refinement roadmap](../archive/PRESENTATION-REFINEMENT-ROADMAP.md).
 The [runtime identity maintenance draft](RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md)
 records the implemented hotfix awaiting external confirmation, the retired
-conclusion-gate proposal, and the unauthorized FSOR-01 draft.
+conclusion-gate proposal, and the completed FSOR-01 filesystem correction.
 The [technical debt register](TECHNICAL-DEBT.md) remains the authority for
 explicitly deferred engineering obligations; TD-004 is pending evaluation.
 

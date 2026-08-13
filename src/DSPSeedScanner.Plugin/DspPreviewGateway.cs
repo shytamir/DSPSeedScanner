@@ -25,11 +25,21 @@ namespace DSPSeedScanner.Plugin
             };
 
         private readonly string ownPluginGuid;
+        private readonly RuntimeFilesystemResolution filesystemResolution;
+        private readonly Action<string> reportFilesystemFailure;
 
-        public DspPreviewGateway(int mainThreadId, string ownPluginGuid)
+        public DspPreviewGateway(
+            int mainThreadId,
+            string ownPluginGuid,
+            RuntimeFilesystemResolution filesystemResolution,
+            Action<string> reportFilesystemFailure)
         {
             MainThreadId = mainThreadId;
             this.ownPluginGuid = ownPluginGuid;
+            this.filesystemResolution = filesystemResolution ??
+                throw new ArgumentNullException(nameof(filesystemResolution));
+            this.reportFilesystemFailure = reportFilesystemFailure ??
+                throw new ArgumentNullException(nameof(reportFilesystemFailure));
         }
 
         public int MainThreadId { get; }
@@ -38,6 +48,8 @@ namespace DSPSeedScanner.Plugin
 
         public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request)
         {
+            RuntimeFilesystemContext filesystem = filesystemResolution.Context ??
+                throw filesystemResolution.ToException();
             string? missingMember = FindMissingMember();
             GameDesc descriptor = CreateDescriptor(request);
             string[] themes = descriptor.savedThemeIds
@@ -48,17 +60,15 @@ namespace DSPSeedScanner.Plugin
                 .Select(pair => pair.Key + "@" + pair.Value.Metadata.Version)
                 .OrderBy(value => value, StringComparer.Ordinal)
                 .ToArray();
-            string[] patchers = CapturePatcherInventory();
+            string[] patchers = CapturePatcherInventory(filesystem);
             string methodHash = CaptureGenerationMethodHash();
 
             return new RuntimeFingerprint(
                 GameConfig.gameVersion.ToFullString(),
                 UniverseGen.algoVersion,
-                RuntimeFileFingerprint.FirstReadableSha256(new[]
-                {
-                    typeof(UniverseGen).Assembly.Location,
-                    Path.Combine(Paths.ManagedPath, "Assembly-CSharp.dll")
-                }),
+                RuntimeFileFingerprint.RequiredSha256(
+                    filesystem.ManagedAssemblyPath,
+                    "active-managed-assembly"),
                 themes,
                 ConclusionDefinition.DefinitionVersion,
                 ConclusionDefinition.ContractVersion,
@@ -352,11 +362,15 @@ namespace DSPSeedScanner.Plugin
             return null;
         }
 
-        private static string[] CapturePatcherInventory()
+        private string[] CapturePatcherInventory(RuntimeFilesystemContext filesystem)
         {
+            if (filesystem.PatcherDirectoryPath == null)
+                return new[] { "inventory:" + RuntimeFileFingerprint.Unavailable };
             return RuntimeFileFingerprint.Inventory(
-                    Paths.PatcherPluginPath,
-                    "*.dll")
+                    filesystem.PatcherDirectoryPath,
+                    "*.dll",
+                    reportFilesystemFailure,
+                    "active-patchers")
                 .ToArray();
         }
 

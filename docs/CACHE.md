@@ -13,6 +13,12 @@ evaluating the live preview. A valid hit avoids repeating a complete scan whose
 semantic conclusions were produced for the same supported runtime and
 generation identity.
 
+If the active BepInEx configuration directory cannot be selected or used
+safely, the scanner continues without cache persistence. Read failures become
+cache misses, and write failures leave the completed conclusions visible but
+uncached. The scanner never redirects cache writes to another DSP
+installation, the managed game directory, or the plugin directory.
+
 ## Trust boundary
 
 An entry is reusable only when all of the following still match exactly:

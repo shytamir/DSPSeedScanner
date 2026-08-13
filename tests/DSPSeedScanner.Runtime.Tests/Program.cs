@@ -25,7 +25,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("unsupported game identity rejects safely", UnsupportedGameIdentityRejectsSafely),
                 ("missing members reject while plugins coexist", MissingMembersRejectWhilePluginsCoexist),
                 ("generation changes coexist and remain identified", GenerationChangesCoexistAndRemainIdentified),
+                ("runtime filesystem context follows the active process", RuntimeFilesystemContextFollowsActiveProcess),
+                ("runtime filesystem context fails closed on identity conflicts", RuntimeFilesystemContextFailsClosedOnConflicts),
+                ("runtime filesystem optional paths degrade independently", RuntimeFilesystemOptionalPathsDegradeIndependently),
                 ("runtime file fingerprints fall back without throwing", RuntimeFileFingerprintsFallBackWithoutThrowing),
+                ("runtime filesystem guards contain expected failures", RuntimeFilesystemGuardsContainExpectedFailures),
                 ("unsupported request identity rejects safely", UnsupportedRequestIdentityRejectsSafely),
                 ("other star count preserves fixed and declines quantitative", OtherStarCountIsBounded),
                 ("peace preview omits Dark Fog status", PeacePreviewOmitsDarkFogStatus),
@@ -56,6 +60,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete cache round trips and replaces atomically", CompleteCacheRoundTripsAndReplacesAtomically),
                 ("complete cache bounds retention and clears manually", CompleteCacheBoundsRetentionAndClears),
                 ("complete cache rejects unsafe and obsolete entries", CompleteCacheRejectsUnsafeEntries),
+                ("complete cache disables and contains filesystem failures", CompleteCacheContainsFilesystemFailures),
                 ("completed keyboard paste and random loads create one session each", CompletedInputLoadsCreateOneSessionEach),
                 ("duplicate callbacks coalesce while same identity reloads", DuplicateCallbacksCoalesceAndReloadsReplace),
                 ("replacement rejects stale publication and late loads", ReplacementRejectsStalePublication),
@@ -409,6 +414,42 @@ namespace DSPSeedScanner.Runtime.Tests
                     out string denied));
                 Equal(RuntimeFileFingerprint.Unavailable, denied);
 
+                bool requiredRejected = false;
+                try
+                {
+                    RuntimeFileFingerprint.RequiredSha256(primary, "active-managed-assembly");
+                }
+                catch (RuntimeFilesystemException exception)
+                {
+                    requiredRejected = true;
+                    Equal("required-file-unavailable", exception.Code);
+                    Equal("active-managed-assembly", exception.FilesystemSource);
+                    True(exception.Diagnostic.Contains("hash-file", StringComparison.Ordinal));
+                    False(exception.Diagnostic.Contains(" at ", StringComparison.Ordinal));
+                    True(exception.Diagnostic.Length < 256);
+                }
+                True(requiredRejected);
+
+                using (new FileStream(
+                    fallback,
+                    FileMode.Open,
+                    FileAccess.ReadWrite,
+                    FileShare.None))
+                {
+                    bool lockedRejected = false;
+                    try
+                    {
+                        RuntimeFileFingerprint.RequiredSha256(
+                            fallback,
+                            "active-managed-assembly");
+                    }
+                    catch (RuntimeFilesystemException)
+                    {
+                        lockedRejected = true;
+                    }
+                    True(lockedRejected);
+                }
+
                 string patcher = Path.Combine(path, "locked-patcher.dll");
                 File.WriteAllBytes(patcher, content);
                 using (new FileStream(
@@ -421,7 +462,188 @@ namespace DSPSeedScanner.Runtime.Tests
                         RuntimeFileFingerprint.Inventory(path, "*.dll");
                     True(inventory.Contains("locked-patcher.dll:unavailable"));
                 }
+
+                var inventoryDiagnostics = new List<string>();
+                Equal(
+                    "inventory:unavailable",
+                    String.Join(",", RuntimeFileFingerprint.Inventory(
+                        Path.Combine(path, "missing-patchers"),
+                        "*.dll",
+                        inventoryDiagnostics.Add,
+                        "active-patchers")));
+                Equal(1, inventoryDiagnostics.Count);
+                True(inventoryDiagnostics[0].StartsWith(
+                    "inventory-directory:active-patchers:",
+                    StringComparison.Ordinal));
+                False(inventoryDiagnostics[0].Contains(" at ", StringComparison.Ordinal));
             });
+        }
+
+        private static void RuntimeFilesystemContextFollowsActiveProcess()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                RuntimeFilesystemFixture fixture = CreateRuntimeFilesystem(path, "active");
+                RuntimeFilesystemResolution resolution = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        fixture.ExecutablePath,
+                        fixture.GameRootPath,
+                        fixture.PluginAssemblyPath,
+                        fixture.ManagedAssemblyPath,
+                        fixture.PatcherDirectoryPath,
+                        fixture.ConfigurationDirectoryPath));
+
+                True(resolution.Succeeded);
+                RuntimeFilesystemContext context = resolution.Context!;
+                Equal(Path.GetFullPath(fixture.GameRootPath), context.GameRootPath);
+                Equal(Path.GetFullPath(fixture.ManagedAssemblyPath), context.ManagedAssemblyPath);
+                Equal(Path.GetFullPath(fixture.PatcherDirectoryPath), context.PatcherDirectoryPath);
+                Equal(Path.GetFullPath(fixture.ConfigurationDirectoryPath), context.ConfigurationDirectoryPath);
+                Equal(
+                    Path.Combine(fixture.ConfigurationDirectoryPath, "DSPSeedScanner", "cache"),
+                    context.CacheDirectoryPath);
+                Equal("process-executable", context.Provenance);
+
+                RuntimeFilesystemResolution fallback = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        null,
+                        fixture.GameRootPath,
+                        fixture.PluginAssemblyPath,
+                        String.Empty,
+                        fixture.PatcherDirectoryPath,
+                        fixture.ConfigurationDirectoryPath));
+                True(fallback.Succeeded);
+                Equal("bepinex-game-root", fallback.Context?.Provenance);
+                Equal(context.GameRootPath, fallback.Context?.GameRootPath);
+
+                RuntimeFilesystemResolution canonical = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        fixture.ExecutablePath,
+                        fixture.GameRootPath,
+                        fixture.PluginAssemblyPath,
+                        String.Empty,
+                        String.Empty,
+                        String.Empty));
+                True(canonical.Succeeded);
+                Equal(fixture.PatcherDirectoryPath, canonical.Context?.PatcherDirectoryPath);
+                Equal(
+                    fixture.ConfigurationDirectoryPath,
+                    canonical.Context?.ConfigurationDirectoryPath);
+            });
+        }
+
+        private static void RuntimeFilesystemContextFailsClosedOnConflicts()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                RuntimeFilesystemFixture active = CreateRuntimeFilesystem(path, "active");
+                RuntimeFilesystemFixture other = CreateRuntimeFilesystem(path, "other");
+
+                RuntimeFilesystemResolution rootConflict = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        active.ExecutablePath,
+                        other.GameRootPath,
+                        active.PluginAssemblyPath,
+                        active.ManagedAssemblyPath,
+                        active.PatcherDirectoryPath,
+                        active.ConfigurationDirectoryPath));
+                False(rootConflict.Succeeded);
+                Equal("active-game-root-conflict", rootConflict.Code);
+
+                RuntimeFilesystemResolution assemblyConflict = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        active.ExecutablePath,
+                        active.GameRootPath,
+                        active.PluginAssemblyPath,
+                        other.ManagedAssemblyPath,
+                        active.PatcherDirectoryPath,
+                        active.ConfigurationDirectoryPath));
+                False(assemblyConflict.Succeeded);
+                Equal("target-assembly-path-conflict", assemblyConflict.Code);
+
+                File.Delete(active.ManagedAssemblyPath);
+                RuntimeFilesystemResolution missing = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        active.ExecutablePath,
+                        active.GameRootPath,
+                        active.PluginAssemblyPath,
+                        null,
+                        active.PatcherDirectoryPath,
+                        active.ConfigurationDirectoryPath));
+                False(missing.Succeeded);
+                Equal("managed-assembly-missing", missing.Code);
+
+                RuntimeFilesystemResolution malformed = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        "\0invalid",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null));
+                False(malformed.Succeeded);
+                True(malformed.Diagnostic.Length < 256);
+                False(malformed.Diagnostic.Contains(" at ", StringComparison.Ordinal));
+            });
+        }
+
+        private static void RuntimeFilesystemOptionalPathsDegradeIndependently()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                RuntimeFilesystemFixture active = CreateRuntimeFilesystem(path, "active");
+                RuntimeFilesystemFixture other = CreateRuntimeFilesystem(path, "other");
+                string missingPatcher = Path.Combine(active.GameRootPath, "BepInEx", "missing-patchers");
+                RuntimeFilesystemResolution resolution = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        active.ExecutablePath,
+                        active.GameRootPath,
+                        other.PluginAssemblyPath,
+                        String.Empty,
+                        missingPatcher,
+                        other.ConfigurationDirectoryPath));
+
+                True(resolution.Succeeded);
+                True(resolution.Context?.PatcherDirectoryPath == null);
+                True(resolution.Context?.ConfigurationDirectoryPath == null);
+                True(resolution.Context?.CacheDirectoryPath == null);
+                True(resolution.Context?.PatcherDiagnostic != null);
+                True(resolution.Context?.ConfigurationDiagnostic != null);
+                True(resolution.Context?.PluginDiagnostic != null);
+                Equal(active.GameRootPath, resolution.Context?.GameRootPath);
+            });
+        }
+
+        private static void RuntimeFilesystemGuardsContainExpectedFailures()
+        {
+            string? diagnostic = null;
+            int result = RuntimeFilesystemGuard.ExecuteOrFallback(
+                () => throw new IOException("setting file is locked\nstack-shaped detail"),
+                1,
+                "bind-setting",
+                "active-config",
+                value => diagnostic = value);
+            Equal(1, result);
+            True(diagnostic != null);
+            True(diagnostic!.StartsWith("bind-setting:active-config:", StringComparison.Ordinal));
+            False(diagnostic.Contains('\n'));
+            False(diagnostic.Contains(" at ", StringComparison.Ordinal));
+
+            bool escaped = false;
+            try
+            {
+                RuntimeFilesystemGuard.ExecuteOrFallback<int>(
+                    () => throw new InvalidOperationException("programming failure"),
+                    1,
+                    "bind-setting",
+                    "active-config",
+                    null);
+            }
+            catch (InvalidOperationException)
+            {
+                escaped = true;
+            }
+            True(escaped);
         }
 
         private static void UnsupportedRequestIdentityRejectsSafely()
@@ -1396,6 +1618,149 @@ namespace DSPSeedScanner.Runtime.Tests
                 File.WriteAllBytes(entry, corruptEntry);
                 False(cache.TryRead(identity, Fingerprint(), out _));
                 False(File.Exists(entry));
+            });
+        }
+
+        private static void CompleteCacheContainsFilesystemFailures()
+        {
+            var diagnostics = new List<string>();
+            CompleteClusterConclusionCache disabled =
+                CompleteClusterConclusionCache.CreateOrDisabled(null, diagnostics.Add);
+            False(disabled.Available);
+            False(disabled.TryRead(PreviewIdentity(16_315_224), Fingerprint(), out _));
+            False(disabled.TryStore(PreviewIdentity(16_315_224), CompleteResult()));
+            False(disabled.Clear());
+            Equal(1, diagnostics.Count);
+            True(diagnostics[0].StartsWith(
+                "initialize-cache:active-config:",
+                StringComparison.Ordinal));
+
+            WithTemporaryDirectory(path =>
+            {
+                string occupied = Path.Combine(path, "occupied");
+                File.WriteAllText(occupied, "not a directory");
+                diagnostics.Clear();
+                CompleteClusterConclusionCache cache =
+                    CompleteClusterConclusionCache.CreateOrDisabled(
+                        occupied,
+                        diagnostics.Add);
+                True(cache.Available);
+                False(cache.TryRead(PreviewIdentity(16_315_224), Fingerprint(), out _));
+                False(cache.TryStore(PreviewIdentity(16_315_224), CompleteResult()));
+                True(cache.Clear());
+                True(diagnostics.Any(value => value.StartsWith(
+                    "write-cache:active-config:",
+                    StringComparison.Ordinal)));
+
+                string cacheDirectory = Path.Combine(path, "cache");
+                diagnostics.Clear();
+                var clearCache = new CompleteClusterConclusionCache(
+                    cacheDirectory,
+                    reportDiagnostic: diagnostics.Add);
+                True(clearCache.TryStore(
+                    PreviewIdentity(16_315_224),
+                    CompleteResult()));
+                string entry = Directory.GetFiles(cacheDirectory, "*.dspseedscan").Single();
+                using (new FileStream(
+                    entry,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.None))
+                {
+                    False(clearCache.Clear());
+                }
+                True(diagnostics.Any(value => value.StartsWith(
+                    "clear-cache:active-config:",
+                    StringComparison.Ordinal)));
+                True(diagnostics.All(value => !value.Contains(" at ", StringComparison.Ordinal)));
+
+                foreach (string operation in new[]
+                {
+                    "write", "replace", "touch", "trim"
+                })
+                {
+                    diagnostics.Clear();
+                    var injected = new CompleteClusterConclusionCache(
+                        Path.Combine(path, "inject-" + operation),
+                        maximumEntries: 1,
+                        reportDiagnostic: diagnostics.Add,
+                        beforeFileOperation: current =>
+                        {
+                            if (current == operation)
+                                throw new IOException("Injected " + operation + " failure.");
+                        });
+                    False(injected.TryStore(
+                        PreviewIdentity(16_315_224),
+                        CompleteResult()));
+                    Equal(
+                        0,
+                        Directory.Exists(injected.DirectoryPath)
+                            ? Directory.GetFiles(
+                                injected.DirectoryPath,
+                                "*.dspseedscan").Length
+                            : 0);
+                    True(diagnostics.Any(value => value.StartsWith(
+                        "write-cache:active-config:",
+                        StringComparison.Ordinal)));
+                }
+
+                string readPath = Path.Combine(path, "inject-read");
+                var prepared = new CompleteClusterConclusionCache(readPath);
+                PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
+                True(prepared.TryStore(identity, CompleteResult()));
+                diagnostics.Clear();
+                var readFailure = new CompleteClusterConclusionCache(
+                    readPath,
+                    maximumEntries: 1,
+                    reportDiagnostic: diagnostics.Add,
+                    beforeFileOperation: operation =>
+                    {
+                        if (operation == "read")
+                            throw new IOException("Injected read failure.");
+                    });
+                False(readFailure.TryRead(identity, Fingerprint(), out _));
+                True(diagnostics.Any(value => value.StartsWith(
+                    "read-cache:active-config:",
+                    StringComparison.Ordinal)));
+
+                string deletePath = Path.Combine(path, "inject-delete");
+                prepared = new CompleteClusterConclusionCache(deletePath);
+                True(prepared.TryStore(identity, CompleteResult()));
+                string deleteEntry = Directory.GetFiles(deletePath, "*.dspseedscan").Single();
+                byte[] corrupt = File.ReadAllBytes(deleteEntry);
+                corrupt[10] ^= 0x01;
+                File.WriteAllBytes(deleteEntry, corrupt);
+                diagnostics.Clear();
+                var deleteFailure = new CompleteClusterConclusionCache(
+                    deletePath,
+                    maximumEntries: 1,
+                    reportDiagnostic: diagnostics.Add,
+                    beforeFileOperation: operation =>
+                    {
+                        if (operation == "delete")
+                            throw new IOException("Injected delete failure.");
+                    });
+                False(deleteFailure.TryRead(identity, Fingerprint(), out _));
+                True(File.Exists(deleteEntry));
+                True(diagnostics.Any(value => value.StartsWith(
+                    "delete-cache:active-config:",
+                    StringComparison.Ordinal)));
+
+                diagnostics.Clear();
+                var clearFailure = new CompleteClusterConclusionCache(
+                    deletePath,
+                    maximumEntries: 1,
+                    reportDiagnostic: diagnostics.Add,
+                    beforeFileOperation: operation =>
+                    {
+                        if (operation == "clear")
+                            throw new IOException("Injected clear failure.");
+                    });
+                False(clearFailure.Clear());
+                True(diagnostics.Any(value => value.StartsWith(
+                    "clear-cache:active-config:",
+                    StringComparison.Ordinal)));
+                True(diagnostics.All(value => !value.Contains(" at ", StringComparison.Ordinal)));
             });
         }
 
@@ -2946,6 +3311,61 @@ namespace DSPSeedScanner.Runtime.Tests
                 if (Directory.Exists(path))
                     Directory.Delete(path, recursive: true);
             }
+        }
+
+        private static RuntimeFilesystemFixture CreateRuntimeFilesystem(
+            string parent,
+            string name)
+        {
+            string gameRoot = Path.Combine(parent, name);
+            string managed = Path.Combine(gameRoot, "DSPGAME_Data", "Managed");
+            string bepInEx = Path.Combine(gameRoot, "BepInEx");
+            string patchers = Path.Combine(bepInEx, "patchers");
+            string plugins = Path.Combine(bepInEx, "plugins", "DSPSeedScanner");
+            string config = Path.Combine(bepInEx, "config");
+            Directory.CreateDirectory(managed);
+            Directory.CreateDirectory(patchers);
+            Directory.CreateDirectory(plugins);
+            Directory.CreateDirectory(config);
+            string executable = Path.Combine(gameRoot, "DSPGAME.exe");
+            string assembly = Path.Combine(managed, "Assembly-CSharp.dll");
+            string plugin = Path.Combine(plugins, "DSPSeedScanner.dll");
+            File.WriteAllBytes(executable, new byte[] { 1 });
+            File.WriteAllBytes(assembly, new byte[] { 2 });
+            File.WriteAllBytes(plugin, new byte[] { 3 });
+            return new RuntimeFilesystemFixture(
+                gameRoot,
+                executable,
+                assembly,
+                plugin,
+                patchers,
+                config);
+        }
+
+        private sealed class RuntimeFilesystemFixture
+        {
+            public RuntimeFilesystemFixture(
+                string gameRootPath,
+                string executablePath,
+                string managedAssemblyPath,
+                string pluginAssemblyPath,
+                string patcherDirectoryPath,
+                string configurationDirectoryPath)
+            {
+                GameRootPath = Path.GetFullPath(gameRootPath);
+                ExecutablePath = Path.GetFullPath(executablePath);
+                ManagedAssemblyPath = Path.GetFullPath(managedAssemblyPath);
+                PluginAssemblyPath = Path.GetFullPath(pluginAssemblyPath);
+                PatcherDirectoryPath = Path.GetFullPath(patcherDirectoryPath);
+                ConfigurationDirectoryPath = Path.GetFullPath(configurationDirectoryPath);
+            }
+
+            public string GameRootPath { get; }
+            public string ExecutablePath { get; }
+            public string ManagedAssemblyPath { get; }
+            public string PluginAssemblyPath { get; }
+            public string PatcherDirectoryPath { get; }
+            public string ConfigurationDirectoryPath { get; }
         }
 
         private static PreviewGenerationIdentity PreviewIdentity(

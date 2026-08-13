@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using DSPSeedScanner.Core;
@@ -156,9 +157,24 @@ namespace DSPSeedScanner.Runtime
 
         private readonly object sync = new object();
         private readonly int maximumEntries;
+        private readonly Action<string>? reportDiagnostic;
+        private readonly Action<string>? beforeFileOperation;
+        private readonly bool available;
         private long lastTouchTicks;
 
-        public CompleteClusterConclusionCache(string directoryPath, int maximumEntries = 256)
+        public CompleteClusterConclusionCache(
+            string directoryPath,
+            int maximumEntries = 256,
+            Action<string>? reportDiagnostic = null)
+            : this(directoryPath, maximumEntries, reportDiagnostic, null)
+        {
+        }
+
+        internal CompleteClusterConclusionCache(
+            string directoryPath,
+            int maximumEntries,
+            Action<string>? reportDiagnostic,
+            Action<string>? beforeFileOperation)
         {
             if (String.IsNullOrWhiteSpace(directoryPath))
                 throw new ArgumentException("A cache directory is required.", nameof(directoryPath));
@@ -166,10 +182,63 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentOutOfRangeException(nameof(maximumEntries));
             DirectoryPath = Path.GetFullPath(directoryPath);
             this.maximumEntries = maximumEntries;
+            this.reportDiagnostic = reportDiagnostic;
+            this.beforeFileOperation = beforeFileOperation;
+            available = true;
+        }
+
+        private CompleteClusterConclusionCache(
+            int maximumEntries,
+            Action<string>? reportDiagnostic,
+            string diagnostic)
+        {
+            DirectoryPath = String.Empty;
+            this.maximumEntries = maximumEntries;
+            this.reportDiagnostic = reportDiagnostic;
+            beforeFileOperation = null;
+            available = false;
+            Report(diagnostic);
+        }
+
+        public static CompleteClusterConclusionCache CreateOrDisabled(
+            string? directoryPath,
+            Action<string>? reportDiagnostic = null,
+            int maximumEntries = 256)
+        {
+            if (maximumEntries <= 0 || maximumEntries > 4096)
+                throw new ArgumentOutOfRangeException(nameof(maximumEntries));
+            if (String.IsNullOrWhiteSpace(directoryPath))
+            {
+                return new CompleteClusterConclusionCache(
+                    maximumEntries,
+                    reportDiagnostic,
+                    RuntimeFilesystemDiagnostics.Format(
+                        "initialize-cache",
+                        "active-config",
+                        "Unavailable: No safe cache directory was selected."));
+            }
+            try
+            {
+                return new CompleteClusterConclusionCache(
+                    directoryPath,
+                    maximumEntries,
+                    reportDiagnostic);
+            }
+            catch (Exception exception) when (RuntimeFilesystemDiagnostics.IsExpectedFailure(exception))
+            {
+                return new CompleteClusterConclusionCache(
+                    maximumEntries,
+                    reportDiagnostic,
+                    RuntimeFilesystemDiagnostics.Format(
+                        "initialize-cache",
+                        "active-config",
+                        exception));
+            }
         }
 
         public string DirectoryPath { get; }
         public int MaximumEntries => maximumEntries;
+        public bool Available => available;
 
         public bool TryRead(
             PreviewGenerationIdentity identity,
@@ -177,6 +246,8 @@ namespace DSPSeedScanner.Runtime
             out CachedCompleteClusterConclusions? result)
         {
             result = null;
+            if (!available)
+                return false;
             if (!CompleteClusterCacheKey.TryCreate(identity, fingerprint, out CompleteClusterCacheKey? key) ||
                 key == null)
             {
@@ -185,11 +256,13 @@ namespace DSPSeedScanner.Runtime
 
             lock (sync)
             {
-                string path = Path.Combine(DirectoryPath, key.FileName);
-                if (!File.Exists(path))
-                    return false;
+                string? path = null;
                 try
                 {
+                    path = Path.Combine(DirectoryPath, key.FileName);
+                    if (!File.Exists(path))
+                        return false;
+                    BeforeFileOperation("read");
                     var info = new FileInfo(path);
                     if (info.Length <= 32 || info.Length > MaximumEntryBytes)
                         throw new InvalidDataException("The cache entry size is invalid.");
@@ -211,7 +284,9 @@ namespace DSPSeedScanner.Runtime
                 }
                 catch (Exception exception) when (IsRecoverable(exception))
                 {
-                    TryDelete(path);
+                    if (path != null && IsInvalidEntry(exception))
+                        TryDelete(path);
+                    Report("read-cache", exception);
                     return false;
                 }
             }
@@ -225,6 +300,8 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentNullException(nameof(identity));
             if (result == null)
                 throw new ArgumentNullException(nameof(result));
+            if (!available)
+                return false;
             if (result.Fingerprint == null ||
                 !CompleteClusterCacheKey.TryCreate(
                     identity,
@@ -239,13 +316,16 @@ namespace DSPSeedScanner.Runtime
             lock (sync)
             {
                 string? temporary = null;
+                string? destination = null;
+                bool installed = false;
                 try
                 {
                     ConclusionReport[] cachedReports = result.Reports
                         .Where(IsCompleteScanSemanticReport)
                         .ToArray();
+                    BeforeFileOperation("write");
                     Directory.CreateDirectory(DirectoryPath);
-                    string destination = Path.Combine(DirectoryPath, key.FileName);
+                    destination = Path.Combine(DirectoryPath, key.FileName);
                     temporary = Path.Combine(
                         DirectoryPath,
                         "." + key.Hash + "." + Guid.NewGuid().ToString("N") + ".tmp");
@@ -271,17 +351,22 @@ namespace DSPSeedScanner.Runtime
                         stream.Flush(true);
                     }
 
+                    BeforeFileOperation("replace");
                     if (File.Exists(destination))
                         File.Replace(temporary, destination, null, ignoreMetadataErrors: true);
                     else
                         File.Move(temporary, destination);
                     temporary = null;
+                    installed = true;
                     Touch(destination);
                     Trim();
                     return true;
                 }
                 catch (Exception exception) when (IsRecoverable(exception))
                 {
+                    if (installed && destination != null)
+                        TryDelete(destination);
+                    Report("write-cache", exception);
                     return false;
                 }
                 finally
@@ -294,12 +379,15 @@ namespace DSPSeedScanner.Runtime
 
         public bool Clear()
         {
+            if (!available)
+                return false;
             lock (sync)
             {
-                if (!Directory.Exists(DirectoryPath))
-                    return true;
                 try
                 {
+                    BeforeFileOperation("clear");
+                    if (!Directory.Exists(DirectoryPath))
+                        return true;
                     foreach (string path in Directory.GetFiles(
                         DirectoryPath,
                         "*" + EntryExtension,
@@ -318,6 +406,7 @@ namespace DSPSeedScanner.Runtime
                 }
                 catch (Exception exception) when (IsRecoverable(exception))
                 {
+                    Report("clear-cache", exception);
                     return false;
                 }
             }
@@ -556,11 +645,13 @@ namespace DSPSeedScanner.Runtime
         {
             long ticks = Math.Max(DateTime.UtcNow.Ticks, checked(lastTouchTicks + 1));
             lastTouchTicks = ticks;
+            BeforeFileOperation("touch");
             File.SetLastWriteTimeUtc(path, new DateTime(ticks, DateTimeKind.Utc));
         }
 
         private void Trim()
         {
+            BeforeFileOperation("trim");
             FileInfo[] entries = new DirectoryInfo(DirectoryPath)
                 .GetFiles("*" + EntryExtension, SearchOption.TopDirectoryOnly)
                 .OrderByDescending(item => item.LastWriteTimeUtc)
@@ -606,6 +697,12 @@ namespace DSPSeedScanner.Runtime
             exception is InvalidOperationException ||
             exception is NotSupportedException ||
             exception is EndOfStreamException ||
+            exception is CryptographicException ||
+            exception is SecurityException;
+
+        private static bool IsInvalidEntry(Exception exception) =>
+            exception is InvalidDataException ||
+            exception is EndOfStreamException ||
             exception is CryptographicException;
 
         private static byte[] Digest(byte[] value, int offset, int count)
@@ -624,19 +721,29 @@ namespace DSPSeedScanner.Runtime
             return difference == 0;
         }
 
-        private static void TryDelete(string path)
+        private void TryDelete(string path)
         {
             try
             {
+                BeforeFileOperation("delete");
                 if (File.Exists(path))
                     File.Delete(path);
             }
-            catch (IOException)
+            catch (Exception exception) when (RuntimeFilesystemDiagnostics.IsExpectedFailure(exception))
             {
-            }
-            catch (UnauthorizedAccessException)
-            {
+                Report("delete-cache", exception);
             }
         }
+
+        private void Report(string operation, Exception exception) =>
+            Report(RuntimeFilesystemDiagnostics.Format(
+                operation,
+                "active-config",
+                exception));
+
+        private void Report(string diagnostic) => reportDiagnostic?.Invoke(diagnostic);
+
+        private void BeforeFileOperation(string operation) =>
+            beforeFileOperation?.Invoke(operation);
     }
 }
