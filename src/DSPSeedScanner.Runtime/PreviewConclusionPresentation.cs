@@ -180,7 +180,9 @@ namespace DSPSeedScanner.Runtime
             }
             return new PreviewConclusionPresentation(
                 attempt.Session.SessionId,
-                PreviewIdentityPresentation.Format(identity),
+                PreviewIdentityPresentation.Format(
+                    identity,
+                    attempt.Session.HomePlanetDisplayDesignation),
                 DarkFogStatusLine(attempt.DarkFogOccupation),
                 attempt.State == PreviewResolutionState.Cached,
                 Group(

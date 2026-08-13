@@ -87,6 +87,7 @@ namespace DSPSeedScanner.Runtime
         private readonly CancellationTokenSource lifetime = new CancellationTokenSource();
         private int retired;
         private PreviewSessionRetirementReason retirementReason;
+        private string? homePlanetDisplayDesignation;
 
         internal PreviewSession(
             long sessionId,
@@ -104,6 +105,28 @@ namespace DSPSeedScanner.Runtime
         public CancellationToken Lifetime => lifetime.Token;
         public bool IsRetired => Volatile.Read(ref retired) != 0;
         public PreviewSessionRetirementReason RetirementReason => retirementReason;
+        public string? HomePlanetDisplayDesignation => homePlanetDisplayDesignation;
+
+        internal void SetHomePlanetDisplayDesignation(string designation)
+        {
+            if (String.IsNullOrWhiteSpace(designation))
+            {
+                throw new ArgumentException(
+                    "Home planet display designation is required.",
+                    nameof(designation));
+            }
+            if (IsRetired)
+            {
+                throw new InvalidOperationException(
+                    "A retired preview session cannot accept presentation identity.");
+            }
+            if (homePlanetDisplayDesignation != null)
+            {
+                throw new InvalidOperationException(
+                    "The home planet display designation is immutable once attached.");
+            }
+            homePlanetDisplayDesignation = designation;
+        }
 
         internal void Retire(PreviewSessionRetirementReason reason)
         {
@@ -112,7 +135,10 @@ namespace DSPSeedScanner.Runtime
 
             retirementReason = reason;
             if (Interlocked.Exchange(ref retired, 1) == 0)
+            {
+                homePlanetDisplayDesignation = null;
                 lifetime.Cancel();
+            }
         }
     }
 

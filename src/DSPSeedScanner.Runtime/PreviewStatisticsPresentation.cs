@@ -398,13 +398,26 @@ namespace DSPSeedScanner.Runtime
 
     public static class PreviewIdentityPresentation
     {
-        public static string Format(PreviewGenerationIdentity identity)
+        public static string Format(
+            PreviewGenerationIdentity identity,
+            string? homePlanetDisplayDesignation = null)
         {
             if (identity == null)
                 throw new ArgumentNullException(nameof(identity));
+            if (homePlanetDisplayDesignation != null &&
+                String.IsNullOrWhiteSpace(homePlanetDisplayDesignation))
+            {
+                throw new ArgumentException(
+                    "Home planet display designation cannot be blank.",
+                    nameof(homePlanetDisplayDesignation));
+            }
+            string home = homePlanetDisplayDesignation == null
+                ? String.Empty
+                : " | Home " + homePlanetDisplayDesignation;
             return "Seed " + identity.GalaxyIdentity.GalaxySeed.ToString(
                     "D8",
                     CultureInfo.InvariantCulture) +
+                home +
                 " | " + identity.GalaxyIdentity.RequestedStarCount.ToString(
                     CultureInfo.InvariantCulture) +
                 " stars | resources x" + identity.ResourceMultiplier.ToString(
@@ -431,7 +444,9 @@ namespace DSPSeedScanner.Runtime
             ScrollY = 0;
             Current = new PreviewStatisticsDocument(
                 session.SessionId,
-                PreviewIdentityPresentation.Format(session.Identity),
+                PreviewIdentityPresentation.Format(
+                    session.Identity,
+                    session.HomePlanetDisplayDesignation),
                 null,
                 new PreviewClusterStatistics());
         }
@@ -444,7 +459,9 @@ namespace DSPSeedScanner.Runtime
                 return false;
             Current = new PreviewStatisticsDocument(
                 activeSessionId,
-                PreviewIdentityPresentation.Format(attempt.Session.Identity),
+                PreviewIdentityPresentation.Format(
+                    attempt.Session.Identity,
+                    attempt.Session.HomePlanetDisplayDesignation),
                 attempt.HomeSystemBodyInventory,
                 Current?.Cluster ?? new PreviewClusterStatistics());
             return true;

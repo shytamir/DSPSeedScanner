@@ -2,8 +2,8 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-03: Establish the statistics
-panel](#feed-03-establish-the-statistics-panel).
+**Active user story:** [FEED-04: Share the home-planet title
+designation](#feed-04-share-the-home-planet-title-designation).
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -13,8 +13,8 @@ issue and records the approved presentation boundary for implementation.
 Urgency describes how soon the work warrants attention; importance describes
 its expected effect on product trust or player value. FEED-01 and FEED-02 were
 accepted, `ready-for-new-panel` passed, and the **Clean slate for panel work**
-milestone was established. FEED-03 passed its technical gate and remains active
-pending owner acceptance. Later stories remain inactive behind their
+milestone was established. FEED-03 was accepted. FEED-04 passed its technical
+gate and remains active pending owner acceptance. Later stories remain inactive behind their
 documented gates.
 
 ## Source coverage
@@ -290,8 +290,7 @@ was not performed.
 
 ## FEED-03: Establish the statistics panel
 
-**State:** Acceptance gate passed on 2026-08-13; active pending owner
-acceptance.
+**State:** Accepted on 2026-08-13.
 
 **Category:** feature-request
 
@@ -401,7 +400,8 @@ story and was not performed.
 
 ## FEED-04: Share the home-planet title designation
 
-**State:** Pending; inactive until FEED-03 is accepted.
+**State:** Acceptance gate passed on 2026-08-13; active pending owner
+acceptance.
 
 **Category:** feature-request
 
@@ -431,6 +431,37 @@ and visual state.
 **Out of scope:** Renaming stars or planets, identifying other planets,
 persisting the designation separately, changing title fields beyond the
 home planet, coupling the renderers, or changing either panel's layout.
+
+**Implemented:** Lightweight preview normalization resolves the exact display
+designation of DSP's `birthPlanetId` from its home-system planet and carries
+only that string across the runtime boundary. The active preview session accepts
+it once as an immutable presentation value. The single identity-title formatter
+adds `Home [designation]`, and each panel independently composes its own document
+from the same session value. Session retirement destroys the designation.
+
+**Acceptance evidence:**
+
+- a successful lightweight preview gave both panel documents the identical
+  exact designation and updated them in the completed-load turn;
+- mutation after attachment was rejected, proving one immutable session-owned
+  value rather than two renderer copies or title reconstruction from an ID;
+- replacement retired the first session, destroyed its designation, reset both
+  documents to the replacement identity, and rejected late updates from the old
+  session;
+- preview exit destroyed the current designation and prevented either retired
+  document from returning, while re-entry to an earlier seed resolved its
+  designation again from the newly active preview;
+- title composition remained one shared formatter while conclusion content,
+  statistics content, layout, scroll, renderer state, caching, and scan
+  selection remained independent; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 Core checks passed, and all 76 Runtime checks passed.
+
+**Produced at this gate:** Exact home-planet designation extraction, one
+immutable preview-session presentation value, shared title composition, same-
+turn independent document updates, retirement cleanup, and focused lifecycle
+fixtures. Interactive DSP presentation validation was not required by this
+story's automated gate and was not performed.
 
 ## FEED-05: Show home-system layout and energy facts
 

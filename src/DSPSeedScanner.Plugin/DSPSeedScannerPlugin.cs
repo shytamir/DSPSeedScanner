@@ -263,6 +263,16 @@ namespace DSPSeedScanner.Plugin
                         ConfiguredPanelCorner(),
                         previewPanelSpinnerStep);
                     statisticsPanel.BeginSession(transition.CurrentSession);
+                    PreviewResolutionAttempt? presented =
+                        previewResolution.CurrentPublishedAttempt;
+                    if (presented != null)
+                    {
+                        previewPanel.Update(
+                            presented,
+                            ConfiguredPanelCorner(),
+                            previewPanelSpinnerStep);
+                        statisticsPanel.Update(presented);
+                    }
                 }
             }
             catch (RuntimeFilesystemException exception)

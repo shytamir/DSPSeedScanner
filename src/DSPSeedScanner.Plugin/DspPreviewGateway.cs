@@ -141,6 +141,8 @@ namespace DSPSeedScanner.Plugin
                 true);
             var generatedPlanets = new HashSet<PlanetData>(
                 galaxy.stars.SelectMany(star => star.planets));
+            PlanetData? homePlanet = birthStar.planets.SingleOrDefault(planet =>
+                planet.id == galaxy.birthPlanetId);
             HomeSystemBodyInventory? homeSystemBodyInventory =
                 HomeSystemBodyInventory.Project(
                     birthSystemIdentifier,
@@ -202,7 +204,8 @@ namespace DSPSeedScanner.Plugin
                 systems,
                 distances,
                 systemDisplays: displays,
-                homeSystemBodyInventory: homeSystemBodyInventory);
+                homeSystemBodyInventory: homeSystemBodyInventory,
+                homePlanetDisplayDesignation: homePlanet?.displayName);
         }
 
         private static NormalizedSystemEvidence NormalizeSystem(

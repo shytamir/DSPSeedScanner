@@ -78,6 +78,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("cluster statistics are keyed ordered and sectioned", ClusterStatisticsAreKeyedOrderedAndSectioned),
                 ("cluster locations format AU and preserve stable ties", ClusterLocationsFormatAuAndPreserveStableTies),
                 ("statistics panel follows preview lifecycle independently", StatisticsPanelFollowsPreviewLifecycleIndependently),
+                ("home planet designation is shared immutable and session owned", HomePlanetDesignationIsSharedImmutableAndSessionOwned),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
@@ -2809,6 +2810,110 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void HomePlanetDesignationIsSharedImmutableAndSessionOwned()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var gateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(homePlanetDisplayDesignation: "Alpha III")
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(gateway, gate),
+                    new CompleteClusterRawCoordinator(
+                        new FakeCompleteClusterGateway(),
+                        gate),
+                    new CompleteClusterConclusionCache(path));
+                var conclusions = new PreviewPanelController();
+                var statistics = new PreviewStatisticsPanelController();
+
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt first = resolver.CurrentPublishedAttempt!;
+                Equal("Alpha III", first.Session.HomePlanetDisplayDesignation);
+                conclusions.BeginSession(
+                    first.Session.SessionId,
+                    PreviewPanelCorner.BottomRight,
+                    0);
+                statistics.BeginSession(first.Session);
+                True(conclusions.Update(
+                    first,
+                    PreviewPanelCorner.BottomRight,
+                    1));
+                True(statistics.Update(first));
+                const string firstTitle =
+                    "Seed 16315224 | Home Alpha III | 64 stars | resources x1 | Combat";
+                Equal(firstTitle, conclusions.Conclusions!.IdentityLine);
+                Equal(firstTitle, statistics.Current!.IdentityLine);
+                bool immutable = false;
+                try
+                {
+                    first.Session.SetHomePlanetDisplayDesignation("Alpha IV");
+                }
+                catch (InvalidOperationException)
+                {
+                    immutable = true;
+                }
+                True(immutable);
+
+                gateway.Snapshot = Snapshot(homePlanetDisplayDesignation: "Gamma II");
+                resolver.ObserveCompletedLoad(
+                    2,
+                    PreviewIdentity(73_339_583),
+                    RequestForSeed(73_339_583));
+                PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
+                True(first.Session.IsRetired);
+                True(first.Session.HomePlanetDisplayDesignation == null);
+                False(conclusions.Update(
+                    first,
+                    PreviewPanelCorner.BottomRight,
+                    2));
+                False(statistics.Update(first));
+                conclusions.BeginSession(
+                    replacement.Session.SessionId,
+                    PreviewPanelCorner.BottomRight,
+                    0);
+                statistics.BeginSession(replacement.Session);
+                conclusions.Update(
+                    replacement,
+                    PreviewPanelCorner.BottomRight,
+                    1);
+                statistics.Update(replacement);
+                const string replacementTitle =
+                    "Seed 73339583 | Home Gamma II | 64 stars | resources x1 | Combat";
+                Equal(replacementTitle, conclusions.Conclusions!.IdentityLine);
+                Equal(replacementTitle, statistics.Current!.IdentityLine);
+
+                PreviewResolutionAttempt? exited = resolver.ExitPreview();
+                True(exited != null);
+                True(exited!.Session.HomePlanetDisplayDesignation == null);
+                conclusions.HideCurrent();
+                statistics.HideCurrent();
+                False(conclusions.Update(
+                    replacement,
+                    PreviewPanelCorner.BottomRight,
+                    2));
+                False(statistics.Update(replacement));
+                True(statistics.Current == null);
+
+                gateway.Snapshot = Snapshot(homePlanetDisplayDesignation: "Alpha III");
+                resolver.ObserveCompletedLoad(3, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt returned = resolver.CurrentPublishedAttempt!;
+                False(ReferenceEquals(first.Session, returned.Session));
+                Equal("Alpha III", returned.Session.HomePlanetDisplayDesignation);
+                conclusions.BeginSession(
+                    returned.Session.SessionId,
+                    PreviewPanelCorner.TopLeft,
+                    0);
+                statistics.BeginSession(returned.Session);
+                conclusions.Update(returned, PreviewPanelCorner.TopLeft, 1);
+                statistics.Update(returned);
+                Equal(firstTitle, conclusions.Conclusions!.IdentityLine);
+                Equal(firstTitle, statistics.Current!.IdentityLine);
+            });
+        }
+
         private static bool Overlaps(PreviewPanelBounds first, PreviewPanelBounds second)
         {
             return first.X < second.Right && first.Right > second.X &&
@@ -4142,7 +4247,8 @@ namespace DSPSeedScanner.Runtime.Tests
             int? missingHiveSystem = null,
             decimal primaryDistanceLy = 2m,
             bool includeHomePlanetTopology = true,
-            HomeSystemBodyInventory? homeSystemBodyInventory = null)
+            HomeSystemBodyInventory? homeSystemBodyInventory = null,
+            string? homePlanetDisplayDesignation = null)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -4209,7 +4315,8 @@ namespace DSPSeedScanner.Runtime.Tests
                         index.ToString(),
                         index == 1 ? "Alpha" : "Star " + index,
                         index == 2 ? "O type star" : "G type star")),
-                homeSystemBodyInventory: homeSystemBodyInventory);
+                homeSystemBodyInventory: homeSystemBodyInventory,
+                homePlanetDisplayDesignation: homePlanetDisplayDesignation);
         }
 
         private static NormalizedBirthPlanetEvidence SolidAttribution(

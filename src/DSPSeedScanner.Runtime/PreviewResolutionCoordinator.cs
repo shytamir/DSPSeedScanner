@@ -171,6 +171,11 @@ namespace DSPSeedScanner.Runtime
             currentAttempt.SetSystemCandidates(preview.SystemCandidates);
             currentAttempt.SetDarkFogOccupation(preview.DarkFogOccupation);
             currentAttempt.SetHomeSystemBodyInventory(preview.HomeSystemBodyInventory);
+            if (preview.HomePlanetDisplayDesignation != null)
+            {
+                currentAttempt.Session.SetHomePlanetDisplayDesignation(
+                    preview.HomePlanetDisplayDesignation);
+            }
             if (preview.Status != RuntimeScanStatus.Success || preview.Fingerprint == null)
             {
                 Finish(currentAttempt, preview.Status, preview.Code, preview.Message);

@@ -33,7 +33,8 @@ namespace DSPSeedScanner.Runtime
             NormalizedHomePlanetTopology? homePlanetTopology = null,
             RuntimeSystemCandidates? systemCandidates = null,
             RuntimeDarkFogOccupation? darkFogOccupation = null,
-            HomeSystemBodyInventory? homeSystemBodyInventory = null)
+            HomeSystemBodyInventory? homeSystemBodyInventory = null,
+            string? homePlanetDisplayDesignation = null)
         {
             Status = status;
             GalaxySeed = galaxySeed;
@@ -61,6 +62,7 @@ namespace DSPSeedScanner.Runtime
             SystemCandidates = systemCandidates;
             DarkFogOccupation = darkFogOccupation;
             HomeSystemBodyInventory = homeSystemBodyInventory;
+            HomePlanetDisplayDesignation = homePlanetDisplayDesignation;
         }
 
         public RuntimeScanStatus Status { get; }
@@ -97,6 +99,7 @@ namespace DSPSeedScanner.Runtime
         public RuntimeSystemCandidates? SystemCandidates { get; }
         public RuntimeDarkFogOccupation? DarkFogOccupation { get; }
         public HomeSystemBodyInventory? HomeSystemBodyInventory { get; }
+        public string? HomePlanetDisplayDesignation { get; }
     }
 
     public sealed class PreviewScanCoordinator
@@ -135,6 +138,7 @@ namespace DSPSeedScanner.Runtime
             RuntimeSystemCandidates? systemCandidates = null;
             RuntimeDarkFogOccupation? darkFogOccupation = null;
             HomeSystemBodyInventory? homeSystemBodyInventory = null;
+            string? homePlanetDisplayDesignation = null;
             bool restored = true;
 
             try
@@ -214,6 +218,8 @@ namespace DSPSeedScanner.Runtime
                                     request.CombatMode,
                                     snapshot.Systems);
                                 homeSystemBodyInventory = snapshot.HomeSystemBodyInventory;
+                                homePlanetDisplayDesignation =
+                                    snapshot.HomePlanetDisplayDesignation;
                                 status = RuntimeScanStatus.Success;
                                 code = "success";
                                 message = "The complete compatible preview was evaluated.";
@@ -278,7 +284,10 @@ namespace DSPSeedScanner.Runtime
                 homePlanetTopology,
                 systemCandidates,
                 status == RuntimeScanStatus.Success ? darkFogOccupation : null,
-                status == RuntimeScanStatus.Success ? homeSystemBodyInventory : null);
+                status == RuntimeScanStatus.Success ? homeSystemBodyInventory : null,
+                status == RuntimeScanStatus.Success
+                    ? homePlanetDisplayDesignation
+                    : null);
         }
 
         private static RuntimeScanResult Result(
@@ -297,7 +306,8 @@ namespace DSPSeedScanner.Runtime
             NormalizedHomePlanetTopology? homePlanetTopology = null,
             RuntimeSystemCandidates? systemCandidates = null,
             RuntimeDarkFogOccupation? darkFogOccupation = null,
-            HomeSystemBodyInventory? homeSystemBodyInventory = null)
+            HomeSystemBodyInventory? homeSystemBodyInventory = null,
+            string? homePlanetDisplayDesignation = null)
         {
             return new RuntimeScanResult(
                 status,
@@ -316,7 +326,8 @@ namespace DSPSeedScanner.Runtime
                 homePlanetTopology,
                 systemCandidates,
                 darkFogOccupation,
-                homeSystemBodyInventory);
+                homeSystemBodyInventory,
+                homePlanetDisplayDesignation);
         }
     }
 }

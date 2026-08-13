@@ -330,7 +330,8 @@ namespace DSPSeedScanner.Runtime
             string? unknownEnumType = null,
             int? unknownEnumValue = null,
             IEnumerable<RuntimeSystemDisplay>? systemDisplays = null,
-            HomeSystemBodyInventory? homeSystemBodyInventory = null)
+            HomeSystemBodyInventory? homeSystemBodyInventory = null,
+            string? homePlanetDisplayDesignation = null)
         {
             if (String.IsNullOrWhiteSpace(birthSystemIdentifier))
                 throw new ArgumentException("Birth system identifier is required.", nameof(birthSystemIdentifier));
@@ -342,6 +343,13 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentNullException(nameof(systemDistances));
             if ((unknownEnumType == null) != (!unknownEnumValue.HasValue))
                 throw new ArgumentException("Unknown enum type and raw value must be supplied together.");
+            if (homePlanetDisplayDesignation != null &&
+                String.IsNullOrWhiteSpace(homePlanetDisplayDesignation))
+            {
+                throw new ArgumentException(
+                    "Home planet display designation cannot be blank.",
+                    nameof(homePlanetDisplayDesignation));
+            }
 
             this.systems = systems.ToArray();
             this.systemDistances = systemDistances.ToArray();
@@ -352,6 +360,7 @@ namespace DSPSeedScanner.Runtime
             this.birthPlanetAttributions = birthSystem?.BirthPlanets?.ToArray();
             HomePlanetTopology = birthSystem?.HomePlanetTopology;
             HomeSystemBodyInventory = homeSystemBodyInventory;
+            HomePlanetDisplayDesignation = homePlanetDisplayDesignation;
             if (this.systemDisplays.Select(value => value.Identifier)
                 .Distinct(StringComparer.Ordinal).Count() != this.systemDisplays.Length)
             {
@@ -386,6 +395,7 @@ namespace DSPSeedScanner.Runtime
                     (NormalizedBirthPlanetEvidence[])birthPlanetAttributions.Clone());
         public NormalizedHomePlanetTopology? HomePlanetTopology { get; }
         public HomeSystemBodyInventory? HomeSystemBodyInventory { get; }
+        public string? HomePlanetDisplayDesignation { get; }
         public string? UnknownEnumType { get; }
         public int? UnknownEnumValue { get; }
     }

@@ -6,12 +6,11 @@ completed story scope, evidence, and history belong in archived roadmaps.
 
 **Current status:** FEED-01 and FEED-02 were accepted on 2026-08-13;
 `ready-for-new-panel` passed with no unresolved blocker, establishing the
-**Clean slate for panel work** milestone. FEED-03 then passed its technical
-acceptance gate and is the sole active story pending owner acceptance. Its
-separate statistics-panel scaffold mirrors the configured conclusion panel,
-shares the active preview lifecycle without sharing renderer state, and owns
-the bounded presentation values required by later panel stories. FEED-04 and
-later stories remain inactive behind their roadmap gates. The earlier
+**Clean slate for panel work** milestone. FEED-03 was then accepted. FEED-04
+passed its technical acceptance gate and is the sole active story pending owner
+acceptance. Both panels now compose their title from one immutable home-planet
+display designation owned and retired by the active preview session. FEED-05
+and later stories remain inactive behind their roadmap gates. The earlier
 scanner core, New Game presentation, and presentation refinement roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01 corrected
 pathless runtime-assembly fingerprinting, and FSOR-01 completed local runtime-
