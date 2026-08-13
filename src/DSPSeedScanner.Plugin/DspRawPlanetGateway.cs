@@ -11,6 +11,7 @@ namespace DSPSeedScanner.Plugin
 {
     internal sealed class DspRawPlanetGateway : IRuntimeCompleteClusterRawGateway
     {
+        private const int SulfuricAcidItemId = 1116;
         private static readonly IReadOnlyDictionary<int, string> ResourceIds =
             new Dictionary<int, string>
             {
@@ -155,6 +156,7 @@ namespace DSPSeedScanner.Plugin
                     recordTrace);
                 StarData birthStar = galaxy.StarById(galaxy.birthStarId);
                 var targets = new List<CompleteClusterPlanetTarget>();
+                int stableGameOrder = 0;
                 foreach (StarData star in galaxy.stars)
                 {
                     bool isBirth = star.id == birthStar.id;
@@ -170,13 +172,18 @@ namespace DSPSeedScanner.Plugin
                     var subject = new ConclusionSubject(
                         isBirth ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
                         systemId);
-                    targets.AddRange(star.planets
-                        .Where(planet => planet.type != EPlanetType.Gas)
-                        .Select(planet => new CompleteClusterPlanetTarget(
+                    foreach (PlanetData planet in star.planets.Where(
+                        planet => planet.type != EPlanetType.Gas))
+                    {
+                        targets.Add(new CompleteClusterPlanetTarget(
                             planet.id,
                             planet.algoId,
                             subject,
-                            distance)));
+                            distance,
+                            planet.displayName,
+                            stableGameOrder++,
+                            planet.waterItemId == SulfuricAcidItemId));
+                    }
                 }
                 recordTrace("cluster-plan:declared=" +
                     targets.Count.ToString(CultureInfo.InvariantCulture));

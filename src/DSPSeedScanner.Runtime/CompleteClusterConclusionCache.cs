@@ -133,7 +133,8 @@ namespace DSPSeedScanner.Runtime
             PreviewGenerationIdentity identity,
             CompleteClusterRawCoverage coverage,
             IEnumerable<ConclusionReport> reports,
-            HomeSystemResourceStatistics homeSystemResources)
+            HomeSystemResourceStatistics homeSystemResources,
+            ClusterResourceStatistics clusterResources)
         {
             CacheKeyHash = cacheKeyHash;
             Identity = identity;
@@ -141,6 +142,8 @@ namespace DSPSeedScanner.Runtime
             Reports = Array.AsReadOnly(reports.ToArray());
             HomeSystemResources = homeSystemResources ??
                 throw new ArgumentNullException(nameof(homeSystemResources));
+            ClusterResources = clusterResources ??
+                throw new ArgumentNullException(nameof(clusterResources));
         }
 
         public string CacheKeyHash { get; }
@@ -148,11 +151,12 @@ namespace DSPSeedScanner.Runtime
         public CompleteClusterRawCoverage Coverage { get; }
         public IReadOnlyList<ConclusionReport> Reports { get; }
         public HomeSystemResourceStatistics HomeSystemResources { get; }
+        public ClusterResourceStatistics ClusterResources { get; }
     }
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 10;
+        internal const int SchemaVersion = 11;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;
@@ -341,7 +345,8 @@ namespace DSPSeedScanner.Runtime
                             key,
                             result.Coverage,
                             cachedReports,
-                            result.HomeSystemResources!);
+                            result.HomeSystemResources!,
+                            result.ClusterResources!);
                         writer.Flush();
                         payload = buffer.ToArray();
                     }
@@ -436,6 +441,7 @@ namespace DSPSeedScanner.Runtime
                 result.AffectedPlanetId.HasValue ||
                 result.RawDiagnostic != null ||
                 result.HomeSystemResources == null ||
+                result.ClusterResources == null ||
                 cachedReports.Length == 0 ||
                 cachedReports.Length > MaximumReports)
             {
@@ -473,7 +479,10 @@ namespace DSPSeedScanner.Runtime
                 result.Reports.Count == 0 ||
                 result.Reports.Count > MaximumReports ||
                 result.HomeSystemResources.Bodies.Count >
-                    HomeSystemResourceStatistics.MaximumBodies)
+                    HomeSystemResourceStatistics.MaximumBodies ||
+                result.ClusterResources.Candidates.Count >
+                    ClusterResourceStatistics.MaximumCategories *
+                    ClusterResourceStatistics.MaximumCandidatesPerCategory)
             {
                 return false;
             }
@@ -543,7 +552,8 @@ namespace DSPSeedScanner.Runtime
             CompleteClusterCacheKey key,
             CompleteClusterRawCoverage coverage,
             IReadOnlyList<ConclusionReport> reports,
-            HomeSystemResourceStatistics homeSystemResources)
+            HomeSystemResourceStatistics homeSystemResources,
+            ClusterResourceStatistics clusterResources)
         {
             writer.Write(Magic);
             writer.Write(SchemaVersion);
@@ -565,6 +575,12 @@ namespace DSPSeedScanner.Runtime
                     writer.Write(resource.Amount);
                     writer.Write(resource.VeinGroups);
                 }
+            }
+            writer.Write(clusterResources.Candidates.Count);
+            foreach (ClusterResourceCandidate candidate in clusterResources.Candidates)
+            {
+                writer.Write(candidate.CategoryId);
+                WriteLocation(writer, candidate.Location);
             }
         }
 
@@ -623,6 +639,21 @@ namespace DSPSeedScanner.Runtime
                 }
                 bodies.Add(new HomeSystemBodyResources(bodyId, resources));
             }
+            int candidateCount = Bounded(
+                reader.ReadInt32(),
+                ClusterResourceStatistics.MaximumCategories *
+                    ClusterResourceStatistics.MaximumCandidatesPerCategory,
+                "cluster-resource candidate count");
+            var candidates = new List<ClusterResourceCandidate>(candidateCount);
+            for (int index = 0; index < candidateCount; index++)
+            {
+                string categoryId = Required(
+                    reader.ReadString(),
+                    "cluster-resource category");
+                candidates.Add(new ClusterResourceCandidate(
+                    categoryId,
+                    ReadLocation(reader)));
+            }
 
             return new CachedCompleteClusterConclusions(
                 key.Hash,
@@ -632,8 +663,26 @@ namespace DSPSeedScanner.Runtime
                     expectedPlanets,
                     expectedPlanets),
                 reports,
-                new HomeSystemResourceStatistics(bodies));
+                new HomeSystemResourceStatistics(bodies),
+                new ClusterResourceStatistics(candidates));
         }
+
+        private static void WriteLocation(BinaryWriter writer, ClusterBodyLocation location)
+        {
+            writer.Write(location.BodyIdentifier);
+            writer.Write(location.DisplayDesignation);
+            writer.Write(location.HostSystemIdentifier);
+            writer.Write(location.HostSystemDistanceLy);
+            writer.Write(location.StableGameOrder);
+        }
+
+        private static ClusterBodyLocation ReadLocation(BinaryReader reader) =>
+            new ClusterBodyLocation(
+                Required(reader.ReadString(), "cluster body identity"),
+                Required(reader.ReadString(), "cluster body display designation"),
+                Required(reader.ReadString(), "cluster host-system identity"),
+                NonNegative(reader.ReadDecimal(), "cluster host-system distance"),
+                Bounded(reader.ReadInt32(), Int32.MaxValue, "cluster stable game order"));
 
         private static void WriteReport(BinaryWriter writer, ConclusionReport report)
         {
@@ -764,6 +813,13 @@ namespace DSPSeedScanner.Runtime
         private static int Bounded(int value, int maximum, string name)
         {
             if (value < 0 || value > maximum)
+                throw new InvalidDataException("Invalid " + name + ".");
+            return value;
+        }
+
+        private static decimal NonNegative(decimal value, string name)
+        {
+            if (value < 0)
                 throw new InvalidDataException("Invalid " + name + ".");
             return value;
         }

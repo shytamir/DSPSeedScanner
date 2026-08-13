@@ -562,7 +562,7 @@ namespace DSPSeedScanner.Runtime
             string bodyIdentifier,
             string displayDesignation,
             string hostSystemIdentifier,
-            decimal hostSystemDistanceAu,
+            decimal hostSystemDistanceLy,
             int stableGameOrder)
         {
             if (String.IsNullOrWhiteSpace(bodyIdentifier))
@@ -575,38 +575,38 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentException(
                     "Host system identity is required.",
                     nameof(hostSystemIdentifier));
-            if (hostSystemDistanceAu < 0)
-                throw new ArgumentOutOfRangeException(nameof(hostSystemDistanceAu));
+            if (hostSystemDistanceLy < 0)
+                throw new ArgumentOutOfRangeException(nameof(hostSystemDistanceLy));
             if (stableGameOrder < 0)
                 throw new ArgumentOutOfRangeException(nameof(stableGameOrder));
 
             BodyIdentifier = bodyIdentifier;
             DisplayDesignation = displayDesignation;
             HostSystemIdentifier = hostSystemIdentifier;
-            HostSystemDistanceAu = hostSystemDistanceAu;
+            HostSystemDistanceLy = hostSystemDistanceLy;
             StableGameOrder = stableGameOrder;
         }
 
         public string BodyIdentifier { get; }
         public string DisplayDesignation { get; }
         public string HostSystemIdentifier { get; }
-        public decimal HostSystemDistanceAu { get; }
+        public decimal HostSystemDistanceLy { get; }
         public int StableGameOrder { get; }
 
-        public string FormattedDistance => DspAuFormatter.Format(HostSystemDistanceAu);
+        public string FormattedDistance => DspLyFormatter.Format(HostSystemDistanceLy);
     }
 
-    public static class DspAuFormatter
+    public static class DspLyFormatter
     {
-        public static string Format(decimal astronomicalUnits)
+        public static string Format(decimal lightYears)
         {
-            if (astronomicalUnits < 0)
-                throw new ArgumentOutOfRangeException(nameof(astronomicalUnits));
-            return astronomicalUnits == 0
-                ? "0 AU"
-                : RoundToSignificantFigures(astronomicalUnits, 3).ToString(
+            if (lightYears < 0)
+                throw new ArgumentOutOfRangeException(nameof(lightYears));
+            return lightYears == 0
+                ? "0 ly"
+                : RoundToSignificantFigures(lightYears, 3).ToString(
                     "G29",
-                    CultureInfo.InvariantCulture) + " AU";
+                    CultureInfo.InvariantCulture) + " ly";
         }
 
         public static IReadOnlyList<ClusterBodyLocation> StableOrder(
@@ -615,7 +615,7 @@ namespace DSPSeedScanner.Runtime
             if (locations == null)
                 throw new ArgumentNullException(nameof(locations));
             return Array.AsReadOnly(locations
-                .OrderBy(value => value.HostSystemDistanceAu)
+                .OrderBy(value => value.HostSystemDistanceLy)
                 .ThenBy(value => value.StableGameOrder)
                 .ThenBy(value => value.BodyIdentifier, StringComparer.Ordinal)
                 .ToArray());
@@ -630,6 +630,112 @@ namespace DSPSeedScanner.Runtime
             decimal factor = Convert.ToDecimal(Math.Pow(10, -decimalPlaces));
             return Decimal.Round(value / factor, 0) * factor;
         }
+    }
+
+    public sealed record ClusterResourceCandidate
+    {
+        public ClusterResourceCandidate(string categoryId, ClusterBodyLocation location)
+        {
+            if (!ClusterResourcePresentation.Supports(categoryId))
+                throw new ArgumentException("A cluster-resource category is unsupported.", nameof(categoryId));
+            CategoryId = categoryId;
+            Location = location ?? throw new ArgumentNullException(nameof(location));
+        }
+
+        public string CategoryId { get; }
+        public ClusterBodyLocation Location { get; }
+    }
+
+    public sealed class ClusterResourceStatistics
+    {
+        public const int MaximumCategories = 7;
+        public const int MaximumCandidatesPerCategory = 2;
+        private readonly ClusterResourceCandidate[] candidates;
+
+        public ClusterResourceStatistics(IEnumerable<ClusterResourceCandidate> candidates)
+        {
+            if (candidates == null)
+                throw new ArgumentNullException(nameof(candidates));
+            this.candidates = candidates
+                .OrderBy(value => ClusterResourcePresentation.Order(value.CategoryId))
+                .ThenBy(value => value.Location.HostSystemDistanceLy)
+                .ThenBy(value => value.Location.StableGameOrder)
+                .ThenBy(value => value.Location.BodyIdentifier, StringComparer.Ordinal)
+                .ToArray();
+            if (this.candidates.GroupBy(value => value.CategoryId, StringComparer.Ordinal)
+                    .Count() > MaximumCategories ||
+                this.candidates.GroupBy(value => value.CategoryId, StringComparer.Ordinal)
+                    .Any(group => group.Count() > MaximumCandidatesPerCategory) ||
+                this.candidates.GroupBy(value => value.CategoryId, StringComparer.Ordinal)
+                    .Any(group => group.Select(value => value.Location.BodyIdentifier)
+                        .Distinct(StringComparer.Ordinal).Count() != group.Count()))
+            {
+                throw new ArgumentException("Cluster-resource candidates exceed their bounds.", nameof(candidates));
+            }
+        }
+
+        public IReadOnlyList<ClusterResourceCandidate> Candidates =>
+            Array.AsReadOnly((ClusterResourceCandidate[])candidates.Clone());
+
+        public IReadOnlyList<ClusterResourceCandidate> ForCategory(string categoryId) =>
+            Array.AsReadOnly(candidates.Where(value => String.Equals(
+                value.CategoryId,
+                categoryId,
+                StringComparison.Ordinal)).ToArray());
+    }
+
+    public static class ClusterResourcePresentation
+    {
+        public const string SulfuricAcidOcean = "sulfuric-acid-ocean";
+        private static readonly IReadOnlyDictionary<string, (int Order, string Name)> Names =
+            new Dictionary<string, (int, string)>(StringComparer.Ordinal)
+            {
+                { SulfuricAcidOcean, (0, "Sulfuric Acid ocean") },
+                { "fire-ice", (1, "Fire Ice veins") },
+                { "fractal-silicon", (2, "Fractal Silicon") },
+                { "kimberlite", (3, "Kimberlite") },
+                { "optical-grating-crystal", (4, "Optical Grating Crystal") },
+                { "organic-crystal", (5, "Organic Crystal") },
+                { "spiniform-stalagmite-crystal", (6, "Spiniform Stalagmite Crystal") }
+            };
+
+        public static IReadOnlyList<string> CategoryIds =>
+            Array.AsReadOnly(Names.OrderBy(pair => pair.Value.Order)
+                .Select(pair => pair.Key).ToArray());
+
+        public static PreviewClusterStatistics Project(ClusterResourceStatistics statistics)
+        {
+            if (statistics == null)
+                throw new ArgumentNullException(nameof(statistics));
+            var result = new PreviewClusterStatistics();
+            foreach (string categoryId in CategoryIds)
+            {
+                IReadOnlyList<ClusterResourceCandidate> candidates =
+                    statistics.ForCategory(categoryId);
+                string name = Names[categoryId].Name;
+                string text = candidates.Count == 0
+                    ? "No " + name + " found"
+                    : name + ": " + String.Join(", ", candidates.Select(value =>
+                        value.Location.DisplayDesignation + " - " +
+                        value.Location.FormattedDistance));
+                result = result.With(new PreviewStatisticItem(
+                    "resource:" + categoryId,
+                    text,
+                    Names[categoryId].Order));
+            }
+            return result;
+        }
+
+        public static bool Supports(string categoryId) =>
+            categoryId != null && Names.ContainsKey(categoryId);
+
+        internal static int Order(string categoryId) => Names.TryGetValue(
+            categoryId,
+            out (int Order, string Name) value)
+                ? value.Order
+                : throw new ArgumentException(
+                    "A cluster-resource category is unsupported.",
+                    nameof(categoryId));
     }
 
     public sealed record PreviewStatisticItem
@@ -869,7 +975,9 @@ namespace DSPSeedScanner.Runtime
                     attempt.Session.HomePlanetDisplayDesignation),
                 attempt.HomeSystemBodyInventory,
                 attempt.HomeSystemResources,
-                Current?.Cluster ?? new PreviewClusterStatistics());
+                attempt.ClusterResources == null
+                    ? Current?.Cluster ?? new PreviewClusterStatistics()
+                    : ClusterResourcePresentation.Project(attempt.ClusterResources));
             return true;
         }
 

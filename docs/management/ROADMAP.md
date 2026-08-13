@@ -2,10 +2,9 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** None. [FEED-06: Show home-system resource
-statistics](#feed-06-show-home-system-resource-statistics) passed its story gate;
-the exact CI artifact remains at the `ready-for-cluster-panel-population` human
-validation boundary.
+**Active user story:** [FEED-07: Show nearest rare-resource
+access](#feed-07-show-nearest-rare-resource-access) is implemented at its
+acceptance gate and awaits owner acceptance.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -19,9 +18,10 @@ milestone was established. FEED-03 and FEED-04 were accepted,
 `ready-for-panel-population` passed, and the **Panel renders with all features
 enabled even if not yet consumed** milestone was established. FEED-05 was
 accepted. FEED-06 passed after its narrow runtime corrections and owner-led
-presentation workshop. The home-system population phase gate awaits validation
-of the exact CI artifact. Later stories remain inactive behind their documented
-gates.
+presentation workshop. The exact CI artifact then passed owner validation;
+`ready-for-cluster-panel-population` passed and established the **Panel home
+system fully populated** milestone. FEED-07 is implemented at its acceptance
+gate. Later stories remain inactive behind their documented gates.
 
 ## Source coverage
 
@@ -111,9 +111,9 @@ enabled even if not yet consumed** milestone.
 
 ### `ready-for-cluster-panel-population`
 
-**State:** Pending exact-artifact human validation. FEED-05 was accepted and
-FEED-06 passed its story gate; the owner will validate the generated CI artifact
-before this phase gate or its milestone can pass.
+**State:** Passed on 2026-08-14. FEED-05 and FEED-06 were accepted, and the
+owner validated the exact generated CI artifact with successful scan and
+conclusion behavior plus complete home-system table population.
 
 The home-system-panel phase is complete when FEED-05 and FEED-06 have passed
 their acceptance gates. Every supported home-system body fact and exact raw-
@@ -336,8 +336,8 @@ All subsections remain in the statistics panel's one document and one scroll
 flow; they do not own nested scrolling, independent lifecycle, or renderer
 state. Define one immutable bounded cluster-location value containing body
 identity, display designation, host-system identity, measured host-system
-distance from home, and stable game order. Provide its common DSP-AU formatter:
-`0 AU` for the home system and three significant figures otherwise, without
+distance from home, and stable game order. Provide its common light-year
+formatter: `0 ly` for the home system and three significant figures otherwise, without
 changing measurement precision. Later stories construct locations only for
 their selected results; the scaffold does not enumerate or retain the cluster.
 Do not add body, subsection, or statistic lines. Treat DSP planet numbers by
@@ -366,7 +366,7 @@ stable order and replacement does not duplicate an item. Subsection fixtures
 cover untitled items, multiple titled subsections, several items in one
 subsection, stable ordering, empty-section omission, and keyed replacement
 without duplicate headings or nested scrolling. Location fixtures cover
-distinct bodies in one host system, equal-distance systems, `0 AU`, three-
+distinct bodies in one host system, equal-distance systems, `0 ly`, three-
 significant-figure formatting, and stable game-order tie handling without
 candidate selection or a cluster inventory. The scaffold appears with the
 active preview; replacement resets its document and scroll position; exit
@@ -389,7 +389,7 @@ identity and distinct empty `Home system` and `Cluster` containers in its own
 scroll flow. Lightweight preview normalization supplies one immutable,
 session-owned home-system body inventory. Runtime presentation contracts also
 provide bounded keyed cluster items with optional ordered subsections and a
-shared immutable cluster-body location with DSP-AU formatting for later
+shared immutable cluster-body location with light-year formatting for later
 consumers; no statistic line was added.
 
 **Acceptance evidence:**
@@ -405,7 +405,7 @@ consumers; no statistic line was added.
   subsections, multiple items per subsection, empty-subsection omission, stable
   item order, bounded keyed replacement, and rejection of conflicting headings;
 - location fixtures covered separate bodies in one system, equal-distance
-  stable-order ties, `0 AU`, and three-significant-figure DSP-AU formatting
+  stable-order ties, `0 ly`, and three-significant-figure light-year formatting
   without introducing cluster enumeration or candidate selection;
 - lifecycle fixtures proved new-session scroll reset, inventory replacement,
   exact exit retirement, stale-session rejection, and independent conclusion
@@ -417,9 +417,9 @@ consumers; no statistic line was added.
 **Produced at this gate:** An independent statistics presentation document,
 controller, renderer, and scroll state; horizontally mirrored panel geometry;
 empty headed containers; session-owned home-body inventory; bounded cluster and
-subsection contracts; a common cluster-location/AU value; and focused acceptance
-fixtures. Installed-game visual layout approval remains explicitly outside this
-story and was not performed.
+subsection contracts; a common cluster-location/light-year value; and focused
+acceptance fixtures. Installed-game visual layout approval remains explicitly
+outside this story and was not performed.
 
 **Post-acceptance scaffold extension:** FEED-06's owner workshop established a
 shared columnar home-system row presentation within the existing container. Its
@@ -657,7 +657,7 @@ only validation of the exact hosted artifact remains at the phase gate.
 
 ## FEED-07: Show nearest rare-resource access
 
-**State:** Pending; inactive until `ready-for-cluster-panel-population` passes.
+**State:** Implemented on 2026-08-14; owner acceptance pending.
 
 **Category:** feature-request
 
@@ -677,7 +677,7 @@ Crystal, Organic Crystal, and Spiniform Stalagmite Crystal. Fire Ice gas giant
 products never qualify for the Fire Ice pair. Unipolar Magnets are explicitly
 excluded and belong only to FEED-08. Multiple deposits on one planet do not
 consume multiple slots. Construct FEED-03 cluster-location values for selected
-planets and use their shared home-to-host-system DSP-AU formatter. Rank the
+planets and use their shared home-to-host-system light-year formatter. Rank the
 existing measurements without introducing a new tolerance or precision model.
 If exactly two candidates share the closest measured distance, preserve and
 display that pair without a secondary tie-breaker. If more than two share it,
@@ -704,6 +704,23 @@ distance, travel time, logistics advice, more than two selected locations per
 resource, Fire Ice gas products, Unipolar Magnets, deuterium giants, or planet-
 theme inventory.
 
+**Implemented at this gate:** Complete-scan aggregation now retains only the
+two nearest unique attributed planets per named category and projects one keyed
+cluster line per category. Sulfuric-acid oceans come from the planet ocean
+prototype; Fire Ice requires generated veins; Unipolar Magnets are excluded.
+Locations retain planet designation, host-system identity, measured
+home-to-host distance in light-years, and stable game order. Cache schema 11
+persists only the bounded selected locations, and cache hits republish them
+without a scan.
+
+**Acceptance evidence:** Focused fixtures covered all seven categories, no-
+result wording, home-system distance, shared-host planets, exact two-way and
+over-bound ties, multiple deposits on one planet, Fire Ice vein/gas separation,
+Unipolar exclusion, three-significant-figure light-year formatting, projection,
+and cache round trips. All 79 Runtime checks passed. Release, installed-runtime,
+and hosted-reference builds completed without warnings. Interactive owner
+validation remains pending.
+
 ## FEED-08: Show per-planet Unipolar Magnet supply
 
 **State:** Pending; inactive until FEED-07 is accepted.
@@ -722,7 +739,7 @@ the actual locations directly.
 contains generated deposits. Each line shows the planet's in-game display
 designation, its host system's distance from the home system, exact vein-node
 count, exact total Unipolar Magnet amount, and exact vein-group count. Reuse
-FEED-03's cluster-location value, DSP-AU formatter, and stable ordering. Treat
+FEED-03's cluster-location value, light-year formatter, and stable ordering. Treat
 vein-group count as the existing factual distribution measure; do not rename
 it density or derive a new ratio. The amount is the exact generated runtime
 value under the active resource setting; do not normalize or estimate it. Use
@@ -775,7 +792,7 @@ distance predicate or create a new conclusion class.
 Highest exact game-provided rate wins. An exact-rate tie selects the nearer
 host system, then stable game order. Do not introduce a rate threshold,
 tolerance, or system-aggregated candidate. Construct the winner's FEED-03
-cluster-location value and show its planet designation, shared DSP-AU distance,
+cluster-location value and show its planet designation, shared light-year distance,
 and exact rate. A complete lightweight preview with no qualifying candidate
 displays `No Deuterium gas giants within 8.125 ly`; incomplete attribution omits
 the item rather than claiming absence.

@@ -356,7 +356,8 @@ namespace DSPSeedScanner.Runtime
                 "Every solid planet was generated and exact rare access was evaluated.",
                 rareResources,
                 reports,
-                aggregate.HomeSystemResources());
+                aggregate.HomeSystemResources(),
+                aggregate.ClusterResources());
         }
 
         private void Finish(
@@ -365,7 +366,8 @@ namespace DSPSeedScanner.Runtime
             string message,
             IReadOnlyList<NormalizedRareResourceEvidence>? rareResources = null,
             IReadOnlyList<ConclusionReport>? reports = null,
-            HomeSystemResourceStatistics? homeSystemResources = null)
+            HomeSystemResourceStatistics? homeSystemResources = null,
+            ClusterResourceStatistics? clusterResources = null)
         {
             if (State == CompleteClusterRawOperationState.Completed)
                 return;
@@ -424,6 +426,7 @@ namespace DSPSeedScanner.Runtime
                 rareResources = null;
                 reports = null;
                 homeSystemResources = null;
+                clusterResources = null;
             }
 
             Result = BuildResult(
@@ -433,7 +436,8 @@ namespace DSPSeedScanner.Runtime
                 restored,
                 rareResources,
                 reports,
-                homeSystemResources);
+                homeSystemResources,
+                clusterResources);
             State = CompleteClusterRawOperationState.Completed;
         }
 
@@ -444,7 +448,8 @@ namespace DSPSeedScanner.Runtime
             bool restored,
             IEnumerable<NormalizedRareResourceEvidence>? rareResources,
             IEnumerable<ConclusionReport>? reports,
-            HomeSystemResourceStatistics? homeSystemResources)
+            HomeSystemResourceStatistics? homeSystemResources,
+            ClusterResourceStatistics? clusterResources)
         {
             CoverageState coverageState = expected > 0 && completed == expected
                 ? CoverageState.Complete
@@ -465,7 +470,8 @@ namespace DSPSeedScanner.Runtime
                 GC.GetTotalMemory(false) - initialMemory,
                 affectedPlanet,
                 rawDiagnostic,
-                homeSystemResources);
+                homeSystemResources,
+                clusterResources);
         }
 
         private void Publish(CompleteClusterRawProgress value)
@@ -533,6 +539,11 @@ namespace DSPSeedScanner.Runtime
             private readonly Dictionary<int, Dictionary<string, HomeResourceAggregate>>
                 homeResources =
                     new Dictionary<int, Dictionary<string, HomeResourceAggregate>>();
+            private readonly Dictionary<string, List<ClusterBodyLocation>> clusterCandidates =
+                ClusterResourcePresentation.CategoryIds.ToDictionary(
+                    categoryId => categoryId,
+                    _ => new List<ClusterBodyLocation>(),
+                    StringComparer.Ordinal);
 
             public long CommonTotal { get; private set; }
             public int BirthPlanetCount { get; private set; }
@@ -542,6 +553,21 @@ namespace DSPSeedScanner.Runtime
                 CompleteClusterPlanetTarget target,
                 NormalizedRawPlanetEvidence planet)
             {
+                var location = new ClusterBodyLocation(
+                    planet.PlanetId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    target.DisplayDesignation,
+                    target.System.Identifier,
+                    target.DistanceFromBirthLy,
+                    target.StableGameOrder);
+                if (target.HasSulfuricAcidOcean)
+                    clusterCandidates[ClusterResourcePresentation.SulfuricAcidOcean].Add(location);
+                foreach (string resourceId in planet.Groups
+                    .Select(group => group.ResourceId)
+                    .Distinct(StringComparer.Ordinal)
+                    .Where(resourceId => ClusterResourcePresentation.Supports(resourceId)))
+                {
+                    clusterCandidates[resourceId].Add(location);
+                }
                 if (target.System.Kind == SubjectKind.BirthSystem)
                 {
                     BirthPlanetCount++;
@@ -601,6 +627,15 @@ namespace DSPSeedScanner.Runtime
                             resource.Value.Semantics,
                             resource.Value.Amount,
                             resource.Value.Groups)))));
+
+            public ClusterResourceStatistics ClusterResources() =>
+                new ClusterResourceStatistics(clusterCandidates.SelectMany(pair =>
+                    pair.Value
+                        .OrderBy(location => location.HostSystemDistanceLy)
+                        .ThenBy(location => location.StableGameOrder)
+                        .ThenBy(location => location.BodyIdentifier, StringComparer.Ordinal)
+                        .Take(ClusterResourceStatistics.MaximumCandidatesPerCategory)
+                        .Select(location => new ClusterResourceCandidate(pair.Key, location))));
 
             public IReadOnlyList<NormalizedRareResourceEvidence> RareResources() =>
                 rare.OrderBy(pair => pair.Key, StringComparer.Ordinal)

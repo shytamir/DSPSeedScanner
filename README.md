@@ -34,9 +34,10 @@ accepted, establishing a clean slate for panel work. FEED-03 was accepted, and
 FEED-04 was accepted, establishing a fully enabled panel scaffold. FEED-05 was
 accepted, and FEED-06's exact per-body resource table passed its direct-build
 story gate after narrow hosted-linkage, DSP planet-number, statistics, and
-presentation corrections. No story is active while the generated CI artifact
-awaits human validation; the home-system population phase gate has not yet
-passed. The completed
+presentation corrections. The exact CI artifact passed human validation,
+establishing the fully populated home-system panel. FEED-07 now awaits owner
+acceptance at its story gate after adding bounded nearby resource locations to
+the cluster panel in light-years. The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 records the preceding stories, acceptance gates, and implementation history.
 

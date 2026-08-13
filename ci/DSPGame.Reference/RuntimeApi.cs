@@ -92,6 +92,7 @@ public sealed class PlanetData
     public EPlanetType type;
     public int theme;
     public int iceFlag;
+    public int waterItemId;
     public int algoId;
     public int precision;
     public double mod_x;

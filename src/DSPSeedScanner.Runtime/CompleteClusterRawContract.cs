@@ -12,7 +12,10 @@ namespace DSPSeedScanner.Runtime
             int planetId,
             int algorithmId,
             ConclusionSubject system,
-            decimal distanceFromBirthLy)
+            decimal distanceFromBirthLy,
+            string displayDesignation,
+            int stableGameOrder,
+            bool hasSulfuricAcidOcean)
         {
             if (planetId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(planetId));
@@ -26,15 +29,27 @@ namespace DSPSeedScanner.Runtime
             }
             if (distanceFromBirthLy < 0)
                 throw new ArgumentOutOfRangeException(nameof(distanceFromBirthLy));
+            if (String.IsNullOrWhiteSpace(displayDesignation))
+                throw new ArgumentException(
+                    "A planet target requires its display designation.",
+                    nameof(displayDesignation));
+            if (stableGameOrder < 0)
+                throw new ArgumentOutOfRangeException(nameof(stableGameOrder));
             PlanetId = planetId;
             AlgorithmId = algorithmId;
             DistanceFromBirthLy = distanceFromBirthLy;
+            DisplayDesignation = displayDesignation;
+            StableGameOrder = stableGameOrder;
+            HasSulfuricAcidOcean = hasSulfuricAcidOcean;
         }
 
         public int PlanetId { get; }
         public int AlgorithmId { get; }
         public ConclusionSubject System { get; }
         public decimal DistanceFromBirthLy { get; }
+        public string DisplayDesignation { get; }
+        public int StableGameOrder { get; }
+        public bool HasSulfuricAcidOcean { get; }
     }
 
     public sealed class CompleteClusterRawPlan
@@ -141,7 +156,8 @@ namespace DSPSeedScanner.Runtime
             long managedMemoryDeltaBytes,
             int? affectedPlanetId = null,
             string? rawDiagnostic = null,
-            HomeSystemResourceStatistics? homeSystemResources = null)
+            HomeSystemResourceStatistics? homeSystemResources = null,
+            ClusterResourceStatistics? clusterResources = null)
         {
             Status = status;
             GalaxySeed = galaxySeed;
@@ -163,6 +179,7 @@ namespace DSPSeedScanner.Runtime
             AffectedPlanetId = affectedPlanetId;
             RawDiagnostic = rawDiagnostic;
             HomeSystemResources = homeSystemResources;
+            ClusterResources = clusterResources;
         }
 
         public RuntimeScanStatus Status { get; }
@@ -182,6 +199,7 @@ namespace DSPSeedScanner.Runtime
         public int? AffectedPlanetId { get; }
         public string? RawDiagnostic { get; }
         public HomeSystemResourceStatistics? HomeSystemResources { get; }
+        public ClusterResourceStatistics? ClusterResources { get; }
     }
 
     public interface IRuntimeCompleteClusterRawGateway : IRuntimeBirthSystemRawGateway

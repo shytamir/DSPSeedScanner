@@ -78,7 +78,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("home system statistics show layout and exact energy facts", HomeSystemStatisticsShowLayoutAndExactEnergyFacts),
                 ("home system resources join rows only when complete", HomeSystemResourcesJoinRowsOnlyWhenComplete),
                 ("cluster statistics are keyed ordered and sectioned", ClusterStatisticsAreKeyedOrderedAndSectioned),
-                ("cluster locations format AU and preserve stable ties", ClusterLocationsFormatAuAndPreserveStableTies),
+                ("cluster locations format light-years and preserve stable ties", ClusterLocationsFormatLyAndPreserveStableTies),
+                ("nearest cluster resources are bounded attributed and cacheable", NearestClusterResourcesAreBoundedAttributedAndCacheable),
                 ("statistics panel follows preview lifecycle independently", StatisticsPanelFollowsPreviewLifecycleIndependently),
                 ("home planet designation is shared immutable and session owned", HomePlanetDesignationIsSharedImmutableAndSessionOwned),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
@@ -1537,7 +1538,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     source.StateRestored,
                     source.ElapsedMilliseconds,
                     source.ManagedMemoryDeltaBytes,
-                    homeSystemResources: source.HomeSystemResources);
+                    homeSystemResources: source.HomeSystemResources,
+                    clusterResources: source.ClusterResources);
 
                 True(cache.TryStore(combat, expanded));
                 Equal(1, Directory.GetFiles(path, "*.dspseedscan").Length);
@@ -1627,6 +1629,11 @@ namespace DSPSeedScanner.Runtime.Tests
                         body.BodyId + ":" + String.Join("+", body.Resources.Select(resource =>
                             resource.ResourceId + ":" + resource.Semantics + ":" +
                             resource.Amount + ":" + resource.VeinGroups)))));
+                Equal(
+                    String.Join("|", source.ClusterResources!.Candidates.Select(candidate =>
+                        candidate.CategoryId + ":" + candidate.Location.BodyIdentifier)),
+                    String.Join("|", restored.ClusterResources.Candidates.Select(candidate =>
+                        candidate.CategoryId + ":" + candidate.Location.BodyIdentifier)));
                 True(restored.Reports.All(report =>
                     (report.Stage == EvidenceStage.BirthSystemRaw &&
                         report.Context == ConclusionContext.FreshStart) ||
@@ -1653,7 +1660,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     source.StateRestored,
                     source.ElapsedMilliseconds,
                     source.ManagedMemoryDeltaBytes,
-                    homeSystemResources: source.HomeSystemResources);
+                    homeSystemResources: source.HomeSystemResources,
+                    clusterResources: source.ClusterResources);
                 True(expanded.Reports.Count > 1_024);
                 True(cache.TryStore(identity, expanded));
                 True(cache.TryRead(identity, fingerprint, out restored));
@@ -2988,25 +2996,125 @@ namespace DSPSeedScanner.Runtime.Tests
             True(conflictingSectionRejected);
         }
 
-        private static void ClusterLocationsFormatAuAndPreserveStableTies()
+        private static void ClusterLocationsFormatLyAndPreserveStableTies()
         {
-            Equal("0 AU", DspAuFormatter.Format(0m));
-            Equal("0.0123 AU", DspAuFormatter.Format(0.012345m));
-            Equal("1.23 AU", DspAuFormatter.Format(1.2345m));
-            Equal("12.3 AU", DspAuFormatter.Format(12.345m));
-            Equal("123 AU", DspAuFormatter.Format(123.45m));
-            Equal("1230 AU", DspAuFormatter.Format(1234.5m));
+            Equal("0 ly", DspLyFormatter.Format(0m));
+            Equal("0.0123 ly", DspLyFormatter.Format(0.012345m));
+            Equal("1.23 ly", DspLyFormatter.Format(1.2345m));
+            Equal("12.3 ly", DspLyFormatter.Format(12.345m));
+            Equal("123 ly", DspLyFormatter.Format(123.45m));
+            Equal("1230 ly", DspLyFormatter.Format(1234.5m));
 
             ClusterBodyLocation first = Location("body-2", "Beta II", "beta", 12.345m, 2);
             ClusterBodyLocation second = Location("body-1", "Beta I", "beta", 12.345m, 1);
             ClusterBodyLocation home = Location("home-1", "Alpha I", "home", 0m, 3);
-            IReadOnlyList<ClusterBodyLocation> ordered = DspAuFormatter.StableOrder(
+            IReadOnlyList<ClusterBodyLocation> ordered = DspLyFormatter.StableOrder(
                 new[] { first, home, second });
             Equal("home-1,body-1,body-2", String.Join(",", ordered.Select(
                 value => value.BodyIdentifier)));
             Equal("Beta I", ordered[1].DisplayDesignation);
             Equal("beta", ordered[1].HostSystemIdentifier);
-            Equal("12.3 AU", ordered[1].FormattedDistance);
+            Equal("12.3 ly", ordered[1].FormattedDistance);
+        }
+
+        private static void NearestClusterResourcesAreBoundedAttributedAndCacheable()
+        {
+            var gateway = new FakeCompleteClusterGateway
+            {
+                TargetCount = 5,
+                PreviewFactory = () => Snapshot(
+                    birthPlanetAttributions: new[]
+                    {
+                        GasAttribution(102, "Planet 102", "fire-ice", "hydrogen")
+                    })
+            };
+            CompleteClusterRawResult result = new CompleteClusterRawCoordinator(gateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            True(result.ClusterResources != null);
+            IReadOnlyList<ClusterResourceCandidate> kimberlite =
+                result.ClusterResources!.ForCategory("kimberlite");
+            Equal(2, kimberlite.Count);
+            Equal("Planet 102,Planet 104", String.Join(",", kimberlite.Select(
+                value => value.Location.DisplayDesignation)));
+            Equal("2 ly", kimberlite[0].Location.FormattedDistance);
+            Equal("2 ly", kimberlite[1].Location.FormattedDistance);
+            False(kimberlite.Any(value => value.Location.DisplayDesignation == "Planet 105"));
+            Equal(1, result.ClusterResources.ForCategory(
+                ClusterResourcePresentation.SulfuricAcidOcean).Count);
+            Equal(0, result.ClusterResources.ForCategory("fire-ice").Count);
+            False(result.ClusterResources.Candidates.Any(value =>
+                value.CategoryId == "unipolar-magnet"));
+
+            PreviewClusterStatistics projected =
+                ClusterResourcePresentation.Project(result.ClusterResources);
+            Equal(7, projected.Items.Count);
+            Equal(
+                "Kimberlite: Planet 102 - 2 ly, Planet 104 - 2 ly",
+                projected.Items.Single(value => value.Key == "resource:kimberlite").Text);
+            Equal(
+                "No Fire Ice veins found",
+                projected.Items.Single(value => value.Key == "resource:fire-ice").Text);
+
+            WithTemporaryDirectory(path =>
+            {
+                var cache = new CompleteClusterConclusionCache(path);
+                True(cache.TryStore(PreviewIdentity(16_315_224), result));
+                True(cache.TryRead(
+                    PreviewIdentity(16_315_224),
+                    Fingerprint(),
+                    out CachedCompleteClusterConclusions? hit));
+                Equal(
+                    String.Join("|", result.ClusterResources.Candidates.Select(value =>
+                        value.CategoryId + ":" + value.Location.BodyIdentifier)),
+                    String.Join("|", hit!.ClusterResources.Candidates.Select(value =>
+                        value.CategoryId + ":" + value.Location.BodyIdentifier)));
+            });
+
+            var completeGateway = new FakeCompleteClusterGateway
+            {
+                TargetCount = 10,
+                TargetFactory = (planetId, index) => new CompleteClusterPlanetTarget(
+                    planetId,
+                    index + 1,
+                    new ConclusionSubject(
+                        index == 0 ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                        index == 0 ? Snapshot().BirthSystemIdentifier :
+                            index <= 5 ? "shared-system" : "system-" + index),
+                    index == 0 ? 0m : index <= 5 ? index <= 3 ? 2m : 3m : index,
+                    "Planet " + planetId,
+                    index,
+                    planetId == 103),
+                EvidenceFactory = (galaxySeed, target) => target.PlanetId switch
+                {
+                    101 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "fire-ice", 7, 1011, 100),
+                    102 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 200),
+                    103 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 300),
+                    104 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 400),
+                    105 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "fractal-silicon", 10, 1129, 500),
+                    106 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "fractal-silicon", 10, 1129, 600),
+                    107 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "optical-grating-crystal", 12, 1012, 700),
+                    108 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "organic-crystal", 11, 1117, 800),
+                    109 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "spiniform-stalagmite-crystal", 13, 1013, 900),
+                    110 => FakeCompleteClusterGateway.ClusterSnapshot(galaxySeed, target, "unipolar-magnet", 14, 1016, 1000),
+                    _ => throw new InvalidOperationException("Unexpected complete-cluster fixture target.")
+                }
+            };
+            CompleteClusterRawResult complete = new CompleteClusterRawCoordinator(completeGateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            ClusterResourceStatistics all = complete.ClusterResources!;
+            Equal("Planet 101", all.ForCategory("fire-ice").Single()
+                .Location.DisplayDesignation);
+            Equal("0 ly", all.ForCategory("fire-ice").Single().Location.FormattedDistance);
+            Equal("Planet 102,Planet 103", String.Join(",", all.ForCategory("kimberlite")
+                .Select(value => value.Location.DisplayDesignation)));
+            Equal("Planet 105,Planet 106", String.Join(",", all
+                .ForCategory("fractal-silicon")
+                .Select(value => value.Location.DisplayDesignation)));
+            Equal(1, all.ForCategory("optical-grating-crystal").Count);
+            Equal(1, all.ForCategory("organic-crystal").Count);
+            Equal(1, all.ForCategory("spiniform-stalagmite-crystal").Count);
+            Equal(1, all.ForCategory(ClusterResourcePresentation.SulfuricAcidOcean).Count);
+            False(all.Candidates.Any(value => value.CategoryId == "unipolar-magnet"));
         }
 
         private static void StatisticsPanelFollowsPreviewLifecycleIndependently()
@@ -3245,14 +3353,14 @@ namespace DSPSeedScanner.Runtime.Tests
             string bodyIdentifier,
             string displayDesignation,
             string systemIdentifier,
-            decimal distanceAu,
+            decimal distanceLy,
             int stableGameOrder)
         {
             return new ClusterBodyLocation(
                 bodyIdentifier,
                 displayDesignation,
                 systemIdentifier,
-                distanceAu,
+                distanceLy,
                 stableGameOrder);
         }
 
@@ -4235,6 +4343,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(HomeSystemBodyResources),
                 typeof(HomeSystemResourceStatistics),
                 typeof(ClusterBodyLocation),
+                typeof(ClusterResourceCandidate),
+                typeof(ClusterResourceStatistics),
                 typeof(PreviewStatisticItem),
                 typeof(PreviewStatisticSubsection),
                 typeof(PreviewClusterStatistics),
@@ -4928,6 +5038,10 @@ namespace DSPSeedScanner.Runtime.Tests
             public Exception? GenerationFailure { get; set; }
             public Action? OnPlanet { get; set; }
             public int TargetCount { get; set; } = 3;
+            public Func<RuntimePreviewSnapshot>? PreviewFactory { get; set; }
+            public Func<int, int, CompleteClusterPlanetTarget>? TargetFactory { get; set; }
+            public Func<int, CompleteClusterPlanetTarget, NormalizedRawPlanetEvidence>?
+                EvidenceFactory { get; set; }
             public int GenerateCalls { get; private set; }
             public int YieldRestoreChecks { get; private set; }
             public int SessionDisposeCalls { get; private set; }
@@ -4962,21 +5076,30 @@ namespace DSPSeedScanner.Runtime.Tests
                 Action<string> recordTrace)
             {
                 recordTrace("cluster-plan:declared=" + TargetCount);
+                RuntimePreviewSnapshot preview = PreviewFactory?.Invoke() ?? Snapshot();
                 var targets = new List<CompleteClusterPlanetTarget>(TargetCount);
                 for (int index = 0; index < TargetCount; index++)
                 {
                     int planetId = 101 + index;
+                    if (TargetFactory != null)
+                    {
+                        targets.Add(TargetFactory(planetId, index));
+                        continue;
+                    }
                     bool birth = index == 0;
                     targets.Add(new CompleteClusterPlanetTarget(
                         planetId,
                         index + 1,
                         new ConclusionSubject(
                             birth ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
-                            birth ? Snapshot().BirthSystemIdentifier : (index + 1).ToString()),
-                        birth ? 0m : index == 1 ? 2m : 20m));
+                            birth ? preview.BirthSystemIdentifier : (index + 1).ToString()),
+                        birth ? 0m : index == 1 || index == 3 ? 2m : 20m,
+                        "Planet " + planetId,
+                        index,
+                        index == 2));
                 }
                 return new CompleteClusterRawPlan(
-                    Snapshot(),
+                    preview,
                     targets);
             }
 
@@ -5050,12 +5173,15 @@ namespace DSPSeedScanner.Runtime.Tests
                         owner.OnPlanet?.Invoke();
                         if (owner.FailingPlanetId == target.PlanetId)
                             throw new InvalidOperationException("injected cluster planet failure");
-                        evidence = target.PlanetId switch
-                        {
-                            102 => ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 200),
-                            103 => ClusterSnapshot(galaxySeed, target, "unipolar-magnet", 14, 1016, 300),
-                            _ => ClusterSnapshot(galaxySeed, target, null, 0, 0, 0)
-                        };
+                        evidence = owner.EvidenceFactory?.Invoke(galaxySeed, target) ??
+                            target.PlanetId switch
+                            {
+                                102 => ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 200),
+                                103 => ClusterSnapshot(galaxySeed, target, "unipolar-magnet", 14, 1016, 300),
+                                104 => ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 400),
+                                105 => ClusterSnapshot(galaxySeed, target, "kimberlite", 9, 1128, 500),
+                                _ => ClusterSnapshot(galaxySeed, target, null, 0, 0, 0)
+                            };
                         pendingTarget = null;
                         stepTrace("raw:terrain-worker:complete");
                         return true;
@@ -5079,7 +5205,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 }
             }
 
-            private static NormalizedRawPlanetEvidence ClusterSnapshot(
+            internal static NormalizedRawPlanetEvidence ClusterSnapshot(
                 int galaxySeed,
                 CompleteClusterPlanetTarget target,
                 string? rareId,
@@ -5108,6 +5234,12 @@ namespace DSPSeedScanner.Runtime.Tests
                     groups.Add(new NormalizedRawVeinGroup(
                         2, rareType, rareId, RawResourceSemantics.FiniteDeposit,
                         1, rareAmount, 0.4m, 0.5m, 0.6m));
+                    if (target.PlanetId == 104)
+                    {
+                        groups.Add(new NormalizedRawVeinGroup(
+                            3, rareType, rareId, RawResourceSemantics.FiniteDeposit,
+                            1, rareAmount, 0.7m, 0.8m, 0.9m));
+                    }
                 }
                 return new NormalizedRawPlanetEvidence(
                     galaxySeed,

@@ -125,7 +125,10 @@ namespace DSPSeedScanner.Plugin
                     document.HomeSystemResources))
                 .ToArray() ?? Array.Empty<HomeSystemBodyTableRow>();
             float homeSectionHeight = HomeSectionHeight(homeRows, contentWidth);
-            float clusterSectionHeight = SectionHeight(Array.Empty<string>(), contentWidth);
+            string[] clusterLines = document.Cluster.Sections()
+                .SelectMany(section => section.Items.Select(item => item.Text))
+                .ToArray();
+            float clusterSectionHeight = SectionHeight(clusterLines, contentWidth);
             float contentHeight = homeSectionHeight + clusterSectionHeight + SectionGap;
             GUISkin previousSkin = GUI.skin;
             GUI.skin = scrollSkin!;
@@ -148,7 +151,7 @@ namespace DSPSeedScanner.Plugin
                     homeSectionHeight);
                 DrawSection(
                     PreviewStatisticsDocument.ClusterTitle,
-                    Array.Empty<string>(),
+                    clusterLines,
                     homeSectionHeight + SectionGap,
                     contentWidth,
                     clusterSectionHeight);

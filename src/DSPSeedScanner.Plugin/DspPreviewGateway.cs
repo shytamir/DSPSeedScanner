@@ -435,6 +435,7 @@ namespace DSPSeedScanner.Plugin
                 (typeof(PlanetData), "luminosity", MemberTypes.Field),
                 (typeof(PlanetData), "windStrength", MemberTypes.Field),
                 (typeof(PlanetData), "theme", MemberTypes.Field),
+                (typeof(PlanetData), "waterItemId", MemberTypes.Field),
                 (typeof(PlanetData), "iceFlag", MemberTypes.Field),
                 (typeof(PlanetData), "gasItems", MemberTypes.Field),
                 (typeof(PlanetData), "gasSpeeds", MemberTypes.Field),

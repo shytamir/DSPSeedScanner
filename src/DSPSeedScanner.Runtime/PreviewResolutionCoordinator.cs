@@ -49,6 +49,7 @@ namespace DSPSeedScanner.Runtime
         public RuntimeDarkFogOccupation? DarkFogOccupation { get; private set; }
         public HomeSystemBodyInventory? HomeSystemBodyInventory { get; private set; }
         public HomeSystemResourceStatistics? HomeSystemResources { get; private set; }
+        public ClusterResourceStatistics? ClusterResources { get; private set; }
         public PreviewGenerationIdentity? CachedPayloadSourceIdentity { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
@@ -106,6 +107,11 @@ namespace DSPSeedScanner.Runtime
         internal void SetHomeSystemResources(HomeSystemResourceStatistics? resources)
         {
             HomeSystemResources = resources;
+        }
+
+        internal void SetClusterResources(ClusterResourceStatistics? resources)
+        {
+            ClusterResources = resources;
         }
 
         internal void SetCachedPayloadSourceIdentity(PreviewGenerationIdentity? identity)
@@ -202,6 +208,7 @@ namespace DSPSeedScanner.Runtime
             {
                 currentAttempt.SetCompleteReports(hit.Reports);
                 currentAttempt.SetHomeSystemResources(hit.HomeSystemResources);
+                currentAttempt.SetClusterResources(hit.ClusterResources);
                 currentAttempt.SetCachedPayloadSourceIdentity(hit.Identity);
                 currentAttempt.ExpectedPlanets = hit.Coverage.ExpectedPlanets;
                 currentAttempt.CompletedPlanets = hit.Coverage.CompletedPlanets;
@@ -276,6 +283,7 @@ namespace DSPSeedScanner.Runtime
                         report.Context == ConclusionContext.FreshStart) ||
                     report.Stage == EvidenceStage.CompleteClusterRaw));
                 attempt.SetHomeSystemResources(result.HomeSystemResources);
+                attempt.SetClusterResources(result.ClusterResources);
                 attempt.CacheStored = cache.TryStore(identity, result);
                 Finish(
                     attempt,
