@@ -163,7 +163,11 @@ namespace DSPSeedScanner.Plugin
                             HomeBodyKind(planet),
                             HomeThemeName(planet, themesById),
                             HomeEnergyRatio(planet, planet.luminosity),
-                            HomeEnergyRatio(planet, planet.windStrength))));
+                            HomeEnergyRatio(planet, planet.windStrength),
+                            planet.type == EPlanetType.Gas && planet.gasItems != null
+                                ? planet.gasItems.Select(NormalizeGasProductId)
+                                    .Where(ResourcePresentation.Supports)
+                                : null)));
             NormalizedHomePlanetTopology? homePlanetTopology =
                 PreviewHomeTopologyNormalizer.Normalize(
                     birthSystemIdentifier,

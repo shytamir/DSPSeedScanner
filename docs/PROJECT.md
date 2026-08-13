@@ -8,11 +8,13 @@ completed story scope, evidence, and history belong in archived roadmaps.
 `ready-for-new-panel` passed with no unresolved blocker, establishing the
 **Clean slate for panel work** milestone. FEED-03 and FEED-04 were then
 accepted; `ready-for-panel-population` passed, establishing the **Panel renders
-with all features enabled even if not yet consumed** milestone. FEED-05 passed
-its technical acceptance gate and is the sole active story pending owner
-acceptance. The statistics panel now presents every home-system body in stable
-game order with giant type or available theme and exact Solar/Wind facts.
-FEED-06 and later stories remain inactive behind their roadmap gates. The earlier
+with all features enabled even if not yet consumed** milestone. FEED-05 was
+accepted. FEED-06 passed its technical acceptance gate and is the sole
+active story pending owner acceptance. The statistics panel now presents every
+home-system body in stable game order with giant type, gas products, or
+available theme and exact Solar/Wind facts; after complete coverage or cache
+reuse, solid rows also identify their present ores. FEED-07 and later stories
+remain inactive behind their roadmap gates. The earlier
 scanner core, New Game presentation, and presentation refinement roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01 corrected
 pathless runtime-assembly fingerprinting, and FSOR-01 completed local runtime-

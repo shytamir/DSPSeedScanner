@@ -48,6 +48,7 @@ namespace DSPSeedScanner.Runtime
         public RuntimeSystemCandidates? SystemCandidates { get; private set; }
         public RuntimeDarkFogOccupation? DarkFogOccupation { get; private set; }
         public HomeSystemBodyInventory? HomeSystemBodyInventory { get; private set; }
+        public HomeSystemResourceStatistics? HomeSystemResources { get; private set; }
         public PreviewGenerationIdentity? CachedPayloadSourceIdentity { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
@@ -100,6 +101,11 @@ namespace DSPSeedScanner.Runtime
         internal void SetHomeSystemBodyInventory(HomeSystemBodyInventory? inventory)
         {
             HomeSystemBodyInventory = inventory;
+        }
+
+        internal void SetHomeSystemResources(HomeSystemResourceStatistics? resources)
+        {
+            HomeSystemResources = resources;
         }
 
         internal void SetCachedPayloadSourceIdentity(PreviewGenerationIdentity? identity)
@@ -195,6 +201,7 @@ namespace DSPSeedScanner.Runtime
                 hit != null)
             {
                 currentAttempt.SetCompleteReports(hit.Reports);
+                currentAttempt.SetHomeSystemResources(hit.HomeSystemResources);
                 currentAttempt.SetCachedPayloadSourceIdentity(hit.Identity);
                 currentAttempt.ExpectedPlanets = hit.Coverage.ExpectedPlanets;
                 currentAttempt.CompletedPlanets = hit.Coverage.CompletedPlanets;
@@ -268,6 +275,7 @@ namespace DSPSeedScanner.Runtime
                     (report.Stage == EvidenceStage.BirthSystemRaw &&
                         report.Context == ConclusionContext.FreshStart) ||
                     report.Stage == EvidenceStage.CompleteClusterRaw));
+                attempt.SetHomeSystemResources(result.HomeSystemResources);
                 attempt.CacheStored = cache.TryStore(identity, result);
                 Finish(
                     attempt,

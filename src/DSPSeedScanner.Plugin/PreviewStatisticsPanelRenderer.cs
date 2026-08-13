@@ -93,7 +93,9 @@ namespace DSPSeedScanner.Plugin
             float scrollHeight = bounds.Bottom - PreviewPanelLayout.DocumentPadding - scrollY;
             float contentWidth = viewportWidth - ScrollbarReserve;
             string[] homeLines = document.HomeSystem?.Bodies
-                .Select(HomeSystemBodyPresentation.Format)
+                .Select(body => HomeSystemBodyPresentation.Format(
+                    body,
+                    document.HomeSystemResources))
                 .ToArray() ?? Array.Empty<string>();
             float homeSectionHeight = SectionHeight(homeLines, contentWidth);
             float clusterSectionHeight = SectionHeight(Array.Empty<string>(), contentWidth);

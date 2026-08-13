@@ -2,8 +2,8 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-05: Show home-system layout and energy
-facts](#feed-05-show-home-system-layout-and-energy-facts).
+**Active user story:** [FEED-06: Show home-system ore
+availability](#feed-06-show-home-system-ore-availability).
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -15,9 +15,9 @@ its expected effect on product trust or player value. FEED-01 and FEED-02 were
 accepted, `ready-for-new-panel` passed, and the **Clean slate for panel work**
 milestone was established. FEED-03 and FEED-04 were accepted,
 `ready-for-panel-population` passed, and the **Panel renders with all features
-enabled even if not yet consumed** milestone was established. FEED-05 passed
-its technical gate and remains active pending owner acceptance. Later stories
-remain inactive behind their documented gates.
+enabled even if not yet consumed** milestone was established. FEED-05 was
+accepted. FEED-06 passed its technical gate and remains active pending owner
+acceptance. Later stories remain inactive behind their documented gates.
 
 ## Source coverage
 
@@ -470,8 +470,7 @@ story's automated gate and was not performed.
 
 ## FEED-05: Show home-system layout and energy facts
 
-**State:** Acceptance gate passed on 2026-08-13; active pending owner
-acceptance.
+**State:** Accepted on 2026-08-13.
 
 **Category:** feature-request
 
@@ -528,7 +527,8 @@ this story's automated gate and was not performed.
 
 ## FEED-06: Show home-system ore availability
 
-**State:** Pending; inactive until FEED-05 is accepted.
+**State:** Acceptance gate passed on 2026-08-13; active pending owner
+acceptance.
 
 **Category:** feature-request
 
@@ -566,6 +566,36 @@ data are retained.
 **Out of scope:** Ore amounts, node or vein-group counts, terrain access,
 resource rankings, cluster-wide ore inventory, gas-product rates, or mining
 throughput.
+
+**Implemented:** Lightweight preview normalization attaches supported gas
+product names to each giant's existing inventory entry. The complete scan
+distills each fully generated home-system solid planet to a bounded body-ID and
+present-ore set, discarding raw nodes, groups, amounts, and cluster ore data.
+The statistics formatter joins that payload to the existing row only after
+complete coverage or a valid cache hit. Cache schema 9 persists only this
+presentation-safe home-resource payload alongside audited conclusions.
+
+**Acceptance evidence:**
+
+- fixtures covered common ores, absent ores, mineable Fire Ice, Fire Ice gas,
+  multiple solid planets, and giants with and without products;
+- gas products appeared from lightweight preview evidence, while ore fields
+  remained absent during incomplete generation and appeared only after complete
+  coverage or cache reuse;
+- each payload joined its matching inventory body without adding, duplicating,
+  suppressing, or reordering rows and without removing FEED-05 facts;
+- giant rows never received `Ores:`, empty resource sets produced no nil marker,
+  and `Ores: Fire Ice veins` remained distinct from `Gas products: Fire Ice`;
+- cancellation and raw failure published no partial home-resource payload, and
+  the cache round trip retained only bounded presentation data; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 Core checks passed, and all 78 Runtime checks passed.
+
+**Produced at this gate:** Immediate giant gas-product labels, complete-only
+per-body ore sets, presentation-time row joining, cache schema 9 persistence,
+and focused completion, cache, cancellation, replacement, and exit fixtures.
+Interactive DSP visual validation was not required by this story's automated
+gate and was not performed.
 
 ## FEED-07: Show nearest rare-resource access
 

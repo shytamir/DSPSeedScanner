@@ -132,23 +132,27 @@ namespace DSPSeedScanner.Runtime
             string cacheKeyHash,
             PreviewGenerationIdentity identity,
             CompleteClusterRawCoverage coverage,
-            IEnumerable<ConclusionReport> reports)
+            IEnumerable<ConclusionReport> reports,
+            HomeSystemResourceStatistics homeSystemResources)
         {
             CacheKeyHash = cacheKeyHash;
             Identity = identity;
             Coverage = coverage;
             Reports = Array.AsReadOnly(reports.ToArray());
+            HomeSystemResources = homeSystemResources ??
+                throw new ArgumentNullException(nameof(homeSystemResources));
         }
 
         public string CacheKeyHash { get; }
         public PreviewGenerationIdentity Identity { get; }
         public CompleteClusterRawCoverage Coverage { get; }
         public IReadOnlyList<ConclusionReport> Reports { get; }
+        public HomeSystemResourceStatistics HomeSystemResources { get; }
     }
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 8;
+        internal const int SchemaVersion = 9;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;
@@ -332,7 +336,12 @@ namespace DSPSeedScanner.Runtime
                     using (var buffer = new MemoryStream())
                     using (var writer = new BinaryWriter(buffer, Encoding.UTF8, leaveOpen: true))
                     {
-                        Write(writer, key, result.Coverage, cachedReports);
+                        Write(
+                            writer,
+                            key,
+                            result.Coverage,
+                            cachedReports,
+                            result.HomeSystemResources!);
                         writer.Flush();
                         payload = buffer.ToArray();
                     }
@@ -426,6 +435,7 @@ namespace DSPSeedScanner.Runtime
                 result.GalaxySeed != key.Identity.GalaxyIdentity.GalaxySeed ||
                 result.AffectedPlanetId.HasValue ||
                 result.RawDiagnostic != null ||
+                result.HomeSystemResources == null ||
                 cachedReports.Length == 0 ||
                 cachedReports.Length > MaximumReports)
             {
@@ -461,7 +471,9 @@ namespace DSPSeedScanner.Runtime
                 !result.Coverage.IsComplete ||
                 result.Coverage.ExpectedPlanets <= 0 ||
                 result.Reports.Count == 0 ||
-                result.Reports.Count > MaximumReports)
+                result.Reports.Count > MaximumReports ||
+                result.HomeSystemResources.Bodies.Count >
+                    HomeSystemResourceStatistics.MaximumBodies)
             {
                 return false;
             }
@@ -530,7 +542,8 @@ namespace DSPSeedScanner.Runtime
             BinaryWriter writer,
             CompleteClusterCacheKey key,
             CompleteClusterRawCoverage coverage,
-            IReadOnlyList<ConclusionReport> reports)
+            IReadOnlyList<ConclusionReport> reports,
+            HomeSystemResourceStatistics homeSystemResources)
         {
             writer.Write(Magic);
             writer.Write(SchemaVersion);
@@ -540,6 +553,14 @@ namespace DSPSeedScanner.Runtime
             writer.Write(reports.Count);
             foreach (ConclusionReport report in reports)
                 WriteReport(writer, report);
+            writer.Write(homeSystemResources.Bodies.Count);
+            foreach (HomeSystemBodyResources body in homeSystemResources.Bodies)
+            {
+                writer.Write(body.BodyId);
+                writer.Write(body.Ores.Count);
+                foreach (string ore in body.Ores)
+                    writer.Write(ore);
+            }
         }
 
         private static CachedCompleteClusterConclusions Read(
@@ -566,6 +587,20 @@ namespace DSPSeedScanner.Runtime
             var reports = new List<ConclusionReport>(reportCount);
             for (int index = 0; index < reportCount; index++)
                 reports.Add(ReadReport(reader, sourceIdentity));
+            int bodyCount = Bounded(
+                reader.ReadInt32(),
+                HomeSystemResourceStatistics.MaximumBodies,
+                "home-system resource body count");
+            var bodies = new List<HomeSystemBodyResources>(bodyCount);
+            for (int index = 0; index < bodyCount; index++)
+            {
+                int bodyId = Positive(reader.ReadInt32(), Int32.MaxValue, "body ID");
+                int oreCount = Bounded(reader.ReadInt32(), 32, "body ore count");
+                var ores = new List<string>(oreCount);
+                for (int oreIndex = 0; oreIndex < oreCount; oreIndex++)
+                    ores.Add(Required(reader.ReadString(), "body ore"));
+                bodies.Add(new HomeSystemBodyResources(bodyId, ores));
+            }
 
             return new CachedCompleteClusterConclusions(
                 key.Hash,
@@ -574,7 +609,8 @@ namespace DSPSeedScanner.Runtime
                     CoverageState.Complete,
                     expectedPlanets,
                     expectedPlanets),
-                reports);
+                reports,
+                new HomeSystemResourceStatistics(bodies));
         }
 
         private static void WriteReport(BinaryWriter writer, ConclusionReport report)

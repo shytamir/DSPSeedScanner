@@ -140,7 +140,8 @@ namespace DSPSeedScanner.Runtime
             long elapsedMilliseconds,
             long managedMemoryDeltaBytes,
             int? affectedPlanetId = null,
-            string? rawDiagnostic = null)
+            string? rawDiagnostic = null,
+            HomeSystemResourceStatistics? homeSystemResources = null)
         {
             Status = status;
             GalaxySeed = galaxySeed;
@@ -161,6 +162,7 @@ namespace DSPSeedScanner.Runtime
             ManagedMemoryDeltaBytes = managedMemoryDeltaBytes;
             AffectedPlanetId = affectedPlanetId;
             RawDiagnostic = rawDiagnostic;
+            HomeSystemResources = homeSystemResources;
         }
 
         public RuntimeScanStatus Status { get; }
@@ -179,6 +181,7 @@ namespace DSPSeedScanner.Runtime
         public long ManagedMemoryDeltaBytes { get; }
         public int? AffectedPlanetId { get; }
         public string? RawDiagnostic { get; }
+        public HomeSystemResourceStatistics? HomeSystemResources { get; }
     }
 
     public interface IRuntimeCompleteClusterRawGateway : IRuntimeBirthSystemRawGateway

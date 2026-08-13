@@ -31,7 +31,8 @@ namespace DSPSeedScanner.Runtime
             HomeSystemBodyKind bodyKind = HomeSystemBodyKind.Solid,
             string? themeName = null,
             decimal? solarRatio = null,
-            decimal? windRatio = null)
+            decimal? windRatio = null,
+            IEnumerable<string>? gasProducts = null)
         {
             if (bodyId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(bodyId));
@@ -62,6 +63,13 @@ namespace DSPSeedScanner.Runtime
                     "Giant facts must not contain solid-planet fields.",
                     nameof(bodyKind));
             }
+            string[] products = ResourcePresentation.Normalize(gasProducts);
+            if (bodyKind == HomeSystemBodyKind.Solid && products.Length != 0)
+            {
+                throw new ArgumentException(
+                    "Solid planets must not contain giant gas products.",
+                    nameof(gasProducts));
+            }
 
             BodyId = bodyId;
             DisplayDesignation = displayDesignation;
@@ -73,6 +81,7 @@ namespace DSPSeedScanner.Runtime
             ThemeName = themeName;
             SolarRatio = solarRatio;
             WindRatio = windRatio;
+            GasProducts = Array.AsReadOnly(products);
         }
 
         public int BodyId { get; }
@@ -85,6 +94,7 @@ namespace DSPSeedScanner.Runtime
         public string? ThemeName { get; }
         public decimal? SolarRatio { get; }
         public decimal? WindRatio { get; }
+        public IReadOnlyList<string> GasProducts { get; }
     }
 
     public sealed record HomeSystemBody
@@ -98,7 +108,8 @@ namespace DSPSeedScanner.Runtime
             HomeSystemBodyKind bodyKind,
             string? themeName,
             decimal? solarRatio,
-            decimal? windRatio)
+            decimal? windRatio,
+            IEnumerable<string> gasProducts)
         {
             BodyId = bodyId;
             DisplayDesignation = displayDesignation;
@@ -109,6 +120,7 @@ namespace DSPSeedScanner.Runtime
             ThemeName = themeName;
             SolarRatio = solarRatio;
             WindRatio = windRatio;
+            GasProducts = Array.AsReadOnly(gasProducts.ToArray());
         }
 
         public int BodyId { get; }
@@ -120,6 +132,7 @@ namespace DSPSeedScanner.Runtime
         public string? ThemeName { get; }
         public decimal? SolarRatio { get; }
         public decimal? WindRatio { get; }
+        public IReadOnlyList<string> GasProducts { get; }
     }
 
     public sealed class HomeSystemBodyInventory
@@ -181,7 +194,8 @@ namespace DSPSeedScanner.Runtime
                         value.BodyKind,
                         value.ThemeName,
                         value.SolarRatio,
-                        value.WindRatio));
+                        value.WindRatio,
+                        value.GasProducts));
                     continue;
                 }
 
@@ -205,7 +219,8 @@ namespace DSPSeedScanner.Runtime
                     value.BodyKind,
                     value.ThemeName,
                     value.SolarRatio,
-                    value.WindRatio));
+                    value.WindRatio,
+                    value.GasProducts));
             }
 
             return new HomeSystemBodyInventory(homeSystemIdentifier, projected.ToArray());
@@ -214,26 +229,45 @@ namespace DSPSeedScanner.Runtime
 
     public static class HomeSystemBodyPresentation
     {
-        public static string Format(HomeSystemBody body)
+        public static string Format(
+            HomeSystemBody body,
+            HomeSystemResourceStatistics? resources = null)
         {
             if (body == null)
                 throw new ArgumentNullException(nameof(body));
 
-            if (body.BodyKind == HomeSystemBodyKind.GasGiant)
-                return body.DisplayDesignation + " | Gas giant";
-            if (body.BodyKind == HomeSystemBodyKind.IceGiant)
-                return body.DisplayDesignation + " | Ice giant";
-
-            var facts = new List<string>(3);
-            if (body.ThemeName != null)
-                facts.Add(body.ThemeName);
-            if (body.SolarRatio.HasValue)
+            var facts = new List<string>(5);
+            if (body.BodyKind != HomeSystemBodyKind.Solid)
             {
-                facts.Add("Solar " + FormatPercentage(body.SolarRatio.Value));
+                facts.Add(body.BodyKind == HomeSystemBodyKind.IceGiant
+                    ? "Ice giant"
+                    : "Gas giant");
+                if (body.GasProducts.Count != 0)
+                {
+                    facts.Add("Gas products: " + String.Join(
+                        ", ",
+                        body.GasProducts.Select(ResourcePresentation.GasProductName)));
+                }
             }
-            if (body.WindRatio.HasValue)
+            else
             {
-                facts.Add("Wind " + FormatPercentage(body.WindRatio.Value));
+                if (body.ThemeName != null)
+                    facts.Add(body.ThemeName);
+                if (body.SolarRatio.HasValue)
+                {
+                    facts.Add("Solar " + FormatPercentage(body.SolarRatio.Value));
+                }
+                if (body.WindRatio.HasValue)
+                {
+                    facts.Add("Wind " + FormatPercentage(body.WindRatio.Value));
+                }
+                HomeSystemBodyResources? bodyResources = resources?.ForBody(body.BodyId);
+                if (bodyResources != null && bodyResources.Ores.Count != 0)
+                {
+                    facts.Add("Ores: " + String.Join(
+                        ", ",
+                        bodyResources.Ores.Select(ResourcePresentation.OreName)));
+                }
             }
             return facts.Count == 0
                 ? body.DisplayDesignation
@@ -247,6 +281,106 @@ namespace DSPSeedScanner.Runtime
             return (ratio * 100m).ToString(
                 "0.############################",
                 CultureInfo.InvariantCulture) + "%";
+        }
+    }
+
+    public sealed record HomeSystemBodyResources
+    {
+        public HomeSystemBodyResources(int bodyId, IEnumerable<string> ores)
+        {
+            if (bodyId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(bodyId));
+            BodyId = bodyId;
+            Ores = Array.AsReadOnly(ResourcePresentation.Normalize(ores));
+        }
+
+        public int BodyId { get; }
+        public IReadOnlyList<string> Ores { get; }
+    }
+
+    public sealed class HomeSystemResourceStatistics
+    {
+        public const int MaximumBodies = 256;
+        private readonly HomeSystemBodyResources[] bodies;
+        private readonly IReadOnlyDictionary<int, HomeSystemBodyResources> byBodyId;
+
+        public HomeSystemResourceStatistics(IEnumerable<HomeSystemBodyResources> bodies)
+        {
+            if (bodies == null)
+                throw new ArgumentNullException(nameof(bodies));
+            this.bodies = bodies.OrderBy(value => value.BodyId).ToArray();
+            if (this.bodies.Length > MaximumBodies ||
+                this.bodies.Select(value => value.BodyId).Distinct().Count() !=
+                    this.bodies.Length)
+            {
+                throw new ArgumentException(
+                    "Home-system resource bodies must be bounded and unique.",
+                    nameof(bodies));
+            }
+            byBodyId = this.bodies.ToDictionary(value => value.BodyId);
+        }
+
+        public IReadOnlyList<HomeSystemBodyResources> Bodies =>
+            Array.AsReadOnly((HomeSystemBodyResources[])bodies.Clone());
+
+        public HomeSystemBodyResources? ForBody(int bodyId) =>
+            byBodyId.TryGetValue(bodyId, out HomeSystemBodyResources? value)
+                ? value
+                : null;
+    }
+
+    public static class ResourcePresentation
+    {
+        private static readonly IReadOnlyDictionary<string, (int Order, string Ore, string Gas)>
+            Names = new Dictionary<string, (int, string, string)>(StringComparer.Ordinal)
+            {
+                { "iron", (0, "Iron", "Iron") },
+                { "copper", (1, "Copper", "Copper") },
+                { "silicon", (2, "Silicon", "Silicon") },
+                { "titanium", (3, "Titanium", "Titanium") },
+                { "stone", (4, "Stone", "Stone") },
+                { "coal", (5, "Coal", "Coal") },
+                { "oil", (6, "Crude Oil", "Crude Oil") },
+                { "fire-ice", (7, "Fire Ice veins", "Fire Ice") },
+                { "kimberlite", (8, "Kimberlite", "Kimberlite") },
+                { "fractal-silicon", (9, "Fractal Silicon", "Fractal Silicon") },
+                { "organic-crystal", (10, "Organic Crystal", "Organic Crystal") },
+                { "optical-grating-crystal", (11, "Optical Grating Crystal", "Optical Grating Crystal") },
+                { "spiniform-stalagmite-crystal", (12, "Spiniform Stalagmite Crystal", "Spiniform Stalagmite Crystal") },
+                { "unipolar-magnet", (13, "Unipolar Magnet", "Unipolar Magnet") },
+                { "hydrogen", (14, "Hydrogen", "Hydrogen") },
+                { "deuterium", (15, "Deuterium", "Deuterium") }
+            };
+
+        internal static string[] Normalize(IEnumerable<string>? resourceIds)
+        {
+            if (resourceIds == null)
+                return Array.Empty<string>();
+            string[] values = resourceIds.ToArray();
+            if (values.Any(String.IsNullOrWhiteSpace) ||
+                values.Any(value => !Names.ContainsKey(value)))
+            {
+                throw new ArgumentException("A resource identifier is unsupported.", nameof(resourceIds));
+            }
+            return values.Distinct(StringComparer.Ordinal)
+                .OrderBy(value => Names[value].Order)
+                .ToArray();
+        }
+
+        public static string OreName(string resourceId) => Name(resourceId).Ore;
+
+        public static string GasProductName(string resourceId) => Name(resourceId).Gas;
+
+        public static bool Supports(string resourceId) =>
+            resourceId != null && Names.ContainsKey(resourceId);
+
+        private static (int Order, string Ore, string Gas) Name(string resourceId)
+        {
+            if (resourceId == null)
+                throw new ArgumentNullException(nameof(resourceId));
+            if (!Names.TryGetValue(resourceId, out (int, string, string) value))
+                throw new ArgumentException("A resource identifier is unsupported.", nameof(resourceId));
+            return value;
         }
     }
 
@@ -473,6 +607,7 @@ namespace DSPSeedScanner.Runtime
             long sessionId,
             string identityLine,
             HomeSystemBodyInventory? homeSystem,
+            HomeSystemResourceStatistics? homeSystemResources,
             PreviewClusterStatistics cluster)
         {
             if (sessionId <= 0)
@@ -482,12 +617,14 @@ namespace DSPSeedScanner.Runtime
             SessionId = sessionId;
             IdentityLine = identityLine;
             HomeSystem = homeSystem;
+            HomeSystemResources = homeSystemResources;
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
         }
 
         public long SessionId { get; }
         public string IdentityLine { get; }
         public HomeSystemBodyInventory? HomeSystem { get; }
+        public HomeSystemResourceStatistics? HomeSystemResources { get; }
         public PreviewClusterStatistics Cluster { get; }
     }
 
@@ -543,6 +680,7 @@ namespace DSPSeedScanner.Runtime
                     session.Identity,
                     session.HomePlanetDisplayDesignation),
                 null,
+                null,
                 new PreviewClusterStatistics());
         }
 
@@ -558,6 +696,7 @@ namespace DSPSeedScanner.Runtime
                     attempt.Session.Identity,
                     attempt.Session.HomePlanetDisplayDesignation),
                 attempt.HomeSystemBodyInventory,
+                attempt.HomeSystemResources,
                 Current?.Cluster ?? new PreviewClusterStatistics());
             return true;
         }

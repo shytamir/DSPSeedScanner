@@ -355,7 +355,8 @@ namespace DSPSeedScanner.Runtime
                 "success",
                 "Every solid planet was generated and exact rare access was evaluated.",
                 rareResources,
-                reports);
+                reports,
+                aggregate.HomeSystemResources());
         }
 
         private void Finish(
@@ -363,7 +364,8 @@ namespace DSPSeedScanner.Runtime
             string code,
             string message,
             IReadOnlyList<NormalizedRareResourceEvidence>? rareResources = null,
-            IReadOnlyList<ConclusionReport>? reports = null)
+            IReadOnlyList<ConclusionReport>? reports = null,
+            HomeSystemResourceStatistics? homeSystemResources = null)
         {
             if (State == CompleteClusterRawOperationState.Completed)
                 return;
@@ -421,6 +423,7 @@ namespace DSPSeedScanner.Runtime
             {
                 rareResources = null;
                 reports = null;
+                homeSystemResources = null;
             }
 
             Result = BuildResult(
@@ -429,7 +432,8 @@ namespace DSPSeedScanner.Runtime
                 message,
                 restored,
                 rareResources,
-                reports);
+                reports,
+                homeSystemResources);
             State = CompleteClusterRawOperationState.Completed;
         }
 
@@ -439,7 +443,8 @@ namespace DSPSeedScanner.Runtime
             string message,
             bool restored,
             IEnumerable<NormalizedRareResourceEvidence>? rareResources,
-            IEnumerable<ConclusionReport>? reports)
+            IEnumerable<ConclusionReport>? reports,
+            HomeSystemResourceStatistics? homeSystemResources)
         {
             CoverageState coverageState = expected > 0 && completed == expected
                 ? CoverageState.Complete
@@ -459,7 +464,8 @@ namespace DSPSeedScanner.Runtime
                 stopwatch.ElapsedMilliseconds,
                 GC.GetTotalMemory(false) - initialMemory,
                 affectedPlanet,
-                rawDiagnostic);
+                rawDiagnostic,
+                homeSystemResources);
         }
 
         private void Publish(CompleteClusterRawProgress value)
@@ -524,6 +530,8 @@ namespace DSPSeedScanner.Runtime
                     resourceId => resourceId,
                     _ => new StarterAggregate(),
                     StringComparer.Ordinal);
+            private readonly Dictionary<int, HashSet<string>> homeResources =
+                new Dictionary<int, HashSet<string>>();
 
             public long CommonTotal { get; private set; }
             public int BirthPlanetCount { get; private set; }
@@ -536,8 +544,10 @@ namespace DSPSeedScanner.Runtime
                 if (target.System.Kind == SubjectKind.BirthSystem)
                 {
                     BirthPlanetCount++;
+                    var bodyResources = new HashSet<string>(StringComparer.Ordinal);
                     foreach (NormalizedRawVeinGroup group in planet.Groups)
                     {
+                        bodyResources.Add(group.ResourceId);
                         if (starter.TryGetValue(group.ResourceId, out StarterAggregate? resource))
                         {
                             resource.Amount = checked(resource.Amount + group.Amount);
@@ -546,6 +556,7 @@ namespace DSPSeedScanner.Runtime
                         if (String.Equals(group.ResourceId, "fire-ice", StringComparison.Ordinal))
                             birthContainsFireIce = true;
                     }
+                    homeResources.Add(planet.PlanetId, bodyResources);
                 }
                 foreach (NormalizedRawVeinGroup group in planet.Groups)
                 {
@@ -565,6 +576,10 @@ namespace DSPSeedScanner.Runtime
                     }
                 }
             }
+
+            public HomeSystemResourceStatistics HomeSystemResources() =>
+                new HomeSystemResourceStatistics(homeResources.Select(pair =>
+                    new HomeSystemBodyResources(pair.Key, pair.Value)));
 
             public IReadOnlyList<NormalizedRareResourceEvidence> RareResources() =>
                 rare.OrderBy(pair => pair.Key, StringComparer.Ordinal)
