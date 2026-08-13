@@ -216,6 +216,66 @@ namespace DSPSeedScanner.Runtime
                 width,
                 height);
         }
+
+        public static PreviewPanelPlacement PlacePanelPair(
+            PreviewPanelCorner conclusionCorner,
+            int screenWidth,
+            int screenHeight,
+            bool fullDocument = true)
+        {
+            PreviewPanelBounds conclusion = fullDocument
+                ? PlaceConclusion(conclusionCorner, screenWidth, screenHeight)
+                : Place(conclusionCorner, screenWidth, screenHeight);
+            PreviewPanelCorner statisticsCorner = HorizontalOpposite(conclusionCorner);
+            int statisticsX = screenWidth - conclusion.Right;
+            var statistics = new PreviewPanelBounds(
+                statisticsX,
+                conclusion.Y,
+                conclusion.Width,
+                conclusion.Height);
+            return new PreviewPanelPlacement(
+                conclusionCorner,
+                statisticsCorner,
+                conclusion,
+                statistics);
+        }
+
+        public static PreviewPanelCorner HorizontalOpposite(PreviewPanelCorner corner) =>
+            corner switch
+            {
+                PreviewPanelCorner.BottomRight => PreviewPanelCorner.BottomLeft,
+                PreviewPanelCorner.BottomLeft => PreviewPanelCorner.BottomRight,
+                PreviewPanelCorner.TopLeft => PreviewPanelCorner.TopRight,
+                PreviewPanelCorner.TopRight => PreviewPanelCorner.TopLeft,
+                _ => throw new ArgumentOutOfRangeException(nameof(corner))
+            };
+    }
+
+    public sealed record PreviewPanelPlacement
+    {
+        internal PreviewPanelPlacement(
+            PreviewPanelCorner conclusionCorner,
+            PreviewPanelCorner statisticsCorner,
+            PreviewPanelBounds conclusionBounds,
+            PreviewPanelBounds statisticsBounds)
+        {
+            ConclusionCorner = conclusionCorner;
+            StatisticsCorner = statisticsCorner;
+            ConclusionBounds = conclusionBounds;
+            StatisticsBounds = statisticsBounds;
+        }
+
+        public PreviewPanelCorner ConclusionCorner { get; }
+        public PreviewPanelCorner StatisticsCorner { get; }
+        public PreviewPanelBounds ConclusionBounds { get; }
+        public PreviewPanelBounds StatisticsBounds { get; }
+        public bool ConclusionAnchorsRight =>
+            ConclusionCorner == PreviewPanelCorner.BottomRight ||
+            ConclusionCorner == PreviewPanelCorner.TopRight;
+        public bool StatisticsAnchorsRight => !ConclusionAnchorsRight;
+        public bool AnchorsTop =>
+            ConclusionCorner == PreviewPanelCorner.TopLeft ||
+            ConclusionCorner == PreviewPanelCorner.TopRight;
     }
 
     public static class PreviewPanelStateMapper

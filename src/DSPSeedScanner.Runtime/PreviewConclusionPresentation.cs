@@ -180,7 +180,7 @@ namespace DSPSeedScanner.Runtime
             }
             return new PreviewConclusionPresentation(
                 attempt.Session.SessionId,
-                IdentityLine(identity),
+                PreviewIdentityPresentation.Format(identity),
                 DarkFogStatusLine(attempt.DarkFogOccupation),
                 attempt.State == PreviewResolutionState.Cached,
                 Group(
@@ -1229,18 +1229,6 @@ namespace DSPSeedScanner.Runtime
                 foreach (PresentedConclusionCard card in group.Cards)
                     lines.Add(new PreviewPanelLine(PreviewPanelLineKind.Conclusion, card.Line));
             }
-        }
-
-        private static string IdentityLine(PreviewGenerationIdentity identity)
-        {
-            GenerationIdentity galaxy = identity.GalaxyIdentity;
-            string value = "Seed " + galaxy.GalaxySeed.ToString("D8", CultureInfo.InvariantCulture) +
-                " | " + galaxy.RequestedStarCount.ToString(CultureInfo.InvariantCulture) +
-                " stars | resources x" + identity.ResourceMultiplier.ToString(
-                    "G29",
-                    CultureInfo.InvariantCulture) +
-                " | " + (identity.CombatMode == CombatMode.Peace ? "Peace" : "Combat");
-            return Bound(value, MaximumLineCharacters);
         }
 
         private static string? DarkFogStatusLine(RuntimeDarkFogOccupation? occupation)

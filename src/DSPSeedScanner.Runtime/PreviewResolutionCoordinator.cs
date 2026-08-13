@@ -47,6 +47,7 @@ namespace DSPSeedScanner.Runtime
         public NormalizedHomePlanetTopology? HomePlanetTopology { get; private set; }
         public RuntimeSystemCandidates? SystemCandidates { get; private set; }
         public RuntimeDarkFogOccupation? DarkFogOccupation { get; private set; }
+        public HomeSystemBodyInventory? HomeSystemBodyInventory { get; private set; }
         public PreviewGenerationIdentity? CachedPayloadSourceIdentity { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
@@ -94,6 +95,11 @@ namespace DSPSeedScanner.Runtime
         internal void SetDarkFogOccupation(RuntimeDarkFogOccupation? occupation)
         {
             DarkFogOccupation = occupation;
+        }
+
+        internal void SetHomeSystemBodyInventory(HomeSystemBodyInventory? inventory)
+        {
+            HomeSystemBodyInventory = inventory;
         }
 
         internal void SetCachedPayloadSourceIdentity(PreviewGenerationIdentity? identity)
@@ -164,6 +170,7 @@ namespace DSPSeedScanner.Runtime
             currentAttempt.SetHomePlanetTopology(preview.HomePlanetTopology);
             currentAttempt.SetSystemCandidates(preview.SystemCandidates);
             currentAttempt.SetDarkFogOccupation(preview.DarkFogOccupation);
+            currentAttempt.SetHomeSystemBodyInventory(preview.HomeSystemBodyInventory);
             if (preview.Status != RuntimeScanStatus.Success || preview.Fingerprint == null)
             {
                 Finish(currentAttempt, preview.Status, preview.Code, preview.Message);

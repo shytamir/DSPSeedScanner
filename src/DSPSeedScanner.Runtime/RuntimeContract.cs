@@ -329,7 +329,8 @@ namespace DSPSeedScanner.Runtime
             IEnumerable<NormalizedSystemDistance> systemDistances,
             string? unknownEnumType = null,
             int? unknownEnumValue = null,
-            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null)
+            IEnumerable<RuntimeSystemDisplay>? systemDisplays = null,
+            HomeSystemBodyInventory? homeSystemBodyInventory = null)
         {
             if (String.IsNullOrWhiteSpace(birthSystemIdentifier))
                 throw new ArgumentException("Birth system identifier is required.", nameof(birthSystemIdentifier));
@@ -350,6 +351,7 @@ namespace DSPSeedScanner.Runtime
                 .SingleOrDefault(system => system.IsBirthSystem);
             this.birthPlanetAttributions = birthSystem?.BirthPlanets?.ToArray();
             HomePlanetTopology = birthSystem?.HomePlanetTopology;
+            HomeSystemBodyInventory = homeSystemBodyInventory;
             if (this.systemDisplays.Select(value => value.Identifier)
                 .Distinct(StringComparer.Ordinal).Count() != this.systemDisplays.Length)
             {
@@ -383,6 +385,7 @@ namespace DSPSeedScanner.Runtime
                 : Array.AsReadOnly(
                     (NormalizedBirthPlanetEvidence[])birthPlanetAttributions.Clone());
         public NormalizedHomePlanetTopology? HomePlanetTopology { get; }
+        public HomeSystemBodyInventory? HomeSystemBodyInventory { get; }
         public string? UnknownEnumType { get; }
         public int? UnknownEnumValue { get; }
     }

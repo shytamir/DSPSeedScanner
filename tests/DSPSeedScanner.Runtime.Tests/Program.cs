@@ -73,6 +73,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("automatic resolution terminal failures never retry", AutomaticResolutionFailuresNeverRetry),
                 ("panel maps every operational state within text bounds", PanelMapsEveryOperationalState),
                 ("panel corners map clockwise and avoid border centers", PanelCornersMapClockwise),
+                ("statistics panel mirrors the authoritative conclusion layout", StatisticsPanelMirrorsConclusionLayout),
+                ("home system body inventory is immutable complete and ordered", HomeSystemBodyInventoryIsImmutableCompleteAndOrdered),
+                ("cluster statistics are keyed ordered and sectioned", ClusterStatisticsAreKeyedOrderedAndSectioned),
+                ("cluster locations format AU and preserve stable ties", ClusterLocationsFormatAuAndPreserveStableTies),
+                ("statistics panel follows preview lifecycle independently", StatisticsPanelFollowsPreviewLifecycleIndependently),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
@@ -2551,6 +2556,297 @@ namespace DSPSeedScanner.Runtime.Tests
                 bottomLeft.Bottom);
         }
 
+        private static void StatisticsPanelMirrorsConclusionLayout()
+        {
+            foreach ((int width, int height) in new[]
+            {
+                (1920, 1080),
+                (2560, 1440),
+                (3840, 2160)
+            })
+            {
+                foreach (PreviewPanelCorner corner in Enum.GetValues(
+                    typeof(PreviewPanelCorner)))
+                {
+                    PreviewPanelPlacement placement = PreviewPanelLayout.PlacePanelPair(
+                        corner,
+                        width,
+                        height);
+                    Equal(
+                        PreviewPanelLayout.PlaceConclusion(corner, width, height),
+                        placement.ConclusionBounds);
+                    Equal(
+                        PreviewPanelLayout.HorizontalOpposite(corner),
+                        placement.StatisticsCorner);
+                    Equal(placement.ConclusionBounds.Y, placement.StatisticsBounds.Y);
+                    Equal(placement.ConclusionBounds.Width, placement.StatisticsBounds.Width);
+                    Equal(placement.ConclusionBounds.Height, placement.StatisticsBounds.Height);
+                    Equal(
+                        width - placement.ConclusionBounds.Right,
+                        placement.StatisticsBounds.X);
+                    False(placement.ConclusionAnchorsRight == placement.StatisticsAnchorsRight);
+                    Equal(
+                        corner == PreviewPanelCorner.TopLeft ||
+                            corner == PreviewPanelCorner.TopRight,
+                        placement.AnchorsTop);
+                    False(Overlaps(
+                        placement.ConclusionBounds,
+                        placement.StatisticsBounds));
+
+                    PreviewPanelPlacement compact = PreviewPanelLayout.PlacePanelPair(
+                        corner,
+                        width,
+                        height,
+                        false);
+                    Equal(
+                        PreviewPanelLayout.Place(corner, width, height),
+                        compact.ConclusionBounds);
+                    Equal(compact.ConclusionBounds.Y, compact.StatisticsBounds.Y);
+                    Equal(compact.ConclusionBounds.Width, compact.StatisticsBounds.Width);
+                    Equal(compact.ConclusionBounds.Height, compact.StatisticsBounds.Height);
+                    Equal(width - compact.ConclusionBounds.Right, compact.StatisticsBounds.X);
+                    False(Overlaps(compact.ConclusionBounds, compact.StatisticsBounds));
+                }
+            }
+        }
+
+        private static void HomeSystemBodyInventoryIsImmutableCompleteAndOrdered()
+        {
+            var source = new List<RuntimeHomeSystemBodyEvidence>
+            {
+                HomeBody(104, "Alpha IV", 4, 2, 102, 3),
+                HomeBody(101, "Alpha I", 1, 0, null, 0),
+                HomeBody(103, "Alpha III", 3, 2, 102, 2),
+                HomeBody(102, "Alpha II", 2, 0, null, 1),
+                HomeBody(105, "Alpha V", 5, 0, null, 4)
+            };
+            HomeSystemBodyInventory? projected = HomeSystemBodyInventory.Project(
+                "home-system",
+                source);
+            True(projected != null);
+            HomeSystemBodyInventory inventory = projected!;
+            Equal("101,102,103,104,105", String.Join(",", inventory.Bodies.Select(
+                value => value.BodyId)));
+            Equal("Alpha I,Alpha II,Alpha III,Alpha IV,Alpha V", String.Join(",",
+                inventory.Bodies.Select(value => value.DisplayDesignation)));
+            Equal(HomeSystemBodyOrbitKind.Primary, inventory.Bodies[0].OrbitKind);
+            Equal(HomeSystemBodyOrbitKind.Primary, inventory.Bodies[1].OrbitKind);
+            Equal(HomeSystemBodyOrbitKind.Satellite, inventory.Bodies[2].OrbitKind);
+            Equal(102, inventory.Bodies[2].ParentBodyId);
+            Equal(HomeSystemBodyOrbitKind.Satellite, inventory.Bodies[3].OrbitKind);
+            Equal(102, inventory.Bodies[3].ParentBodyId);
+            Equal(HomeSystemBodyOrbitKind.Primary, inventory.Bodies[4].OrbitKind);
+            source.Clear();
+            Equal(5, inventory.Bodies.Count);
+            HomeSystemBody[] copy = inventory.Bodies.ToArray();
+            copy[0] = copy[4];
+            Equal(101, inventory.Bodies[0].BodyId);
+
+            True(HomeSystemBodyInventory.Project(
+                "home-system",
+                new[]
+                {
+                    HomeBody(101, "Alpha I", 1, 0, null, 0),
+                    HomeBody(102, "Alpha II", 2, 0, null, 1)
+                }) != null);
+            True(HomeSystemBodyInventory.Project(
+                "home-system",
+                new[]
+                {
+                    HomeBody(101, "Alpha I", 1, 0, null, 0),
+                    HomeBody(102, "Alpha II", 2, 0, null, 1),
+                    HomeBody(103, "Alpha III", 3, 2, 102, 2)
+                }) != null);
+            True(HomeSystemBodyInventory.Project(
+                "home-system",
+                new[]
+                {
+                    HomeBody(101, "Alpha I", 1, 0, null, 0),
+                    HomeBody(102, "Alpha II", 2, 0, null, 1),
+                    HomeBody(103, "Alpha III", 3, 1, 101, 2),
+                    HomeBody(104, "Alpha IV", 4, 2, 102, 3)
+                }) != null);
+            True(HomeSystemBodyInventory.Project(
+                "home-system",
+                new[] { HomeBody(103, "Alpha III", 3, 2, 999, 0) }) == null);
+        }
+
+        private static void ClusterStatisticsAreKeyedOrderedAndSectioned()
+        {
+            PreviewClusterStatistics empty = new PreviewClusterStatistics();
+            Equal(0, empty.Items.Count);
+            Equal(0, empty.Sections().Count);
+
+            PreviewClusterStatistics values = empty
+                .With(new PreviewStatisticItem("plain", "Plain", 5))
+                .With(new PreviewStatisticItem(
+                    "rare-2", "Rare two", 2, "rare", "Rare resources", 1))
+                .With(new PreviewStatisticItem(
+                    "star-1", "Star one", 1, "stars", "Notable stars", 2))
+                .With(new PreviewStatisticItem(
+                    "rare-1", "Rare one", 1, "rare", "Rare resources", 1));
+            Equal("plain,rare-1,rare-2,star-1", String.Join(",", values.Items.Select(
+                value => value.Key)));
+            Equal(3, values.Sections().Count);
+            True(values.Sections()[0].Title == null);
+            Equal("Rare resources", values.Sections()[1].Title);
+            Equal("rare-1,rare-2", String.Join(",", values.Sections()[1].Items.Select(
+                value => value.Key)));
+            Equal("Notable stars", values.Sections()[2].Title);
+
+            PreviewClusterStatistics replaced = values.With(
+                new PreviewStatisticItem(
+                    "rare-1", "Rare one replaced", 3, "rare", "Rare resources", 1));
+            Equal(4, replaced.Items.Count);
+            Equal("Rare one replaced", replaced.Items.Single(value =>
+                value.Key == "rare-1").Text);
+            Equal(4, values.Items.Count);
+            Equal("Rare one", values.Items.Single(value => value.Key == "rare-1").Text);
+            bool conflictingSectionRejected = false;
+            try
+            {
+                values.With(new PreviewStatisticItem(
+                    "bad", "Bad", 1, "rare", "Different title", 1));
+            }
+            catch (ArgumentException)
+            {
+                conflictingSectionRejected = true;
+            }
+            True(conflictingSectionRejected);
+        }
+
+        private static void ClusterLocationsFormatAuAndPreserveStableTies()
+        {
+            Equal("0 AU", DspAuFormatter.Format(0m));
+            Equal("0.0123 AU", DspAuFormatter.Format(0.012345m));
+            Equal("1.23 AU", DspAuFormatter.Format(1.2345m));
+            Equal("12.3 AU", DspAuFormatter.Format(12.345m));
+            Equal("123 AU", DspAuFormatter.Format(123.45m));
+            Equal("1230 AU", DspAuFormatter.Format(1234.5m));
+
+            ClusterBodyLocation first = Location("body-2", "Beta II", "beta", 12.345m, 2);
+            ClusterBodyLocation second = Location("body-1", "Beta I", "beta", 12.345m, 1);
+            ClusterBodyLocation home = Location("home-1", "Alpha I", "home", 0m, 3);
+            IReadOnlyList<ClusterBodyLocation> ordered = DspAuFormatter.StableOrder(
+                new[] { first, home, second });
+            Equal("home-1,body-1,body-2", String.Join(",", ordered.Select(
+                value => value.BodyIdentifier)));
+            Equal("Beta I", ordered[1].DisplayDesignation);
+            Equal("beta", ordered[1].HostSystemIdentifier);
+            Equal("12.3 AU", ordered[1].FormattedDistance);
+        }
+
+        private static void StatisticsPanelFollowsPreviewLifecycleIndependently()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var gateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(
+                        homeSystemBodyInventory: HomeSystemBodyInventory.Project(
+                            "1",
+                            new[]
+                            {
+                                HomeBody(101, "Alpha I", 1, 0, null, 0),
+                                HomeBody(102, "Alpha II", 2, 0, null, 1),
+                                HomeBody(103, "Alpha III", 3, 2, 102, 2)
+                            }))
+                };
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(gateway, gate),
+                    new CompleteClusterRawCoordinator(
+                        new FakeCompleteClusterGateway(),
+                        gate),
+                    new CompleteClusterConclusionCache(path));
+                var conclusions = new PreviewPanelController();
+                var statistics = new PreviewStatisticsPanelController();
+
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt first = resolver.CurrentPublishedAttempt!;
+                conclusions.BeginSession(first.Session.SessionId, PreviewPanelCorner.BottomRight, 0);
+                conclusions.Update(first, PreviewPanelCorner.BottomRight, 1);
+                PreviewPanelView conclusionBefore = conclusions.Current;
+                PreviewConclusionPresentation conclusionDocument = conclusions.Conclusions!;
+                statistics.BeginSession(first.Session);
+                True(statistics.Update(first));
+                PreviewStatisticsDocument firstDocument = statistics.Current!;
+                Equal(PreviewStatisticsDocument.HomeSystemTitle, "Home system");
+                Equal(PreviewStatisticsDocument.ClusterTitle, "Cluster");
+                Equal(conclusionDocument.IdentityLine, firstDocument.IdentityLine);
+                Equal(3, firstDocument.HomeSystem!.Bodies.Count);
+                Equal(0, firstDocument.Cluster.Items.Count);
+                True(statistics.SetScrollPosition(first.Session.SessionId, 0, 74));
+                Equal(74.0, statistics.ScrollY);
+
+                gateway.Snapshot = Snapshot(
+                    homeSystemBodyInventory: HomeSystemBodyInventory.Project(
+                        "1",
+                        new[] { HomeBody(201, "Gamma I", 1, 0, null, 0) }));
+                resolver.ObserveCompletedLoad(
+                    2,
+                    PreviewIdentity(73_339_583),
+                    RequestForSeed(73_339_583));
+                PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
+                False(statistics.Update(first));
+                True(ReferenceEquals(firstDocument, statistics.Current));
+                statistics.BeginSession(replacement.Session);
+                Equal(0.0, statistics.ScrollY);
+                True(statistics.Update(replacement));
+                Equal(1, statistics.Current!.HomeSystem!.Bodies.Count);
+                Equal(201, statistics.Current.HomeSystem.Bodies[0].BodyId);
+                False(statistics.Hide(first.Session.SessionId));
+                True(statistics.Current != null);
+
+                PreviewResolutionAttempt? retired = resolver.ExitPreview();
+                True(retired != null);
+                True(statistics.Hide(replacement.Session.SessionId));
+                True(statistics.Current == null);
+                False(statistics.Update(replacement));
+                True(ReferenceEquals(conclusionBefore, conclusions.Current));
+                True(ReferenceEquals(conclusionDocument, conclusions.Conclusions));
+            });
+        }
+
+        private static bool Overlaps(PreviewPanelBounds first, PreviewPanelBounds second)
+        {
+            return first.X < second.Right && first.Right > second.X &&
+                first.Y < second.Bottom && first.Bottom > second.Y;
+        }
+
+        private static RuntimeHomeSystemBodyEvidence HomeBody(
+            int bodyId,
+            string displayDesignation,
+            int planetNumber,
+            int orbitAround,
+            int? parentBodyId,
+            int stableGameOrder)
+        {
+            return new RuntimeHomeSystemBodyEvidence(
+                bodyId,
+                displayDesignation,
+                planetNumber,
+                orbitAround,
+                parentBodyId,
+                stableGameOrder);
+        }
+
+        private static ClusterBodyLocation Location(
+            string bodyIdentifier,
+            string displayDesignation,
+            string systemIdentifier,
+            decimal distanceAu,
+            int stableGameOrder)
+        {
+            return new ClusterBodyLocation(
+                bodyIdentifier,
+                displayDesignation,
+                systemIdentifier,
+                distanceAu,
+                stableGameOrder);
+        }
+
         private static void PanelRejectsObsoleteSessions()
         {
             WithTemporaryDirectory(path =>
@@ -3521,8 +3817,18 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(PreviewResolutionAttempt),
                 typeof(PreviewResolutionCoordinator),
                 typeof(PreviewPanelBounds),
+                typeof(PreviewPanelPlacement),
                 typeof(PreviewPanelView),
                 typeof(PreviewPanelController),
+                typeof(RuntimeHomeSystemBodyEvidence),
+                typeof(HomeSystemBody),
+                typeof(HomeSystemBodyInventory),
+                typeof(ClusterBodyLocation),
+                typeof(PreviewStatisticItem),
+                typeof(PreviewStatisticSubsection),
+                typeof(PreviewClusterStatistics),
+                typeof(PreviewStatisticsDocument),
+                typeof(PreviewStatisticsPanelController),
                 typeof(PresentedConclusionCard),
                 typeof(PresentedContextGroup),
                 typeof(PreviewConclusionPresentation),
@@ -3835,7 +4141,8 @@ namespace DSPSeedScanner.Runtime.Tests
             int otherInitialHiveCount = 39,
             int? missingHiveSystem = null,
             decimal primaryDistanceLy = 2m,
-            bool includeHomePlanetTopology = true)
+            bool includeHomePlanetTopology = true,
+            HomeSystemBodyInventory? homeSystemBodyInventory = null)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -3901,7 +4208,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     .Select(index => new RuntimeSystemDisplay(
                         index.ToString(),
                         index == 1 ? "Alpha" : "Star " + index,
-                        index == 2 ? "O type star" : "G type star")));
+                        index == 2 ? "O type star" : "G type star")),
+                homeSystemBodyInventory: homeSystemBodyInventory);
         }
 
         private static NormalizedBirthPlanetEvidence SolidAttribution(

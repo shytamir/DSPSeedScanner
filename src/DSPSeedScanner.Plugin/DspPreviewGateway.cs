@@ -141,6 +141,20 @@ namespace DSPSeedScanner.Plugin
                 true);
             var generatedPlanets = new HashSet<PlanetData>(
                 galaxy.stars.SelectMany(star => star.planets));
+            HomeSystemBodyInventory? homeSystemBodyInventory =
+                HomeSystemBodyInventory.Project(
+                    birthSystemIdentifier,
+                    birthStar.planets.Select((planet, stableGameOrder) =>
+                        new RuntimeHomeSystemBodyEvidence(
+                            planet.id,
+                            planet.displayName,
+                            planet.number,
+                            planet.orbitAround,
+                            planet.orbitAroundPlanet != null &&
+                                generatedPlanets.Contains(planet.orbitAroundPlanet)
+                                ? planet.orbitAroundPlanet.id
+                                : null,
+                            stableGameOrder)));
             NormalizedHomePlanetTopology? homePlanetTopology =
                 PreviewHomeTopologyNormalizer.Normalize(
                     birthSystemIdentifier,
@@ -187,7 +201,8 @@ namespace DSPSeedScanner.Plugin
                 galaxy.starCount,
                 systems,
                 distances,
-                systemDisplays: displays);
+                systemDisplays: displays,
+                homeSystemBodyInventory: homeSystemBodyInventory);
         }
 
         private static NormalizedSystemEvidence NormalizeSystem(

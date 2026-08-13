@@ -2,8 +2,8 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-02: Reuse results across the Dark Fog
-toggle](#feed-02-reuse-results-across-the-dark-fog-toggle).
+**Active user story:** [FEED-03: Establish the statistics
+panel](#feed-03-establish-the-statistics-panel).
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -11,9 +11,11 @@ Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
 This active roadmap decomposes every independently valuable request in the
 issue and records the approved presentation boundary for implementation.
 Urgency describes how soon the work warrants attention; importance describes
-its expected effect on product trust or player value. FEED-01 was accepted;
-FEED-02 passed its technical gate and remains active pending owner acceptance.
-Later stories remain inactive behind their documented gates.
+its expected effect on product trust or player value. FEED-01 and FEED-02 were
+accepted, `ready-for-new-panel` passed, and the **Clean slate for panel work**
+milestone was established. FEED-03 passed its technical gate and remains active
+pending owner acceptance. Later stories remain inactive behind their
+documented gates.
 
 ## Source coverage
 
@@ -75,6 +77,10 @@ acceptance gate does not by itself pass a phase gate or milestone. FEED-REJ-01
 and FEED-REJ-02 remain tabled and unauthorized.
 
 ### `ready-for-new-panel`
+
+**State:** Passed on 2026-08-13. The owner accepted FEED-01 and FEED-02 with no
+unresolved residual or blocking issue, establishing the **Clean slate for
+panel work** milestone.
 
 The pre-new-panel phase is complete when FEED-01 and FEED-02 have passed their
 acceptance gates. Their conclusion-copy, topology, reuse-key, active-preview
@@ -213,8 +219,7 @@ by this story's automated acceptance gate and was not performed.
 
 ## FEED-02: Reuse results across the Dark Fog toggle
 
-**State:** Acceptance gate passed on 2026-08-13; active pending owner
-acceptance.
+**State:** Accepted on 2026-08-13.
 
 **Category:** feature-request
 
@@ -285,7 +290,8 @@ was not performed.
 
 ## FEED-03: Establish the statistics panel
 
-**State:** Pending; inactive until `ready-for-new-panel` passes.
+**State:** Acceptance gate passed on 2026-08-13; active pending owner
+acceptance.
 
 **Category:** feature-request
 
@@ -354,6 +360,44 @@ independent placement configuration, resizing or re-anchoring the conclusion
 panel, cluster enumeration or candidate selection, shared renderer state, a
 generic panel framework, nested scrolling, caching, or installed-game layout
 approval.
+
+**Implemented:** The plugin now renders an independently owned statistics
+document opposite the configured conclusion panel using a horizontal reflection
+of the one authoritative conclusion layout. It displays the active preview
+identity and distinct empty `Home system` and `Cluster` containers in its own
+scroll flow. Lightweight preview normalization supplies one immutable,
+session-owned home-system body inventory. Runtime presentation contracts also
+provide bounded keyed cluster items with optional ordered subsections and a
+shared immutable cluster-body location with DSP-AU formatting for later
+consumers; no statistic line was added.
+
+**Acceptance evidence:**
+
+- all four configured corner pairings at 1080p, 1440p, and 4K preserved the
+  conclusion panel's `y`, width, height, and vertical anchor while reflecting
+  `x` and the horizontal anchor without overlap or a second setting;
+- inventory fixtures covered primary planets, satellites of different
+  primaries, and primaries with and without satellites, preserving every body
+  exactly once in stable game order with its resolved parent;
+- cluster-document fixtures covered untitled items, multiple ordered titled
+  subsections, multiple items per subsection, empty-subsection omission, stable
+  item order, bounded keyed replacement, and rejection of conflicting headings;
+- location fixtures covered separate bodies in one system, equal-distance
+  stable-order ties, `0 AU`, and three-significant-figure DSP-AU formatting
+  without introducing cluster enumeration or candidate selection;
+- lifecycle fixtures proved new-session scroll reset, inventory replacement,
+  exact exit retirement, stale-session rejection, and independent conclusion
+  document and state ownership; existing conclusion snapshots remained
+  unchanged; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 Core checks passed, and all 75 Runtime checks passed.
+
+**Produced at this gate:** An independent statistics presentation document,
+controller, renderer, and scroll state; horizontally mirrored panel geometry;
+empty headed containers; session-owned home-body inventory; bounded cluster and
+subsection contracts; a common cluster-location/AU value; and focused acceptance
+fixtures. Installed-game visual layout approval remains explicitly outside this
+story and was not performed.
 
 ## FEED-04: Share the home-planet title designation
 

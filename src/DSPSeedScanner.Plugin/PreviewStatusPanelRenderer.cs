@@ -80,10 +80,11 @@ namespace DSPSeedScanner.Plugin
             int screenWidth,
             int screenHeight)
         {
-            PreviewPanelBounds bounds = PreviewPanelLayout.Place(
+            PreviewPanelBounds bounds = PreviewPanelLayout.PlacePanelPair(
                 view.Corner,
                 screenWidth,
-                screenHeight);
+                screenHeight,
+                false).ConclusionBounds;
             string title = identity ?? (view.Spinner.HasValue
                 ? view.Spinner.Value + "  " + view.Title
                 : view.Title);
@@ -143,10 +144,10 @@ namespace DSPSeedScanner.Plugin
             int screenWidth,
             int screenHeight)
         {
-            PreviewPanelBounds bounds = PreviewPanelLayout.PlaceConclusion(
+            PreviewPanelBounds bounds = PreviewPanelLayout.PlacePanelPair(
                 view.Corner,
                 screenWidth,
-                screenHeight);
+                screenHeight).ConclusionBounds;
             GUI.Box(
                 new Rect(bounds.X, bounds.Y, bounds.Width, bounds.Height),
                 GUIContent.none,

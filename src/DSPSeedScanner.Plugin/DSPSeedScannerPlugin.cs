@@ -36,6 +36,10 @@ namespace DSPSeedScanner.Plugin
         private readonly PreviewPanelController previewPanel = new PreviewPanelController();
         private readonly PreviewStatusPanelRenderer previewPanelRenderer =
             new PreviewStatusPanelRenderer();
+        private readonly PreviewStatisticsPanelController statisticsPanel =
+            new PreviewStatisticsPanelController();
+        private readonly PreviewStatisticsPanelRenderer statisticsPanelRenderer =
+            new PreviewStatisticsPanelRenderer();
         private ConfigEntry<int>? previewPanelCorner;
         private Harmony? harmony;
         private long previewLoadSequence;
@@ -115,6 +119,7 @@ namespace DSPSeedScanner.Plugin
                     visibleAttempt,
                     ConfiguredPanelCorner(),
                     previewPanelSpinnerStep);
+                statisticsPanel.Update(visibleAttempt);
             }
 
             string? output = Environment.GetEnvironmentVariable("DSP_SEED_SCANNER_PROBE_OUTPUT");
@@ -180,6 +185,7 @@ namespace DSPSeedScanner.Plugin
         {
             previewResolution?.Dispose();
             previewPanel.HideCurrent();
+            statisticsPanel.HideCurrent();
             PreviewUiPatches.Plugin = null;
             harmony?.UnpatchSelf();
         }
@@ -191,6 +197,21 @@ namespace DSPSeedScanner.Plugin
                 previewPanel.Conclusions,
                 Screen.width,
                 Screen.height);
+            statisticsPanelRenderer.Draw(
+                statisticsPanel,
+                ConfiguredPanelCorner(),
+                HasConclusionDocument(previewPanel.Conclusions),
+                Screen.width,
+                Screen.height);
+        }
+
+        private static bool HasConclusionDocument(
+            PreviewConclusionPresentation? conclusions)
+        {
+            return conclusions != null && conclusions.ImmediateGroups
+                .Concat(conclusions.DetailGroups)
+                .SelectMany(group => group.Cards)
+                .Any();
         }
 
         internal void OnPreviewLoadCompleted(GameDesc descriptor)
@@ -241,11 +262,13 @@ namespace DSPSeedScanner.Plugin
                         transition.CurrentSession.SessionId,
                         ConfiguredPanelCorner(),
                         previewPanelSpinnerStep);
+                    statisticsPanel.BeginSession(transition.CurrentSession);
                 }
             }
             catch (RuntimeFilesystemException exception)
             {
                 previewResolution.ExitPreview();
+                statisticsPanel.HideCurrent();
                 previewPanel.ShowUnavailable(
                     sessionId,
                     ConfiguredPanelCorner(),
@@ -255,6 +278,7 @@ namespace DSPSeedScanner.Plugin
             catch (Exception exception)
             {
                 previewResolution.ExitPreview();
+                statisticsPanel.HideCurrent();
                 previewPanel.ShowUnavailable(
                     sessionId,
                     ConfiguredPanelCorner(),
@@ -296,6 +320,7 @@ namespace DSPSeedScanner.Plugin
         {
             previewResolution?.ExitPreview();
             previewPanel.HideCurrent();
+            statisticsPanel.HideCurrent();
         }
 
         private PreviewPanelCorner ConfiguredPanelCorner()
