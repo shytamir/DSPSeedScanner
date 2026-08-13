@@ -11,7 +11,10 @@ accepted; `ready-for-panel-population` passed, establishing the **Panel renders
 with all features enabled even if not yet consumed** milestone. FEED-05 was
 accepted. FEED-06 is the sole active story and is undergoing corrective owner
 validation after its first interactive test exposed a hosted-reference linkage
-defect and empty home-system rows. The statistics panel now presents every
+defect and an invalid global planet-number uniqueness assumption. Both narrow
+corrections have direct-build validation; the generated CI artifact and the
+home-system population phase gate still await human validation. The statistics
+panel now presents every
 home-system body in stable game order with giant type, gas products, or
 available theme and exact Solar/Wind facts; after complete coverage or cache
 reuse, solid rows also identify their present ores. FEED-07 and later stories

@@ -169,7 +169,9 @@ namespace DSPSeedScanner.Runtime
             RuntimeHomeSystemBodyEvidence[] values = evidence.ToArray();
             if (values.Length == 0 ||
                 values.Select(value => value.BodyId).Distinct().Count() != values.Length ||
-                values.Select(value => value.PlanetNumber).Distinct().Count() != values.Length ||
+                values.Where(value => value.OrbitAround == 0)
+                    .Select(value => value.PlanetNumber).Distinct().Count() !=
+                    values.Count(value => value.OrbitAround == 0) ||
                 values.Select(value => value.StableGameOrder).Distinct().Count() != values.Length)
             {
                 return null;

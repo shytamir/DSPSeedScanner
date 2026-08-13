@@ -2691,6 +2691,19 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(
                 102,
                 unresolvedReference!.Bodies.Single(body => body.BodyId == 103).ParentBodyId);
+            HomeSystemBodyInventory? repeatedMoonNumbers =
+                HomeSystemBodyInventory.Project(
+                    "home-system",
+                    new[]
+                    {
+                        HomeBody(101, "Menkent I", 1, 0, null, 0),
+                        HomeBody(102, "Menkent II", 2, 0, null, 1),
+                        HomeBody(103, "Menkent III", 1, 2, 102, 2),
+                        HomeBody(104, "Menkent IV", 2, 2, 102, 3)
+                    });
+            True(repeatedMoonNumbers != null);
+            Equal("101,102,103,104", String.Join(",", repeatedMoonNumbers!.Bodies.Select(
+                body => body.BodyId)));
             True(HomeSystemBodyInventory.Project(
                 "home-system",
                 new[] { HomeBody(103, "Alpha III", 3, 2, 999, 0) }) == null);

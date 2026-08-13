@@ -334,7 +334,12 @@ distance from home, and stable game order. Provide its common DSP-AU formatter:
 `0 AU` for the home system and three significant figures otherwise, without
 changing measurement precision. Later stories construct locations only for
 their selected results; the scaffold does not enumerate or retain the cluster.
-Do not add body, subsection, or statistic lines.
+Do not add body, subsection, or statistic lines. Treat DSP planet numbers by
+their generated scope: primary numbers identify star-orbiting bodies, while
+moon display ordinals may repeat primary or other moon numbers. Resolve a
+satellite through its `orbitAround` primary number and use an available parent
+object reference only to corroborate that relationship; body ID remains the
+inventory identity.
 
 **Acceptance gate:** Layout fixtures cover all four configured conclusion
 corners and prove the statistics panel uses the horizontally opposite corner
@@ -344,10 +349,13 @@ prove the paired panels do not overlap. The calculation reuses one
 authoritative conclusion layout and introduces no second corner setting. Both
 empty subcontainers are visually distinct and headed exactly `Home system` and
 `Cluster`. Inventory fixtures cover primary planets, satellites belonging to
-different primaries, and giants with and without satellites. Every home-system
-body appears exactly once in stable game order with its correct identity and
-parent, and the inventory is replaced or retired with its preview session. The
-empty cluster collection accepts independently keyed presentation items in
+different primaries, giants with and without satellites, repeated
+primary/moon display numbers, and repeated moon ordinals. Primary numbers
+remain unambiguous; repeated moon numbers do not reject the inventory. Every
+home-system body appears exactly once in stable game order with its correct
+body-ID identity and parent, and the inventory is replaced or retired with its
+preview session. The empty cluster collection accepts independently keyed
+presentation items in
 stable order and replacement does not duplicate an item. Subsection fixtures
 cover untitled items, multiple titled subsections, several items in one
 subsection, stable ordering, empty-section omission, and keyed replacement
@@ -384,8 +392,9 @@ consumers; no statistic line was added.
   conclusion panel's `y`, width, height, and vertical anchor while reflecting
   `x` and the horizontal anchor without overlap or a second setting;
 - inventory fixtures covered primary planets, satellites of different
-  primaries, and primaries with and without satellites, preserving every body
-  exactly once in stable game order with its resolved parent;
+  primaries, primaries with and without satellites, and DSP's separate primary
+  and moon number sequences, preserving every body exactly once in stable game
+  order with its resolved parent;
 - cluster-document fixtures covered untitled items, multiple ordered titled
   subsections, multiple items per subsection, empty-subsection omission, stable
   item order, bounded keyed replacement, and rejection of conflicting headings;
@@ -601,12 +610,17 @@ gate and was not performed.
 **Corrective finding:** The first interactive roadmap test found that the
 hosted artifact referenced `ThemeProtoSet.dataArray`, while DSP declares that
 field on `ProtoSet<ThemeProto>`, causing immediate scans to fail. Direct-build
-testing also showed empty rows when DSP omitted the optional parent object
-reference. The hosted compile contract now mirrors the real declaring type,
-and home-body projection resolves the parent from the authoritative
-`orbitAround` planet number while using an available object reference only as
-corroboration. Owner validation of the corrected hosted artifact remains
-pending.
+testing then isolated empty rows to an invalid system-wide uniqueness rule for
+`PlanetData.number`: DSP independently numbers primaries and each giant's
+moons, so valid values repeat. The hosted compile contract now mirrors the real
+declaring type. Home-body projection requires uniqueness only among primary
+numbers, retains body ID as identity, resolves satellites from their
+`orbitAround` primary number, and uses an available parent object reference
+only as corroboration. Fixtures preserve the observed Menkent pattern of
+primary numbers `1, 2` and moon numbers `1, 2` without weakening primary-parent
+validation. The scan regression, cache/replacement lifecycle, and direct-build
+home rows passed interactive checks; owner validation of the corrected hosted
+artifact and the home-system population phase gate remains pending.
 
 ## FEED-07: Show nearest rare-resource access
 
