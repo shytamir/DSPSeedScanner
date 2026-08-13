@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using BepInEx;
@@ -55,7 +54,11 @@ namespace DSPSeedScanner.Plugin
             return new RuntimeFingerprint(
                 GameConfig.gameVersion.ToFullString(),
                 UniverseGen.algoVersion,
-                HashAssembly(typeof(UniverseGen).Assembly.Location),
+                RuntimeFileFingerprint.FirstReadableSha256(new[]
+                {
+                    typeof(UniverseGen).Assembly.Location,
+                    Path.Combine(Paths.ManagedPath, "Assembly-CSharp.dll")
+                }),
                 themes,
                 ConclusionDefinition.DefinitionVersion,
                 ConclusionDefinition.ContractVersion,
@@ -349,21 +352,11 @@ namespace DSPSeedScanner.Plugin
             return null;
         }
 
-        private static string HashAssembly(string path)
-        {
-            using (FileStream stream = File.OpenRead(path))
-            using (SHA256 hash = SHA256.Create())
-                return BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", String.Empty);
-        }
-
         private static string[] CapturePatcherInventory()
         {
-            string path = Paths.PatcherPluginPath;
-            if (!Directory.Exists(path))
-                return Array.Empty<string>();
-            return Directory.GetFiles(path, "*.dll", SearchOption.TopDirectoryOnly)
-                .OrderBy(file => Path.GetFileName(file), StringComparer.OrdinalIgnoreCase)
-                .Select(file => Path.GetFileName(file) + ":" + HashAssembly(file))
+            return RuntimeFileFingerprint.Inventory(
+                    Paths.PatcherPluginPath,
+                    "*.dll")
                 .ToArray();
         }
 
@@ -387,7 +380,8 @@ namespace DSPSeedScanner.Plugin
             var bytes = new List<byte>();
             AddMethod(bytes, preview);
             AddMethod(bytes, raw);
-            using (SHA256 hash = SHA256.Create())
+            using (System.Security.Cryptography.SHA256 hash =
+                System.Security.Cryptography.SHA256.Create())
             {
                 return BitConverter.ToString(hash.ComputeHash(bytes.ToArray()))
                     .Replace("-", String.Empty);

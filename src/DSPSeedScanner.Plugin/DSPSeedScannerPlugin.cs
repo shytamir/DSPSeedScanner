@@ -175,6 +175,7 @@ namespace DSPSeedScanner.Plugin
             if (previewGateway == null || previewResolution == null)
                 return;
 
+            long sessionId = checked(++previewLoadSequence);
             try
             {
                 decimal initialColonize = Convert.ToDecimal(descriptor.combatSettings.initialColonize);
@@ -206,7 +207,7 @@ namespace DSPSeedScanner.Plugin
                     request.InitialColonize,
                     request.MaxDensity);
                 PreviewLoadTransition transition = previewResolution.ObserveCompletedLoad(
-                    checked(++previewLoadSequence),
+                    sessionId,
                     identity,
                     request);
                 if (transition.Disposition == PreviewLoadDisposition.SessionCreated &&
@@ -222,7 +223,10 @@ namespace DSPSeedScanner.Plugin
             catch (Exception exception)
             {
                 previewResolution.ExitPreview();
-                previewPanel.HideCurrent();
+                previewPanel.ShowUnavailable(
+                    sessionId,
+                    ConfiguredPanelCorner(),
+                    "Runtime identity could not be read");
                 Logger.LogError("Completed preview load could not be resolved: " + exception);
             }
         }

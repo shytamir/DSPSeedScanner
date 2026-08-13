@@ -423,6 +423,27 @@ namespace DSPSeedScanner.Runtime
             return true;
         }
 
+        public void ShowUnavailable(
+            long sessionId,
+            PreviewPanelCorner corner,
+            string detail)
+        {
+            ValidateFailureDetail(detail);
+            activeSessionId = sessionId;
+            Current = new PreviewPanelView(
+                true,
+                sessionId,
+                corner,
+                PreviewPanelOperationalState.Failed,
+                "Scanner unavailable",
+                detail,
+                null);
+            Conclusions = null;
+            presentedState = null;
+            presentedPreviewCount = 0;
+            presentedCompleteCount = 0;
+        }
+
         public void HideCurrent()
         {
             activeSessionId = 0;
@@ -431,6 +452,14 @@ namespace DSPSeedScanner.Runtime
             presentedState = null;
             presentedPreviewCount = 0;
             presentedCompleteCount = 0;
+        }
+
+        private static void ValidateFailureDetail(string detail)
+        {
+            if (String.IsNullOrWhiteSpace(detail))
+                throw new ArgumentException("Failure detail is required.", nameof(detail));
+            if (detail.Length > PreviewPanelLayout.MaximumDetailCharacters)
+                throw new ArgumentException("Failure detail exceeds its presentation bound.", nameof(detail));
         }
     }
 }

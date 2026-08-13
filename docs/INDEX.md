@@ -8,8 +8,11 @@ current status and decisions; completed roadmap history resides in the
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [Maintenance roadmap](management/ROADMAP.md): Inactive placeholder recording
-  that no roadmap or user story is active.
+- [Maintenance roadmap](management/ROADMAP.md): Current maintenance state and
+  active external confirmation gate.
+- [Runtime identity maintenance draft](management/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
+  Pathless-assembly hotfix evidence and the separately proposed conclusion-gate
+  replacement.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, temporary constraints, and mandatory closure gates.
 - [RFIN-10 human validation](management/RFIN-10-HUMAN-VALIDATION.md): Passed

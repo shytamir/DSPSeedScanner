@@ -25,6 +25,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("unsupported game identity rejects safely", UnsupportedGameIdentityRejectsSafely),
                 ("missing members reject while plugins coexist", MissingMembersRejectWhilePluginsCoexist),
                 ("generation changes coexist and remain identified", GenerationChangesCoexistAndRemainIdentified),
+                ("runtime file fingerprints fall back without throwing", RuntimeFileFingerprintsFallBackWithoutThrowing),
                 ("unsupported request identity rejects safely", UnsupportedRequestIdentityRejectsSafely),
                 ("other star count preserves fixed and declines quantitative", OtherStarCountIsBounded),
                 ("peace preview omits Dark Fog status", PeacePreviewOmitsDarkFogStatus),
@@ -361,6 +362,66 @@ namespace DSPSeedScanner.Runtime.Tests
             True(CompatibilityPolicy.Evaluate(Fingerprint(algorithm: 1)).Supported);
             True(CompatibilityPolicy.Evaluate(Fingerprint(
                 themes: ConclusionDefinition.ReferenceOrderedThemeIds.Split(',').Reverse())).Supported);
+        }
+
+        private static void RuntimeFileFingerprintsFallBackWithoutThrowing()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                string primary = Path.Combine(path, "missing.dll");
+                string fallback = Path.Combine(path, "Assembly-CSharp.dll");
+                byte[] content = { 1, 2, 3, 4, 5 };
+                File.WriteAllBytes(fallback, content);
+                string expected;
+                using (SHA256 hash = SHA256.Create())
+                {
+                    expected = BitConverter.ToString(hash.ComputeHash(content))
+                        .Replace("-", String.Empty);
+                }
+
+                Equal(expected, RuntimeFileFingerprint.FirstReadableSha256(
+                    new string?[] { String.Empty, primary, fallback }));
+
+                byte[] primaryContent = { 9, 8, 7 };
+                File.WriteAllBytes(primary, primaryContent);
+                string primaryExpected;
+                using (SHA256 hash = SHA256.Create())
+                {
+                    primaryExpected = BitConverter.ToString(
+                        hash.ComputeHash(primaryContent)).Replace("-", String.Empty);
+                }
+                Equal(primaryExpected, RuntimeFileFingerprint.FirstReadableSha256(
+                    new string?[] { primary, fallback }));
+
+                File.Delete(primary);
+                Equal(RuntimeFileFingerprint.Unavailable,
+                    RuntimeFileFingerprint.FirstReadableSha256(
+                        new string?[] { null, String.Empty, primary }));
+
+                False(RuntimeFileFingerprint.TrySha256(
+                    "disappeared.dll",
+                    _ => throw new FileNotFoundException("removed during capture"),
+                    out string disappeared));
+                Equal(RuntimeFileFingerprint.Unavailable, disappeared);
+                False(RuntimeFileFingerprint.TrySha256(
+                    "denied.dll",
+                    _ => throw new UnauthorizedAccessException("access denied"),
+                    out string denied));
+                Equal(RuntimeFileFingerprint.Unavailable, denied);
+
+                string patcher = Path.Combine(path, "locked-patcher.dll");
+                File.WriteAllBytes(patcher, content);
+                using (new FileStream(
+                    patcher,
+                    FileMode.Open,
+                    FileAccess.ReadWrite,
+                    FileShare.None))
+                {
+                    IReadOnlyList<string> inventory =
+                        RuntimeFileFingerprint.Inventory(path, "*.dll");
+                    True(inventory.Contains("locked-patcher.dll:unavailable"));
+                }
+            });
         }
 
         private static void UnsupportedRequestIdentityRejectsSafely()
@@ -1703,6 +1764,17 @@ namespace DSPSeedScanner.Runtime.Tests
                 0,
                 PreviewPanelCorner.BottomLeft,
                 0).Spinner);
+
+            var panel = new PreviewPanelController();
+            panel.ShowUnavailable(
+                4,
+                PreviewPanelCorner.BottomRight,
+                "Runtime identity could not be read");
+            True(panel.Current.Visible);
+            Equal(PreviewPanelOperationalState.Failed, panel.Current.State);
+            Equal("Scanner unavailable", panel.Current.Title);
+            Equal("Runtime identity could not be read", panel.Current.Detail);
+            True(panel.Current.Detail.Length <= PreviewPanelLayout.MaximumDetailCharacters);
         }
 
         private static void PanelCornersMapClockwise()
