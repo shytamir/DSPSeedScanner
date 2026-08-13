@@ -1158,6 +1158,11 @@ namespace DSPSeedScanner.Runtime.Tests
             NormalizedRareResourceEvidence absent = result.RareResources.Single(
                 resource => resource.ResourceId == "fractal-silicon");
             Equal(false, absent.IsPresent);
+            HomeSystemResource homeIron = result.HomeSystemResources!.ForBody(101)!
+                .Resources.Single(resource => resource.ResourceId == "iron");
+            Equal(10_000L, homeIron.Amount);
+            Equal(1, homeIron.VeinGroups);
+            Equal(RawResourceSemantics.FiniteDeposit, homeIron.Semantics);
 
             AssertReport(result, "RR-ACCESS.distance:kimberlite", ComponentOutcome.Supports);
             AssertReport(result, "RR-ACCESS.distance:unipolar-magnet", ComponentOutcome.DoesNotSupport);
@@ -1615,9 +1620,13 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(expected.SequenceEqual(restored!.Reports));
                 Equal(
                     String.Join(",", source.HomeSystemResources!.Bodies.Select(body =>
-                        body.BodyId + ":" + String.Join("+", body.Ores))),
+                        body.BodyId + ":" + String.Join("+", body.Resources.Select(resource =>
+                            resource.ResourceId + ":" + resource.Semantics + ":" +
+                            resource.Amount + ":" + resource.VeinGroups)))),
                     String.Join(",", restored.HomeSystemResources.Bodies.Select(body =>
-                        body.BodyId + ":" + String.Join("+", body.Ores))));
+                        body.BodyId + ":" + String.Join("+", body.Resources.Select(resource =>
+                            resource.ResourceId + ":" + resource.Semantics + ":" +
+                            resource.Amount + ":" + resource.VeinGroups)))));
                 True(restored.Reports.All(report =>
                     (report.Stage == EvidenceStage.BirthSystemRaw &&
                         report.Context == ConclusionContext.FreshStart) ||
@@ -2776,19 +2785,37 @@ namespace DSPSeedScanner.Runtime.Tests
                 })!;
             var resources = new HomeSystemResourceStatistics(new[]
             {
-                new HomeSystemBodyResources(101, new[] { "iron", "fire-ice", "iron" }),
-                new HomeSystemBodyResources(103, new[] { "copper", "stone" })
+                new HomeSystemBodyResources(101, new[]
+                {
+                    new HomeSystemResource(
+                        "iron", RawResourceSemantics.FiniteDeposit, 12_345_678, 12),
+                    new HomeSystemResource(
+                        "fire-ice", RawResourceSemantics.FiniteDeposit, 987_654, 1),
+                    new HomeSystemResource(
+                        "oil", RawResourceSemantics.OilFlow, 1_234_567, 4)
+                }),
+                new HomeSystemBodyResources(103, new[]
+                {
+                    new HomeSystemResource(
+                        "copper", RawResourceSemantics.FiniteDeposit, 2_500_000, 3),
+                    new HomeSystemResource(
+                        "stone", RawResourceSemantics.FiniteDeposit, 750_000, 2)
+                })
             });
 
             Equal(
                 "Alpha I | Mediterranean | Solar 120% | Wind 80% | " +
-                    "Ores: Iron, Fire Ice veins",
+                    "Ores (units / vein groups): Iron 12.3M / 12; " +
+                    "Fire Ice veins 988K / 1 | " +
+                    "Crude Oil (flow units / groups): 1.23M / 4",
                 HomeSystemBodyPresentation.Format(inventory.Bodies[0], resources));
             Equal(
                 "Alpha II | Gas giant | Gas products: Fire Ice, Hydrogen",
                 HomeSystemBodyPresentation.Format(inventory.Bodies[1], resources));
             Equal(
-                "Alpha III | Lava | Solar 150% | Wind 100% | Ores: Copper, Stone",
+                "Alpha III | Lava | Solar 150% | Wind 100% | " +
+                    "Ores (units / vein groups): Copper 2.5M / 3; " +
+                    "Stone 750K / 2",
                 HomeSystemBodyPresentation.Format(inventory.Bodies[2], resources));
             Equal(
                 "Alpha IV | Ice giant",
@@ -2799,6 +2826,31 @@ namespace DSPSeedScanner.Runtime.Tests
                 .Contains("None", StringComparison.Ordinal));
             False(HomeSystemBodyPresentation.Format(inventory.Bodies[0], resources)
                 .Contains("Coal", StringComparison.Ordinal));
+            Equal("999", HomeSystemBodyPresentation.FormatAmount(999));
+            Equal("1K", HomeSystemBodyPresentation.FormatAmount(1_000));
+            Equal("12.3K", HomeSystemBodyPresentation.FormatAmount(12_345));
+            Equal("1M", HomeSystemBodyPresentation.FormatAmount(999_999));
+            Equal("1.23M", HomeSystemBodyPresentation.FormatAmount(1_234_567));
+            HomeSystemBodyTableRow firstRow =
+                HomeSystemBodyPresentation.ProjectTableRow(
+                    inventory.Bodies[0],
+                    resources);
+            Equal("Alpha I", firstRow.Body);
+            Equal("Mediterranean", firstRow.World);
+            Equal("120%", firstRow.Solar);
+            Equal("80%", firstRow.Wind);
+            Equal("Iron 12.3M / 12, Fire Ice veins 988K / 1", firstRow.Ores);
+            Equal("1.23M / 4", firstRow.Oil);
+            Equal(String.Empty, firstRow.GasProducts);
+            False(firstRow.Cells.Any(cell => cell.Contains("|", StringComparison.Ordinal)));
+            HomeSystemBodyTableRow giantRow =
+                HomeSystemBodyPresentation.ProjectTableRow(
+                    inventory.Bodies[1],
+                    resources);
+            Equal("Gas giant", giantRow.World);
+            Equal("Fire Ice\nHydrogen", giantRow.GasProducts);
+            Equal(String.Empty, giantRow.Ores);
+            Equal(String.Empty, giantRow.Oil);
 
             WithTemporaryDirectory(path =>
             {
@@ -2832,7 +2884,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(statistics.Current!.HomeSystemResources != null);
                 Equal(
                     "Alpha I | Mediterranean | Solar 120% | Wind 80% | " +
-                        "Ores: Iron",
+                        "Ores (units / vein groups): Iron 10K / 1",
                     HomeSystemBodyPresentation.Format(
                         statistics.Current.HomeSystem!.Bodies[0],
                         statistics.Current.HomeSystemResources));
@@ -2847,7 +2899,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(statistics.Current!.HomeSystemResources != null);
                 Equal(
                     "Alpha I | Mediterranean | Solar 120% | Wind 80% | " +
-                        "Ores: Iron",
+                        "Ores (units / vein groups): Iron 10K / 1",
                     HomeSystemBodyPresentation.Format(
                         statistics.Current.HomeSystem!.Bodies[0],
                         statistics.Current.HomeSystemResources));

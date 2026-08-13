@@ -152,7 +152,7 @@ namespace DSPSeedScanner.Runtime
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 9;
+        internal const int SchemaVersion = 10;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;
@@ -557,9 +557,14 @@ namespace DSPSeedScanner.Runtime
             foreach (HomeSystemBodyResources body in homeSystemResources.Bodies)
             {
                 writer.Write(body.BodyId);
-                writer.Write(body.Ores.Count);
-                foreach (string ore in body.Ores)
-                    writer.Write(ore);
+                writer.Write(body.Resources.Count);
+                foreach (HomeSystemResource resource in body.Resources)
+                {
+                    writer.Write(resource.ResourceId);
+                    writer.Write((int)resource.Semantics);
+                    writer.Write(resource.Amount);
+                    writer.Write(resource.VeinGroups);
+                }
             }
         }
 
@@ -596,10 +601,27 @@ namespace DSPSeedScanner.Runtime
             {
                 int bodyId = Positive(reader.ReadInt32(), Int32.MaxValue, "body ID");
                 int oreCount = Bounded(reader.ReadInt32(), 32, "body ore count");
-                var ores = new List<string>(oreCount);
+                var resources = new List<HomeSystemResource>(oreCount);
                 for (int oreIndex = 0; oreIndex < oreCount; oreIndex++)
-                    ores.Add(Required(reader.ReadString(), "body ore"));
-                bodies.Add(new HomeSystemBodyResources(bodyId, ores));
+                {
+                    string resourceId = Required(reader.ReadString(), "body ore");
+                    int semanticsValue = reader.ReadInt32();
+                    if (!Enum.IsDefined(typeof(RawResourceSemantics), semanticsValue))
+                        throw new InvalidDataException("The body resource semantics are invalid.");
+                    long amount = reader.ReadInt64();
+                    if (amount < 0)
+                        throw new InvalidDataException("The body resource amount is invalid.");
+                    int veinGroups = Positive(
+                        reader.ReadInt32(),
+                        Int32.MaxValue,
+                        "body resource vein-group count");
+                    resources.Add(new HomeSystemResource(
+                        resourceId,
+                        (RawResourceSemantics)semanticsValue,
+                        amount,
+                        veinGroups));
+                }
+                bodies.Add(new HomeSystemBodyResources(bodyId, resources));
             }
 
             return new CachedCompleteClusterConclusions(

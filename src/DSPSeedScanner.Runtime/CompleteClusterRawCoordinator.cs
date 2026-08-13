@@ -530,8 +530,9 @@ namespace DSPSeedScanner.Runtime
                     resourceId => resourceId,
                     _ => new StarterAggregate(),
                     StringComparer.Ordinal);
-            private readonly Dictionary<int, HashSet<string>> homeResources =
-                new Dictionary<int, HashSet<string>>();
+            private readonly Dictionary<int, Dictionary<string, HomeResourceAggregate>>
+                homeResources =
+                    new Dictionary<int, Dictionary<string, HomeResourceAggregate>>();
 
             public long CommonTotal { get; private set; }
             public int BirthPlanetCount { get; private set; }
@@ -544,10 +545,24 @@ namespace DSPSeedScanner.Runtime
                 if (target.System.Kind == SubjectKind.BirthSystem)
                 {
                     BirthPlanetCount++;
-                    var bodyResources = new HashSet<string>(StringComparer.Ordinal);
+                    var bodyResources = new Dictionary<string, HomeResourceAggregate>(
+                        StringComparer.Ordinal);
                     foreach (NormalizedRawVeinGroup group in planet.Groups)
                     {
-                        bodyResources.Add(group.ResourceId);
+                        if (!bodyResources.TryGetValue(
+                                group.ResourceId,
+                                out HomeResourceAggregate? bodyResource))
+                        {
+                            bodyResource = new HomeResourceAggregate(group.Semantics);
+                            bodyResources.Add(group.ResourceId, bodyResource);
+                        }
+                        else if (bodyResource.Semantics != group.Semantics)
+                        {
+                            throw new InvalidOperationException(
+                                "A home-system resource changed amount semantics.");
+                        }
+                        bodyResource.Amount = checked(bodyResource.Amount + group.Amount);
+                        bodyResource.Groups = checked(bodyResource.Groups + 1);
                         if (starter.TryGetValue(group.ResourceId, out StarterAggregate? resource))
                         {
                             resource.Amount = checked(resource.Amount + group.Amount);
@@ -579,7 +594,13 @@ namespace DSPSeedScanner.Runtime
 
             public HomeSystemResourceStatistics HomeSystemResources() =>
                 new HomeSystemResourceStatistics(homeResources.Select(pair =>
-                    new HomeSystemBodyResources(pair.Key, pair.Value)));
+                    new HomeSystemBodyResources(
+                        pair.Key,
+                        pair.Value.Select(resource => new HomeSystemResource(
+                            resource.Key,
+                            resource.Value.Semantics,
+                            resource.Value.Amount,
+                            resource.Value.Groups)))));
 
             public IReadOnlyList<NormalizedRareResourceEvidence> RareResources() =>
                 rare.OrderBy(pair => pair.Key, StringComparer.Ordinal)
@@ -618,6 +639,18 @@ namespace DSPSeedScanner.Runtime
 
             private sealed class StarterAggregate
             {
+                public long Amount { get; set; }
+                public int Groups { get; set; }
+            }
+
+            private sealed class HomeResourceAggregate
+            {
+                public HomeResourceAggregate(RawResourceSemantics semantics)
+                {
+                    Semantics = semantics;
+                }
+
+                public RawResourceSemantics Semantics { get; }
                 public long Amount { get; set; }
                 public int Groups { get; set; }
             }

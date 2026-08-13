@@ -32,10 +32,11 @@ project status and steering decisions. Active product development follows the
 [user-feedback roadmap](docs/management/ROADMAP.md). FEED-01 and FEED-02 were
 accepted, establishing a clean slate for panel work. FEED-03 was accepted, and
 FEED-04 was accepted, establishing a fully enabled panel scaffold. FEED-05 was
-accepted, and FEED-06's per-body home-system ore and gas-product facts are in
-corrective owner validation after narrow hosted-linkage and DSP planet-number
-scope fixes. The generated CI artifact still requires human validation before
-the home-system population phase gate can pass. The completed
+accepted, and FEED-06's exact per-body resource table passed its direct-build
+story gate after narrow hosted-linkage, DSP planet-number, statistics, and
+presentation corrections. No story is active while the generated CI artifact
+awaits human validation; the home-system population phase gate has not yet
+passed. The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 records the preceding stories, acceptance gates, and implementation history.
 

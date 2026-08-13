@@ -2,9 +2,10 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-06: Show home-system ore
-availability](#feed-06-show-home-system-ore-availability) is undergoing
-corrective owner validation.
+**Active user story:** None. [FEED-06: Show home-system resource
+statistics](#feed-06-show-home-system-resource-statistics) passed its story gate;
+the exact CI artifact remains at the `ready-for-cluster-panel-population` human
+validation boundary.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -17,9 +18,10 @@ accepted, `ready-for-new-panel` passed, and the **Clean slate for panel work**
 milestone was established. FEED-03 and FEED-04 were accepted,
 `ready-for-panel-population` passed, and the **Panel renders with all features
 enabled even if not yet consumed** milestone was established. FEED-05 was
-accepted. FEED-06 remains active while its narrow runtime and hosted-reference
-corrections await owner validation. Later stories remain inactive behind their
-documented gates.
+accepted. FEED-06 passed after its narrow runtime corrections and owner-led
+presentation workshop. The home-system population phase gate awaits validation
+of the exact CI artifact. Later stories remain inactive behind their documented
+gates.
 
 ## Source coverage
 
@@ -30,7 +32,7 @@ documented gates.
 | Provide factual statistics without changing the conclusion panel | FEED-03 |
 | Identify the current seed's home planet in both panel titles | FEED-04 |
 | Show home-system giant type, planet themes, and exact Solar and Wind percentages | FEED-05 |
-| Show exact home-system ore availability, including mineable Fire Ice | FEED-06 |
+| Show exact per-body home-system resource totals and group counts, including mineable Fire Ice | FEED-06 |
 | Show the nearest sulfuric-acid ocean and nearest rare-resource locations | FEED-07 |
 | Show per-planet Unipolar Magnet supply and distribution | FEED-08 |
 | Locate the strongest nearby deuterium-producing gas giant | FEED-09 |
@@ -108,6 +110,10 @@ is required. This gate establishes the **Panel renders with all features
 enabled even if not yet consumed** milestone.
 
 ### `ready-for-cluster-panel-population`
+
+**State:** Pending exact-artifact human validation. FEED-05 was accepted and
+FEED-06 passed its story gate; the owner will validate the generated CI artifact
+before this phase gate or its milestone can pass.
 
 The home-system-panel phase is complete when FEED-05 and FEED-06 have passed
 their acceptance gates. Every supported home-system body fact and exact raw-
@@ -415,6 +421,13 @@ subsection contracts; a common cluster-location/AU value; and focused acceptance
 fixtures. Installed-game visual layout approval remains explicitly outside this
 story and was not performed.
 
+**Post-acceptance scaffold extension:** FEED-06's owner workshop established a
+shared columnar home-system row presentation within the existing container. Its
+fixed fields are `Body`, `World`, `Solar`, `Wind`, `Ores (units / groups)`, `Oil
+(flow / wells)`, and `Gas products`. The scaffold uses thin rules, compact
+single-line headings, wrapped body values, the existing document and scrollbar,
+and no independent lifecycle or data ownership.
+
 ## FEED-04: Share the home-planet title designation
 
 **State:** Accepted on 2026-08-13.
@@ -536,9 +549,10 @@ compatibility-member checks for the newly consumed DSP fields, and focused
 lifecycle fixtures. Interactive DSP visual validation was not required by
 this story's automated gate and was not performed.
 
-## FEED-06: Show home-system ore availability
+## FEED-06: Show home-system resource statistics
 
-**State:** Corrective build pending owner validation as of 2026-08-13.
+**State:** Passed on 2026-08-14; exact CI artifact validation remains at the
+phase gate.
 
 **Category:** feature-request
 
@@ -550,62 +564,78 @@ As a player choosing a start, I want mineable ores attributed to their home
 planets and giant gas products identified separately so I can tell which local
 resources can be extracted from each source.
 
-**Return:** During existing home-system raw generation, retain the set of ore
-types present on each solid planet as a bounded payload keyed to its FEED-03
-body identity. Join that payload while composing the existing body row rather
-than mutating the inventory or creating another row. Solid-body resource text
-uses `Ores:`, names mineable Fire Ice as `Fire Ice veins`, and lists only ores
-confirmed present. Giant rows use the separate label `Gas products:` and name
-collected Fire Ice as `Fire Ice`; they never receive an ore field. Persist only
-this presentation-safe resource payload for cache reuse. Preview gas products
-may appear immediately; ore fields join the same rows only when their raw
-evidence completes or a valid cache entry supplies it.
+**Return:** During existing home-system raw generation, aggregate each supported
+resource's exact amount and group count for every solid planet into a bounded
+payload keyed to its FEED-03 body identity. Preserve finite-deposit and oil-flow
+semantics, then join the completed payload to the existing body row without
+mutating the inventory or creating another row. Present all home rows in the
+shared FEED-03 table with `Body`, `World`, `Solar`, `Wind`, `Ores (units /
+groups)`, `Oil (flow / wells)`, and `Gas products` fields. Use compact `K`/`M`
+amounts, comma-separated ore facts in one wrapping cell, a separate oil value,
+and distinct giant gas products. Mineable Fire Ice is `Fire Ice veins`; gas
+Fire Ice remains `Fire Ice`. Use thin table rules and compact single-line
+headings rather than repeated prose labels or pipe separators. Persist only the
+bounded presentation payload for cache reuse. Preview gas products may appear
+immediately; exact raw-resource facts appear only after complete evidence or a
+valid cache hit.
 
-**Acceptance gate:** Fixtures cover present and absent common ores, mineable
-Fire Ice, Fire Ice as a gas product, multiple solid planets, giants with and
-without gas products, incomplete generation, scan completion, and cache reuse.
-Each resource populates the correct existing body row exactly once without
-changing inventory order or removing FEED-05 facts. Scan progress and
-completion do not duplicate a body row or gas-product field. A giant never
-displays an ore field, missing-ore value, `None`, `N/A`, or an equivalent nil
-marker. `Ores: Fire Ice veins` and `Gas products: Fire Ice` remain visibly
-distinct. An absent ore is not listed, and unavailable evidence is omitted
-rather than presented as absence. Neither raw planet objects nor cluster ore
-data are retained.
+**Acceptance gate:** Fixtures cover exact amounts and group counts for present
+common ores, Crude Oil, mineable Fire Ice, Fire Ice as a gas product, multiple
+solid planets, giants with and without gas products, incomplete generation,
+scan completion, and cache reuse. Each resource populates the correct existing
+body row exactly once without changing inventory order or removing FEED-05
+facts. Compact quantities cover unit, `K`, and `M` boundaries. The table keeps
+one row per body, one field per fact class, one grouped ore cell, a distinct oil
+cell, and a distinct gas-products cell; it does not repeat field descriptions
+for every resource or use pipe separators. Thin rules, single-line headings,
+wrapped values, and scrolling remain readable at the installed 4K layout. A
+giant never displays an ore or oil value, missing-resource value, `None`, `N/A`,
+or an equivalent nil marker. `Fire Ice veins` and gas-product `Fire Ice` remain
+visibly distinct. Unavailable evidence is omitted rather than presented as
+absence. Neither raw planet objects nor cluster resource data are retained.
 
-**Out of scope:** Ore amounts, node or vein-group counts, terrain access,
-resource rankings, cluster-wide ore inventory, gas-product rates, or mining
-throughput.
+**Out of scope:** Individual node details, terrain access, resource rankings,
+cluster-wide resource inventory, gas-product rates, mining throughput, or
+changes to the conclusion panel.
 
 **Implemented:** Lightweight preview normalization attaches supported gas
 product names to each giant's existing inventory entry. The complete scan
-distills each fully generated home-system solid planet to a bounded body-ID and
-present-ore set, discarding raw nodes, groups, amounts, and cluster ore data.
-The statistics formatter joins that payload to the existing row only after
-complete coverage or a valid cache hit. Cache schema 9 persists only this
-presentation-safe home-resource payload alongside audited conclusions.
+aggregates supported resources for each fully generated home-system solid body
+by resource identifier and semantics, retaining only exact amount and group
+count with the body ID. The statistics presenter projects the existing body
+inventory into a seven-field table, formats amounts with compact `K`/`M`
+notation, groups all finite deposits in one wrapping ore cell, and separates
+oil and gas products. Cache schema 10 persists this bounded presentation-safe
+payload alongside audited conclusions.
 
 **Acceptance evidence:**
 
-- fixtures covered common ores, absent ores, mineable Fire Ice, Fire Ice gas,
-  multiple solid planets, and giants with and without products;
+- fixtures covered common ores, absent ores, Crude Oil, mineable Fire Ice, Fire
+  Ice gas, exact amounts and groups, multiple solid planets, and giants with and
+  without products;
 - gas products appeared from lightweight preview evidence, while ore fields
   remained absent during incomplete generation and appeared only after complete
   coverage or cache reuse;
 - each payload joined its matching inventory body without adding, duplicating,
   suppressing, or reordering rows and without removing FEED-05 facts;
-- giant rows never received `Ores:`, empty resource sets produced no nil marker,
-  and `Ores: Fire Ice veins` remained distinct from `Gas products: Fire Ice`;
+- table projections separated body, world, energy, grouped ores, oil, and gas
+  products without repeated field prose or pipe separators; compact amount
+  fixtures covered unit, `K`, and `M` forms;
+- giant rows never received ore or oil values, empty resource sets produced no
+  nil marker, and mineable `Fire Ice veins` remained distinct from gas-product
+  `Fire Ice`;
 - cancellation and raw failure published no partial home-resource payload, and
   the cache round trip retained only bounded presentation data; and
 - the Release solution and installed-game plugin built with zero warnings, all
   14 Core checks passed, and all 78 Runtime checks passed.
 
-**Produced at this gate:** Immediate giant gas-product labels, complete-only
-per-body ore sets, presentation-time row joining, cache schema 9 persistence,
-and focused completion, cache, cancellation, replacement, and exit fixtures.
-Interactive DSP visual validation was not required by this story's automated
-gate and was not performed.
+**Produced at this gate:** Immediate giant gas-product labels; complete-only
+per-body exact amounts and group counts; presentation-time row joining; the
+seven-field home-system table with thin rules, compact single-line headings,
+grouped wrapping ores, and separate oil and gas fields; cache schema 10; and
+focused completion, cache, cancellation, replacement, and exit fixtures. The
+owner passed the direct-build story gate after interactive 4K refinement of
+column allocation, wrapping, rule thickness, heading fit, and compact values.
 
 **Corrective finding:** The first interactive roadmap test found that the
 hosted artifact referenced `ThemeProtoSet.dataArray`, while DSP declares that
@@ -618,9 +648,12 @@ numbers, retains body ID as identity, resolves satellites from their
 `orbitAround` primary number, and uses an available parent object reference
 only as corroboration. Fixtures preserve the observed Menkent pattern of
 primary numbers `1, 2` and moon numbers `1, 2` without weakening primary-parent
-validation. The scan regression, cache/replacement lifecycle, and direct-build
-home rows passed interactive checks; owner validation of the corrected hosted
-artifact and the home-system population phase gate remains pending.
+validation. After that correction, owner feedback established that presence-
+only rows did not deliver the requested exact statistics. The accepted narrow
+refinement added exact amounts and groups, compact units, and the columnar
+presentation recorded above. Scan, cache/replacement, lifecycle, populated
+rows, scrolling, and the final direct-build layout passed interactive checks;
+only validation of the exact hosted artifact remains at the phase gate.
 
 ## FEED-07: Show nearest rare-resource access
 

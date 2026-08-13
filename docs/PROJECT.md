@@ -9,16 +9,16 @@ completed story scope, evidence, and history belong in archived roadmaps.
 **Clean slate for panel work** milestone. FEED-03 and FEED-04 were then
 accepted; `ready-for-panel-population` passed, establishing the **Panel renders
 with all features enabled even if not yet consumed** milestone. FEED-05 was
-accepted. FEED-06 is the sole active story and is undergoing corrective owner
-validation after its first interactive test exposed a hosted-reference linkage
-defect and an invalid global planet-number uniqueness assumption. Both narrow
-corrections have direct-build validation; the generated CI artifact and the
-home-system population phase gate still await human validation. The statistics
-panel now presents every
-home-system body in stable game order with giant type, gas products, or
-available theme and exact Solar/Wind facts; after complete coverage or cache
-reuse, solid rows also identify their present ores. FEED-07 and later stories
-remain inactive behind their roadmap gates. The earlier
+accepted. FEED-06 passed its story gate on 2026-08-14 after correcting hosted
+reference linkage, DSP planet-number scope, exact resource retention, and the
+home-system table presentation. No story is active while the generated CI
+artifact awaits owner validation at `ready-for-cluster-panel-population`; that
+phase gate and the **Panel home system fully populated** milestone have not yet
+passed. The statistics panel presents every home-system body in stable game
+order with distinct body, world, Solar, Wind, ores, oil, and gas-product fields.
+After complete coverage or cache reuse, solid rows show compact exact resource
+amounts and group counts without retaining raw planets or cluster resources.
+FEED-07 and later stories remain inactive behind their roadmap gates. The earlier
 scanner core, New Game presentation, and presentation refinement roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01 corrected
 pathless runtime-assembly fingerprinting, and FSOR-01 completed local runtime-

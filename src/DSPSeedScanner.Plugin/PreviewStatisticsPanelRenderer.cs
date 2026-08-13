@@ -9,11 +9,38 @@ namespace DSPSeedScanner.Plugin
     {
         private const float ScrollbarReserve = 18f;
         private const float SectionGap = 12f;
+        private const float TableHeaderHeight = 38f;
+        private const float CellPadding = 6f;
+        private const float HeaderCellPadding = 2f;
+        private const float TableRuleThickness = 1f;
+        private static readonly string[] HomeHeadings =
+        {
+            "Body",
+            "World",
+            "Solar",
+            "Wind",
+            "Ores (units / groups)",
+            "Oil (flow / wells)",
+            "Gas products"
+        };
+        private static readonly float[] HomeColumnRatios =
+        {
+            0.14f,
+            0.14f,
+            0.08f,
+            0.08f,
+            0.30f,
+            0.14f,
+            0.12f
+        };
         private GUIStyle? titleStyle;
         private GUIStyle? sectionTitleStyle;
         private GUIStyle? bodyStyle;
+        private GUIStyle? tableHeaderStyle;
         private GUIStyle? panelStyle;
         private GUIStyle? sectionStyle;
+        private GUIStyle? tableHeaderBackgroundStyle;
+        private Texture2D? tableRuleTexture;
         private GUISkin? scrollSkin;
         private Vector2 scrollPosition;
         private long scrollSessionId;
@@ -92,12 +119,12 @@ namespace DSPSeedScanner.Plugin
             float scrollY = y + 42f;
             float scrollHeight = bounds.Bottom - PreviewPanelLayout.DocumentPadding - scrollY;
             float contentWidth = viewportWidth - ScrollbarReserve;
-            string[] homeLines = document.HomeSystem?.Bodies
-                .Select(body => HomeSystemBodyPresentation.Format(
+            HomeSystemBodyTableRow[] homeRows = document.HomeSystem?.Bodies
+                .Select(body => HomeSystemBodyPresentation.ProjectTableRow(
                     body,
                     document.HomeSystemResources))
-                .ToArray() ?? Array.Empty<string>();
-            float homeSectionHeight = SectionHeight(homeLines, contentWidth);
+                .ToArray() ?? Array.Empty<HomeSystemBodyTableRow>();
+            float homeSectionHeight = HomeSectionHeight(homeRows, contentWidth);
             float clusterSectionHeight = SectionHeight(Array.Empty<string>(), contentWidth);
             float contentHeight = homeSectionHeight + clusterSectionHeight + SectionGap;
             GUISkin previousSkin = GUI.skin;
@@ -114,9 +141,8 @@ namespace DSPSeedScanner.Plugin
                 scrollPosition.y);
             try
             {
-                DrawSection(
-                    PreviewStatisticsDocument.HomeSystemTitle,
-                    homeLines,
+                DrawHomeSection(
+                    homeRows,
                     0f,
                     contentWidth,
                     homeSectionHeight);
@@ -133,6 +159,109 @@ namespace DSPSeedScanner.Plugin
                 GUI.skin = previousSkin;
             }
         }
+
+        private float HomeSectionHeight(
+            HomeSystemBodyTableRow[] rows,
+            float width)
+        {
+            float height = 46f + TableHeaderHeight;
+            foreach (HomeSystemBodyTableRow row in rows)
+                height += HomeRowHeight(row, width);
+            return Math.Max(88f, height + 8f);
+        }
+
+        private float HomeRowHeight(HomeSystemBodyTableRow row, float width)
+        {
+            float height = 28f;
+            for (int index = 0; index < HomeColumnRatios.Length; index++)
+            {
+                float cellWidth = ColumnWidth(index, width) - CellPadding * 2f;
+                height = Math.Max(
+                    height,
+                    bodyStyle!.CalcHeight(
+                        new GUIContent(row.Cells[index]),
+                        cellWidth) + CellPadding * 2f);
+            }
+            return height;
+        }
+
+        private void DrawHomeSection(
+            HomeSystemBodyTableRow[] rows,
+            float y,
+            float width,
+            float height)
+        {
+            GUI.Box(new Rect(0f, y, width, height), GUIContent.none, sectionStyle);
+            GUI.Label(
+                new Rect(0f, y + 8f, width, 30f),
+                PreviewStatisticsDocument.HomeSystemTitle,
+                sectionTitleStyle);
+
+            float headerY = y + 42f;
+            GUI.Box(
+                new Rect(0f, headerY, width, TableHeaderHeight),
+                GUIContent.none,
+                tableHeaderBackgroundStyle);
+            for (int index = 0; index < HomeHeadings.Length; index++)
+            {
+                float columnX = ColumnX(index, width);
+                float columnWidth = ColumnWidth(index, width);
+                GUI.Label(
+                    new Rect(
+                        columnX + HeaderCellPadding,
+                        headerY,
+                        columnWidth - HeaderCellPadding * 2f,
+                        TableHeaderHeight),
+                    HomeHeadings[index],
+                    tableHeaderStyle);
+                if (index != 0)
+                {
+                    GUI.DrawTexture(
+                        new Rect(
+                            columnX,
+                            headerY,
+                            TableRuleThickness,
+                            height - 42f),
+                        tableRuleTexture!);
+                }
+            }
+
+            float rowY = headerY + TableHeaderHeight;
+            foreach (HomeSystemBodyTableRow row in rows)
+            {
+                float rowHeight = HomeRowHeight(row, width);
+                GUI.DrawTexture(
+                    new Rect(0f, rowY, width, TableRuleThickness),
+                    tableRuleTexture!);
+                for (int index = 0; index < HomeColumnRatios.Length; index++)
+                {
+                    float columnX = ColumnX(index, width);
+                    float columnWidth = ColumnWidth(index, width);
+                    GUI.Label(
+                        new Rect(
+                            columnX + CellPadding,
+                            rowY + CellPadding,
+                            columnWidth - CellPadding * 2f,
+                            rowHeight - CellPadding * 2f),
+                        row.Cells[index],
+                        bodyStyle);
+                }
+                rowY += rowHeight;
+            }
+        }
+
+        private static float ColumnX(int index, float width)
+        {
+            float x = 0f;
+            for (int previous = 0; previous < index; previous++)
+                x += ColumnWidth(previous, width);
+            return x;
+        }
+
+        private static float ColumnWidth(int index, float width) =>
+            index == HomeColumnRatios.Length - 1
+                ? width - ColumnX(index, width)
+                : width * HomeColumnRatios[index];
 
         private float SectionHeight(string[] lines, float width)
         {
@@ -200,12 +329,25 @@ namespace DSPSeedScanner.Plugin
                 fontStyle = FontStyle.Normal,
                 wordWrap = true
             };
+            tableHeaderStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                clipping = TextClipping.Clip,
+                fontSize = 13,
+                fontStyle = FontStyle.Bold,
+                wordWrap = false
+            };
             panelStyle = new GUIStyle(GUI.skin.box);
             panelStyle.normal.background = MakeTexture(
                 new Color(0.015f, 0.035f, 0.045f, 0.76f));
             sectionStyle = new GUIStyle(GUI.skin.box);
             sectionStyle.normal.background = MakeTexture(
                 new Color(0.07f, 0.10f, 0.11f, 0.38f));
+            tableHeaderBackgroundStyle = new GUIStyle(GUI.skin.box);
+            tableHeaderBackgroundStyle.normal.background = MakeTexture(
+                new Color(0.11f, 0.16f, 0.17f, 0.52f));
+            tableRuleTexture = MakeTexture(
+                new Color(0.40f, 0.52f, 0.54f, 0.22f));
             scrollSkin = UnityEngine.Object.Instantiate(GUI.skin);
             scrollSkin.hideFlags = HideFlags.HideAndDontSave;
             scrollSkin.verticalScrollbar = new GUIStyle(GUI.skin.verticalScrollbar)
