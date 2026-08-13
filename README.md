@@ -29,8 +29,8 @@ by another plugin may affect its results and are not always detectable.
 
 [docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current
 project status and steering decisions. Active product development follows the
-[user-feedback roadmap](docs/management/ROADMAP.md), beginning with FEED-01's
-home-system terminology correction. The completed
+[user-feedback roadmap](docs/management/ROADMAP.md). FEED-01 was accepted and
+FEED-02's Dark Fog toggle reuse has reached its technical acceptance gate. The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 records the preceding stories, acceptance gates, and implementation history.
 

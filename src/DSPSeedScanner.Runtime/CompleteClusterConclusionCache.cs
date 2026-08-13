@@ -94,7 +94,6 @@ namespace DSPSeedScanner.Runtime
             Add(value, "galaxy-seed", galaxy.GalaxySeed.ToString(CultureInfo.InvariantCulture));
             Add(value, "star-count", galaxy.RequestedStarCount.ToString(CultureInfo.InvariantCulture));
             Add(value, "resource-multiplier", DecimalValue(identity.ResourceMultiplier));
-            Add(value, "combat-mode", ((int)identity.CombatMode).ToString(CultureInfo.InvariantCulture));
             Add(value, "combat-settings", identity.CombatSettingsKey);
             Add(value, "initial-colonize", DecimalValue(identity.InitialColonize));
             Add(value, "max-density", DecimalValue(identity.MaxDensity));
@@ -149,7 +148,7 @@ namespace DSPSeedScanner.Runtime
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 7;
+        internal const int SchemaVersion = 8;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;
@@ -321,7 +320,7 @@ namespace DSPSeedScanner.Runtime
                 try
                 {
                     ConclusionReport[] cachedReports = result.Reports
-                        .Where(IsCompleteScanSemanticReport)
+                        .Where(IsAuditedReusableReport)
                         .ToArray();
                     BeforeFileOperation("write");
                     Directory.CreateDirectory(DirectoryPath);
@@ -417,7 +416,7 @@ namespace DSPSeedScanner.Runtime
             CompleteClusterRawResult result)
         {
             ConclusionReport[] cachedReports = result.Reports
-                .Where(IsCompleteScanSemanticReport)
+                .Where(IsAuditedReusableReport)
                 .ToArray();
             if (result.Status != RuntimeScanStatus.Success ||
                 result.Fingerprint == null ||
@@ -442,14 +441,11 @@ namespace DSPSeedScanner.Runtime
                 return false;
             }
 
-            EvaluationSettings settings = new EvaluationSettings(
-                key.Identity.ResourceMultiplier,
-                key.Identity.CombatMode,
-                key.Identity.CombatSettingsKey);
+            EvaluationSettings settings = Settings(key.Identity);
             bool hasCompleteClusterReport = false;
             foreach (ConclusionReport report in cachedReports)
             {
-                if (!IsCurrentReport(key, settings, report))
+                if (!IsCurrentReport(key.Identity, settings, report))
                     return false;
                 hasCompleteClusterReport |= report.Coverage.IsComplete;
             }
@@ -461,7 +457,7 @@ namespace DSPSeedScanner.Runtime
             CachedCompleteClusterConclusions result)
         {
             if (!String.Equals(result.CacheKeyHash, key.Hash, StringComparison.Ordinal) ||
-                !result.Identity.Equals(key.Identity) ||
+                !CanReuseAcrossMode(key.Identity, result.Identity) ||
                 !result.Coverage.IsComplete ||
                 result.Coverage.ExpectedPlanets <= 0 ||
                 result.Reports.Count == 0 ||
@@ -470,26 +466,56 @@ namespace DSPSeedScanner.Runtime
                 return false;
             }
 
-            var settings = new EvaluationSettings(
-                key.Identity.ResourceMultiplier,
-                key.Identity.CombatMode,
-                key.Identity.CombatSettingsKey);
+            EvaluationSettings settings = Settings(result.Identity);
             return result.Reports.All(report =>
-                IsCompleteScanSemanticReport(report) &&
+                IsAuditedReusableReport(report) &&
                 report.Coverage.IsComplete &&
-                IsCurrentReport(key, settings, report));
+                IsCurrentReport(result.Identity, settings, report));
         }
 
-        private static bool IsCompleteScanSemanticReport(ConclusionReport report) =>
-            (report.Stage == EvidenceStage.BirthSystemRaw &&
-                report.Context == ConclusionContext.FreshStart) ||
-            report.Stage == EvidenceStage.CompleteClusterRaw;
+        private static bool IsAuditedReusableReport(ConclusionReport report)
+        {
+            string id = report.ConclusionId;
+            if (report.Stage == EvidenceStage.BirthSystemRaw &&
+                report.Context == ConclusionContext.FreshStart)
+            {
+                return String.Equals(id, "FS-RESOURCES.common-total", StringComparison.Ordinal) ||
+                    String.Equals(id, "FS-RESOURCES.fire-ice", StringComparison.Ordinal) ||
+                    id.StartsWith("FS-RESOURCES.amount:", StringComparison.Ordinal) ||
+                    id.StartsWith("FS-RESOURCES.groups:", StringComparison.Ordinal);
+            }
+            if (report.Stage != EvidenceStage.CompleteClusterRaw)
+                return false;
+            return String.Equals(id, "MF-RESOURCE-SCOPE.strength", StringComparison.Ordinal) ||
+                String.Equals(id, "CX-GROUPING.distance", StringComparison.Ordinal) ||
+                id.StartsWith("RR-ACCESS.distance:", StringComparison.Ordinal) ||
+                id.StartsWith("RR-ACCESS.amount:", StringComparison.Ordinal) ||
+                id.StartsWith("MF-SYSTEM-ROLE.role:", StringComparison.Ordinal);
+        }
+
+        private static EvaluationSettings Settings(PreviewGenerationIdentity identity) =>
+            new EvaluationSettings(
+                identity.ResourceMultiplier,
+                identity.CombatMode,
+                identity.CombatSettingsKey);
+
+        private static bool CanReuseAcrossMode(
+            PreviewGenerationIdentity active,
+            PreviewGenerationIdentity source) =>
+            active.GalaxyIdentity == source.GalaxyIdentity &&
+            active.ResourceMultiplier == source.ResourceMultiplier &&
+            String.Equals(
+                active.CombatSettingsKey,
+                source.CombatSettingsKey,
+                StringComparison.Ordinal) &&
+            active.InitialColonize == source.InitialColonize &&
+            active.MaxDensity == source.MaxDensity;
 
         private static bool IsCurrentReport(
-            CompleteClusterCacheKey key,
+            PreviewGenerationIdentity identity,
             EvaluationSettings settings,
             ConclusionReport report) =>
-            report.Identity == key.Identity.GalaxyIdentity &&
+            report.Identity == identity.GalaxyIdentity &&
             report.Settings == settings &&
             String.Equals(
                 report.ContractVersion,
@@ -509,6 +535,7 @@ namespace DSPSeedScanner.Runtime
             writer.Write(Magic);
             writer.Write(SchemaVersion);
             writer.Write(key.CanonicalValue);
+            writer.Write((int)key.Identity.CombatMode);
             writer.Write(coverage.ExpectedPlanets);
             writer.Write(reports.Count);
             foreach (ConclusionReport report in reports)
@@ -526,15 +553,23 @@ namespace DSPSeedScanner.Runtime
             if (!String.Equals(reader.ReadString(), key.CanonicalValue, StringComparison.Ordinal))
                 throw new InvalidDataException("The cache identity is not current.");
 
+            CombatMode sourceMode = EnumValue<CombatMode>(reader.ReadInt32());
+            var sourceIdentity = new PreviewGenerationIdentity(
+                key.Identity.GalaxyIdentity,
+                key.Identity.ResourceMultiplier,
+                sourceMode,
+                key.Identity.CombatSettingsKey,
+                key.Identity.InitialColonize,
+                key.Identity.MaxDensity);
             int expectedPlanets = Positive(reader.ReadInt32(), 4096, "planet count");
             int reportCount = Positive(reader.ReadInt32(), MaximumReports, "report count");
             var reports = new List<ConclusionReport>(reportCount);
             for (int index = 0; index < reportCount; index++)
-                reports.Add(ReadReport(reader, key.Identity));
+                reports.Add(ReadReport(reader, sourceIdentity));
 
             return new CachedCompleteClusterConclusions(
                 key.Hash,
-                key.Identity,
+                sourceIdentity,
                 new CompleteClusterRawCoverage(
                     CoverageState.Complete,
                     expectedPlanets,

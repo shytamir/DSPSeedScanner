@@ -57,7 +57,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("incremental cluster polls terrain workers without changing results", IncrementalClusterMatchesSynchronousExecution),
                 ("incremental cluster cancellation and failure restore state", IncrementalClusterExitPathsRestoreState),
                 ("incremental cluster keeps serialization between yields", IncrementalClusterKeepsSerializationBetweenYields),
-                ("complete cache keys cover the full supported identity", CompleteCacheKeysCoverSupportedIdentity),
+                ("complete cache keys cover the audited reusable identity", CompleteCacheKeysCoverReusableIdentity),
+                ("complete cache reuses only audited payload across mode", CompleteCacheReusesOnlyAuditedPayloadAcrossMode),
                 ("complete cache round trips and replaces atomically", CompleteCacheRoundTripsAndReplacesAtomically),
                 ("complete cache bounds retention and clears manually", CompleteCacheBoundsRetentionAndClears),
                 ("complete cache rejects unsafe and obsolete entries", CompleteCacheRejectsUnsafeEntries),
@@ -67,6 +68,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("replacement rejects stale publication and late loads", ReplacementRejectsStalePublication),
                 ("preview exit retires once and blocks resurrection", PreviewExitRetiresAndBlocksResurrection),
                 ("automatic resolution uses cache once per completed load", AutomaticResolutionUsesCacheOncePerLoad),
+                ("automatic resolution reuses completed payload across mode", AutomaticResolutionReusesCompletedPayloadAcrossMode),
                 ("automatic resolution cancels replacement and exit", AutomaticResolutionCancelsReplacementAndExit),
                 ("automatic resolution terminal failures never retry", AutomaticResolutionFailuresNeverRetry),
                 ("panel maps every operational state within text bounds", PanelMapsEveryOperationalState),
@@ -1411,7 +1413,7 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(1, previewGateway.GenerateCalls);
         }
 
-        private static void CompleteCacheKeysCoverSupportedIdentity()
+        private static void CompleteCacheKeysCoverReusableIdentity()
         {
             True(CompleteClusterCacheKey.TryCreate(
                 PreviewIdentity(16_315_224, 1.0m),
@@ -1424,6 +1426,17 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(first, equivalent);
             Equal(first?.Hash, equivalent?.Hash);
             Equal(first?.CanonicalValue, equivalent?.CanonicalValue);
+
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224, combatMode: CombatMode.Peace),
+                Fingerprint(),
+                out CompleteClusterCacheKey? peace));
+            False(PreviewIdentity(16_315_224).Equals(
+                PreviewIdentity(16_315_224, combatMode: CombatMode.Peace)));
+            Equal(first, peace);
+            Equal(first?.Hash, peace?.Hash);
+            False(first!.CanonicalValue.Contains("combat-mode", StringComparison.Ordinal));
+            True(first.CanonicalValue.Contains("conclusion-contract", StringComparison.Ordinal));
 
             True(CompleteClusterCacheKey.TryCreate(
                 PreviewIdentity(16_315_224, 0.5m),
@@ -1457,6 +1470,103 @@ namespace DSPSeedScanner.Runtime.Tests
                 out CompleteClusterCacheKey? patched));
             False(first.Equals(patched));
             False(String.Equals(first.Hash, patched?.Hash, StringComparison.Ordinal));
+
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224, initialColonize: 0.5m),
+                Fingerprint(),
+                out CompleteClusterCacheKey? changedCombatValues));
+            False(first.Equals(changedCombatValues));
+            True(CompleteClusterCacheKey.TryCreate(
+                PreviewIdentity(16_315_224, maxDensity: 0.5m),
+                Fingerprint(),
+                out CompleteClusterCacheKey? changedDensity));
+            False(first.Equals(changedDensity));
+        }
+
+        private static void CompleteCacheReusesOnlyAuditedPayloadAcrossMode()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var cache = new CompleteClusterConclusionCache(path);
+                PreviewGenerationIdentity combat = PreviewIdentity(16_315_224);
+                PreviewGenerationIdentity peace = PreviewIdentity(
+                    16_315_224,
+                    combatMode: CombatMode.Peace);
+                CompleteClusterRawResult source = CompleteResult();
+                ConclusionReport template = source.Reports.First(report =>
+                    report.Stage == EvidenceStage.CompleteClusterRaw);
+                var unaudited = new ConclusionReport(
+                    template.Identity,
+                    template.Settings,
+                    template.Coverage,
+                    "FUTURE-UNAUDITED.fact",
+                    template.Context,
+                    template.ContractVersion,
+                    template.DefinitionVersion,
+                    template.Subject,
+                    template.Outcome,
+                    template.DecisiveFact,
+                    template.DiagnosticCause,
+                    template.SourceConclusionId);
+                var expanded = new CompleteClusterRawResult(
+                    source.Status,
+                    source.GalaxySeed,
+                    source.Code,
+                    source.Message,
+                    source.Fingerprint,
+                    source.Coverage,
+                    source.Progress,
+                    source.RareResources,
+                    source.Reports.Concat(new[] { unaudited }).ToArray(),
+                    source.Trace,
+                    source.StateRestored,
+                    source.ElapsedMilliseconds,
+                    source.ManagedMemoryDeltaBytes);
+
+                True(cache.TryStore(combat, expanded));
+                Equal(1, Directory.GetFiles(path, "*.dspseedscan").Length);
+                True(cache.TryRead(peace, Fingerprint(), out CachedCompleteClusterConclusions? hit));
+                Equal(combat, hit?.Identity);
+                False(hit!.Identity.Equals(peace));
+                True(hit.Reports.All(report => report.Settings.CombatMode == CombatMode.Combat));
+                False(hit.Reports.Any(report => report.ConclusionId == "FUTURE-UNAUDITED.fact"));
+
+                False(cache.TryRead(
+                    PreviewIdentity(16_315_224, 0.5m, CombatMode.Peace),
+                    Fingerprint(),
+                    out _));
+                False(cache.TryRead(
+                    PreviewIdentity(16_315_224, combatMode: CombatMode.Peace,
+                        initialColonize: 0.5m),
+                    Fingerprint(),
+                    out _));
+                False(cache.TryRead(
+                    PreviewIdentity(73_339_583, combatMode: CombatMode.Peace),
+                    Fingerprint(),
+                    out _));
+                var differentStarCount = new PreviewGenerationIdentity(
+                    new GenerationIdentity(
+                        peace.GalaxyIdentity.GameVersion,
+                        peace.GalaxyIdentity.GalaxyAlgorithm,
+                        peace.GalaxyIdentity.AssemblySha256,
+                        peace.GalaxyIdentity.OrderedThemeIds,
+                        peace.GalaxyIdentity.ScannerCompatibilityVersion,
+                        peace.GalaxyIdentity.GalaxySeed,
+                        32,
+                        peace.GalaxyIdentity.CreationVersion),
+                    peace.ResourceMultiplier,
+                    peace.CombatMode,
+                    peace.CombatSettingsKey,
+                    peace.InitialColonize,
+                    peace.MaxDensity);
+                False(cache.TryRead(differentStarCount, Fingerprint(), out _));
+                False(cache.TryRead(peace, Fingerprint(methodIl: "changed"), out _));
+                False(cache.TryRead(peace, Fingerprint(mods: new[] { "generation-mod" }), out _));
+                False(cache.TryRead(peace, Fingerprint(
+                    scannerCompatibility: "changed"), out _));
+                False(cache.TryRead(peace, Fingerprint(
+                    scannerContract: "changed"), out _));
+            });
         }
 
         private static void CompleteCacheRoundTripsAndReplacesAtomically()
@@ -1665,7 +1775,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     using (var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true))
                         reader.ReadString();
                     using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true);
-                    writer.Write(6);
+                    writer.Write(7);
                 }
                 byte[] obsoleteEntry = File.ReadAllBytes(entry);
                 using (SHA256 sha = SHA256.Create())
@@ -2022,6 +2132,111 @@ namespace DSPSeedScanner.Runtime.Tests
                     report.ConclusionId + "\t" + report.Outcome).SequenceEqual(
                         scanned.CompleteReports.Select(report =>
                             report.ConclusionId + "\t" + report.Outcome)));
+            });
+        }
+
+        private static void AutomaticResolutionReusesCompletedPayloadAcrossMode()
+        {
+            AssertCrossModeReuse(CombatMode.Combat, CombatMode.Peace);
+            AssertCrossModeReuse(CombatMode.Peace, CombatMode.Combat);
+            AssertIncompleteCrossModeReplacementRestarts();
+        }
+
+        private static void AssertIncompleteCrossModeReplacementRestarts()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var completeGateway = new FakeCompleteClusterGateway();
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle,
+                    new PreviewScanCoordinator(new FakeGateway(), gate),
+                    new CompleteClusterRawCoordinator(completeGateway, gate),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(
+                    1,
+                    PreviewIdentity(16_315_224),
+                    Request());
+                PreviewResolutionAttempt incomplete = resolver.CurrentPublishedAttempt!;
+                resolver.AdvanceCurrent();
+                Equal(PreviewResolutionState.Scanning, incomplete.State);
+
+                resolver.ObserveCompletedLoad(
+                    2,
+                    PreviewIdentity(16_315_224, combatMode: CombatMode.Peace),
+                    Request(combatMode: CombatMode.Peace));
+                PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cancelled, incomplete.State);
+                Equal(PreviewResolutionState.Scanning, replacement.State);
+                Equal(2, completeGateway.GenerateCalls);
+                True(replacement.CachedPayloadSourceIdentity == null);
+                False(lifecycle.CanPublish(incomplete.Session));
+                True(lifecycle.CanPublish(replacement.Session));
+            });
+        }
+
+        private static void AssertCrossModeReuse(
+            CombatMode sourceMode,
+            CombatMode activeMode)
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var previewGateway = new FakeGateway();
+                var completeGateway = new FakeCompleteClusterGateway();
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle,
+                    new PreviewScanCoordinator(previewGateway, gate),
+                    new CompleteClusterRawCoordinator(completeGateway, gate),
+                    new CompleteClusterConclusionCache(path));
+                PreviewGenerationIdentity sourceIdentity = PreviewIdentity(
+                    16_315_224,
+                    combatMode: sourceMode);
+                PreviewScanRequest sourceRequest = Request(combatMode: sourceMode);
+                resolver.ObserveCompletedLoad(1, sourceIdentity, sourceRequest);
+                PreviewResolutionAttempt source = resolver.CurrentPublishedAttempt!;
+                while (!source.IsTerminal)
+                    resolver.AdvanceCurrent();
+                Equal(PreviewResolutionState.Complete, source.State);
+                Equal(1, completeGateway.GenerateCalls);
+
+                PreviewGenerationIdentity activeIdentity = PreviewIdentity(
+                    16_315_224,
+                    combatMode: activeMode);
+                resolver.ObserveCompletedLoad(
+                    2,
+                    activeIdentity,
+                    Request(combatMode: activeMode));
+                PreviewResolutionAttempt active = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, active.State);
+                Equal(1, active.TerminalTransitionCount);
+                Equal(1, completeGateway.GenerateCalls);
+                Equal(activeIdentity, active.Session.Identity);
+                Equal(sourceIdentity, active.CachedPayloadSourceIdentity);
+                True(active.CompleteReports.All(report =>
+                    report.Settings.CombatMode == sourceMode));
+                if (activeMode == CombatMode.Peace)
+                    True(active.DarkFogOccupation == null);
+                else
+                    True(active.DarkFogOccupation != null);
+                PreviewConclusionPresentation presentation =
+                    PreviewConclusionPresenter.Project(active);
+                Equal(activeMode == CombatMode.Peace ? "Peace" : "Combat",
+                    presentation.IdentityLine.Split(' ').Last());
+                Equal(activeMode == CombatMode.Peace,
+                    presentation.DarkFogStatusLine == null);
+
+                PreviewResolutionAttempt retired = active;
+                resolver.ObserveCompletedLoad(
+                    3,
+                    PreviewIdentity(73_339_583, combatMode: activeMode),
+                    RequestForSeed(73_339_583, activeMode));
+                False(lifecycle.CanPublish(retired.Session));
+                True(lifecycle.CanPublish(resolver.CurrentPublishedAttempt!.Session));
+                resolver.ExitPreview();
+                True(resolver.CurrentPublishedAttempt == null);
             });
         }
 
@@ -3346,14 +3561,16 @@ namespace DSPSeedScanner.Runtime.Tests
                 maxDensity);
         }
 
-        private static PreviewScanRequest RequestForSeed(int seed)
+        private static PreviewScanRequest RequestForSeed(
+            int seed,
+            CombatMode combatMode = CombatMode.Combat)
         {
             return new PreviewScanRequest(
                 seed,
                 ConclusionDefinition.ReferenceStarCount,
                 ConclusionDefinition.ReferenceGameVersion,
                 1m,
-                CombatMode.Combat,
+                combatMode,
                 ConclusionDefinition.ReferenceCombatSettingsKey);
         }
 
@@ -3590,15 +3807,17 @@ namespace DSPSeedScanner.Runtime.Tests
             string? missing = null,
             IEnumerable<string>? mods = null,
             string? methodIl = null,
-            IEnumerable<string>? patchers = null)
+            IEnumerable<string>? patchers = null,
+            string? scannerCompatibility = null,
+            string? scannerContract = null)
         {
             return new RuntimeFingerprint(
                 gameVersion ?? ConclusionDefinition.ReferenceGameVersion,
                 algorithm ?? ConclusionDefinition.ReferenceGalaxyAlgorithm,
                 assembly ?? ConclusionDefinition.ReferenceAssemblySha256,
                 themes ?? ConclusionDefinition.ReferenceOrderedThemeIds.Split(','),
-                ConclusionDefinition.DefinitionVersion,
-                ConclusionDefinition.ContractVersion,
+                scannerCompatibility ?? ConclusionDefinition.DefinitionVersion,
+                scannerContract ?? ConclusionDefinition.ContractVersion,
                 members,
                 missing,
                 mods,

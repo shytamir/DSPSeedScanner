@@ -47,6 +47,7 @@ namespace DSPSeedScanner.Runtime
         public NormalizedHomePlanetTopology? HomePlanetTopology { get; private set; }
         public RuntimeSystemCandidates? SystemCandidates { get; private set; }
         public RuntimeDarkFogOccupation? DarkFogOccupation { get; private set; }
+        public PreviewGenerationIdentity? CachedPayloadSourceIdentity { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
         public bool CacheStored { get; internal set; }
@@ -93,6 +94,11 @@ namespace DSPSeedScanner.Runtime
         internal void SetDarkFogOccupation(RuntimeDarkFogOccupation? occupation)
         {
             DarkFogOccupation = occupation;
+        }
+
+        internal void SetCachedPayloadSourceIdentity(PreviewGenerationIdentity? identity)
+        {
+            CachedPayloadSourceIdentity = identity;
         }
     }
 
@@ -177,6 +183,7 @@ namespace DSPSeedScanner.Runtime
                 hit != null)
             {
                 currentAttempt.SetCompleteReports(hit.Reports);
+                currentAttempt.SetCachedPayloadSourceIdentity(hit.Identity);
                 currentAttempt.ExpectedPlanets = hit.Coverage.ExpectedPlanets;
                 currentAttempt.CompletedPlanets = hit.Coverage.CompletedPlanets;
                 Finish(

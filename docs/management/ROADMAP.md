@@ -2,8 +2,8 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-01: Use literal home-system
-terminology](#feed-01-use-literal-home-system-terminology).
+**Active user story:** [FEED-02: Reuse results across the Dark Fog
+toggle](#feed-02-reuse-results-across-the-dark-fog-toggle).
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -11,8 +11,9 @@ Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
 This active roadmap decomposes every independently valuable request in the
 issue and records the approved presentation boundary for implementation.
 Urgency describes how soon the work warrants attention; importance describes
-its expected effect on product trust or player value. FEED-01 is authorized
-and active; later stories remain inactive behind their documented gates.
+its expected effect on product trust or player value. FEED-01 was accepted;
+FEED-02 passed its technical gate and remains active pending owner acceptance.
+Later stories remain inactive behind their documented gates.
 
 ## Source coverage
 
@@ -134,8 +135,7 @@ this milestone.
 
 ## FEED-01: Use literal home-system terminology
 
-**State:** Acceptance gate passed on 2026-08-13; active pending owner
-acceptance.
+**State:** Accepted on 2026-08-13.
 
 **Category:** bug-fix
 
@@ -213,7 +213,8 @@ by this story's automated acceptance gate and was not performed.
 
 ## FEED-02: Reuse results across the Dark Fog toggle
 
-**State:** Pending; applicability proved; inactive until FEED-01 is accepted.
+**State:** Acceptance gate passed on 2026-08-13; active pending owner
+acceptance.
 
 **Category:** feature-request
 
@@ -248,6 +249,39 @@ settings, reusing Dark Fog counts, weakening compatibility or canonical
 generation identity, changing conclusion predicates, adding Dark Fog
 judgments, or sharing results between game versions or materially different
 generation environments.
+
+**Implemented:** Cache schema 8 gives only the audited completed payload a
+mode-neutral reuse key while preserving mode in the source identity stored
+inside the entry. A hit attaches source-attributed reports to the newly loaded
+preview session; that active preview remains authoritative for its identity,
+mode, immediate facts, and Dark Fog status. The full canonical identities are
+unchanged and still distinguish Peace from Combat.
+
+**Acceptance evidence:**
+
+- Combat-to-Peace and Peace-to-Combat fixtures reused one completed payload
+  without a second raw-generation operation, while the active panel identity
+  and Dark Fog status reflected the newly loaded mode;
+- the cached payload and every reused report retained the original source mode
+  and provenance instead of being rewritten as active-preview evidence;
+- seed, star count, resource multiplier, numeric combat settings, runtime and
+  generation fingerprints, scanner and conclusion contracts, and other key
+  changes remained misses; incomplete cross-mode replacement cancelled and
+  restarted rather than reusing partial work;
+- persistence admitted only the audited Fresh start resource, cluster-resource,
+  rare-access, derived-role, and compact-route report families; a synthetic
+  future field was excluded until separately proved invariant;
+- schema 7 entries became safe misses under schema 8, and existing corruption,
+  bounds, atomic replacement, retention, filesystem-failure, cache-hit,
+  cancellation, replacement, and exit fixtures remained green; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 Core checks passed, and all 70 Runtime checks passed.
+
+**Produced at this gate:** A bounded cross-mode reuse identity, explicit source
+provenance in persisted payloads and active attempts, an audited field
+allowlist, schema 8 persistence, and focused two-direction lifecycle fixtures.
+Interactive DSP validation was not required by this story's automated gate and
+was not performed.
 
 ## FEED-03: Establish the statistics panel
 
