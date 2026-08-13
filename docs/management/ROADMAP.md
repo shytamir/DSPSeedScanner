@@ -134,7 +134,8 @@ this milestone.
 
 ## FEED-01: Use literal home-system terminology
 
-**State:** Active; authorized for implementation.
+**State:** Acceptance gate passed on 2026-08-13; active pending owner
+acceptance.
 
 **Category:** bug-fix
 
@@ -181,6 +182,34 @@ or unrelated conclusion copy.
 **Out of scope:** Displaying giant type, topology elsewhere in the cluster,
 moon rankings, power-output predictions, factual statistics, or conclusion
 thresholds.
+
+**Implemented:** Preview normalization now resolves the home planet's native
+orbit parent, verifies that it is a generated giant in the same home system,
+and records either known direct-star orbit or the exact same-parent solid-moon
+count. Inconsistent topology omits only this conclusion. The presenter consumes
+that verified value and uses literal tidal-lock and home-giant wording; the
+existing topology predicate and every unrelated conclusion remain unchanged.
+
+**Acceptance evidence:**
+
+- tidal-lock fixtures covered one, two, and three named planets, a four-planet
+  count, known absence, and incomplete attribution;
+- topology fixtures covered direct orbit, one through three verified moons,
+  unrelated star-orbiting planets, another giant with moons, a moon of another
+  giant, a giant without moons, and wrong-system, missing, non-giant,
+  cross-system, mismatched, and malformed parent evidence;
+- only solid planets referencing the home planet's exact verified parent were
+  counted, and invalid topology omitted only its presentation line;
+- production-code inspection found no `permanent solar source` or `gas giant
+  neighbors` wording and confirmed no raw-scan, cache, statistics-panel, or
+  unrelated predicate change; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 Core checks passed, and all 68 Runtime checks passed.
+
+**Produced at this gate:** Immutable normalized home-planet topology,
+native-parent preview verification, literal Fresh start copy, and focused
+acceptance fixtures. Interactive DSP presentation validation was not required
+by this story's automated acceptance gate and was not performed.
 
 ## FEED-02: Reuse results across the Dark Fog toggle
 

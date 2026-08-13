@@ -79,8 +79,10 @@ public sealed class StarData
 public sealed class PlanetData
 {
     public int id;
+    public int number;
     public string displayName => string.Empty;
     public int orbitAround;
+    public PlanetData? orbitAroundPlanet;
     public float orbitRadius;
     public EPlanetSingularity singularity;
     public float luminosity;

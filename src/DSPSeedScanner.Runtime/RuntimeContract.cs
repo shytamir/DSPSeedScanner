@@ -349,6 +349,7 @@ namespace DSPSeedScanner.Runtime
             NormalizedSystemEvidence? birthSystem = this.systems
                 .SingleOrDefault(system => system.IsBirthSystem);
             this.birthPlanetAttributions = birthSystem?.BirthPlanets?.ToArray();
+            HomePlanetTopology = birthSystem?.HomePlanetTopology;
             if (this.systemDisplays.Select(value => value.Identifier)
                 .Distinct(StringComparer.Ordinal).Count() != this.systemDisplays.Length)
             {
@@ -381,6 +382,7 @@ namespace DSPSeedScanner.Runtime
                 ? null
                 : Array.AsReadOnly(
                     (NormalizedBirthPlanetEvidence[])birthPlanetAttributions.Clone());
+        public NormalizedHomePlanetTopology? HomePlanetTopology { get; }
         public string? UnknownEnumType { get; }
         public int? UnknownEnumValue { get; }
     }

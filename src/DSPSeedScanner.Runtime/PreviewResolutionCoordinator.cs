@@ -44,6 +44,7 @@ namespace DSPSeedScanner.Runtime
         public IReadOnlyList<NormalizedBirthPlanetEvidence> BirthPlanetAttributions =>
             birthPlanetAttributions.AsReadOnly();
         public bool HasCompleteBirthPlanetAttribution { get; private set; }
+        public NormalizedHomePlanetTopology? HomePlanetTopology { get; private set; }
         public RuntimeSystemCandidates? SystemCandidates { get; private set; }
         public RuntimeDarkFogOccupation? DarkFogOccupation { get; private set; }
         public int ExpectedPlanets { get; internal set; }
@@ -82,6 +83,11 @@ namespace DSPSeedScanner.Runtime
         internal void SetSystemCandidates(RuntimeSystemCandidates? candidates)
         {
             SystemCandidates = candidates;
+        }
+
+        internal void SetHomePlanetTopology(NormalizedHomePlanetTopology? topology)
+        {
+            HomePlanetTopology = topology;
         }
 
         internal void SetDarkFogOccupation(RuntimeDarkFogOccupation? occupation)
@@ -149,6 +155,7 @@ namespace DSPSeedScanner.Runtime
             currentAttempt.SetPreviewReports(preview.Reports);
             currentAttempt.SetSystemDisplays(preview.SystemDisplays);
             currentAttempt.SetBirthPlanetAttributions(preview.BirthPlanetAttributions);
+            currentAttempt.SetHomePlanetTopology(preview.HomePlanetTopology);
             currentAttempt.SetSystemCandidates(preview.SystemCandidates);
             currentAttempt.SetDarkFogOccupation(preview.DarkFogOccupation);
             if (preview.Status != RuntimeScanStatus.Success || preview.Fingerprint == null)

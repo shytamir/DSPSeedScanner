@@ -136,6 +136,49 @@ namespace DSPSeedScanner.Core
             Array.AsReadOnly((string[])gasProductIds.Clone());
     }
 
+    public enum HomePlanetOrbitKind
+    {
+        DirectStar,
+        GiantMoon
+    }
+
+    public sealed record NormalizedHomePlanetTopology
+    {
+        public NormalizedHomePlanetTopology(
+            int homePlanetId,
+            HomePlanetOrbitKind orbitKind,
+            int? homeGiantMoonCount = null)
+        {
+            if (homePlanetId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(homePlanetId));
+            if (!Enum.IsDefined(typeof(HomePlanetOrbitKind), orbitKind))
+                throw new ArgumentOutOfRangeException(nameof(orbitKind));
+            if (orbitKind == HomePlanetOrbitKind.DirectStar && homeGiantMoonCount.HasValue)
+            {
+                throw new ArgumentException(
+                    "A direct-orbit home planet cannot carry a giant moon count.",
+                    nameof(homeGiantMoonCount));
+            }
+            if (orbitKind == HomePlanetOrbitKind.GiantMoon &&
+                (!homeGiantMoonCount.HasValue || homeGiantMoonCount.Value < 1))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(homeGiantMoonCount),
+                    "A home giant must include the home planet in its moon count.");
+            }
+
+            HomePlanetId = homePlanetId;
+            OrbitKind = orbitKind;
+            HomeGiantMoonCount = homeGiantMoonCount;
+        }
+
+        public int HomePlanetId { get; }
+
+        public HomePlanetOrbitKind OrbitKind { get; }
+
+        public int? HomeGiantMoonCount { get; }
+    }
+
     public sealed record NormalizedSystemEvidence
     {
         public NormalizedSystemEvidence(
@@ -150,7 +193,8 @@ namespace DSPSeedScanner.Core
             long? maximumShellRadius = null,
             int? containedOrbitCount = null,
             int? initialHiveCount = null,
-            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanets = null)
+            IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanets = null,
+            NormalizedHomePlanetTopology? homePlanetTopology = null)
         {
             Subject = subject ?? throw new ArgumentNullException(nameof(subject));
             if (subject.Kind != SubjectKind.BirthSystem &&
@@ -188,6 +232,12 @@ namespace DSPSeedScanner.Core
                     "Only the birth system can carry birth-planet attribution.",
                     nameof(birthPlanets));
             }
+            if (!isBirthSystem && homePlanetTopology != null)
+            {
+                throw new ArgumentException(
+                    "Only the home system can carry home-planet topology.",
+                    nameof(homePlanetTopology));
+            }
 
             NormalizedGasProduct[] products = (giantProducts ??
                 Array.Empty<NormalizedGasProduct>())
@@ -222,6 +272,7 @@ namespace DSPSeedScanner.Core
             ContainedOrbitCount = containedOrbitCount;
             InitialHiveCount = initialHiveCount;
             BirthPlanets = planets == null ? null : Array.AsReadOnly(planets);
+            HomePlanetTopology = homePlanetTopology;
         }
 
         public ConclusionSubject Subject { get; }
@@ -247,6 +298,8 @@ namespace DSPSeedScanner.Core
         public int? InitialHiveCount { get; }
 
         public IReadOnlyList<NormalizedBirthPlanetEvidence>? BirthPlanets { get; }
+
+        public NormalizedHomePlanetTopology? HomePlanetTopology { get; }
     }
 
     public sealed record StarterResourceMetric

@@ -20,6 +20,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("complete preview reaches all immediate families", CompletePreviewReachesAllImmediateFamilies),
                 ("birth planet attribution is deterministic and owned", BirthPlanetAttributionIsDeterministicAndOwned),
                 ("birth planet attribution distinguishes gas cardinality and unknown", BirthPlanetAttributionDistinguishesCardinalityAndUnknown),
+                ("home topology verifies only the home planet parent", HomeTopologyVerifiesOnlyHomePlanetParent),
                 ("system candidates are bounded deterministic and owned", SystemCandidatesAreBoundedDeterministicAndOwned),
                 ("incomplete system candidate evidence stays unknown", IncompleteSystemCandidateEvidenceStaysUnknown),
                 ("unsupported game identity rejects safely", UnsupportedGameIdentityRejectsSafely),
@@ -73,6 +74,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
+                ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
                 ("fresh start resources group by metric and outcome", FreshStartResourcesGroupByMetricAndOutcome),
                 ("Megafactory copy is natural bounded and grouped", MegafactoryCopyIsNaturalBoundedAndGrouped),
@@ -243,6 +245,78 @@ namespace DSPSeedScanner.Runtime.Tests
                 False(attempt.HasCompleteBirthPlanetAttribution);
                 Equal(0, attempt.BirthPlanetAttributions.Count);
             });
+        }
+
+        private static void HomeTopologyVerifiesOnlyHomePlanetParent()
+        {
+            const string home = "home";
+            const string other = "other";
+            RuntimePlanetOrbitEvidence Direct(int id = 101) =>
+                Orbit(id, home, 1, true, false, 0, null);
+            RuntimePlanetOrbitEvidence Giant(
+                int id = 200,
+                string system = home,
+                int number = 2) => Orbit(id, system, number, false, true, 0, null);
+            RuntimePlanetOrbitEvidence Moon(
+                int id,
+                int parentId = 200,
+                int orbitAround = 2,
+                string system = home) =>
+                Orbit(id, system, id, true, false, orbitAround, parentId);
+
+            Equal(
+                HomePlanetOrbitKind.DirectStar,
+                PreviewHomeTopologyNormalizer.Normalize(home, 101, new[]
+                {
+                    Direct(),
+                    Giant(),
+                    Giant(300, home, 3),
+                    Moon(301, 300, 3),
+                    Orbit(102, home, 4, true, false, 0, null)
+                })?.OrbitKind);
+
+            for (int count = 1; count <= 3; count++)
+            {
+                var planets = new List<RuntimePlanetOrbitEvidence> { Giant(), Moon(101) };
+                for (int index = 1; index < count; index++)
+                    planets.Add(Moon(101 + index));
+                planets.Add(Giant(300, home, 3));
+                planets.Add(Moon(301, 300, 3));
+                planets.Add(Orbit(400, home, 4, true, false, 0, null));
+                NormalizedHomePlanetTopology? topology =
+                    PreviewHomeTopologyNormalizer.Normalize(home, 101, planets);
+                Equal(HomePlanetOrbitKind.GiantMoon, topology?.OrbitKind);
+                Equal(count, topology?.HomeGiantMoonCount);
+            }
+
+            Equal(HomePlanetOrbitKind.DirectStar,
+                PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                    new[] { Direct(), Giant() })?.OrbitKind);
+            True(PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                new[] { Orbit(101, other, 1, true, false, 0, null) }) == null);
+            True(PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                new[] { Moon(101, 999) }) == null);
+            True(PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                new[] { Moon(101, 202), Orbit(202, home, 2, true, false, 0, null) }) == null);
+            True(PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                new[] { Moon(101), Giant(200, other) }) == null);
+            True(PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                new[] { Moon(101, 200, 3), Giant() }) == null);
+            True(PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                new[] { Orbit(101, home, 1, true, false, -1, null) }) == null);
+            True(PreviewHomeTopologyNormalizer.Normalize(home, 101,
+                new[] { Moon(101), Giant(200, home, 0) }) == null);
+
+            RuntimeScanResult isolated = new PreviewScanCoordinator(new FakeGateway
+            {
+                Snapshot = Snapshot(includeHomePlanetTopology: false)
+            }).TryScan(Request(), CancellationToken.None);
+            Equal(ComponentOutcome.Unknown, FindReport(
+                isolated,
+                SharedSatelliteEvaluator.ConclusionId).Outcome);
+            Equal(ComponentOutcome.Supports, FindReport(
+                isolated,
+                "FS-POWER.solar").Outcome);
         }
 
         private static void SystemCandidatesAreBoundedDeterministicAndOwned()
@@ -2574,13 +2648,14 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(rendered.Contains("Starter gas giants lack Deuterium / Fire Ice", StringComparison.Ordinal));
                 True(rendered.Contains("Aspidiske I has bright solar", StringComparison.Ordinal));
                 True(rendered.Contains("Aspidiske I has strong wind", StringComparison.Ordinal));
-                True(rendered.Contains("Permanent solar source on Aspidiske I", StringComparison.Ordinal));
-                True(rendered.Contains("2 gas giant neighbors", StringComparison.Ordinal));
+                True(rendered.Contains("Aspidiske I is tidally locked", StringComparison.Ordinal));
+                True(rendered.Contains("3 moons orbit the home giant", StringComparison.Ordinal));
                 False(rendered.Contains("Combined starter deposits", StringComparison.Ordinal));
                 foreach (string forbidden in new[]
                 {
                     "@", "type star", "%", "ratio", "amount", "distribution",
-                    "Birth-system", "collection rate", "+"
+                    "Birth-system", "collection rate", "+", "permanent solar source",
+                    "gas giant neighbor"
                 })
                 {
                     False(rendered.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
@@ -2610,9 +2685,48 @@ namespace DSPSeedScanner.Runtime.Tests
                 False(rendered.Contains("wind", StringComparison.OrdinalIgnoreCase));
                 False(rendered.Contains("gas giant has", StringComparison.OrdinalIgnoreCase));
                 False(rendered.Contains("gas giants have", StringComparison.OrdinalIgnoreCase));
-                False(rendered.Contains("permanent solar", StringComparison.OrdinalIgnoreCase));
-                True(rendered.Contains("gas giant neighbors", StringComparison.OrdinalIgnoreCase));
+                False(rendered.Contains("tidally locked", StringComparison.OrdinalIgnoreCase));
+                True(rendered.Contains("moons orbit the home giant", StringComparison.OrdinalIgnoreCase));
             });
+        }
+
+        private static void TidalLockCopyIsBoundedAndLiteral()
+        {
+            ConclusionReport supports = PresentationReport(
+                ConclusionContext.FreshStart,
+                ComponentOutcome.Supports,
+                EvidenceStage.GalaxyPreview,
+                "FS-POWER.birth-tidal",
+                new ConclusionSubject(SubjectKind.BirthSystem, "home"));
+            ConclusionReport absent = PresentationReport(
+                ConclusionContext.FreshStart,
+                ComponentOutcome.DoesNotSupport,
+                EvidenceStage.GalaxyPreview,
+                "FS-POWER.birth-tidal",
+                new ConclusionSubject(SubjectKind.BirthSystem, "home"));
+            NormalizedBirthPlanetEvidence[] planets = Enumerable.Range(1, 4)
+                .Select(index => SolidAttribution(
+                    100 + index,
+                    "Alpha " + index,
+                    1m,
+                    1m,
+                    true))
+                .ToArray();
+            var topology = new NormalizedHomePlanetTopology(
+                101,
+                HomePlanetOrbitKind.DirectStar);
+
+            Equal("Alpha 1 is tidally locked", FreshLines(
+                new[] { supports }, planets.Take(1), topology).Single());
+            Equal("Alpha 1 and Alpha 2 are tidally locked", FreshLines(
+                new[] { supports }, planets.Take(2), topology).Single());
+            Equal("Alpha 1, Alpha 2, and Alpha 3 are tidally locked", FreshLines(
+                new[] { supports }, planets.Take(3), topology).Single());
+            Equal("4 home planets are tidally locked", FreshLines(
+                new[] { supports }, planets, topology).Single());
+            Equal("No tidally locked home planets", FreshLines(
+                new[] { absent }, Array.Empty<NormalizedBirthPlanetEvidence>(), topology).Single());
+            Equal(0, FreshLines(new[] { supports }, null, topology).Count);
         }
 
         private static void FreshStartResourcesGroupByMetricAndOutcome()
@@ -2648,16 +2762,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     "FS-RESOURCES.groups:" + resource,
                     new ConclusionSubject(SubjectKind.Resource, resource)));
             }
-            MethodInfo build = typeof(PreviewConclusionPresenter).GetMethod(
-                "BuildFreshStartCards",
-                BindingFlags.Static | BindingFlags.NonPublic) ??
-                throw new InvalidOperationException(
-                    "Fresh start presentation composer was not found.");
-            var cards = (IReadOnlyList<PresentedConclusionCard>)(build.Invoke(
-                null,
-                new object?[] { reports, null }) ??
-                throw new InvalidOperationException(
-                    "Fresh start presentation composer returned no cards."));
+            IReadOnlyList<PresentedConclusionCard> cards = FreshCards(reports, null, null);
             string[] lines = cards.Select(card => card.Line).ToArray();
 
             True(lines.SequenceEqual(new[]
@@ -3291,6 +3396,52 @@ namespace DSPSeedScanner.Runtime.Tests
                 cause);
         }
 
+        private static RuntimePlanetOrbitEvidence Orbit(
+            int planetId,
+            string systemIdentifier,
+            int planetNumber,
+            bool isSolid,
+            bool isGiant,
+            int orbitAround,
+            int? parentPlanetId)
+        {
+            return new RuntimePlanetOrbitEvidence(
+                planetId,
+                systemIdentifier,
+                planetNumber,
+                isSolid,
+                isGiant,
+                orbitAround,
+                parentPlanetId);
+        }
+
+        private static IReadOnlyList<PresentedConclusionCard> FreshCards(
+            IReadOnlyList<ConclusionReport> reports,
+            IEnumerable<NormalizedBirthPlanetEvidence>? planets,
+            NormalizedHomePlanetTopology? topology)
+        {
+            MethodInfo build = typeof(PreviewConclusionPresenter).GetMethod(
+                "BuildFreshStartCards",
+                BindingFlags.Static | BindingFlags.NonPublic) ??
+                throw new InvalidOperationException(
+                    "Fresh start presentation composer was not found.");
+            return (IReadOnlyList<PresentedConclusionCard>)(build.Invoke(
+                null,
+                new object?[] { reports, planets?.ToArray(), topology }) ??
+                throw new InvalidOperationException(
+                    "Fresh start presentation composer returned no cards."));
+        }
+
+        private static IReadOnlyList<string> FreshLines(
+            IReadOnlyList<ConclusionReport> reports,
+            IEnumerable<NormalizedBirthPlanetEvidence>? planets,
+            NormalizedHomePlanetTopology? topology)
+        {
+            return FreshCards(reports, planets, topology)
+                .Select(card => card.Line)
+                .ToArray();
+        }
+
         private static CompleteClusterRawResult CompleteResult(decimal resourceMultiplier = 1m) =>
             new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway())
                 .TryGenerate(Request(resourceMultiplier), CancellationToken.None);
@@ -3464,7 +3615,8 @@ namespace DSPSeedScanner.Runtime.Tests
             int birthInitialHiveCount = 1,
             int otherInitialHiveCount = 39,
             int? missingHiveSystem = null,
-            decimal primaryDistanceLy = 2m)
+            decimal primaryDistanceLy = 2m,
+            bool includeHomePlanetTopology = true)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -3489,7 +3641,7 @@ namespace DSPSeedScanner.Runtime.Tests
                         birth ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
                         (index + 1).ToString()),
                     birth,
-                    birth ? 3 : null,
+                    birth ? includeHomePlanetTopology ? 3 : null : null,
                     birth ? true : null,
                     birth ? 1.35m : null,
                     birth ? 1.5m : null,
@@ -3500,7 +3652,14 @@ namespace DSPSeedScanner.Runtime.Tests
                     systemId == missingHiveSystem
                         ? null
                         : birth ? birthInitialHiveCount : leader ? otherInitialHiveCount : 0,
-                    birth ? birthPlanetAttributions : null));
+                    birth ? birthPlanetAttributions : null,
+                    birth && includeHomePlanetTopology
+                        ? new NormalizedHomePlanetTopology(
+                            birthPlanetAttributions?.FirstOrDefault(value => !value.IsGasGiant)
+                                ?.PlanetId ?? 101,
+                            HomePlanetOrbitKind.GiantMoon,
+                            3)
+                        : null));
             }
 
             var distances = new List<NormalizedSystemDistance>();

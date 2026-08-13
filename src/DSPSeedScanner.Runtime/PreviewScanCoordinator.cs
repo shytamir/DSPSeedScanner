@@ -30,6 +30,7 @@ namespace DSPSeedScanner.Runtime
             string? rawDiagnostic = null,
             IEnumerable<RuntimeSystemDisplay>? systemDisplays = null,
             IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null,
+            NormalizedHomePlanetTopology? homePlanetTopology = null,
             RuntimeSystemCandidates? systemCandidates = null,
             RuntimeDarkFogOccupation? darkFogOccupation = null)
         {
@@ -55,6 +56,7 @@ namespace DSPSeedScanner.Runtime
                 ? null
                 : Array.AsReadOnly(
                     new List<NormalizedBirthPlanetEvidence>(birthPlanetAttributions).ToArray());
+            HomePlanetTopology = homePlanetTopology;
             SystemCandidates = systemCandidates;
             DarkFogOccupation = darkFogOccupation;
         }
@@ -89,6 +91,7 @@ namespace DSPSeedScanner.Runtime
         public string? RawDiagnostic { get; }
         public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays { get; }
         public IReadOnlyList<NormalizedBirthPlanetEvidence>? BirthPlanetAttributions { get; }
+        public NormalizedHomePlanetTopology? HomePlanetTopology { get; }
         public RuntimeSystemCandidates? SystemCandidates { get; }
         public RuntimeDarkFogOccupation? DarkFogOccupation { get; }
     }
@@ -125,6 +128,7 @@ namespace DSPSeedScanner.Runtime
             int? generatedStarCount = null;
             IReadOnlyList<RuntimeSystemDisplay>? systemDisplays = null;
             IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null;
+            NormalizedHomePlanetTopology? homePlanetTopology = null;
             RuntimeSystemCandidates? systemCandidates = null;
             RuntimeDarkFogOccupation? darkFogOccupation = null;
             bool restored = true;
@@ -200,6 +204,7 @@ namespace DSPSeedScanner.Runtime
                             {
                                 reports = RuntimeConclusionEvaluator.Evaluate(request, fingerprint, snapshot);
                                 birthPlanetAttributions = snapshot.BirthPlanetAttributions;
+                                homePlanetTopology = snapshot.HomePlanetTopology;
                                 systemCandidates = snapshot.SystemCandidates;
                                 darkFogOccupation = RuntimeDarkFogOccupation.Project(
                                     request.CombatMode,
@@ -265,6 +270,7 @@ namespace DSPSeedScanner.Runtime
                 rawDiagnostic,
                 systemDisplays,
                 birthPlanetAttributions,
+                homePlanetTopology,
                 systemCandidates,
                 status == RuntimeScanStatus.Success ? darkFogOccupation : null);
         }
@@ -282,6 +288,7 @@ namespace DSPSeedScanner.Runtime
             string? rawDiagnostic = null,
             IEnumerable<RuntimeSystemDisplay>? systemDisplays = null,
             IEnumerable<NormalizedBirthPlanetEvidence>? birthPlanetAttributions = null,
+            NormalizedHomePlanetTopology? homePlanetTopology = null,
             RuntimeSystemCandidates? systemCandidates = null,
             RuntimeDarkFogOccupation? darkFogOccupation = null)
         {
@@ -299,6 +306,7 @@ namespace DSPSeedScanner.Runtime
                 rawDiagnostic,
                 systemDisplays,
                 birthPlanetAttributions,
+                homePlanetTopology,
                 systemCandidates,
                 darkFogOccupation);
         }

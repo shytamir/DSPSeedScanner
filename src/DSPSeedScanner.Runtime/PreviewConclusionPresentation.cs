@@ -189,14 +189,16 @@ namespace DSPSeedScanner.Runtime
                     attempt.SystemCandidates,
                     attempt.HasCompleteBirthPlanetAttribution
                         ? attempt.BirthPlanetAttributions
-                        : null),
+                        : null,
+                    attempt.HomePlanetTopology),
                 Group(
                     detailReports,
                     displays,
                     attempt.SystemCandidates,
                     attempt.HasCompleteBirthPlanetAttribution
                         ? attempt.BirthPlanetAttributions
-                        : null));
+                        : null,
+                    attempt.HomePlanetTopology));
         }
 
         public static PresentedConclusionCard MapCard(ConclusionReport report)
@@ -263,7 +265,8 @@ namespace DSPSeedScanner.Runtime
             IEnumerable<ConclusionReport> source,
             IReadOnlyDictionary<string, RuntimeSystemDisplay> displays,
             RuntimeSystemCandidates? candidates,
-            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets,
+            NormalizedHomePlanetTopology? homePlanetTopology)
         {
             ConclusionReport[] reports = source
                 .Where(report => report.Outcome != ComponentOutcome.Unknown &&
@@ -281,7 +284,10 @@ namespace DSPSeedScanner.Runtime
                 if (context == ConclusionContext.FreshStart)
                 {
                     IReadOnlyList<PresentedConclusionCard> freshStart =
-                        BuildFreshStartCards(contextReports, birthPlanets);
+                        BuildFreshStartCards(
+                            contextReports,
+                            birthPlanets,
+                            homePlanetTopology);
                     if (freshStart.Count != 0)
                     {
                         groups.Add(new PresentedContextGroup(
@@ -418,7 +424,8 @@ namespace DSPSeedScanner.Runtime
 
         private static IReadOnlyList<PresentedConclusionCard> BuildFreshStartCards(
             IReadOnlyList<ConclusionReport> reports,
-            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
+            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets,
+            NormalizedHomePlanetTopology? homePlanetTopology)
         {
             var cards = new List<PresentedConclusionCard>();
             foreach (ComponentOutcome outcome in new[]
@@ -459,7 +466,7 @@ namespace DSPSeedScanner.Runtime
             AddFreshCard(
                 cards,
                 Reports(reports, SharedSatelliteEvaluator.ConclusionId),
-                TopologyLine(reports));
+                TopologyLine(reports, homePlanetTopology));
 
             AddGroupedResourceCards(
                 cards,
@@ -1135,7 +1142,7 @@ namespace DSPSeedScanner.Runtime
             if (report == null || birthPlanets == null)
                 return null;
             if (report.Outcome == ComponentOutcome.DoesNotSupport)
-                return "No permanent solar sources";
+                return "No tidally locked home planets";
             NormalizedBirthPlanetEvidence[] tidal = birthPlanets
                 .Where(planet => !planet.IsGasGiant && planet.IsTidalLocked == true)
                 .OrderBy(planet => planet.PlanetId)
@@ -1143,30 +1150,28 @@ namespace DSPSeedScanner.Runtime
             return tidal.Length == 0
                 ? null
                 : tidal.Length > MaximumSubjectsPerCard
-                    ? "Many permanent solar sources"
-                : (tidal.Length == 1 ? "Permanent solar source on " :
-                    "Permanent solar sources on ") +
-                    JoinNames(tidal.Select(planet => planet.DisplayName));
+                    ? tidal.Length.ToString(CultureInfo.InvariantCulture) +
+                        " home planets are tidally locked"
+                : JoinNames(tidal.Select(planet => planet.DisplayName)) +
+                    (tidal.Length == 1 ? " is tidally locked" : " are tidally locked");
         }
 
-        private static string? TopologyLine(IReadOnlyList<ConclusionReport> reports)
+        private static string? TopologyLine(
+            IReadOnlyList<ConclusionReport> reports,
+            NormalizedHomePlanetTopology? topology)
         {
             ConclusionReport? report = reports.SingleOrDefault(value =>
                 value.ConclusionId == SharedSatelliteEvaluator.ConclusionId);
-            if (report?.DecisiveFact == null ||
-                !Int32.TryParse(
-                    report.DecisiveFact.Value,
-                    NumberStyles.Integer,
-                    CultureInfo.InvariantCulture,
-                    out int sharedBodies))
-            {
+            if (report == null || topology == null)
                 return null;
-            }
-            int neighbors = Math.Max(0, sharedBodies - 1);
-            return neighbors == 0
-                ? "No gas giant neighbors"
-                : neighbors.ToString(CultureInfo.InvariantCulture) +
-                    (neighbors == 1 ? " gas giant neighbor" : " gas giant neighbors");
+            if (topology.OrbitKind == HomePlanetOrbitKind.DirectStar)
+                return "Home planet is not a moon";
+            if (!topology.HomeGiantMoonCount.HasValue)
+                return null;
+            int moons = topology.HomeGiantMoonCount.Value;
+            return moons.ToString(CultureInfo.InvariantCulture) +
+                (moons == 1 ? " moon orbits the home giant" :
+                    " moons orbit the home giant");
         }
 
         private static string? ResourceLine(ConclusionReport report)

@@ -4,10 +4,11 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 completed story scope, evidence, and history belong in archived roadmaps.
 
-**Current status:** The user-feedback roadmap was activated on 2026-08-13 and
-the repository returned to active product development. FEED-01, the literal
-home-system terminology correction, is the sole active story. Later stories
-remain inactive behind the roadmap's acceptance and phase gates. The earlier
+**Current status:** FEED-01 passed its technical acceptance gate on 2026-08-13
+and remains the sole active story pending owner acceptance. Its literal
+tidal-lock wording and verified home-planet topology correction are
+implemented; FEED-02 and later stories remain inactive behind the roadmap's
+acceptance and phase gates. The earlier
 scanner core, New Game presentation, and presentation refinement roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01 corrected
 pathless runtime-assembly fingerprinting, and FSOR-01 completed local runtime-

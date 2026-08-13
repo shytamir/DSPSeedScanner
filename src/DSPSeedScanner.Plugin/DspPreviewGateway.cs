@@ -117,7 +117,6 @@ namespace DSPSeedScanner.Plugin
         {
             recordTrace("preview:extract");
             StarData birthStar = galaxy.StarById(galaxy.birthStarId);
-            PlanetData birthPlanet = galaxy.PlanetById(galaxy.birthPlanetId);
             foreach (StarData star in galaxy.stars)
             {
                 foreach (PlanetData planet in star.planets)
@@ -136,12 +135,38 @@ namespace DSPSeedScanner.Plugin
                 }
             }
 
+            string birthSystemIdentifier = SystemIdentifier(
+                request.GalaxySeed,
+                birthStar,
+                true);
+            var generatedPlanets = new HashSet<PlanetData>(
+                galaxy.stars.SelectMany(star => star.planets));
+            NormalizedHomePlanetTopology? homePlanetTopology =
+                PreviewHomeTopologyNormalizer.Normalize(
+                    birthSystemIdentifier,
+                    galaxy.birthPlanetId,
+                    galaxy.stars.SelectMany(star => star.planets.Select(planet =>
+                        new RuntimePlanetOrbitEvidence(
+                            planet.id,
+                            SystemIdentifier(
+                                request.GalaxySeed,
+                                star,
+                                star.id == galaxy.birthStarId),
+                            planet.number,
+                            planet.type != EPlanetType.Gas,
+                            planet.type == EPlanetType.Gas,
+                            planet.orbitAround,
+                            planet.orbitAroundPlanet != null &&
+                                generatedPlanets.Contains(planet.orbitAroundPlanet)
+                                ? planet.orbitAroundPlanet.id
+                                : null))));
+
             NormalizedSystemEvidence[] systems = galaxy.stars
                 .Select(star => NormalizeSystem(
                     request.GalaxySeed,
                     star,
                     birthStar,
-                    birthPlanet))
+                    homePlanetTopology))
                 .ToArray();
             NormalizedSystemDistance[] distances = NormalizeDistances(
                 request.GalaxySeed,
@@ -158,7 +183,7 @@ namespace DSPSeedScanner.Plugin
                 .ToArray();
             recordTrace("preview:normalized");
             return new RuntimePreviewSnapshot(
-                SystemIdentifier(request.GalaxySeed, birthStar, true),
+                birthSystemIdentifier,
                 galaxy.starCount,
                 systems,
                 distances,
@@ -169,10 +194,14 @@ namespace DSPSeedScanner.Plugin
             int seed,
             StarData star,
             StarData birthStar,
-            PlanetData birthPlanet)
+            NormalizedHomePlanetTopology? homePlanetTopology)
         {
             bool isBirth = star.id == birthStar.id;
-            int sharedBodies = 0;
+            int? sharedBodies = isBirth
+                ? homePlanetTopology?.OrbitKind == HomePlanetOrbitKind.DirectStar
+                    ? 1
+                    : homePlanetTopology?.HomeGiantMoonCount
+                : null;
             bool tidal = false;
             bool hasSolid = false;
             decimal maximumSolar = 0m;
@@ -194,11 +223,6 @@ namespace DSPSeedScanner.Plugin
                     maximumSolar = Math.Max(maximumSolar, Convert.ToDecimal(planet.luminosity));
                     maximumWind = Math.Max(maximumWind, Convert.ToDecimal(planet.windStrength));
                     tidal |= (planet.singularity & EPlanetSingularity.TidalLocked) != 0;
-                    if (isBirth && birthPlanet.orbitAround > 0 &&
-                        planet.orbitAround == birthPlanet.orbitAround)
-                    {
-                        sharedBodies++;
-                    }
                     birthPlanets?.Add(new NormalizedBirthPlanetEvidence(
                         planet.id,
                         planet.displayName,
@@ -246,7 +270,7 @@ namespace DSPSeedScanner.Plugin
                     isBirth ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
                     SystemIdentifier(seed, star, isBirth)),
                 isBirth,
-                isBirth ? sharedBodies : null,
+                sharedBodies,
                 isBirth ? tidal : null,
                 isBirth && hasSolid ? maximumSolar : null,
                 isBirth && hasSolid ? maximumWind : null,
@@ -260,7 +284,8 @@ namespace DSPSeedScanner.Plugin
                 maximumShellRadius,
                 containedOrbits,
                 star.initialHiveCount,
-                birthPlanetAttributionComplete ? birthPlanets : null);
+                birthPlanetAttributionComplete ? birthPlanets : null,
+                isBirth ? homePlanetTopology : null);
         }
 
         private static NormalizedSystemDistance[] NormalizeDistances(
@@ -329,7 +354,6 @@ namespace DSPSeedScanner.Plugin
                 (typeof(UniverseGen), "CreateGalaxy", MemberTypes.Method),
                 (typeof(GalaxyData), "Free", MemberTypes.Method),
                 (typeof(GalaxyData), "StarById", MemberTypes.Method),
-                (typeof(GalaxyData), "PlanetById", MemberTypes.Method),
                 (typeof(GalaxyData), "stars", MemberTypes.Field),
                 (typeof(GalaxyData), "starCount", MemberTypes.Field),
                 (typeof(GameDesc), "savedThemeIds", MemberTypes.Field),
@@ -340,6 +364,8 @@ namespace DSPSeedScanner.Plugin
                 (typeof(StarData), "uPosition", MemberTypes.Field),
                 (typeof(StarData), "initialHiveCount", MemberTypes.Field),
                 (typeof(PlanetData), "orbitAround", MemberTypes.Field),
+                (typeof(PlanetData), "orbitAroundPlanet", MemberTypes.Field),
+                (typeof(PlanetData), "number", MemberTypes.Field),
                 (typeof(PlanetData), "displayName", MemberTypes.Property),
                 (typeof(PlanetData), "orbitRadius", MemberTypes.Field),
                 (typeof(PlanetData), "singularity", MemberTypes.Field),
