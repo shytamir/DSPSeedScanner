@@ -8,8 +8,8 @@ authority.
 
 - [Project steering](../PROJECT.md): Authoritative accepted decisions and
   current tracked project status.
-- [Maintenance roadmap](../management/ROADMAP.md): Inactive placeholder
-  recording that no roadmap or user story is active.
+- [User-feedback roadmap](../management/ROADMAP.md): Active FEED-01 through
+  FEED-10 delivery plan, phase gates, and milestones.
 
 ## Archived documents
 

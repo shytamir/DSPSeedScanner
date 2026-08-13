@@ -8,8 +8,8 @@ current status and decisions; completed roadmap history resides in the
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [Maintenance roadmap](management/ROADMAP.md): Current maintenance state and
-  active external confirmation gate.
+- [User-feedback roadmap](management/ROADMAP.md): Active FEED-01 through
+  FEED-10 delivery plan, phase gates, milestones, and tabled requests.
 - [Runtime identity maintenance draft](management/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
   Pathless-assembly hotfix evidence, retired conclusion-gate proposal, and the
   completed filesystem-robustness correction.

@@ -28,11 +28,11 @@ by another plugin may affect its results and are not always detectable.
 ## Project status
 
 [docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current
-project status and steering decisions. The completed
+project status and steering decisions. Active product development follows the
+[user-feedback roadmap](docs/management/ROADMAP.md), beginning with FEED-01's
+home-system terminology correction. The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
-records its stories, acceptance gates, and implementation history. The current
-[roadmap placeholder](docs/management/ROADMAP.md) confirms that no roadmap is
-active and the repository is in maintenance mode.
+records the preceding stories, acceptance gates, and implementation history.
 
 The [documentation index](docs/INDEX.md) lists the accepted specifications,
 delivery notes, management documents, and archived planning material.
@@ -57,7 +57,7 @@ integration boundary are documented in the
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
 [project steering document](docs/PROJECT.md), and the current
-[roadmap placeholder](docs/management/ROADMAP.md) before changing scope or
+[user-feedback roadmap](docs/management/ROADMAP.md) before changing scope or
 behavior.
 
 ## License

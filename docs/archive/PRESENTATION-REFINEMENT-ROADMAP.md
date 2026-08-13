@@ -775,5 +775,5 @@ removed. Automated equivalence, restoration, presentation, build, and package
 checks passed, followed by all seven installed 4K steps with the original
 progress sequence intact and no observed frame drops.
 
-Return to the [maintenance roadmap](../management/ROADMAP.md),
+Return to the [active roadmap](../management/ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

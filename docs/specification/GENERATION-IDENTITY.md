@@ -77,6 +77,41 @@ initial and maximum hive counts in the runtime experiment. Toggling combat on
 with otherwise default settings did not change the generated galaxy snapshot,
 because the same default combat values were already present in `GameDesc`.
 
+### Peace/Combat reuse applicability
+
+A focused follow-up on 2026-08-13 established that `isPeaceMode` may be omitted
+from the reuse key for explicitly toggle-invariant pre-play evidence when every
+other identity input, including `initialColonize` and `maxDensity`, remains
+equal. It may not be omitted from the canonical generation identity or from
+Dark Fog status.
+
+Assembly inspection of the supported `Assembly-CSharp.dll` found no direct
+`isPeaceMode` read in galaxy, star, planet, terrain, or vein generation. Star
+generation read `initialColonize` and `maxDensity`; raw algorithms did not read
+the mode field or its `isCombatMode` property. Indirect property consumers were
+UI, save, achievement, property-multiplier, factory, sector, and other gameplay
+paths rather than the inspected pre-play generation path.
+
+The controlled runtime comparison held seed, 64-star request, creation version,
+ordered themes, resource multiplier `1`, galaxy algorithm, assembly, and
+numeric combat values equal and changed only Peace/Combat mode. Seeds
+`73339583`, `96178012`, and `45772` covered 630 solid planets. For each seed,
+Peace and Combat produced identical hashes for the selected preview facts and
+for every generated vein node and summarized vein group. The comparison covered
+383,309 vein nodes and 21,351 groups, including planet attribution, theme and
+algorithm, resource type and product, node/group counts, amounts, and positions.
+The preview hash covered the star, planet, topology, theme, energy, gas-product,
+ocean, and stellar facts consumed or planned by the product. Two independent
+DSP processes produced byte-identical result files with SHA-256
+`4F0889174EA9FDC90D6E8BB0A189D94B33840132C6A6B74BF9B1CBF0C8ABB33C`.
+
+This finding authorizes reuse only for fields included in that audited payload.
+An added field must establish the same invariance before joining it. The active
+preview continues to supply its own mode and Dark Fog occupation, while the
+reused payload retains its source identity and provenance. Any numeric combat,
+resource, seed, catalogue, runtime, algorithm, contract, or evidence-stage
+change remains a cache miss.
+
 Reproducing the actual enemy state created when play begins additionally
 requires `initialLevel` and `initialGrowth`. Reproducing or interpreting later
 Dark Fog behavior requires the complete combat-settings value:

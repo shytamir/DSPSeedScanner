@@ -4,17 +4,16 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 completed story scope, evidence, and history belong in archived roadmaps.
 
-**Current status:** The scanner core, New Game presentation, and presentation
-refinement roadmaps were completed and accepted on 2026-08-11 and 2026-08-12.
-The refinement release candidate passed its seven-step installed 4K human
-validation on 2026-08-12, including smooth cache-miss scanning through a
-scanner-owned terrain worker. The repository is in maintenance mode; no
-product roadmap is active. HOTFIX-01 corrected pathless runtime-assembly
-fingerprinting and is awaiting confirmation on the reporting user's affected
-installation. FSOR-01 completed local runtime-filesystem hardening on
-2026-08-13 without changing identity or conclusion semantics. TD-004 is
-pending evaluation for developer-probe output failure containment and does not
-affect ordinary player behavior.
+**Current status:** The user-feedback roadmap was activated on 2026-08-13 and
+the repository returned to active product development. FEED-01, the literal
+home-system terminology correction, is the sole active story. Later stories
+remain inactive behind the roadmap's acceptance and phase gates. The earlier
+scanner core, New Game presentation, and presentation refinement roadmaps were
+completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01 corrected
+pathless runtime-assembly fingerprinting, and FSOR-01 completed local runtime-
+filesystem hardening on 2026-08-13 without changing identity or conclusion
+semantics. TD-004 remains pending evaluation and does not affect ordinary
+player behavior.
 
 ## Product decision
 
@@ -117,8 +116,8 @@ decision and corresponding roadmap change.
 
 ## Management and documentation
 
-The [maintenance roadmap placeholder](management/ROADMAP.md) records that no
-management roadmap is active. The completed
+The active [user-feedback roadmap](management/ROADMAP.md) owns current story
+order, phase gates, milestones, and acceptance boundaries. The completed
 [presentation refinement roadmap](archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 and earlier roadmap records are retained in the [archive](archive/INDEX.md).
 The
