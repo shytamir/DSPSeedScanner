@@ -134,10 +134,14 @@ public static class LDB
     public static ThemeProtoSet themes => new ThemeProtoSet();
 }
 
-public sealed class ThemeProtoSet
+public class ProtoSet<T>
+{
+    public T[] dataArray = System.Array.Empty<T>();
+}
+
+public sealed class ThemeProtoSet : ProtoSet<ThemeProto>
 {
     public int Length => dataArray.Length;
-    public ThemeProto[] dataArray = System.Array.Empty<ThemeProto>();
 }
 
 public sealed class ThemeProto

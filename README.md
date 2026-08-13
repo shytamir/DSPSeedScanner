@@ -32,8 +32,8 @@ project status and steering decisions. Active product development follows the
 [user-feedback roadmap](docs/management/ROADMAP.md). FEED-01 and FEED-02 were
 accepted, establishing a clean slate for panel work. FEED-03 was accepted, and
 FEED-04 was accepted, establishing a fully enabled panel scaffold. FEED-05 was
-accepted, and FEED-06's per-body home-system ore and gas-product facts have
-reached their technical acceptance gate. The completed
+accepted, and FEED-06's per-body home-system ore and gas-product facts are in
+corrective owner validation after their first interactive test. The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 records the preceding stories, acceptance gates, and implementation history.
 

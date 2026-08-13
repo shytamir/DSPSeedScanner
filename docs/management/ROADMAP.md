@@ -3,7 +3,8 @@
 **Status:** Active as of 2026-08-13.
 
 **Active user story:** [FEED-06: Show home-system ore
-availability](#feed-06-show-home-system-ore-availability).
+availability](#feed-06-show-home-system-ore-availability) is undergoing
+corrective owner validation.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -16,8 +17,9 @@ accepted, `ready-for-new-panel` passed, and the **Clean slate for panel work**
 milestone was established. FEED-03 and FEED-04 were accepted,
 `ready-for-panel-population` passed, and the **Panel renders with all features
 enabled even if not yet consumed** milestone was established. FEED-05 was
-accepted. FEED-06 passed its technical gate and remains active pending owner
-acceptance. Later stories remain inactive behind their documented gates.
+accepted. FEED-06 remains active while its narrow runtime and hosted-reference
+corrections await owner validation. Later stories remain inactive behind their
+documented gates.
 
 ## Source coverage
 
@@ -527,8 +529,7 @@ this story's automated gate and was not performed.
 
 ## FEED-06: Show home-system ore availability
 
-**State:** Acceptance gate passed on 2026-08-13; active pending owner
-acceptance.
+**State:** Corrective build pending owner validation as of 2026-08-13.
 
 **Category:** feature-request
 
@@ -596,6 +597,16 @@ per-body ore sets, presentation-time row joining, cache schema 9 persistence,
 and focused completion, cache, cancellation, replacement, and exit fixtures.
 Interactive DSP visual validation was not required by this story's automated
 gate and was not performed.
+
+**Corrective finding:** The first interactive roadmap test found that the
+hosted artifact referenced `ThemeProtoSet.dataArray`, while DSP declares that
+field on `ProtoSet<ThemeProto>`, causing immediate scans to fail. Direct-build
+testing also showed empty rows when DSP omitted the optional parent object
+reference. The hosted compile contract now mirrors the real declaring type,
+and home-body projection resolves the parent from the authoritative
+`orbitAround` planet number while using an available object reference only as
+corroboration. Owner validation of the corrected hosted artifact remains
+pending.
 
 ## FEED-07: Show nearest rare-resource access
 

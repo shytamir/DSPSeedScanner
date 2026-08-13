@@ -175,8 +175,6 @@ namespace DSPSeedScanner.Runtime
                 return null;
             }
 
-            IReadOnlyDictionary<int, RuntimeHomeSystemBodyEvidence> byId =
-                values.ToDictionary(value => value.BodyId);
             var projected = new List<HomeSystemBody>(values.Length);
             foreach (RuntimeHomeSystemBodyEvidence value in values
                 .OrderBy(item => item.StableGameOrder))
@@ -199,14 +197,14 @@ namespace DSPSeedScanner.Runtime
                     continue;
                 }
 
-                if (!value.ResolvedParentBodyId.HasValue ||
-                    !byId.TryGetValue(
-                        value.ResolvedParentBodyId.Value,
-                        out RuntimeHomeSystemBodyEvidence? parent) ||
+                RuntimeHomeSystemBodyEvidence? parent = values.SingleOrDefault(candidate =>
+                    candidate.PlanetNumber == value.OrbitAround &&
+                    candidate.OrbitAround == 0);
+                if (parent == null ||
                     parent.BodyId == value.BodyId ||
-                    parent.OrbitAround != 0 ||
                     parent.ResolvedParentBodyId.HasValue ||
-                    parent.PlanetNumber != value.OrbitAround)
+                    (value.ResolvedParentBodyId.HasValue &&
+                        value.ResolvedParentBodyId.Value != parent.BodyId))
                 {
                     return null;
                 }

@@ -2678,6 +2678,19 @@ namespace DSPSeedScanner.Runtime.Tests
                     HomeBody(103, "Alpha III", 3, 1, 101, 2),
                     HomeBody(104, "Alpha IV", 4, 2, 102, 3)
                 }) != null);
+            HomeSystemBodyInventory? unresolvedReference =
+                HomeSystemBodyInventory.Project(
+                    "home-system",
+                    new[]
+                    {
+                        HomeBody(101, "Alpha I", 1, 0, null, 0),
+                        HomeBody(102, "Alpha II", 2, 0, null, 1),
+                        HomeBody(103, "Alpha III", 3, 2, null, 2)
+                    });
+            True(unresolvedReference != null);
+            Equal(
+                102,
+                unresolvedReference!.Bodies.Single(body => body.BodyId == 103).ParentBodyId);
             True(HomeSystemBodyInventory.Project(
                 "home-system",
                 new[] { HomeBody(103, "Alpha III", 3, 2, 999, 0) }) == null);
