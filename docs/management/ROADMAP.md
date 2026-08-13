@@ -2,8 +2,8 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-04: Share the home-planet title
-designation](#feed-04-share-the-home-planet-title-designation).
+**Active user story:** [FEED-05: Show home-system layout and energy
+facts](#feed-05-show-home-system-layout-and-energy-facts).
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -13,9 +13,11 @@ issue and records the approved presentation boundary for implementation.
 Urgency describes how soon the work warrants attention; importance describes
 its expected effect on product trust or player value. FEED-01 and FEED-02 were
 accepted, `ready-for-new-panel` passed, and the **Clean slate for panel work**
-milestone was established. FEED-03 was accepted. FEED-04 passed its technical
-gate and remains active pending owner acceptance. Later stories remain inactive behind their
-documented gates.
+milestone was established. FEED-03 and FEED-04 were accepted,
+`ready-for-panel-population` passed, and the **Panel renders with all features
+enabled even if not yet consumed** milestone was established. FEED-05 passed
+its technical gate and remains active pending owner acceptance. Later stories
+remain inactive behind their documented gates.
 
 ## Source coverage
 
@@ -89,6 +91,10 @@ regression that would contaminate new panel work. This gate establishes the
 **Clean slate for panel work** milestone.
 
 ### `ready-for-panel-population`
+
+**State:** Passed on 2026-08-13. The owner accepted FEED-03 and FEED-04,
+establishing the **Panel renders with all features enabled even if not yet
+consumed** milestone.
 
 The panel-scaffold-and-prior-concern phase is complete when FEED-03 and FEED-04
 have passed their acceptance gates. The statistics panel renders in every
@@ -400,8 +406,7 @@ story and was not performed.
 
 ## FEED-04: Share the home-planet title designation
 
-**State:** Acceptance gate passed on 2026-08-13; active pending owner
-acceptance.
+**State:** Accepted on 2026-08-13.
 
 **Category:** feature-request
 
@@ -465,7 +470,8 @@ story's automated gate and was not performed.
 
 ## FEED-05: Show home-system layout and energy facts
 
-**State:** Pending; inactive until `ready-for-panel-population` passes.
+**State:** Acceptance gate passed on 2026-08-13; active pending owner
+acceptance.
 
 **Category:** feature-request
 
@@ -492,6 +498,33 @@ scan does not start, and conclusion-panel content remains unchanged.
 **Out of scope:** Ore availability or amounts, cluster planet themes, energy
 output predictions, preferred-planet selection, sorting by quality, or new
 energy thresholds.
+
+**Implemented:** The existing lightweight home-system body projection now
+retains DSP's body kind, theme display name, and exact Solar and Wind ratios in
+the same stable inventory entry. DSP's native per-planet ice flag distinguishes
+ice giants from gas giants. The statistics renderer formats one row per body in
+inventory order, omits unavailable fields, and sizes the `Home system`
+container to its wrapped rows. No raw resource or cluster fact was added.
+
+**Acceptance evidence:**
+
+- fixtures covered solid planets with distinct themes, exact whole and
+  fractional percentages, gas and ice giants, and partially available fields;
+- the body-evidence source was enumerable only once, the immutable inventory
+  remained the sole body collection, and formatting preserved one row per body
+  in stable game order;
+- statistics-document updates exposed the lightweight facts before any raw
+  planet work advanced, caused no additional complete-scan session, replaced
+  the prior seed's rows, and cleared them on preview exit;
+- conclusion presentation and conclusion contracts were unchanged; and
+- the Release solution and installed-game plugin built with zero warnings, all
+  14 Core checks passed, and all 77 Runtime checks passed.
+
+**Produced at this gate:** One-pass home-body fact capture, exact percentage
+formatting, gas/ice labels, dynamically sized and scrollable home-system rows,
+compatibility-member checks for the newly consumed DSP fields, and focused
+lifecycle fixtures. Interactive DSP visual validation was not required by
+this story's automated gate and was not performed.
 
 ## FEED-06: Show home-system ore availability
 

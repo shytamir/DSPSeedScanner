@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using DSPSeedScanner.Runtime;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace DSPSeedScanner.Plugin
         private const float SectionGap = 12f;
         private GUIStyle? titleStyle;
         private GUIStyle? sectionTitleStyle;
+        private GUIStyle? bodyStyle;
         private GUIStyle? panelStyle;
         private GUIStyle? sectionStyle;
         private GUISkin? scrollSkin;
@@ -90,8 +92,12 @@ namespace DSPSeedScanner.Plugin
             float scrollY = y + 42f;
             float scrollHeight = bounds.Bottom - PreviewPanelLayout.DocumentPadding - scrollY;
             float contentWidth = viewportWidth - ScrollbarReserve;
-            const float sectionHeight = 88f;
-            float contentHeight = sectionHeight * 2 + SectionGap;
+            string[] homeLines = document.HomeSystem?.Bodies
+                .Select(HomeSystemBodyPresentation.Format)
+                .ToArray() ?? Array.Empty<string>();
+            float homeSectionHeight = SectionHeight(homeLines, contentWidth);
+            float clusterSectionHeight = SectionHeight(Array.Empty<string>(), contentWidth);
+            float contentHeight = homeSectionHeight + clusterSectionHeight + SectionGap;
             GUISkin previousSkin = GUI.skin;
             GUI.skin = scrollSkin!;
             scrollPosition = GUI.BeginScrollView(
@@ -106,16 +112,18 @@ namespace DSPSeedScanner.Plugin
                 scrollPosition.y);
             try
             {
-                DrawEmptySection(
+                DrawSection(
                     PreviewStatisticsDocument.HomeSystemTitle,
+                    homeLines,
                     0f,
                     contentWidth,
-                    sectionHeight);
-                DrawEmptySection(
+                    homeSectionHeight);
+                DrawSection(
                     PreviewStatisticsDocument.ClusterTitle,
-                    sectionHeight + SectionGap,
+                    Array.Empty<string>(),
+                    homeSectionHeight + SectionGap,
                     contentWidth,
-                    sectionHeight);
+                    clusterSectionHeight);
             }
             finally
             {
@@ -124,14 +132,41 @@ namespace DSPSeedScanner.Plugin
             }
         }
 
-        private void DrawEmptySection(
+        private float SectionHeight(string[] lines, float width)
+        {
+            float height = 46f;
+            foreach (string line in lines)
+            {
+                height += Math.Max(
+                    24f,
+                    bodyStyle!.CalcHeight(
+                        new GUIContent(line),
+                        width - 24f)) + 4f;
+            }
+            return Math.Max(88f, height + 8f);
+        }
+
+        private void DrawSection(
             string title,
+            string[] lines,
             float y,
             float width,
             float height)
         {
             GUI.Box(new Rect(0f, y, width, height), GUIContent.none, sectionStyle);
             GUI.Label(new Rect(0f, y + 8f, width, 30f), title, sectionTitleStyle);
+            float lineY = y + 42f;
+            foreach (string line in lines)
+            {
+                float lineHeight = Math.Max(
+                    24f,
+                    bodyStyle!.CalcHeight(new GUIContent(line), width - 24f));
+                GUI.Label(
+                    new Rect(12f, lineY, width - 24f, lineHeight),
+                    line,
+                    bodyStyle);
+                lineY += lineHeight + 4f;
+            }
         }
 
         private void EnsureStyles()
@@ -154,6 +189,14 @@ namespace DSPSeedScanner.Plugin
                 fontSize = 18,
                 fontStyle = FontStyle.Bold,
                 wordWrap = false
+            };
+            bodyStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.UpperLeft,
+                clipping = TextClipping.Clip,
+                fontSize = 16,
+                fontStyle = FontStyle.Normal,
+                wordWrap = true
             };
             panelStyle = new GUIStyle(GUI.skin.box);
             panelStyle.normal.background = MakeTexture(

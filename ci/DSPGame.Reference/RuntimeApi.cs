@@ -91,6 +91,7 @@ public sealed class PlanetData
     public float[]? gasSpeeds;
     public EPlanetType type;
     public int theme;
+    public int iceFlag;
     public int algoId;
     public int precision;
     public double mod_x;
@@ -142,6 +143,7 @@ public sealed class ThemeProtoSet
 public sealed class ThemeProto
 {
     public int ID;
+    public string displayName => string.Empty;
     public EPlanetType PlanetType;
     public int[]? Algos;
 }

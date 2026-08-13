@@ -12,6 +12,13 @@ namespace DSPSeedScanner.Runtime
         Satellite
     }
 
+    public enum HomeSystemBodyKind
+    {
+        Solid,
+        GasGiant,
+        IceGiant
+    }
+
     public sealed record RuntimeHomeSystemBodyEvidence
     {
         public RuntimeHomeSystemBodyEvidence(
@@ -20,7 +27,11 @@ namespace DSPSeedScanner.Runtime
             int planetNumber,
             int orbitAround,
             int? resolvedParentBodyId,
-            int stableGameOrder)
+            int stableGameOrder,
+            HomeSystemBodyKind bodyKind = HomeSystemBodyKind.Solid,
+            string? themeName = null,
+            decimal? solarRatio = null,
+            decimal? windRatio = null)
         {
             if (bodyId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(bodyId));
@@ -34,6 +45,23 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentOutOfRangeException(nameof(orbitAround));
             if (stableGameOrder < 0)
                 throw new ArgumentOutOfRangeException(nameof(stableGameOrder));
+            if (!Enum.IsDefined(typeof(HomeSystemBodyKind), bodyKind))
+                throw new ArgumentOutOfRangeException(nameof(bodyKind));
+            if (themeName != null && String.IsNullOrWhiteSpace(themeName))
+                throw new ArgumentException(
+                    "Theme name must be nonblank when supplied.",
+                    nameof(themeName));
+            if (solarRatio < 0)
+                throw new ArgumentOutOfRangeException(nameof(solarRatio));
+            if (windRatio < 0)
+                throw new ArgumentOutOfRangeException(nameof(windRatio));
+            if (bodyKind != HomeSystemBodyKind.Solid &&
+                (themeName != null || solarRatio.HasValue || windRatio.HasValue))
+            {
+                throw new ArgumentException(
+                    "Giant facts must not contain solid-planet fields.",
+                    nameof(bodyKind));
+            }
 
             BodyId = bodyId;
             DisplayDesignation = displayDesignation;
@@ -41,6 +69,10 @@ namespace DSPSeedScanner.Runtime
             OrbitAround = orbitAround;
             ResolvedParentBodyId = resolvedParentBodyId;
             StableGameOrder = stableGameOrder;
+            BodyKind = bodyKind;
+            ThemeName = themeName;
+            SolarRatio = solarRatio;
+            WindRatio = windRatio;
         }
 
         public int BodyId { get; }
@@ -49,6 +81,10 @@ namespace DSPSeedScanner.Runtime
         public int OrbitAround { get; }
         public int? ResolvedParentBodyId { get; }
         public int StableGameOrder { get; }
+        public HomeSystemBodyKind BodyKind { get; }
+        public string? ThemeName { get; }
+        public decimal? SolarRatio { get; }
+        public decimal? WindRatio { get; }
     }
 
     public sealed record HomeSystemBody
@@ -58,13 +94,21 @@ namespace DSPSeedScanner.Runtime
             string displayDesignation,
             HomeSystemBodyOrbitKind orbitKind,
             int? parentBodyId,
-            int stableGameOrder)
+            int stableGameOrder,
+            HomeSystemBodyKind bodyKind,
+            string? themeName,
+            decimal? solarRatio,
+            decimal? windRatio)
         {
             BodyId = bodyId;
             DisplayDesignation = displayDesignation;
             OrbitKind = orbitKind;
             ParentBodyId = parentBodyId;
             StableGameOrder = stableGameOrder;
+            BodyKind = bodyKind;
+            ThemeName = themeName;
+            SolarRatio = solarRatio;
+            WindRatio = windRatio;
         }
 
         public int BodyId { get; }
@@ -72,11 +116,16 @@ namespace DSPSeedScanner.Runtime
         public HomeSystemBodyOrbitKind OrbitKind { get; }
         public int? ParentBodyId { get; }
         public int StableGameOrder { get; }
+        public HomeSystemBodyKind BodyKind { get; }
+        public string? ThemeName { get; }
+        public decimal? SolarRatio { get; }
+        public decimal? WindRatio { get; }
     }
 
     public sealed class HomeSystemBodyInventory
     {
         private readonly HomeSystemBody[] bodies;
+        private readonly IReadOnlyList<HomeSystemBody> bodyView;
 
         private HomeSystemBodyInventory(
             string homeSystemIdentifier,
@@ -84,12 +133,12 @@ namespace DSPSeedScanner.Runtime
         {
             HomeSystemIdentifier = homeSystemIdentifier;
             this.bodies = bodies;
+            bodyView = Array.AsReadOnly(bodies);
         }
 
         public string HomeSystemIdentifier { get; }
 
-        public IReadOnlyList<HomeSystemBody> Bodies =>
-            Array.AsReadOnly((HomeSystemBody[])bodies.Clone());
+        public IReadOnlyList<HomeSystemBody> Bodies => bodyView;
 
         public static HomeSystemBodyInventory? Project(
             string homeSystemIdentifier,
@@ -128,7 +177,11 @@ namespace DSPSeedScanner.Runtime
                         value.DisplayDesignation,
                         HomeSystemBodyOrbitKind.Primary,
                         null,
-                        value.StableGameOrder));
+                        value.StableGameOrder,
+                        value.BodyKind,
+                        value.ThemeName,
+                        value.SolarRatio,
+                        value.WindRatio));
                     continue;
                 }
 
@@ -148,10 +201,52 @@ namespace DSPSeedScanner.Runtime
                     value.DisplayDesignation,
                     HomeSystemBodyOrbitKind.Satellite,
                     parent.BodyId,
-                    value.StableGameOrder));
+                    value.StableGameOrder,
+                    value.BodyKind,
+                    value.ThemeName,
+                    value.SolarRatio,
+                    value.WindRatio));
             }
 
             return new HomeSystemBodyInventory(homeSystemIdentifier, projected.ToArray());
+        }
+    }
+
+    public static class HomeSystemBodyPresentation
+    {
+        public static string Format(HomeSystemBody body)
+        {
+            if (body == null)
+                throw new ArgumentNullException(nameof(body));
+
+            if (body.BodyKind == HomeSystemBodyKind.GasGiant)
+                return body.DisplayDesignation + " | Gas giant";
+            if (body.BodyKind == HomeSystemBodyKind.IceGiant)
+                return body.DisplayDesignation + " | Ice giant";
+
+            var facts = new List<string>(3);
+            if (body.ThemeName != null)
+                facts.Add(body.ThemeName);
+            if (body.SolarRatio.HasValue)
+            {
+                facts.Add("Solar " + FormatPercentage(body.SolarRatio.Value));
+            }
+            if (body.WindRatio.HasValue)
+            {
+                facts.Add("Wind " + FormatPercentage(body.WindRatio.Value));
+            }
+            return facts.Count == 0
+                ? body.DisplayDesignation
+                : body.DisplayDesignation + " | " + String.Join(" | ", facts);
+        }
+
+        public static string FormatPercentage(decimal ratio)
+        {
+            if (ratio < 0)
+                throw new ArgumentOutOfRangeException(nameof(ratio));
+            return (ratio * 100m).ToString(
+                "0.############################",
+                CultureInfo.InvariantCulture) + "%";
         }
     }
 

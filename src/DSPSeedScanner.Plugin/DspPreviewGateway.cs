@@ -143,6 +143,9 @@ namespace DSPSeedScanner.Plugin
                 galaxy.stars.SelectMany(star => star.planets));
             PlanetData? homePlanet = birthStar.planets.SingleOrDefault(planet =>
                 planet.id == galaxy.birthPlanetId);
+            IReadOnlyDictionary<int, ThemeProto> themesById = LDB.themes.dataArray
+                .Where(theme => theme != null)
+                .ToDictionary(theme => theme.ID);
             HomeSystemBodyInventory? homeSystemBodyInventory =
                 HomeSystemBodyInventory.Project(
                     birthSystemIdentifier,
@@ -156,7 +159,11 @@ namespace DSPSeedScanner.Plugin
                                 generatedPlanets.Contains(planet.orbitAroundPlanet)
                                 ? planet.orbitAroundPlanet.id
                                 : null,
-                            stableGameOrder)));
+                            stableGameOrder,
+                            HomeBodyKind(planet),
+                            HomeThemeName(planet, themesById),
+                            HomeEnergyRatio(planet, planet.luminosity),
+                            HomeEnergyRatio(planet, planet.windStrength))));
             NormalizedHomePlanetTopology? homePlanetTopology =
                 PreviewHomeTopologyNormalizer.Normalize(
                     birthSystemIdentifier,
@@ -206,6 +213,40 @@ namespace DSPSeedScanner.Plugin
                 systemDisplays: displays,
                 homeSystemBodyInventory: homeSystemBodyInventory,
                 homePlanetDisplayDesignation: homePlanet?.displayName);
+        }
+
+        private static HomeSystemBodyKind HomeBodyKind(PlanetData planet)
+        {
+            if (planet.type != EPlanetType.Gas)
+                return HomeSystemBodyKind.Solid;
+            return planet.iceFlag > 0
+                ? HomeSystemBodyKind.IceGiant
+                : HomeSystemBodyKind.GasGiant;
+        }
+
+        private static string? HomeThemeName(
+            PlanetData planet,
+            IReadOnlyDictionary<int, ThemeProto> themesById)
+        {
+            if (planet.type == EPlanetType.Gas ||
+                !themesById.TryGetValue(planet.theme, out ThemeProto? theme) ||
+                String.IsNullOrWhiteSpace(theme.displayName))
+            {
+                return null;
+            }
+            return theme.displayName;
+        }
+
+        private static decimal? HomeEnergyRatio(PlanetData planet, float ratio)
+        {
+            if (planet.type == EPlanetType.Gas ||
+                Single.IsNaN(ratio) ||
+                Single.IsInfinity(ratio) ||
+                ratio < 0f)
+            {
+                return null;
+            }
+            return Convert.ToDecimal(ratio);
         }
 
         private static NormalizedSystemEvidence NormalizeSystem(
@@ -389,9 +430,12 @@ namespace DSPSeedScanner.Plugin
                 (typeof(PlanetData), "singularity", MemberTypes.Field),
                 (typeof(PlanetData), "luminosity", MemberTypes.Field),
                 (typeof(PlanetData), "windStrength", MemberTypes.Field),
+                (typeof(PlanetData), "theme", MemberTypes.Field),
+                (typeof(PlanetData), "iceFlag", MemberTypes.Field),
                 (typeof(PlanetData), "gasItems", MemberTypes.Field),
                 (typeof(PlanetData), "gasSpeeds", MemberTypes.Field),
-                (typeof(PlanetData), "type", MemberTypes.Field)
+                (typeof(PlanetData), "type", MemberTypes.Field),
+                (typeof(ThemeProto), "displayName", MemberTypes.Property)
             };
             foreach ((Type type, string member, MemberTypes kind) in required)
             {

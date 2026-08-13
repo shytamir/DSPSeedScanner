@@ -75,6 +75,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("panel corners map clockwise and avoid border centers", PanelCornersMapClockwise),
                 ("statistics panel mirrors the authoritative conclusion layout", StatisticsPanelMirrorsConclusionLayout),
                 ("home system body inventory is immutable complete and ordered", HomeSystemBodyInventoryIsImmutableCompleteAndOrdered),
+                ("home system statistics show layout and exact energy facts", HomeSystemStatisticsShowLayoutAndExactEnergyFacts),
                 ("cluster statistics are keyed ordered and sectioned", ClusterStatisticsAreKeyedOrderedAndSectioned),
                 ("cluster locations format AU and preserve stable ties", ClusterLocationsFormatAuAndPreserveStableTies),
                 ("statistics panel follows preview lifecycle independently", StatisticsPanelFollowsPreviewLifecycleIndependently),
@@ -2672,6 +2673,51 @@ namespace DSPSeedScanner.Runtime.Tests
                 new[] { HomeBody(103, "Alpha III", 3, 2, 999, 0) }) == null);
         }
 
+        private static void HomeSystemStatisticsShowLayoutAndExactEnergyFacts()
+        {
+            var source = new SingleEnumerationEnumerable<RuntimeHomeSystemBodyEvidence>(
+                new[]
+                {
+                    HomeBody(
+                        104, "Alpha IV", 4, 2, 102, 3,
+                        HomeSystemBodyKind.Solid, null, null, 1.5m),
+                    HomeBody(
+                        101, "Alpha I", 1, 0, null, 0,
+                        HomeSystemBodyKind.Solid, "Mediterranean", 1.23m, 0.8m),
+                    HomeBody(
+                        103, "Alpha III", 3, 2, 102, 2,
+                        HomeSystemBodyKind.IceGiant),
+                    HomeBody(
+                        102, "Alpha II", 2, 0, null, 1,
+                        HomeSystemBodyKind.GasGiant),
+                    HomeBody(
+                        105, "Alpha V", 5, 0, null, 4,
+                        HomeSystemBodyKind.Solid, "Lava", 0m, null)
+                });
+
+            HomeSystemBodyInventory inventory = HomeSystemBodyInventory.Project(
+                "home-system",
+                source)!;
+            Equal(1, source.EnumerationCount);
+            string[] lines = inventory.Bodies
+                .Select(HomeSystemBodyPresentation.Format)
+                .ToArray();
+            Equal(5, lines.Length);
+            Equal("Alpha I | Mediterranean | Solar 123% | Wind 80%", lines[0]);
+            Equal("Alpha II | Gas giant", lines[1]);
+            Equal("Alpha III | Ice giant", lines[2]);
+            Equal("Alpha IV | Wind 150%", lines[3]);
+            Equal("Alpha V | Lava | Solar 0%", lines[4]);
+            Equal("123.456789%", HomeSystemBodyPresentation.FormatPercentage(
+                1.23456789m));
+            False(lines.Any(line => line.Contains("ore", StringComparison.OrdinalIgnoreCase)));
+            Equal(1, source.EnumerationCount);
+
+            HomeSystemBody[] copy = inventory.Bodies.ToArray();
+            copy[0] = copy[4];
+            Equal("Alpha I", inventory.Bodies[0].DisplayDesignation);
+        }
+
         private static void ClusterStatisticsAreKeyedOrderedAndSectioned()
         {
             PreviewClusterStatistics empty = new PreviewClusterStatistics();
@@ -2749,16 +2795,25 @@ namespace DSPSeedScanner.Runtime.Tests
                             "1",
                             new[]
                             {
-                                HomeBody(101, "Alpha I", 1, 0, null, 0),
-                                HomeBody(102, "Alpha II", 2, 0, null, 1),
-                                HomeBody(103, "Alpha III", 3, 2, 102, 2)
+                                HomeBody(
+                                    101, "Alpha I", 1, 0, null, 0,
+                                    HomeSystemBodyKind.Solid,
+                                    "Mediterranean", 1.2m, 0.8m),
+                                HomeBody(
+                                    102, "Alpha II", 2, 0, null, 1,
+                                    HomeSystemBodyKind.GasGiant),
+                                HomeBody(
+                                    103, "Alpha III", 3, 2, 102, 2,
+                                    HomeSystemBodyKind.Solid,
+                                    "Oceanic jungle", null, 1.5m)
                             }))
                 };
+                var completeGateway = new FakeCompleteClusterGateway();
                 using var resolver = new PreviewResolutionCoordinator(
                     new PreviewSessionLifecycle(),
                     new PreviewScanCoordinator(gateway, gate),
                     new CompleteClusterRawCoordinator(
-                        new FakeCompleteClusterGateway(),
+                        completeGateway,
                         gate),
                     new CompleteClusterConclusionCache(path));
                 var conclusions = new PreviewPanelController();
@@ -2777,9 +2832,20 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(PreviewStatisticsDocument.ClusterTitle, "Cluster");
                 Equal(conclusionDocument.IdentityLine, firstDocument.IdentityLine);
                 Equal(3, firstDocument.HomeSystem!.Bodies.Count);
+                Equal(
+                    "Alpha I | Mediterranean | Solar 120% | Wind 80%",
+                    HomeSystemBodyPresentation.Format(firstDocument.HomeSystem.Bodies[0]));
+                Equal(
+                    "Alpha II | Gas giant",
+                    HomeSystemBodyPresentation.Format(firstDocument.HomeSystem.Bodies[1]));
+                Equal(
+                    "Alpha III | Oceanic jungle | Wind 150%",
+                    HomeSystemBodyPresentation.Format(firstDocument.HomeSystem.Bodies[2]));
                 Equal(0, firstDocument.Cluster.Items.Count);
+                Equal(1, completeGateway.GenerateCalls);
                 True(statistics.SetScrollPosition(first.Session.SessionId, 0, 74));
                 Equal(74.0, statistics.ScrollY);
+                Equal(1, completeGateway.GenerateCalls);
 
                 gateway.Snapshot = Snapshot(
                     homeSystemBodyInventory: HomeSystemBodyInventory.Project(
@@ -2797,6 +2863,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(statistics.Update(replacement));
                 Equal(1, statistics.Current!.HomeSystem!.Bodies.Count);
                 Equal(201, statistics.Current.HomeSystem.Bodies[0].BodyId);
+                Equal(2, completeGateway.GenerateCalls);
                 False(statistics.Hide(first.Session.SessionId));
                 True(statistics.Current != null);
 
@@ -2805,6 +2872,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(statistics.Hide(replacement.Session.SessionId));
                 True(statistics.Current == null);
                 False(statistics.Update(replacement));
+                Equal(2, completeGateway.GenerateCalls);
                 True(ReferenceEquals(conclusionBefore, conclusions.Current));
                 True(ReferenceEquals(conclusionDocument, conclusions.Conclusions));
             });
@@ -2926,7 +2994,11 @@ namespace DSPSeedScanner.Runtime.Tests
             int planetNumber,
             int orbitAround,
             int? parentBodyId,
-            int stableGameOrder)
+            int stableGameOrder,
+            HomeSystemBodyKind bodyKind = HomeSystemBodyKind.Solid,
+            string? themeName = null,
+            decimal? solarRatio = null,
+            decimal? windRatio = null)
         {
             return new RuntimeHomeSystemBodyEvidence(
                 bodyId,
@@ -2934,7 +3006,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 planetNumber,
                 orbitAround,
                 parentBodyId,
-                stableGameOrder);
+                stableGameOrder,
+                bodyKind,
+                themeName,
+                solarRatio,
+                windRatio);
         }
 
         private static ClusterBodyLocation Location(
@@ -4518,6 +4594,29 @@ namespace DSPSeedScanner.Runtime.Tests
                     restored = true;
                 }
             }
+        }
+
+        private sealed class SingleEnumerationEnumerable<T> : IEnumerable<T>
+        {
+            private readonly IEnumerable<T> source;
+
+            public SingleEnumerationEnumerable(IEnumerable<T> source)
+            {
+                this.source = source;
+            }
+
+            public int EnumerationCount { get; private set; }
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                EnumerationCount++;
+                if (EnumerationCount > 1)
+                    throw new InvalidOperationException("Evidence was enumerated more than once.");
+                return source.GetEnumerator();
+            }
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() =>
+                GetEnumerator();
         }
 
         private sealed class FakeBirthGateway : IRuntimeBirthSystemRawGateway

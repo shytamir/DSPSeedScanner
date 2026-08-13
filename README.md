@@ -31,7 +31,9 @@ by another plugin may affect its results and are not always detectable.
 project status and steering decisions. Active product development follows the
 [user-feedback roadmap](docs/management/ROADMAP.md). FEED-01 and FEED-02 were
 accepted, establishing a clean slate for panel work. FEED-03 was accepted, and
-FEED-04's shared home-planet title has reached its technical acceptance gate. The completed
+FEED-04 was accepted, establishing a fully enabled panel scaffold. FEED-05's
+home-system layout and energy facts have reached their technical acceptance
+gate. The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 records the preceding stories, acceptance gates, and implementation history.
 
