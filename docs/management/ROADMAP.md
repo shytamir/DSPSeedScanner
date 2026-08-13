@@ -16,10 +16,10 @@ retained in the [documentation archive](../archive/INDEX.md), including the
 completed
 [presentation refinement roadmap](../archive/PRESENTATION-REFINEMENT-ROADMAP.md).
 The [runtime identity maintenance draft](RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md)
-records the implemented hotfix awaiting external confirmation and the
-separately proposed conclusion-gate replacement.
+records the implemented hotfix awaiting external confirmation, the retired
+conclusion-gate proposal, and the unauthorized FSOR-01 draft.
 The [technical debt register](TECHNICAL-DEBT.md) remains the authority for
-explicitly deferred engineering obligations.
+explicitly deferred engineering obligations; TD-004 is pending evaluation.
 
 Activating new planned product work requires an approved roadmap and a
 corresponding update to [project steering](../PROJECT.md).

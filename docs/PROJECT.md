@@ -11,7 +11,8 @@ validation on 2026-08-12, including smooth cache-miss scanning through a
 scanner-owned terrain worker. The repository is in maintenance mode; no
 product roadmap is active. HOTFIX-01 corrected pathless runtime-assembly
 fingerprinting and is awaiting confirmation on the reporting user's affected
-installation. The technical debt register has no active entries.
+installation. TD-004 is pending evaluation for developer-probe output failure
+containment and does not affect ordinary player behavior.
 
 ## Product decision
 

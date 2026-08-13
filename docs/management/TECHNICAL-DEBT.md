@@ -1,7 +1,8 @@
 # Technical Debt Register
 
-**Status:** No active entries. TD-001 and TD-002 were closed by IMPL-08;
-TD-003 was reviewed and closed during the 0.9 release-candidate pass.
+**Status:** TD-004 is pending evaluation as of 2026-08-13. TD-001 and TD-002
+were closed by IMPL-08; TD-003 was reviewed and closed during the 0.9 release-
+candidate pass.
 
 This register records deliberately deferred engineering obligations that are
 too important to disappear into story prose. A debt entry does not weaken the
@@ -117,6 +118,33 @@ cosmetic benefit, so no publication blocker remained.
 
 **Required by:** Satisfied by the 0.9 release-candidate review. The entry did
 not block the completed presentation specification or implementation.
+
+## TD-004: Contain developer-probe output failures
+
+**Introduced:** FSOR-01 scope review, 2026-08-13.
+
+**State:** Pending evaluation as of 2026-08-13.
+
+**Deferred obligation:** Decide whether the environment-selected developer
+probe output paths warrant a shared bounded-write helper. If implemented, each
+probe result receives one write attempt. A failed write is reported once
+through concise fallback logging, never retried through the failed path, and
+the probe always terminates cleanly while preserving the original failure.
+
+**Value if closed by implementation:** Probe failures become deterministic and
+retain their useful original diagnostic instead of risking a second escaping
+write exception. This improves development and installed-runtime validation;
+it does not change ordinary player behavior.
+
+**Cost boundary:** Do not add path discovery, alternate output destinations,
+general probe refactoring, or player-facing behavior. The change is justified
+only if its small validation-pipeline benefit outweighs touching every probe
+writer and adding failure-injection coverage.
+
+**Evaluation gate:** Inventory the remaining direct probe writes and determine
+whether one shared helper and focused injected-writer tests can close the
+failure pattern without widening production filesystem policy. Close as
+declined if the maintenance and test surface is disproportionate.
 
 Return to the [maintenance roadmap](ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

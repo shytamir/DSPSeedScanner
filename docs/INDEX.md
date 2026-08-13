@@ -11,10 +11,11 @@ current status and decisions; completed roadmap history resides in the
 - [Maintenance roadmap](management/ROADMAP.md): Current maintenance state and
   active external confirmation gate.
 - [Runtime identity maintenance draft](management/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
-  Pathless-assembly hotfix evidence and the separately proposed conclusion-gate
-  replacement.
+  Pathless-assembly hotfix evidence, retired conclusion-gate proposal, and the
+  unauthorized filesystem-robustness story.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
-  engineering obligations, temporary constraints, and mandatory closure gates.
+  engineering obligations, including pending developer-probe failure
+  containment, temporary constraints, and mandatory closure gates.
 - [RFIN-10 human validation](management/RFIN-10-HUMAN-VALIDATION.md): Passed
   seven-step installed 4K acceptance record for the refined release candidate.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
