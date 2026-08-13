@@ -80,7 +80,7 @@ not scanner feature claims. Runtime conformance remains governed by
 ## Integration boundary
 
 After BepInEx loads `DSPSeedScannerPlugin`, an integration may obtain the
-plugin instance through its GUID `io.github.shytamir.dspseedscanner` and call
+plugin instance through its GUID `dspseedscanner` and call
 the public `ScanPreview`, `GenerateRawPlanet`,
 `GenerateBirthSystemResources`, `GenerateCompleteClusterResources`, or
 `StartCompleteClusterResources` methods. Complete-scan semantic conclusion

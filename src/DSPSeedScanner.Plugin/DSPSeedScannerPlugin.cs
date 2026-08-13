@@ -18,7 +18,7 @@ namespace DSPSeedScanner.Plugin
     [BepInPlugin(PluginGuid, PluginName, BuildVersion.BepInPluginVersion)]
     public sealed class DSPSeedScannerPlugin : BaseUnityPlugin
     {
-        public const string PluginGuid = "io.github.shytamir.dspseedscanner";
+        public const string PluginGuid = "dspseedscanner";
         public const string PluginName = "DSP Seed Scanner";
         public const string PluginVersion = BuildVersion.PluginVersion;
 
