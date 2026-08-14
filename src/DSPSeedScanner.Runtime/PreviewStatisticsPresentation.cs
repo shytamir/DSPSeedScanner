@@ -688,6 +688,148 @@ namespace DSPSeedScanner.Runtime
         public decimal CollectionRate { get; }
     }
 
+    public enum NotableStarDisplayClass
+    {
+        Other,
+        OType,
+        BlueGiant
+    }
+
+    public sealed record RuntimeNotableStarEvidence
+    {
+        public RuntimeNotableStarEvidence(
+            string displayName,
+            string displayedType,
+            NotableStarDisplayClass displayClass,
+            decimal radius,
+            decimal luminosity,
+            int stableGameOrder)
+        {
+            if (String.IsNullOrWhiteSpace(displayName))
+                throw new ArgumentException("Star display name is required.", nameof(displayName));
+            if (String.IsNullOrWhiteSpace(displayedType))
+                throw new ArgumentException("Displayed star type is required.", nameof(displayedType));
+            if (!Enum.IsDefined(typeof(NotableStarDisplayClass), displayClass))
+                throw new ArgumentOutOfRangeException(nameof(displayClass));
+            if (radius < 0)
+                throw new ArgumentOutOfRangeException(nameof(radius));
+            if (luminosity < 0)
+                throw new ArgumentOutOfRangeException(nameof(luminosity));
+            if (stableGameOrder < 0)
+                throw new ArgumentOutOfRangeException(nameof(stableGameOrder));
+
+            DisplayName = displayName;
+            DisplayedType = displayedType;
+            DisplayClass = displayClass;
+            Radius = radius;
+            Luminosity = luminosity;
+            StableGameOrder = stableGameOrder;
+        }
+
+        public string DisplayName { get; }
+        public string DisplayedType { get; }
+        public NotableStarDisplayClass DisplayClass { get; }
+        public decimal Radius { get; }
+        public decimal Luminosity { get; }
+        public int StableGameOrder { get; }
+    }
+
+    public sealed record NotableStarTableRow
+    {
+        private readonly IReadOnlyList<string> cells;
+
+        internal NotableStarTableRow(
+            string star,
+            string type,
+            string size,
+            string luminosity,
+            string note)
+        {
+            Star = star;
+            Type = type;
+            Size = size;
+            Luminosity = luminosity;
+            Note = note;
+            cells = Array.AsReadOnly(new[] { Star, Type, Size, Luminosity, Note });
+        }
+
+        public string Star { get; }
+        public string Type { get; }
+        public string Size { get; }
+        public string Luminosity { get; }
+        public string Note { get; }
+        public IReadOnlyList<string> Cells => cells;
+    }
+
+    public sealed class NotableStarStatistics
+    {
+        private readonly NotableStarTableRow[] rows;
+
+        private NotableStarStatistics(
+            int oStarCount,
+            int blueGiantCount,
+            NotableStarTableRow[] rows)
+        {
+            OStarCount = oStarCount;
+            BlueGiantCount = blueGiantCount;
+            this.rows = rows;
+        }
+
+        public int OStarCount { get; }
+        public int BlueGiantCount { get; }
+        public string Summary => Count(OStarCount, "O star", "O stars") + " - " +
+            Count(BlueGiantCount, "blue giant", "blue giants");
+        public IReadOnlyList<NotableStarTableRow> Rows =>
+            Array.AsReadOnly((NotableStarTableRow[])rows.Clone());
+
+        public static NotableStarStatistics? Project(
+            IEnumerable<RuntimeNotableStarEvidence> evidence,
+            int expectedStarCount)
+        {
+            if (evidence == null)
+                throw new ArgumentNullException(nameof(evidence));
+            if (expectedStarCount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(expectedStarCount));
+
+            RuntimeNotableStarEvidence[] values = evidence.ToArray();
+            if (values.Length != expectedStarCount || values.Any(value => value == null) ||
+                values.Select(value => value.StableGameOrder).Distinct().Count() != values.Length)
+            {
+                return null;
+            }
+
+            RuntimeNotableStarEvidence brightest = values
+                .OrderByDescending(value => value.Luminosity)
+                .ThenBy(value => value.StableGameOrder)
+                .First();
+            RuntimeNotableStarEvidence[] notable = values
+                .Where(value => value.DisplayClass != NotableStarDisplayClass.Other)
+                .OrderBy(value => value.DisplayClass == NotableStarDisplayClass.OType ? 0 : 1)
+                .ThenBy(value => value.StableGameOrder)
+                .ToArray();
+            IEnumerable<RuntimeNotableStarEvidence> displayed = notable;
+            if (brightest.DisplayClass == NotableStarDisplayClass.Other)
+                displayed = displayed.Append(brightest);
+
+            NotableStarTableRow[] rows = displayed.Select(value =>
+                new NotableStarTableRow(
+                    value.DisplayName,
+                    value.DisplayedType,
+                    value.Radius.ToString("0.00", CultureInfo.InvariantCulture) + " R",
+                    value.Luminosity.ToString("0.000", CultureInfo.InvariantCulture) + " L",
+                    ReferenceEquals(value, brightest) ? "Brightest" : String.Empty))
+                .ToArray();
+            return new NotableStarStatistics(
+                notable.Count(value => value.DisplayClass == NotableStarDisplayClass.OType),
+                notable.Count(value => value.DisplayClass == NotableStarDisplayClass.BlueGiant),
+                rows);
+        }
+
+        private static string Count(int value, string singular, string plural) =>
+            value.ToString(CultureInfo.InvariantCulture) + " " +
+            (value == 1 ? singular : plural);
+    }
+
     public sealed record NearbyDeuteriumTableRow
     {
         private readonly IReadOnlyList<string> cells;
@@ -1232,6 +1374,7 @@ namespace DSPSeedScanner.Runtime
             HomeSystemResourceStatistics? homeSystemResources,
             ClusterResourceStatistics? clusterResources,
             NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant,
+            NotableStarStatistics? notableStars,
             PreviewClusterStatistics cluster)
         {
             if (sessionId <= 0)
@@ -1251,6 +1394,7 @@ namespace DSPSeedScanner.Runtime
                 : ClusterResourcePresentation.ProjectUnipolarTableRows(
                     clusterResources);
             NearbyDeuteriumRow = nearbyDeuteriumGasGiant?.ProjectTableRow();
+            NotableStars = notableStars;
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
         }
 
@@ -1261,6 +1405,7 @@ namespace DSPSeedScanner.Runtime
         public IReadOnlyList<ClusterRareResourceTableRow> RareResourceRows { get; }
         public IReadOnlyList<ClusterUnipolarMagnetTableRow> UnipolarMagnetRows { get; }
         public NearbyDeuteriumTableRow? NearbyDeuteriumRow { get; }
+        public NotableStarStatistics? NotableStars { get; }
         public PreviewClusterStatistics Cluster { get; }
     }
 
@@ -1319,6 +1464,7 @@ namespace DSPSeedScanner.Runtime
                 null,
                 null,
                 null,
+                null,
                 new PreviewClusterStatistics());
         }
 
@@ -1342,6 +1488,7 @@ namespace DSPSeedScanner.Runtime
                 attempt.HomeSystemResources,
                 attempt.ClusterResources,
                 attempt.NearbyDeuteriumGasGiant,
+                attempt.NotableStars,
                 cluster);
             return true;
         }

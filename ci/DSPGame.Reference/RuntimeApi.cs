@@ -67,13 +67,37 @@ public sealed class GalaxyData
 public sealed class StarData
 {
     public int id;
+    public EStarType type;
+    public ESpectrType spectr;
     public string displayName => string.Empty;
     public string typeString => string.Empty;
     public VectorLF3 uPosition;
+    public float radius;
     public float dysonRadius;
     public PlanetData[] planets = System.Array.Empty<PlanetData>();
     public int initialHiveCount;
     public float dysonLumino => 0f;
+}
+
+public enum EStarType
+{
+    MainSeqStar,
+    GiantStar,
+    WhiteDwarf,
+    NeutronStar,
+    BlackHole
+}
+
+public enum ESpectrType
+{
+    M,
+    K,
+    G,
+    F,
+    A,
+    B,
+    O,
+    X
 }
 
 public sealed class PlanetData

@@ -16,7 +16,8 @@ home-system table presentation. The owner validated the exact CI artifact;
 system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
 FEED-08 and FEED-09 were then accepted. `ready-for-subsection-consumer` passed
 and established the **Panel cluster populated excluding subsection** milestone.
-FEED-10 is active and pending implementation. The statistics panel presents
+FEED-10 reached its technical acceptance gate on 2026-08-14; owner acceptance
+and `ready-for-end-to-end-testing` remain pending. The statistics panel presents
 every home-system body in stable game order with distinct body, world, Solar,
 Wind, ores, oil, and gas-product fields.
 After complete coverage or cache reuse, solid rows show compact exact resource

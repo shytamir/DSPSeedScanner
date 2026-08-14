@@ -35,7 +35,8 @@ namespace DSPSeedScanner.Runtime
             RuntimeDarkFogOccupation? darkFogOccupation = null,
             HomeSystemBodyInventory? homeSystemBodyInventory = null,
             string? homePlanetDisplayDesignation = null,
-            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null)
+            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null,
+            NotableStarStatistics? notableStars = null)
         {
             Status = status;
             GalaxySeed = galaxySeed;
@@ -65,6 +66,7 @@ namespace DSPSeedScanner.Runtime
             HomeSystemBodyInventory = homeSystemBodyInventory;
             HomePlanetDisplayDesignation = homePlanetDisplayDesignation;
             NearbyDeuteriumGasGiant = nearbyDeuteriumGasGiant;
+            NotableStars = notableStars;
         }
 
         public RuntimeScanStatus Status { get; }
@@ -103,6 +105,7 @@ namespace DSPSeedScanner.Runtime
         public HomeSystemBodyInventory? HomeSystemBodyInventory { get; }
         public string? HomePlanetDisplayDesignation { get; }
         public NearbyDeuteriumGasGiantSelection? NearbyDeuteriumGasGiant { get; }
+        public NotableStarStatistics? NotableStars { get; }
     }
 
     public sealed class PreviewScanCoordinator
@@ -143,6 +146,7 @@ namespace DSPSeedScanner.Runtime
             HomeSystemBodyInventory? homeSystemBodyInventory = null;
             string? homePlanetDisplayDesignation = null;
             NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null;
+            NotableStarStatistics? notableStars = null;
             bool restored = true;
 
             try
@@ -226,6 +230,7 @@ namespace DSPSeedScanner.Runtime
                                     snapshot.HomePlanetDisplayDesignation;
                                 nearbyDeuteriumGasGiant =
                                     snapshot.NearbyDeuteriumGasGiant;
+                                notableStars = snapshot.NotableStars;
                                 status = RuntimeScanStatus.Success;
                                 code = "success";
                                 message = "The complete compatible preview was evaluated.";
@@ -296,7 +301,8 @@ namespace DSPSeedScanner.Runtime
                     : null,
                 status == RuntimeScanStatus.Success
                     ? nearbyDeuteriumGasGiant
-                    : null);
+                    : null,
+                status == RuntimeScanStatus.Success ? notableStars : null);
         }
 
         private static RuntimeScanResult Result(
@@ -317,7 +323,8 @@ namespace DSPSeedScanner.Runtime
             RuntimeDarkFogOccupation? darkFogOccupation = null,
             HomeSystemBodyInventory? homeSystemBodyInventory = null,
             string? homePlanetDisplayDesignation = null,
-            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null)
+            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null,
+            NotableStarStatistics? notableStars = null)
         {
             return new RuntimeScanResult(
                 status,
@@ -338,7 +345,8 @@ namespace DSPSeedScanner.Runtime
                 darkFogOccupation,
                 homeSystemBodyInventory,
                 homePlanetDisplayDesignation,
-                nearbyDeuteriumGasGiant);
+                nearbyDeuteriumGasGiant,
+                notableStars);
         }
     }
 }

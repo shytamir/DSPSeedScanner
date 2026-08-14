@@ -82,6 +82,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("nearest cluster resources are bounded attributed and cacheable", NearestClusterResourcesAreBoundedAttributedAndCacheable),
                 ("Unipolar Magnet planets preserve exact bounded statistics", UnipolarMagnetPlanetsPreserveExactBoundedStatistics),
                 ("nearby Deuterium giant selection is bounded and lifecycle safe", NearbyDeuteriumGiantSelectionIsBoundedAndLifecycleSafe),
+                ("notable stars are exclusive formatted table rows and lifecycle safe", NotableStarsAreExclusiveFormattedTableRowsAndLifecycleSafe),
                 ("statistics panel follows preview lifecycle independently", StatisticsPanelFollowsPreviewLifecycleIndependently),
                 ("home planet designation is shared immutable and session owned", HomePlanetDesignationIsSharedImmutableAndSessionOwned),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
@@ -3420,6 +3421,156 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void NotableStarsAreExclusiveFormattedTableRowsAndLifecycleSafe()
+        {
+            RuntimeNotableStarEvidence Star(
+                string name,
+                string type,
+                NotableStarDisplayClass displayClass,
+                decimal radius,
+                decimal luminosity,
+                int order) => new RuntimeNotableStarEvidence(
+                    name,
+                    type,
+                    displayClass,
+                    radius,
+                    luminosity,
+                    order);
+
+            NotableStarStatistics selected = NotableStarStatistics.Project(
+                new[]
+                {
+                    Star("Alpha", "G type star", NotableStarDisplayClass.Other, 1m, 1m, 0),
+                    Star("Orion", "O type star", NotableStarDisplayClass.OType, 2.345m, 8.7654m, 1),
+                    Star("Bellatrix", "O type star", NotableStarDisplayClass.OType, 3m, 7m, 3),
+                    Star("Rigel", "Blue Giant", NotableStarDisplayClass.BlueGiant, 12.678m, 9.8765m, 2)
+                },
+                4)!;
+            Equal("2 O stars - 1 blue giant", selected.Summary);
+            Equal(3, selected.Rows.Count);
+            Equal("Orion", selected.Rows[0].Star);
+            Equal("Bellatrix", selected.Rows[1].Star);
+            Equal("Rigel", selected.Rows[2].Star);
+            Equal("2.35 R", selected.Rows[0].Size);
+            Equal("8.765 L", selected.Rows[0].Luminosity);
+            Equal("Brightest", selected.Rows[2].Note);
+            Equal(1, selected.Rows.Count(row => row.Note == "Brightest"));
+            Equal(5, selected.Rows[0].Cells.Count);
+
+            NotableStarStatistics oMaximum = NotableStarStatistics.Project(
+                new[]
+                {
+                    Star("O Prime", "O type star", NotableStarDisplayClass.OType, 4m, 12m, 0),
+                    Star("Blue", "Blue Giant", NotableStarDisplayClass.BlueGiant, 10m, 11m, 1)
+                },
+                2)!;
+            Equal("Brightest", oMaximum.Rows[0].Note);
+            Equal(1, oMaximum.Rows.Count(row => row.Note == "Brightest"));
+
+            NotableStarStatistics equalMaximum = NotableStarStatistics.Project(
+                new[]
+                {
+                    Star("First", "G type star", NotableStarDisplayClass.Other, 1m, 10m, 0),
+                    Star("Second", "O type star", NotableStarDisplayClass.OType, 2m, 10m, 1),
+                    Star("Blue O", "Blue Giant", NotableStarDisplayClass.BlueGiant, 8m, 9m, 2)
+                },
+                3)!;
+            Equal("1 O star - 1 blue giant", equalMaximum.Summary);
+            Equal(3, equalMaximum.Rows.Count);
+            Equal("Second", equalMaximum.Rows[0].Star);
+            Equal("Blue O", equalMaximum.Rows[1].Star);
+            Equal("First", equalMaximum.Rows[2].Star);
+            Equal("Brightest", equalMaximum.Rows[2].Note);
+            Equal(1, equalMaximum.Rows.Count(row => row.Note == "Brightest"));
+
+            NotableStarStatistics noNotable = NotableStarStatistics.Project(
+                new[]
+                {
+                    Star("Home", "G type star", NotableStarDisplayClass.Other, 1m, 1m, 0),
+                    Star("Peak", "A type star", NotableStarDisplayClass.Other, 2m, 3m, 1)
+                },
+                2)!;
+            Equal("0 O stars - 0 blue giants", noNotable.Summary);
+            Equal(1, noNotable.Rows.Count);
+            Equal("Peak", noNotable.Rows[0].Star);
+            Equal("Brightest", noNotable.Rows[0].Note);
+
+            RuntimeNotableStarEvidence[] fullBound = Enumerable.Range(0, 64)
+                .Select(index => Star(
+                    "Star " + index,
+                    index == 62 ? "O type star" : index == 63 ? "Blue Giant" : "G type star",
+                    index == 62
+                        ? NotableStarDisplayClass.OType
+                        : index == 63
+                            ? NotableStarDisplayClass.BlueGiant
+                            : NotableStarDisplayClass.Other,
+                    1m + index / 100m,
+                    1m + index / 10m,
+                    index))
+                .ToArray();
+            NotableStarStatistics full = NotableStarStatistics.Project(fullBound, 64)!;
+            Equal(2, full.Rows.Count);
+            Equal("Brightest", full.Rows.Single(row => row.Star == "Star 63").Note);
+            True(NotableStarStatistics.Project(fullBound.Take(63), 64) == null);
+
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var previewGateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(notableStars: selected)
+                };
+                var completeGateway = new FakeCompleteClusterGateway();
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(previewGateway, gate),
+                    new CompleteClusterRawCoordinator(completeGateway, gate),
+                    new CompleteClusterConclusionCache(path));
+                var statistics = new PreviewStatisticsPanelController();
+
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt scanned = resolver.CurrentPublishedAttempt!;
+                statistics.BeginSession(scanned.Session);
+                True(statistics.Update(scanned));
+                Equal("2 O stars - 1 blue giant", statistics.Current!.NotableStars?.Summary);
+                while (!scanned.IsTerminal)
+                    resolver.AdvanceCurrent();
+                True(statistics.Update(scanned));
+                Equal(3, statistics.Current!.NotableStars?.Rows.Count);
+
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt cached = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, cached.State);
+                statistics.BeginSession(cached.Session);
+                True(statistics.Update(cached));
+                Equal("Rigel", statistics.Current!.NotableStars?.Rows[2].Star);
+                Equal(1, completeGateway.GenerateCalls);
+
+                previewGateway.Snapshot = Snapshot(notableStars: noNotable);
+                resolver.ObserveCompletedLoad(
+                    3,
+                    PreviewIdentity(73_339_583),
+                    RequestForSeed(73_339_583));
+                PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
+                statistics.BeginSession(replacement.Session);
+                True(statistics.Update(replacement));
+                Equal("0 O stars - 0 blue giants", statistics.Current!.NotableStars?.Summary);
+                True(scanned.Session.IsRetired);
+
+                resolver.ExitPreview();
+                True(statistics.Hide(replacement.Session.SessionId));
+                True(statistics.Current == null);
+
+                previewGateway.Snapshot = Snapshot(notableStars: selected);
+                resolver.ObserveCompletedLoad(4, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt returned = resolver.CurrentPublishedAttempt!;
+                statistics.BeginSession(returned.Session);
+                True(statistics.Update(returned));
+                Equal("2 O stars - 1 blue giant", statistics.Current!.NotableStars?.Summary);
+                Equal(2, completeGateway.GenerateCalls);
+            });
+        }
+
         private static void StatisticsPanelFollowsPreviewLifecycleIndependently()
         {
             WithTemporaryDirectory(path =>
@@ -4653,6 +4804,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(NearbyDeuteriumGasGiantCandidate),
                 typeof(NearbyDeuteriumTableRow),
                 typeof(NearbyDeuteriumGasGiantSelection),
+                typeof(RuntimeNotableStarEvidence),
+                typeof(NotableStarTableRow),
+                typeof(NotableStarStatistics),
                 typeof(ClusterResourceStatistics),
                 typeof(PreviewStatisticItem),
                 typeof(PreviewStatisticSubsection),
@@ -4974,7 +5128,8 @@ namespace DSPSeedScanner.Runtime.Tests
             bool includeHomePlanetTopology = true,
             HomeSystemBodyInventory? homeSystemBodyInventory = null,
             string? homePlanetDisplayDesignation = null,
-            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null)
+            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null,
+            NotableStarStatistics? notableStars = null)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -5043,7 +5198,8 @@ namespace DSPSeedScanner.Runtime.Tests
                         index == 2 ? "O type star" : "G type star")),
                 homeSystemBodyInventory: homeSystemBodyInventory,
                 homePlanetDisplayDesignation: homePlanetDisplayDesignation,
-                nearbyDeuteriumGasGiant: nearbyDeuteriumGasGiant);
+                nearbyDeuteriumGasGiant: nearbyDeuteriumGasGiant,
+                notableStars: notableStars);
         }
 
         private static NormalizedBirthPlanetEvidence SolidAttribution(

@@ -119,6 +119,26 @@ namespace DSPSeedScanner.Plugin
             StarData birthStar = galaxy.StarById(galaxy.birthStarId);
             foreach (StarData star in galaxy.stars)
             {
+                if (!Enum.IsDefined(typeof(EStarType), star.type))
+                {
+                    return new RuntimePreviewSnapshot(
+                        SystemIdentifier(request.GalaxySeed, birthStar, true),
+                        galaxy.starCount,
+                        Array.Empty<NormalizedSystemEvidence>(),
+                        Array.Empty<NormalizedSystemDistance>(),
+                        nameof(EStarType),
+                        (int)star.type);
+                }
+                if (!Enum.IsDefined(typeof(ESpectrType), star.spectr))
+                {
+                    return new RuntimePreviewSnapshot(
+                        SystemIdentifier(request.GalaxySeed, birthStar, true),
+                        galaxy.starCount,
+                        Array.Empty<NormalizedSystemEvidence>(),
+                        Array.Empty<NormalizedSystemDistance>(),
+                        nameof(ESpectrType),
+                        (int)star.spectr);
+                }
                 foreach (PlanetData planet in star.planets)
                 {
                     int rawType = (int)planet.type;
@@ -214,6 +234,7 @@ namespace DSPSeedScanner.Plugin
                     birthStar,
                     galaxy.stars,
                     distances);
+            NotableStarStatistics? notableStars = NormalizeNotableStars(galaxy.stars);
             recordTrace("preview:normalized");
             return new RuntimePreviewSnapshot(
                 birthSystemIdentifier,
@@ -223,7 +244,40 @@ namespace DSPSeedScanner.Plugin
                 systemDisplays: displays,
                 homeSystemBodyInventory: homeSystemBodyInventory,
                 homePlanetDisplayDesignation: homePlanet?.displayName,
-                nearbyDeuteriumGasGiant: nearbyDeuteriumGasGiant);
+                nearbyDeuteriumGasGiant: nearbyDeuteriumGasGiant,
+                notableStars: notableStars);
+        }
+
+        private static NotableStarStatistics? NormalizeNotableStars(StarData[] stars)
+        {
+            var evidence = new List<RuntimeNotableStarEvidence>(stars.Length);
+            for (int index = 0; index < stars.Length; index++)
+            {
+                StarData star = stars[index];
+                if (String.IsNullOrWhiteSpace(star.displayName) ||
+                    String.IsNullOrWhiteSpace(star.typeString) ||
+                    Single.IsNaN(star.radius) || Single.IsInfinity(star.radius) ||
+                    Single.IsNaN(star.dysonLumino) || Single.IsInfinity(star.dysonLumino) ||
+                    star.radius < 0f || star.dysonLumino < 0f)
+                {
+                    return null;
+                }
+
+                NotableStarDisplayClass displayClass =
+                    star.type == EStarType.GiantStar && star.spectr > ESpectrType.A
+                        ? NotableStarDisplayClass.BlueGiant
+                        : star.type == EStarType.MainSeqStar && star.spectr == ESpectrType.O
+                            ? NotableStarDisplayClass.OType
+                            : NotableStarDisplayClass.Other;
+                evidence.Add(new RuntimeNotableStarEvidence(
+                    star.displayName,
+                    star.typeString,
+                    displayClass,
+                    Convert.ToDecimal(star.radius),
+                    Convert.ToDecimal(star.dysonLumino),
+                    index));
+            }
+            return NotableStarStatistics.Project(evidence, stars.Length);
         }
 
         private static NearbyDeuteriumGasGiantSelection
@@ -485,6 +539,11 @@ namespace DSPSeedScanner.Plugin
                 (typeof(CombatSettings), "maxDensity", MemberTypes.Field),
                 (typeof(StarData), "planets", MemberTypes.Field),
                 (typeof(StarData), "dysonLumino", MemberTypes.Property),
+                (typeof(StarData), "radius", MemberTypes.Field),
+                (typeof(StarData), "type", MemberTypes.Field),
+                (typeof(StarData), "spectr", MemberTypes.Field),
+                (typeof(StarData), "displayName", MemberTypes.Property),
+                (typeof(StarData), "typeString", MemberTypes.Property),
                 (typeof(StarData), "uPosition", MemberTypes.Field),
                 (typeof(StarData), "initialHiveCount", MemberTypes.Field),
                 (typeof(PlanetData), "orbitAround", MemberTypes.Field),

@@ -54,6 +54,7 @@ namespace DSPSeedScanner.Runtime
             get;
             private set;
         }
+        public NotableStarStatistics? NotableStars { get; private set; }
         public PreviewGenerationIdentity? CachedPayloadSourceIdentity { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
@@ -122,6 +123,11 @@ namespace DSPSeedScanner.Runtime
             NearbyDeuteriumGasGiantSelection? selection)
         {
             NearbyDeuteriumGasGiant = selection;
+        }
+
+        internal void SetNotableStars(NotableStarStatistics? statistics)
+        {
+            NotableStars = statistics;
         }
 
         internal void SetCachedPayloadSourceIdentity(PreviewGenerationIdentity? identity)
@@ -195,6 +201,7 @@ namespace DSPSeedScanner.Runtime
             currentAttempt.SetHomeSystemBodyInventory(preview.HomeSystemBodyInventory);
             currentAttempt.SetNearbyDeuteriumGasGiant(
                 preview.NearbyDeuteriumGasGiant);
+            currentAttempt.SetNotableStars(preview.NotableStars);
             if (preview.HomePlanetDisplayDesignation != null)
             {
                 currentAttempt.Session.SetHomePlanetDisplayDesignation(

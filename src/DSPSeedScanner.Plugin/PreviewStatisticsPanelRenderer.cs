@@ -75,6 +75,22 @@ namespace DSPSeedScanner.Plugin
             0.23f,
             0.15f
         };
+        private static readonly string[] NotableStarHeadings =
+        {
+            "Star",
+            "Type",
+            "Size",
+            "Luminosity",
+            "Note"
+        };
+        private static readonly float[] NotableStarColumnRatios =
+        {
+            0.32f,
+            0.24f,
+            0.13f,
+            0.17f,
+            0.14f
+        };
         private GUIStyle? titleStyle;
         private GUIStyle? sectionTitleStyle;
         private GUIStyle? subsectionTitleStyle;
@@ -185,10 +201,15 @@ namespace DSPSeedScanner.Plugin
             IReadOnlyList<string>[] unipolarRows = document.UnipolarMagnetRows
                 .Select(row => row.Cells)
                 .ToArray();
+            IReadOnlyList<string>[] notableStarRows = document.NotableStars?.Rows
+                .Select(row => row.Cells)
+                .ToArray() ?? Array.Empty<IReadOnlyList<string>>();
             float clusterSectionHeight = ClusterSectionHeight(
                 deuteriumRows,
                 rareRows,
                 unipolarRows,
+                document.NotableStars?.Summary,
+                notableStarRows,
                 clusterLines,
                 contentWidth);
             float contentHeight = homeSectionHeight + clusterSectionHeight + SectionGap;
@@ -215,6 +236,8 @@ namespace DSPSeedScanner.Plugin
                     deuteriumRows,
                     rareRows,
                     unipolarRows,
+                    document.NotableStars?.Summary,
+                    notableStarRows,
                     clusterLines,
                     homeSectionHeight + SectionGap,
                     contentWidth,
@@ -334,6 +357,8 @@ namespace DSPSeedScanner.Plugin
             IReadOnlyList<string>[] deuteriumRows,
             IReadOnlyList<string>[] rareRows,
             IReadOnlyList<string>[] unipolarRows,
+            string? notableStarSummary,
+            IReadOnlyList<string>[] notableStarRows,
             string[] lines,
             float width)
         {
@@ -360,6 +385,13 @@ namespace DSPSeedScanner.Plugin
                     UnipolarColumnRatios,
                     width) + 8f;
             }
+            if (notableStarSummary != null && notableStarRows.Length != 0)
+            {
+                height += NotableStarTableHeight(
+                    notableStarSummary,
+                    notableStarRows,
+                    width) + 8f;
+            }
             foreach (string line in lines)
             {
                 height += Math.Max(
@@ -369,6 +401,22 @@ namespace DSPSeedScanner.Plugin
                         width - 24f)) + 4f;
             }
             return Math.Max(88f, height + 8f);
+        }
+
+        private float NotableStarTableHeight(
+            string summary,
+            IReadOnlyList<string>[] rows,
+            float width)
+        {
+            float summaryHeight = Math.Max(
+                24f,
+                bodyStyle!.CalcHeight(new GUIContent(summary), width - 24f));
+            return ClusterTableTitleHeight + summaryHeight + 4f +
+                ClusterTableHeight(
+                    rows,
+                    NotableStarColumnRatios,
+                    width,
+                    includeTitle: false);
         }
 
         private float ClusterTableHeight(
@@ -409,6 +457,8 @@ namespace DSPSeedScanner.Plugin
             IReadOnlyList<string>[] deuteriumRows,
             IReadOnlyList<string>[] rareRows,
             IReadOnlyList<string>[] unipolarRows,
+            string? notableStarSummary,
+            IReadOnlyList<string>[] notableStarRows,
             string[] lines,
             float y,
             float width,
@@ -469,6 +519,20 @@ namespace DSPSeedScanner.Plugin
                     tableHeight);
                 contentY += tableHeight + 8f;
             }
+            if (notableStarSummary != null && notableStarRows.Length != 0)
+            {
+                float tableHeight = NotableStarTableHeight(
+                    notableStarSummary,
+                    notableStarRows,
+                    width);
+                DrawNotableStarTable(
+                    notableStarSummary,
+                    notableStarRows,
+                    contentY,
+                    width,
+                    tableHeight);
+                contentY += tableHeight + 8f;
+            }
             foreach (string line in lines)
             {
                 float lineHeight = Math.Max(
@@ -480,6 +544,36 @@ namespace DSPSeedScanner.Plugin
                     bodyStyle);
                 contentY += lineHeight + 4f;
             }
+        }
+
+        private void DrawNotableStarTable(
+            string summary,
+            IReadOnlyList<string>[] rows,
+            float y,
+            float width,
+            float height)
+        {
+            GUI.Label(
+                new Rect(0f, y, width, ClusterTableTitleHeight),
+                "Notable stars",
+                subsectionTitleStyle);
+            float summaryY = y + ClusterTableTitleHeight;
+            float summaryHeight = Math.Max(
+                24f,
+                bodyStyle!.CalcHeight(new GUIContent(summary), width - 24f));
+            GUI.Label(
+                new Rect(12f, summaryY, width - 24f, summaryHeight),
+                summary,
+                bodyStyle);
+            float tableY = summaryY + summaryHeight + 4f;
+            DrawClusterTable(
+                null,
+                NotableStarHeadings,
+                NotableStarColumnRatios,
+                rows,
+                tableY,
+                width,
+                height - (tableY - y));
         }
 
         private void DrawClusterTable(

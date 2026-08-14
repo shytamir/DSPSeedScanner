@@ -332,7 +332,8 @@ namespace DSPSeedScanner.Runtime
             IEnumerable<RuntimeSystemDisplay>? systemDisplays = null,
             HomeSystemBodyInventory? homeSystemBodyInventory = null,
             string? homePlanetDisplayDesignation = null,
-            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null)
+            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null,
+            NotableStarStatistics? notableStars = null)
         {
             if (String.IsNullOrWhiteSpace(birthSystemIdentifier))
                 throw new ArgumentException("Birth system identifier is required.", nameof(birthSystemIdentifier));
@@ -363,6 +364,7 @@ namespace DSPSeedScanner.Runtime
             HomeSystemBodyInventory = homeSystemBodyInventory;
             HomePlanetDisplayDesignation = homePlanetDisplayDesignation;
             NearbyDeuteriumGasGiant = nearbyDeuteriumGasGiant;
+            NotableStars = notableStars;
             if (this.systemDisplays.Select(value => value.Identifier)
                 .Distinct(StringComparer.Ordinal).Count() != this.systemDisplays.Length)
             {
@@ -399,6 +401,7 @@ namespace DSPSeedScanner.Runtime
         public HomeSystemBodyInventory? HomeSystemBodyInventory { get; }
         public string? HomePlanetDisplayDesignation { get; }
         public NearbyDeuteriumGasGiantSelection? NearbyDeuteriumGasGiant { get; }
+        public NotableStarStatistics? NotableStars { get; }
         public string? UnknownEnumType { get; }
         public int? UnknownEnumValue { get; }
     }

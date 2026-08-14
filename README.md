@@ -41,7 +41,9 @@ FEED-08 was accepted after adding exact per-planet Unipolar Magnet supply and
 distribution to that panel. FEED-09 was accepted after adding the strongest
 Deuterium gas giant within 8.125 light-years of home and refining the cluster
 facts into compact comparison tables. This established the panel cluster
-populated excluding subsections; FEED-10 is active and pending implementation.
+populated excluding subsections. FEED-10 has now reached its technical
+acceptance gate with a headed Notable stars table; owner acceptance and the
+next phase gate remain pending.
 The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 records the preceding stories, acceptance gates, and implementation history.

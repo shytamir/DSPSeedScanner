@@ -3,8 +3,8 @@
 **Status:** Active as of 2026-08-13.
 
 **Active user story:** [FEED-10: Show notable-star
-measurements](#feed-10-show-notable-star-measurements) is pending
-implementation.
+measurements](#feed-10-show-notable-star-measurements) has reached its technical
+acceptance gate; owner acceptance is pending.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -24,7 +24,8 @@ system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
 FEED-08 and FEED-09 were accepted on 2026-08-14 after the cluster presentation
 passed its final table-refinement workshop. `ready-for-subsection-consumer`
 passed and established the **Panel cluster populated excluding subsection**
-milestone. FEED-10 is active and pending implementation.
+milestone. FEED-10 was implemented on 2026-08-14 and reached its technical
+acceptance gate; owner acceptance is pending.
 
 ## Source coverage
 
@@ -139,7 +140,9 @@ subsection** milestone.
 
 ### `ready-for-end-to-end-testing`
 
-**State:** Pending. FEED-10 is active and pending implementation.
+**State:** Pending owner acceptance. FEED-10 reached its technical acceptance
+gate on 2026-08-14; this phase gate has not been inferred from implementation
+or automated validation.
 
 The cluster-subsection phase is complete when FEED-10 has passed its acceptance
 gate. The `Notable stars` subsection uses the scaffold's existing document and
@@ -880,7 +883,8 @@ accepted FEED-09, passed `ready-for-subsection-consumer`, and established the
 
 ## FEED-10: Show notable-star measurements
 
-**State:** Pending; active and authorized for implementation.
+**State:** Implemented on 2026-08-14; technical acceptance evidence passed and
+owner acceptance is pending.
 
 **Category:** feature-request
 
@@ -895,9 +899,10 @@ generic brightness verdict.
 **Return:** Add `Cluster` statistics for every blue giant and O-type star in
 the requested preview under one `Notable stars` subsection. Begin with the
 compact summary `<O count> O stars - <blue-giant count> blue giants`. Then show
-one compact line per qualifying star using its in-game display name, displayed
-star type, and DSP's displayed stellar size and luminosity definitions and
-rounding. Classify and count stars by DSP's displayed star type so each result
+one compact table row per qualifying star under `Star`, `Type`, `Size`,
+`Luminosity`, and `Note` headers, using its in-game display name, displayed star
+type, and DSP's displayed stellar size and luminosity definitions and rounding.
+Classify and count stars by DSP's displayed star type so each result
 belongs to exactly one group; show O stars first and blue giants second, with
 stable game order within each group. Identify the cluster's maximum luminosity:
 append `Brightest` to its existing row when it already qualifies, otherwise add
@@ -921,6 +926,27 @@ values match DSP and the conclusion panel remains unchanged.
 predictions, non-notable star catalogs beyond the maximum, planet themes, or
 precision beyond DSP's display, item caps, `+N more` summaries, pagination,
 nested scrolling, or another panel.
+
+**Implementation:** The lightweight preview now projects complete, bounded
+stellar display evidence independently of the raw planet scan. DSP's displayed
+classification keeps main-sequence O stars and hot giants in exclusive groups,
+then orders O stars before blue giants in stable game order. The statistics
+document supplies the summary and typed table rows; the existing cluster
+renderer draws the titled table within its single parent scroll flow. The
+first stable game-order star at the maximum displayed luminosity receives the
+only `Brightest` note, including when it is otherwise non-notable. Incomplete
+stellar evidence omits this subsection without affecting conclusions.
+
+**Acceptance evidence:** Inspection of the installed supported DSP
+`0.10.34.28529` assembly confirmed that `UIStarDetail` displays `StarData.radius`
+as `0.00 R`, displays `StarData.dysonLumino` as `0.000 L`, and resolves a hot
+`GiantStar` to the blue-giant display category before spectral O classification.
+The focused runtime suite passed 82/82, covering exclusive grouping, singular
+and plural summaries, all maximum-luminosity placements, equal-value stable
+ties, native formatting, full 64-star coverage, partial evidence, cache reuse,
+replacement, exit, and return. Installed-runtime and hosted-reference plugin
+builds completed with no warnings. Interactive runtime validation and owner
+acceptance remain pending; the conclusion panel was not changed.
 
 ## FEED-REJ-01: Re-evaluate sphere conclusions
 
