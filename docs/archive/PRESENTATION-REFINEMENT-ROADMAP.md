@@ -585,7 +585,7 @@ The focused fixtures collectively cover every approved copy outcome,
 three-example aggregation bounds, deterministic ordering, unknown omission,
 schema-6 rejection by schema 7, duplicate coalescing, replacement, exit,
 cancellation, progress, restoration, and cache identity behavior. The
-seven-step [human validation sequence](../management/RFIN-10-HUMAN-VALIDATION.md) recorded the
+seven-step [human validation sequence](RFIN-10-HUMAN-VALIDATION.md) recorded the
 installed 4K observations, including cache-miss pacing and responsiveness.
 
 **Automated evidence:**
@@ -775,5 +775,5 @@ removed. Automated equivalence, restoration, presentation, build, and package
 checks passed, followed by all seven installed 4K steps with the original
 progress sequence intact and no observed frame drops.
 
-Return to the [active roadmap](../management/ROADMAP.md),
+Return to the [maintenance roadmap](../management/ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

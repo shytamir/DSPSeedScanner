@@ -28,28 +28,11 @@ by another plugin may affect its results and are not always detectable.
 ## Project status
 
 [docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current
-project status and steering decisions. Active product development follows the
-[user-feedback roadmap](docs/management/ROADMAP.md). FEED-01 and FEED-02 were
-accepted, establishing a clean slate for panel work. FEED-03 was accepted, and
-FEED-04 was accepted, establishing a fully enabled panel scaffold. FEED-05 was
-accepted, and FEED-06's exact per-body resource table passed its direct-build
-story gate after narrow hosted-linkage, DSP planet-number, statistics, and
-presentation corrections. The exact CI artifact passed human validation,
-establishing the fully populated home-system panel. FEED-07 was accepted after
-adding bounded nearby resource locations to the cluster panel in light-years.
-FEED-08 was accepted after adding exact per-planet Unipolar Magnet supply and
-distribution to that panel. FEED-09 was accepted after adding the strongest
-Deuterium gas giant within 8.125 light-years of home and refining the cluster
-facts into compact comparison tables. This established the panel cluster
-populated excluding subsections. FEED-10 was accepted with a headed Notable
-stars table, establishing the fully populated panel. Exact release candidate
-`1.0.85` is ready; final owner approval remains pending. Its identity and
-validation evidence are recorded in the
-[release-candidate record](docs/management/RELEASE-CANDIDATE-1.0.85.md).
-
-The completed
-[presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
-records the preceding stories, acceptance gates, and implementation history.
+project status and steering decisions. The repository is in maintenance mode
+with no active user story. The latest completed scope, acceptance gates, and
+implementation history are preserved in the archived
+[User Feedback Roadmap](docs/archive/USER-FEEDBACK-ROADMAP.md); the current
+[maintenance roadmap](docs/management/ROADMAP.md) authorizes no new work.
 
 The [documentation index](docs/INDEX.md) lists the accepted specifications,
 delivery notes, management documents, and archived planning material.
@@ -74,7 +57,7 @@ integration boundary are documented in the
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
 [project steering document](docs/PROJECT.md), and the current
-[user-feedback roadmap](docs/management/ROADMAP.md) before changing scope or
+[maintenance roadmap](docs/management/ROADMAP.md) before changing scope or
 behavior.
 
 ## License

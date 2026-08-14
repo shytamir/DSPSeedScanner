@@ -8,8 +8,12 @@ authority.
 
 - [Project steering](../PROJECT.md): Authoritative accepted decisions and
   current tracked project status.
-- [User-feedback roadmap](../management/ROADMAP.md): Active FEED-01 through
-  FEED-10 delivery plan, phase gates, and milestones.
+- [Maintenance roadmap](../management/ROADMAP.md): Inactive placeholder
+  recording that no roadmap or user story is active.
+- [Feature-request register](../management/FEATURE-REQUESTS.md): Unauthorized
+  product requests retained for future evaluation.
+- [Technical debt register](../management/TECHNICAL-DEBT.md): Deferred
+  engineering obligations and their closure gates.
 
 ## Archived documents
 
@@ -24,5 +28,15 @@ authority.
 - [Presentation refinement roadmap](PRESENTATION-REFINEMENT-ROADMAP.md):
   Completed RFIN-01 through RFIN-10 implementation, acceptance evidence, and
   final installed-game validation record.
+- [User Feedback Roadmap](USER-FEEDBACK-ROADMAP.md): Latest completed FEED-01
+  through FEED-10 delivery record, phase gates, release-candidate work, and
+  owner acceptance.
+- [Runtime identity maintenance record](RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
+  Completed path-resolution and filesystem-robustness work plus the retired
+  compatibility proposal.
+- [RFIN-10 human validation](RFIN-10-HUMAN-VALIDATION.md): Passed seven-step
+  installed 4K acceptance record for the refinement roadmap.
+- [Release Candidate 1.0.85 validation](RELEASE-CANDIDATE-1.0.85.md): Exact
+  candidate identity, readiness evidence, and final owner approval.
 
 Return to the [documentation index](../INDEX.md) for all current documents.

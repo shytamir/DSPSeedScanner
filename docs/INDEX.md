@@ -8,19 +8,13 @@ current status and decisions; completed roadmap history resides in the
 
 - [Project steering](PROJECT.md): Authoritative accepted decisions and current
   tracked project status.
-- [User-feedback roadmap](management/ROADMAP.md): Active FEED-01 through
-  FEED-10 delivery plan, phase gates, milestones, and tabled requests.
-- [Release Candidate 1.0.85 validation](management/RELEASE-CANDIDATE-1.0.85.md):
-  Exact candidate identity, readiness evidence, scenario coverage, and final
-  owner-approval boundary.
-- [Runtime identity maintenance draft](management/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
-  Pathless-assembly hotfix evidence, retired conclusion-gate proposal, and the
-  completed filesystem-robustness correction.
+- [Maintenance roadmap](management/ROADMAP.md): Inactive placeholder recording
+  that no roadmap or user story is active.
+- [Feature-request register](management/FEATURE-REQUESTS.md): Unauthorized
+  product requests retained with their evaluation gates and scope boundaries.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
   engineering obligations, including pending developer-probe failure
   containment, temporary constraints, and mandatory closure gates.
-- [RFIN-10 human validation](management/RFIN-10-HUMAN-VALIDATION.md): Passed
-  seven-step installed 4K acceptance record for the refined release candidate.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
   evidence, operating bounds, and residual limits for the implemented core.
 
@@ -68,3 +62,12 @@ current status and decisions; completed roadmap history resides in the
 - [Presentation refinement roadmap](archive/PRESENTATION-REFINEMENT-ROADMAP.md):
   Completed RFIN-01 through RFIN-10 scope, implementation history, and passed
   acceptance gates.
+- [User Feedback Roadmap](archive/USER-FEEDBACK-ROADMAP.md): Latest completed
+  FEED-01 through FEED-10 delivery record, phase gates, and owner acceptance.
+- [Runtime identity maintenance record](archive/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
+  Completed path-resolution and filesystem-robustness work plus the retired
+  compatibility proposal.
+- [RFIN-10 human validation](archive/RFIN-10-HUMAN-VALIDATION.md): Passed
+  seven-step installed 4K acceptance record for the refinement roadmap.
+- [Release Candidate 1.0.85 validation](archive/RELEASE-CANDIDATE-1.0.85.md):
+  Exact candidate identity, readiness evidence, and final owner approval.

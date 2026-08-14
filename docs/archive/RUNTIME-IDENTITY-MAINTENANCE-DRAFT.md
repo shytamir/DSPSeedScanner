@@ -1,17 +1,18 @@
 # Runtime Identity Maintenance Draft
 
-**Status:** HOTFIX-01 was implemented on 2026-08-13 and reached its external
-confirmation gate. COMPAT-02 was retired without implementation. FSOR-01 was
-implemented and passed its acceptance gate on 2026-08-13.
+**Status:** Archived after HOTFIX-01 and FSOR-01 were implemented and passed
+their repository acceptance gates on 2026-08-13. COMPAT-02 was retired without
+implementation. External confirmation from the original reporter was not
+recorded before archival.
 
-This draft records the completed path-resolution hotfix, the retired proposal
+This record preserved the completed path-resolution hotfix, retired proposal
 to change conclusion eligibility, and a separate filesystem-robustness story.
-Filesystem recovery must not broaden conclusion eligibility.
+Filesystem recovery did not broaden conclusion eligibility.
 
 ## HOTFIX-01: Resolve pathless game assemblies safely
 
 **State:** Implemented; automated, game-linked build, and package gates passed.
-Confirmation on the reporting user's affected installation remains pending.
+Confirmation on the reporting user's affected installation was not recorded.
 
 **User story:** As a player using the supported DSP version, I want the New
 Game scanner to start when the loaded game assembly exposes no filesystem
@@ -168,7 +169,7 @@ another DSP version, changing cache contents or migration, writing outside the
 active BepInEx config tree, searching other installations or the registry,
 repairing BepInEx-owned config/log persistence outside scanner-controlled
 calls, developer-probe output hardening tracked as
-[TD-004](TECHNICAL-DEBT.md#td-004-contain-developer-probe-output-failures),
+[TD-004](../management/TECHNICAL-DEBT.md#td-004-contain-developer-probe-output-failures),
 changing build/package scripts, removing developer probes, UI redesign, or
 supporting another plugin manager.
 
@@ -194,6 +195,6 @@ Thunderstore package validation passed for `1.0.0`.
 ## Sequence
 
 HOTFIX-01 retained the existing conclusion semantics. COMPAT-02 was retired
-after investigation and will not follow it into implementation. FSOR-01 is an
+after investigation and did not proceed to implementation. FSOR-01 was an
 implemented filesystem-robustness correction that preserved the existing
 identity and conclusion contracts.

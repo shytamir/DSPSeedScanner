@@ -41,5 +41,5 @@ replacement, preview exit, and Peace-mode behavior worked as specified. No
 residual human-validation blocker was recorded.
 
 Return to the completed
-[presentation refinement roadmap](../archive/PRESENTATION-REFINEMENT-ROADMAP.md),
+[presentation refinement roadmap](PRESENTATION-REFINEMENT-ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

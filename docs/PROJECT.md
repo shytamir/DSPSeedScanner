@@ -4,43 +4,11 @@ This document is authoritative for accepted project decisions and current
 tracked status. Detailed contracts belong in the specification documents;
 completed story scope, evidence, and history belong in archived roadmaps.
 
-**Current status:** FEED-01 and FEED-02 were accepted on 2026-08-13;
-`ready-for-new-panel` passed with no unresolved blocker, establishing the
-**Clean slate for panel work** milestone. FEED-03 and FEED-04 were then
-accepted; `ready-for-panel-population` passed, establishing the **Panel renders
-with all features enabled even if not yet consumed** milestone. FEED-05 was
-accepted. FEED-06 passed its story gate on 2026-08-14 after correcting hosted
-reference linkage, DSP planet-number scope, exact resource retention, and the
-home-system table presentation. The owner validated the exact CI artifact;
-`ready-for-cluster-panel-population` passed and established the **Panel home
-system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
-FEED-08 and FEED-09 were then accepted. `ready-for-subsection-consumer` passed
-and established the **Panel cluster populated excluding subsection** milestone.
-FEED-10 was accepted on 2026-08-14; `ready-for-end-to-end-testing` passed and
-established the **Panel fully populated** milestone. Exact candidate `1.0.85`
-then passed release-candidate readiness validation; final owner approval remains
-pending. The statistics panel presents
-every home-system body in stable game order with distinct body, world, Solar,
-Wind, ores, oil, and gas-product fields.
-After complete coverage or cache reuse, solid rows show compact exact resource
-amounts and group counts without retaining raw planets or cluster resources.
-FEED-07 adds at most two nearest planet locations for sulfuric-acid oceans and
-six supported rare ores, measured from home to their host system in light-
-years. FEED-08 adds one exact, cacheable line for every planet with generated
-Unipolar Magnet deposits, including host-system distance, vein nodes, total
-amount, and groups.
-FEED-09 adds one lightweight-preview statistic for the highest-rate Deuterium
-gas giant within 8.125 light-years of home, with deterministic ties and native
-four-decimal rate formatting. The accepted cluster presentation uses separate
-tables for nearby resources, exact Unipolar Magnet statistics, and nearby
-Deuterium; FEED-10 consumed the titled subsection capability for its accepted
-Notable stars table.
-The earlier scanner core, New Game presentation, and presentation refinement
-roadmaps were completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01
-corrected pathless runtime-assembly fingerprinting, and FSOR-01 completed local
-runtime-filesystem hardening on 2026-08-13 without changing identity or
-conclusion semantics. TD-004 remains pending evaluation and does not affect
-ordinary player behavior.
+**Current status:** Maintenance mode as of 2026-08-14. No roadmap or user story
+is active. The last delivery roadmap and its release candidate passed every
+technical and owner-acceptance gate; its scope, evidence, and implementation
+history are preserved in the completed
+[User Feedback Roadmap](archive/USER-FEEDBACK-ROADMAP.md).
 
 ## Product decision
 
@@ -143,17 +111,11 @@ decision and corresponding roadmap change.
 
 ## Management and documentation
 
-The active [user-feedback roadmap](management/ROADMAP.md) owns current story
-order, phase gates, milestones, and acceptance boundaries. The completed
-[presentation refinement roadmap](archive/PRESENTATION-REFINEMENT-ROADMAP.md)
-and earlier roadmap records are retained in the [archive](archive/INDEX.md).
-The
-[technical debt register](management/TECHNICAL-DEBT.md) owns explicitly
-deferred obligations and their closure gates; recording debt does not weaken
-the accepted safety contract. The completed scanner-core, New Game
-presentation, and product-planning roadmaps are retained in the archive. The
-[documentation index](INDEX.md) lists all current and archived documents with
-their purpose.
-
-The exact candidate identity and readiness evidence are recorded in
-[Release Candidate 1.0.85 Validation](management/RELEASE-CANDIDATE-1.0.85.md).
+The inactive [maintenance roadmap](management/ROADMAP.md) records that no work
+is currently authorized. The [feature-request register](management/FEATURE-REQUESTS.md)
+owns unapproved product requests, while the
+[technical-debt register](management/TECHNICAL-DEBT.md) owns explicitly
+deferred engineering obligations and their closure gates. The completed
+[User Feedback Roadmap](archive/USER-FEEDBACK-ROADMAP.md) is the latest
+historical delivery record. The [documentation index](INDEX.md) lists all
+current and archived documents with their purpose.
