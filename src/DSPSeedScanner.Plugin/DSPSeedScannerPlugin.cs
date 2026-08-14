@@ -320,6 +320,8 @@ namespace DSPSeedScanner.Plugin
                 new RuntimeFilesystemInputs(
                     executablePath,
                     Paths.GameRootPath,
+                    Paths.BepInExRootPath,
+                    Paths.ManagedPath,
                     typeof(DSPSeedScannerPlugin).Assembly.Location,
                     typeof(UniverseGen).Assembly.Location,
                     Paths.PatcherPluginPath,

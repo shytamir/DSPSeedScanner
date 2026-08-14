@@ -9,6 +9,8 @@ namespace DSPSeedScanner.Runtime
         public RuntimeFilesystemInputs(
             string? executablePath,
             string? bepInExGameRootPath,
+            string? bepInExRootPath,
+            string? managedDirectoryPath,
             string? pluginAssemblyPath,
             string? targetAssemblyPath,
             string? patcherDirectoryPath,
@@ -16,6 +18,8 @@ namespace DSPSeedScanner.Runtime
         {
             ExecutablePath = executablePath;
             BepInExGameRootPath = bepInExGameRootPath;
+            BepInExRootPath = bepInExRootPath;
+            ManagedDirectoryPath = managedDirectoryPath;
             PluginAssemblyPath = pluginAssemblyPath;
             TargetAssemblyPath = targetAssemblyPath;
             PatcherDirectoryPath = patcherDirectoryPath;
@@ -24,6 +28,8 @@ namespace DSPSeedScanner.Runtime
 
         public string? ExecutablePath { get; }
         public string? BepInExGameRootPath { get; }
+        public string? BepInExRootPath { get; }
+        public string? ManagedDirectoryPath { get; }
         public string? PluginAssemblyPath { get; }
         public string? TargetAssemblyPath { get; }
         public string? PatcherDirectoryPath { get; }
@@ -198,16 +204,59 @@ namespace DSPSeedScanner.Runtime
                     "The reported root did not match the process executable.");
             }
 
-            string managedDirectory = Path.Combine(gameRoot, "DSPGAME_Data", "Managed");
-            string bepInExRoot = Path.Combine(gameRoot, "BepInEx");
-            if (!Directory.Exists(managedDirectory) || !Directory.Exists(bepInExRoot))
+            string canonicalManagedDirectory = Path.Combine(gameRoot, "DSPGAME_Data", "Managed");
+            string? reportedManagedDirectory = Normalize(inputs.ManagedDirectoryPath);
+            if (!String.IsNullOrWhiteSpace(inputs.ManagedDirectoryPath) &&
+                reportedManagedDirectory == null)
             {
                 return Fail(
-                    "active-game-structure-missing",
-                    "The active DSP installation structure was incomplete.",
-                    "validate-structure",
-                    provenance,
-                    "The managed or BepInEx directory was unavailable.");
+                    "managed-directory-path-invalid",
+                    "BepInEx reported an invalid managed directory.",
+                    "validate-managed",
+                    "bepinex-managed-path",
+                    "The reported directory could not be normalized.");
+            }
+            string managedDirectory = reportedManagedDirectory ?? canonicalManagedDirectory;
+            if (!IsWithin(gameRoot, managedDirectory))
+            {
+                return Fail(
+                    "managed-directory-path-conflict",
+                    "The active managed directory was outside the DSP installation.",
+                    "validate-managed",
+                    "bepinex-managed-path",
+                    "The reported directory did not belong to the active game root.");
+            }
+            if (!Directory.Exists(managedDirectory))
+            {
+                return Fail(
+                    "managed-directory-missing",
+                    "The active DSP managed directory was unavailable.",
+                    "validate-managed",
+                    "bepinex-managed-path",
+                    "The reported directory was unavailable.");
+            }
+
+            string canonicalBepInExRoot = Path.Combine(gameRoot, "BepInEx");
+            string? reportedBepInExRoot = Normalize(inputs.BepInExRootPath);
+            if (!String.IsNullOrWhiteSpace(inputs.BepInExRootPath) &&
+                reportedBepInExRoot == null)
+            {
+                return Fail(
+                    "bepinex-root-path-invalid",
+                    "BepInEx reported an invalid runtime root.",
+                    "validate-bepinex-root",
+                    "bepinex-root",
+                    "The reported root could not be normalized.");
+            }
+            string bepInExRoot = reportedBepInExRoot ?? canonicalBepInExRoot;
+            if (!Directory.Exists(bepInExRoot))
+            {
+                return Fail(
+                    "bepinex-root-missing",
+                    "The active BepInEx runtime root was unavailable.",
+                    "validate-bepinex-root",
+                    "bepinex-root",
+                    "The reported root was unavailable.");
             }
 
             string managedAssembly = Path.Combine(managedDirectory, "Assembly-CSharp.dll");

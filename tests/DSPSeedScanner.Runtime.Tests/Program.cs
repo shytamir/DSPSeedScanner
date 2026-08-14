@@ -27,6 +27,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("missing members reject while plugins coexist", MissingMembersRejectWhilePluginsCoexist),
                 ("generation changes coexist and remain identified", GenerationChangesCoexistAndRemainIdentified),
                 ("runtime filesystem context follows the active process", RuntimeFilesystemContextFollowsActiveProcess),
+                ("runtime filesystem context accepts the active BepInEx root", RuntimeFilesystemContextAcceptsReportedBepInExRoot),
                 ("runtime filesystem context fails closed on identity conflicts", RuntimeFilesystemContextFailsClosedOnConflicts),
                 ("runtime filesystem optional paths degrade independently", RuntimeFilesystemOptionalPathsDegradeIndependently),
                 ("runtime file fingerprints fall back without throwing", RuntimeFileFingerprintsFallBackWithoutThrowing),
@@ -576,6 +577,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     new RuntimeFilesystemInputs(
                         fixture.ExecutablePath,
                         fixture.GameRootPath,
+                        fixture.BepInExRootPath,
+                        fixture.ManagedDirectoryPath,
                         fixture.PluginAssemblyPath,
                         fixture.ManagedAssemblyPath,
                         fixture.PatcherDirectoryPath,
@@ -596,6 +599,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     new RuntimeFilesystemInputs(
                         null,
                         fixture.GameRootPath,
+                        fixture.BepInExRootPath,
+                        fixture.ManagedDirectoryPath,
                         fixture.PluginAssemblyPath,
                         String.Empty,
                         fixture.PatcherDirectoryPath,
@@ -608,6 +613,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     new RuntimeFilesystemInputs(
                         fixture.ExecutablePath,
                         fixture.GameRootPath,
+                        String.Empty,
+                        String.Empty,
                         fixture.PluginAssemblyPath,
                         String.Empty,
                         String.Empty,
@@ -617,6 +624,35 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(
                     fixture.ConfigurationDirectoryPath,
                     canonical.Context?.ConfigurationDirectoryPath);
+            });
+        }
+
+        private static void RuntimeFilesystemContextAcceptsReportedBepInExRoot()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                string reportedBepInExRoot = Path.Combine(path, "profile", "BepInEx");
+                RuntimeFilesystemFixture fixture = CreateRuntimeFilesystem(
+                    path,
+                    "active",
+                    reportedBepInExRoot);
+                RuntimeFilesystemResolution resolution = RuntimeFilesystemContextResolver.Resolve(
+                    new RuntimeFilesystemInputs(
+                        fixture.ExecutablePath,
+                        fixture.GameRootPath,
+                        fixture.BepInExRootPath,
+                        fixture.ManagedDirectoryPath,
+                        fixture.PluginAssemblyPath,
+                        fixture.ManagedAssemblyPath,
+                        fixture.PatcherDirectoryPath,
+                        fixture.ConfigurationDirectoryPath));
+
+                True(resolution.Succeeded);
+                Equal(fixture.GameRootPath, resolution.Context?.GameRootPath);
+                Equal(fixture.BepInExRootPath, resolution.Context?.BepInExRootPath);
+                Equal(fixture.ManagedAssemblyPath, resolution.Context?.ManagedAssemblyPath);
+                Equal(fixture.PatcherDirectoryPath, resolution.Context?.PatcherDirectoryPath);
+                Equal(fixture.ConfigurationDirectoryPath, resolution.Context?.ConfigurationDirectoryPath);
             });
         }
 
@@ -631,6 +667,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     new RuntimeFilesystemInputs(
                         active.ExecutablePath,
                         other.GameRootPath,
+                        active.BepInExRootPath,
+                        active.ManagedDirectoryPath,
                         active.PluginAssemblyPath,
                         active.ManagedAssemblyPath,
                         active.PatcherDirectoryPath,
@@ -642,6 +680,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     new RuntimeFilesystemInputs(
                         active.ExecutablePath,
                         active.GameRootPath,
+                        active.BepInExRootPath,
+                        active.ManagedDirectoryPath,
                         active.PluginAssemblyPath,
                         other.ManagedAssemblyPath,
                         active.PatcherDirectoryPath,
@@ -654,6 +694,8 @@ namespace DSPSeedScanner.Runtime.Tests
                     new RuntimeFilesystemInputs(
                         active.ExecutablePath,
                         active.GameRootPath,
+                        active.BepInExRootPath,
+                        active.ManagedDirectoryPath,
                         active.PluginAssemblyPath,
                         null,
                         active.PatcherDirectoryPath,
@@ -664,6 +706,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 RuntimeFilesystemResolution malformed = RuntimeFilesystemContextResolver.Resolve(
                     new RuntimeFilesystemInputs(
                         "\0invalid",
+                        null,
+                        null,
                         null,
                         null,
                         null,
@@ -681,11 +725,13 @@ namespace DSPSeedScanner.Runtime.Tests
             {
                 RuntimeFilesystemFixture active = CreateRuntimeFilesystem(path, "active");
                 RuntimeFilesystemFixture other = CreateRuntimeFilesystem(path, "other");
-                string missingPatcher = Path.Combine(active.GameRootPath, "BepInEx", "missing-patchers");
+                string missingPatcher = Path.Combine(active.BepInExRootPath, "missing-patchers");
                 RuntimeFilesystemResolution resolution = RuntimeFilesystemContextResolver.Resolve(
                     new RuntimeFilesystemInputs(
                         active.ExecutablePath,
                         active.GameRootPath,
+                        active.BepInExRootPath,
+                        active.ManagedDirectoryPath,
                         other.PluginAssemblyPath,
                         String.Empty,
                         missingPatcher,
@@ -4973,11 +5019,12 @@ namespace DSPSeedScanner.Runtime.Tests
 
         private static RuntimeFilesystemFixture CreateRuntimeFilesystem(
             string parent,
-            string name)
+            string name,
+            string? bepInExRootPath = null)
         {
             string gameRoot = Path.Combine(parent, name);
             string managed = Path.Combine(gameRoot, "DSPGAME_Data", "Managed");
-            string bepInEx = Path.Combine(gameRoot, "BepInEx");
+            string bepInEx = bepInExRootPath ?? Path.Combine(gameRoot, "BepInEx");
             string patchers = Path.Combine(bepInEx, "patchers");
             string plugins = Path.Combine(bepInEx, "plugins", "DSPSeedScanner");
             string config = Path.Combine(bepInEx, "config");
@@ -4994,6 +5041,8 @@ namespace DSPSeedScanner.Runtime.Tests
             return new RuntimeFilesystemFixture(
                 gameRoot,
                 executable,
+                managed,
+                bepInEx,
                 assembly,
                 plugin,
                 patchers,
@@ -5005,6 +5054,8 @@ namespace DSPSeedScanner.Runtime.Tests
             public RuntimeFilesystemFixture(
                 string gameRootPath,
                 string executablePath,
+                string managedDirectoryPath,
+                string bepInExRootPath,
                 string managedAssemblyPath,
                 string pluginAssemblyPath,
                 string patcherDirectoryPath,
@@ -5012,6 +5063,8 @@ namespace DSPSeedScanner.Runtime.Tests
             {
                 GameRootPath = Path.GetFullPath(gameRootPath);
                 ExecutablePath = Path.GetFullPath(executablePath);
+                ManagedDirectoryPath = Path.GetFullPath(managedDirectoryPath);
+                BepInExRootPath = Path.GetFullPath(bepInExRootPath);
                 ManagedAssemblyPath = Path.GetFullPath(managedAssemblyPath);
                 PluginAssemblyPath = Path.GetFullPath(pluginAssemblyPath);
                 PatcherDirectoryPath = Path.GetFullPath(patcherDirectoryPath);
@@ -5020,6 +5073,8 @@ namespace DSPSeedScanner.Runtime.Tests
 
             public string GameRootPath { get; }
             public string ExecutablePath { get; }
+            public string ManagedDirectoryPath { get; }
+            public string BepInExRootPath { get; }
             public string ManagedAssemblyPath { get; }
             public string PluginAssemblyPath { get; }
             public string PatcherDirectoryPath { get; }
