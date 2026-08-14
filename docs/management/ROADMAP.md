@@ -2,9 +2,8 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-10: Show notable-star
-measurements](#feed-10-show-notable-star-measurements) has reached its technical
-acceptance gate; owner acceptance is pending.
+**Active user story:** None. Feature implementation is complete; release
+candidate `1.0.85` is ready and awaits final owner approval.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -24,8 +23,10 @@ system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
 FEED-08 and FEED-09 were accepted on 2026-08-14 after the cluster presentation
 passed its final table-refinement workshop. `ready-for-subsection-consumer`
 passed and established the **Panel cluster populated excluding subsection**
-milestone. FEED-10 was implemented on 2026-08-14 and reached its technical
-acceptance gate; owner acceptance is pending.
+milestone. FEED-10 was accepted on 2026-08-14,
+`ready-for-end-to-end-testing` passed, and the **Panel fully populated**
+milestone was established. Release candidate `1.0.85` then passed its readiness
+checks; final owner approval remains pending.
 
 ## Source coverage
 
@@ -140,9 +141,8 @@ subsection** milestone.
 
 ### `ready-for-end-to-end-testing`
 
-**State:** Pending owner acceptance. FEED-10 reached its technical acceptance
-gate on 2026-08-14; this phase gate has not been inferred from implementation
-or automated validation.
+**State:** Passed on 2026-08-14. The owner accepted FEED-10, establishing the
+**Panel fully populated** milestone and authorizing release-candidate work.
 
 The cluster-subsection phase is complete when FEED-10 has passed its acceptance
 gate. The `Notable stars` subsection uses the scaffold's existing document and
@@ -152,6 +152,13 @@ populated** milestone and authorizes release-candidate work; it does not approve
 a release candidate.
 
 ## Release-candidate milestones
+
+**State:** Release candidate ready was established on 2026-08-14. Exact
+candidate `1.0.85` from Build 85 passed the required source, automated,
+release-build, package, installed-runtime, lifecycle, layout, and normal-
+plugin-coexistence checks. The candidate identity, evidence, and residual
+assessment are recorded in
+[Release Candidate 1.0.85 Validation](RELEASE-CANDIDATE-1.0.85.md).
 
 **Release candidate ready:** All roadmap stories and phase gates have passed;
 the full automated suite, release build, package validation, and installed DSP
@@ -163,7 +170,7 @@ covered; and residual issues are recorded with no release blocker open.
 **Release candidate approved:** The owner completes the final human validation
 against that exact candidate artifact and explicitly accepts it. Technical
 checks, a successful package build, or absence of reported defects cannot infer
-this milestone.
+this milestone. **State:** Pending owner validation of candidate `1.0.85`.
 
 ## FEED-01: Use literal home-system terminology
 
@@ -883,8 +890,7 @@ accepted FEED-09, passed `ready-for-subsection-consumer`, and established the
 
 ## FEED-10: Show notable-star measurements
 
-**State:** Implemented on 2026-08-14; technical acceptance evidence passed and
-owner acceptance is pending.
+**State:** Accepted on 2026-08-14.
 
 **Category:** feature-request
 
@@ -945,8 +951,10 @@ The focused runtime suite passed 82/82, covering exclusive grouping, singular
 and plural summaries, all maximum-luminosity placements, equal-value stable
 ties, native formatting, full 64-star coverage, partial evidence, cache reuse,
 replacement, exit, and return. Installed-runtime and hosted-reference plugin
-builds completed with no warnings. Interactive runtime validation and owner
-acceptance remain pending; the conclusion panel was not changed.
+builds completed with no warnings. The owner interactively validated and
+accepted the headed Notable stars table in the exact Build 85 candidate. The
+conclusion panel was unchanged. This passed `ready-for-end-to-end-testing` and
+established the **Panel fully populated** milestone.
 
 ## FEED-REJ-01: Re-evaluate sphere conclusions
 

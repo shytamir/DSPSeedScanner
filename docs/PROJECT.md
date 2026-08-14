@@ -16,8 +16,10 @@ home-system table presentation. The owner validated the exact CI artifact;
 system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
 FEED-08 and FEED-09 were then accepted. `ready-for-subsection-consumer` passed
 and established the **Panel cluster populated excluding subsection** milestone.
-FEED-10 reached its technical acceptance gate on 2026-08-14; owner acceptance
-and `ready-for-end-to-end-testing` remain pending. The statistics panel presents
+FEED-10 was accepted on 2026-08-14; `ready-for-end-to-end-testing` passed and
+established the **Panel fully populated** milestone. Exact candidate `1.0.85`
+then passed release-candidate readiness validation; final owner approval remains
+pending. The statistics panel presents
 every home-system body in stable game order with distinct body, world, Solar,
 Wind, ores, oil, and gas-product fields.
 After complete coverage or cache reuse, solid rows show compact exact resource
@@ -31,7 +33,8 @@ FEED-09 adds one lightweight-preview statistic for the highest-rate Deuterium
 gas giant within 8.125 light-years of home, with deterministic ties and native
 four-decimal rate formatting. The accepted cluster presentation uses separate
 tables for nearby resources, exact Unipolar Magnet statistics, and nearby
-Deuterium; FEED-10 will consume the remaining titled subsection capability.
+Deuterium; FEED-10 consumed the titled subsection capability for its accepted
+Notable stars table.
 The earlier scanner core, New Game presentation, and presentation refinement
 roadmaps were completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01
 corrected pathless runtime-assembly fingerprinting, and FSOR-01 completed local
@@ -151,3 +154,6 @@ the accepted safety contract. The completed scanner-core, New Game
 presentation, and product-planning roadmaps are retained in the archive. The
 [documentation index](INDEX.md) lists all current and archived documents with
 their purpose.
+
+The exact candidate identity and readiness evidence are recorded in
+[Release Candidate 1.0.85 Validation](management/RELEASE-CANDIDATE-1.0.85.md).

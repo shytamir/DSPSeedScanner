@@ -10,6 +10,9 @@ current status and decisions; completed roadmap history resides in the
   tracked project status.
 - [User-feedback roadmap](management/ROADMAP.md): Active FEED-01 through
   FEED-10 delivery plan, phase gates, milestones, and tabled requests.
+- [Release Candidate 1.0.85 validation](management/RELEASE-CANDIDATE-1.0.85.md):
+  Exact candidate identity, readiness evidence, scenario coverage, and final
+  owner-approval boundary.
 - [Runtime identity maintenance draft](management/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
   Pathless-assembly hotfix evidence, retired conclusion-gate proposal, and the
   completed filesystem-robustness correction.
