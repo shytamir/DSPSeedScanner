@@ -672,6 +672,124 @@ namespace DSPSeedScanner.Runtime
         public int VeinGroups { get; }
     }
 
+    public sealed record NearbyDeuteriumGasGiantCandidate
+    {
+        public NearbyDeuteriumGasGiantCandidate(
+            ClusterBodyLocation location,
+            decimal collectionRate)
+        {
+            Location = location ?? throw new ArgumentNullException(nameof(location));
+            if (collectionRate < 0)
+                throw new ArgumentOutOfRangeException(nameof(collectionRate));
+            CollectionRate = collectionRate;
+        }
+
+        public ClusterBodyLocation Location { get; }
+        public decimal CollectionRate { get; }
+    }
+
+    public sealed class NearbyDeuteriumGasGiantSelection
+    {
+        public const decimal MaximumDistanceLy = 8.125m;
+        private const string StatisticKey = "deuterium:strongest-nearby";
+
+        private NearbyDeuteriumGasGiantSelection(
+            bool attributionComplete,
+            NearbyDeuteriumGasGiantCandidate? candidate)
+        {
+            AttributionComplete = attributionComplete;
+            Candidate = candidate;
+        }
+
+        public bool AttributionComplete { get; }
+        public NearbyDeuteriumGasGiantCandidate? Candidate { get; }
+
+        public static NearbyDeuteriumGasGiantSelection Select(
+            IEnumerable<NearbyDeuteriumGasGiantCandidate> candidates,
+            bool attributionComplete = true)
+        {
+            if (candidates == null)
+                throw new ArgumentNullException(nameof(candidates));
+            if (!attributionComplete)
+                return new NearbyDeuteriumGasGiantSelection(false, null);
+
+            NearbyDeuteriumGasGiantCandidate? winner = null;
+            foreach (NearbyDeuteriumGasGiantCandidate candidate in candidates)
+            {
+                if (candidate == null)
+                    throw new ArgumentException("A Deuterium candidate cannot be null.", nameof(candidates));
+                winner = Prefer(winner, candidate);
+            }
+            return new NearbyDeuteriumGasGiantSelection(true, winner);
+        }
+
+        internal static NearbyDeuteriumGasGiantCandidate? Prefer(
+            NearbyDeuteriumGasGiantCandidate? current,
+            NearbyDeuteriumGasGiantCandidate candidate)
+        {
+            if (candidate == null)
+                throw new ArgumentNullException(nameof(candidate));
+            if (candidate.Location.HostSystemDistanceLy > MaximumDistanceLy)
+                return current;
+            return current == null || Better(candidate, current)
+                ? candidate
+                : current;
+        }
+
+        internal static NearbyDeuteriumGasGiantSelection FromWinner(
+            NearbyDeuteriumGasGiantCandidate? candidate,
+            bool attributionComplete)
+        {
+            if (candidate?.Location.HostSystemDistanceLy > MaximumDistanceLy)
+                throw new ArgumentException("The selected Deuterium giant is outside the distance bound.", nameof(candidate));
+            return new NearbyDeuteriumGasGiantSelection(
+                attributionComplete,
+                attributionComplete ? candidate : null);
+        }
+
+        public PreviewClusterStatistics Apply(PreviewClusterStatistics statistics)
+        {
+            if (statistics == null)
+                throw new ArgumentNullException(nameof(statistics));
+            if (!AttributionComplete)
+                return statistics;
+
+            string text = Candidate == null
+                ? "No Deuterium gas giants within 8.125 ly"
+                : Candidate.Location.DisplayDesignation + " - " +
+                    Candidate.Location.FormattedDistance + " - " +
+                    "Deuterium " + FormatRate(Candidate.CollectionRate);
+            return statistics.With(new PreviewStatisticItem(
+                StatisticKey,
+                text,
+                400));
+        }
+
+        private static bool Better(
+            NearbyDeuteriumGasGiantCandidate candidate,
+            NearbyDeuteriumGasGiantCandidate current)
+        {
+            int rate = candidate.CollectionRate.CompareTo(current.CollectionRate);
+            if (rate != 0)
+                return rate > 0;
+            int distance = candidate.Location.HostSystemDistanceLy.CompareTo(
+                current.Location.HostSystemDistanceLy);
+            if (distance != 0)
+                return distance < 0;
+            int order = candidate.Location.StableGameOrder.CompareTo(
+                current.Location.StableGameOrder);
+            if (order != 0)
+                return order < 0;
+            return StringComparer.Ordinal.Compare(
+                candidate.Location.BodyIdentifier,
+                current.Location.BodyIdentifier) < 0;
+        }
+
+        private static string FormatRate(decimal value) =>
+            Decimal.Round(value, 4, MidpointRounding.AwayFromZero)
+                .ToString("0.0000", CultureInfo.InvariantCulture) + "/s";
+    }
+
     public sealed class ClusterResourceStatistics
     {
         public const int MaximumCategories = 7;
@@ -1045,6 +1163,11 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentNullException(nameof(attempt));
             if (attempt.Session.SessionId != activeSessionId || attempt.Session.IsRetired)
                 return false;
+            PreviewClusterStatistics cluster = attempt.ClusterResources == null
+                ? Current?.Cluster ?? new PreviewClusterStatistics()
+                : ClusterResourcePresentation.Project(attempt.ClusterResources);
+            if (attempt.NearbyDeuteriumGasGiant != null)
+                cluster = attempt.NearbyDeuteriumGasGiant.Apply(cluster);
             Current = new PreviewStatisticsDocument(
                 activeSessionId,
                 PreviewIdentityPresentation.Format(
@@ -1052,9 +1175,7 @@ namespace DSPSeedScanner.Runtime
                     attempt.Session.HomePlanetDisplayDesignation),
                 attempt.HomeSystemBodyInventory,
                 attempt.HomeSystemResources,
-                attempt.ClusterResources == null
-                    ? Current?.Cluster ?? new PreviewClusterStatistics()
-                    : ClusterResourcePresentation.Project(attempt.ClusterResources));
+                cluster);
             return true;
         }
 

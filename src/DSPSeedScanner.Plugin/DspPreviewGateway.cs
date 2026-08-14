@@ -208,6 +208,12 @@ namespace DSPSeedScanner.Plugin
                     star.displayName,
                     star.typeString))
                 .ToArray();
+            NearbyDeuteriumGasGiantSelection nearbyDeuteriumGasGiant =
+                NormalizeNearbyDeuteriumGasGiant(
+                    request.GalaxySeed,
+                    birthStar,
+                    galaxy.stars,
+                    distances);
             recordTrace("preview:normalized");
             return new RuntimePreviewSnapshot(
                 birthSystemIdentifier,
@@ -216,7 +222,62 @@ namespace DSPSeedScanner.Plugin
                 distances,
                 systemDisplays: displays,
                 homeSystemBodyInventory: homeSystemBodyInventory,
-                homePlanetDisplayDesignation: homePlanet?.displayName);
+                homePlanetDisplayDesignation: homePlanet?.displayName,
+                nearbyDeuteriumGasGiant: nearbyDeuteriumGasGiant);
+        }
+
+        private static NearbyDeuteriumGasGiantSelection
+            NormalizeNearbyDeuteriumGasGiant(
+                int seed,
+                StarData birthStar,
+                StarData[] stars,
+                IReadOnlyList<NormalizedSystemDistance> distances)
+        {
+            NearbyDeuteriumGasGiantCandidate? winner = null;
+            bool complete = true;
+            int stableGameOrder = 0;
+            foreach (StarData star in stars)
+            {
+                bool isBirth = star.id == birthStar.id;
+                string systemIdentifier = SystemIdentifier(seed, star, isBirth);
+                decimal distance = isBirth
+                    ? 0m
+                    : distances.Single(item => item.Connects(
+                        SystemIdentifier(seed, birthStar, true),
+                        systemIdentifier)).LightYears;
+                foreach (PlanetData planet in star.planets)
+                {
+                    int order = stableGameOrder++;
+                    if (planet.type != EPlanetType.Gas)
+                        continue;
+                    if (planet.gasItems == null || planet.gasSpeeds == null ||
+                        planet.gasItems.Length != planet.gasSpeeds.Length ||
+                        String.IsNullOrWhiteSpace(planet.displayName))
+                    {
+                        complete = false;
+                        continue;
+                    }
+                    for (int index = 0; index < planet.gasItems.Length; index++)
+                    {
+                        if (planet.gasItems[index] != 1121)
+                            continue;
+                        decimal rate = Convert.ToDecimal(planet.gasSpeeds[index]);
+                        var candidate = new NearbyDeuteriumGasGiantCandidate(
+                            new ClusterBodyLocation(
+                                planet.id.ToString(CultureInfo.InvariantCulture),
+                                planet.displayName,
+                                systemIdentifier,
+                                distance,
+                                order),
+                            rate);
+                        winner = NearbyDeuteriumGasGiantSelection.Prefer(
+                            winner,
+                            candidate);
+                        break;
+                    }
+                }
+            }
+            return NearbyDeuteriumGasGiantSelection.FromWinner(winner, complete);
         }
 
         private static HomeSystemBodyKind HomeBodyKind(PlanetData planet)

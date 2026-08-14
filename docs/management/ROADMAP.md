@@ -2,9 +2,9 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-08: Show per-planet Unipolar Magnet
-supply](#feed-08-show-per-planet-unipolar-magnet-supply) is implemented at its
-acceptance gate and awaits owner acceptance.
+**Active user story:** [FEED-09: Show the strongest nearby deuterium gas
+giant](#feed-09-show-the-strongest-nearby-deuterium-gas-giant) is implemented
+at its acceptance gate and awaits owner acceptance.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -21,8 +21,8 @@ accepted. FEED-06 passed after its narrow runtime corrections and owner-led
 presentation workshop. The exact CI artifact then passed owner validation;
 `ready-for-cluster-panel-population` passed and established the **Panel home
 system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
-FEED-08 is implemented at its acceptance gate. Later stories remain inactive
-behind their documented gates.
+FEED-08 was accepted on 2026-08-14. FEED-09 is implemented at its acceptance
+gate. Later stories remain inactive behind their documented gates.
 
 ## Source coverage
 
@@ -124,8 +124,8 @@ remain valid, and the conclusion panel is unchanged. This gate establishes the
 
 ### `ready-for-subsection-consumer`
 
-**State:** Pending. FEED-07 is accepted, FEED-08 is implemented at its
-acceptance gate, and FEED-09 remains inactive.
+**State:** Pending. FEED-07 and FEED-08 are accepted. FEED-09 is implemented at
+its acceptance gate and awaits owner acceptance.
 
 The cluster-panel phase excluding subsections is complete when FEED-07,
 FEED-08, and FEED-09 have passed their acceptance gates. Their bounded cluster
@@ -727,7 +727,7 @@ FEED-07 and authorized FEED-08.
 
 ## FEED-08: Show per-planet Unipolar Magnet supply
 
-**State:** Implemented on 2026-08-14; owner acceptance pending.
+**State:** Accepted on 2026-08-14.
 
 **Category:** feature-request
 
@@ -785,12 +785,12 @@ and plural wording; invariant grouped integers; host-system light-year
 distance; the full solid-planet bound; FEED-07 coexistence; cache round trip,
 deduplication, and resource-setting mismatch; and fail-closed partial exits.
 All 80 Runtime checks passed. Release, installed-runtime, and hosted-reference
-builds completed without warnings. Interactive owner validation remains
-pending.
+builds completed without warnings. The owner passed FEED-08 and authorized
+FEED-09.
 
 ## FEED-09: Show the strongest nearby deuterium gas giant
 
-**State:** Pending; inactive until FEED-08 is accepted.
+**State:** Implemented on 2026-08-14; owner acceptance pending.
 
 **Category:** feature-request
 
@@ -835,6 +835,23 @@ not change.
 8.125 light-years, multiple displayed candidates, orbital-collector output,
 logistics or travel advice, hydrogen ranking, Fire Ice gas products, or home-
 system gas conclusions.
+
+**Implemented at this gate:** Lightweight preview normalization now reduces
+per-giant Deuterium products to one attributed candidate within the inclusive
+8.125-light-year bound. Exact game rate, then distance, then stable game order
+select the winner. The lifecycle carries that bounded selection independently
+of complete-scan cache data, and the statistics document merges its one keyed
+line after both scan completion and cache reuse without altering conclusions.
+Known absence emits the specified absence line; incomplete attribution omits
+it.
+
+**Acceptance evidence:** Focused fixtures covered no product; home, inside,
+boundary, and rejected beyond-bound candidates; a farther higher-rate winner;
+rate, distance, and stable-order ties; fixed four-decimal DSP rate formatting
+and rounding; incomplete attribution; single-key projection; scan completion;
+cache reuse; replacement; exit; and conclusion-panel isolation. All 81 Runtime
+checks passed. Installed-runtime and hosted-reference plugin builds completed
+without warnings. Interactive owner validation remains pending.
 
 ## FEED-10: Show notable-star measurements
 

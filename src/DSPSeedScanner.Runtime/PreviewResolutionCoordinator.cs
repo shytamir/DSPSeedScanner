@@ -50,6 +50,10 @@ namespace DSPSeedScanner.Runtime
         public HomeSystemBodyInventory? HomeSystemBodyInventory { get; private set; }
         public HomeSystemResourceStatistics? HomeSystemResources { get; private set; }
         public ClusterResourceStatistics? ClusterResources { get; private set; }
+        public NearbyDeuteriumGasGiantSelection? NearbyDeuteriumGasGiant {
+            get;
+            private set;
+        }
         public PreviewGenerationIdentity? CachedPayloadSourceIdentity { get; private set; }
         public int ExpectedPlanets { get; internal set; }
         public int CompletedPlanets { get; internal set; }
@@ -112,6 +116,12 @@ namespace DSPSeedScanner.Runtime
         internal void SetClusterResources(ClusterResourceStatistics? resources)
         {
             ClusterResources = resources;
+        }
+
+        internal void SetNearbyDeuteriumGasGiant(
+            NearbyDeuteriumGasGiantSelection? selection)
+        {
+            NearbyDeuteriumGasGiant = selection;
         }
 
         internal void SetCachedPayloadSourceIdentity(PreviewGenerationIdentity? identity)
@@ -183,6 +193,8 @@ namespace DSPSeedScanner.Runtime
             currentAttempt.SetSystemCandidates(preview.SystemCandidates);
             currentAttempt.SetDarkFogOccupation(preview.DarkFogOccupation);
             currentAttempt.SetHomeSystemBodyInventory(preview.HomeSystemBodyInventory);
+            currentAttempt.SetNearbyDeuteriumGasGiant(
+                preview.NearbyDeuteriumGasGiant);
             if (preview.HomePlanetDisplayDesignation != null)
             {
                 currentAttempt.Session.SetHomePlanetDisplayDesignation(

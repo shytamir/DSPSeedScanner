@@ -81,6 +81,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("cluster locations format light-years and preserve stable ties", ClusterLocationsFormatLyAndPreserveStableTies),
                 ("nearest cluster resources are bounded attributed and cacheable", NearestClusterResourcesAreBoundedAttributedAndCacheable),
                 ("Unipolar Magnet planets preserve exact bounded statistics", UnipolarMagnetPlanetsPreserveExactBoundedStatistics),
+                ("nearby Deuterium giant selection is bounded and lifecycle safe", NearbyDeuteriumGiantSelectionIsBoundedAndLifecycleSafe),
                 ("statistics panel follows preview lifecycle independently", StatisticsPanelFollowsPreviewLifecycleIndependently),
                 ("home planet designation is shared immutable and session owned", HomePlanetDesignationIsSharedImmutableAndSessionOwned),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
@@ -3250,6 +3251,128 @@ namespace DSPSeedScanner.Runtime.Tests
             True(overBoundRejected);
         }
 
+        private static void NearbyDeuteriumGiantSelectionIsBoundedAndLifecycleSafe()
+        {
+            NearbyDeuteriumGasGiantCandidate Candidate(
+                string id,
+                string name,
+                string system,
+                decimal distance,
+                int order,
+                decimal rate) => new NearbyDeuteriumGasGiantCandidate(
+                    Location(id, name, system, distance, order),
+                    rate);
+
+            NearbyDeuteriumGasGiantSelection selected =
+                NearbyDeuteriumGasGiantSelection.Select(new[]
+                {
+                    Candidate("home", "Alpha II", "home-system", 0m, 0, 0.01m),
+                    Candidate("near", "Beta IV", "beta", 2.5m, 4, 0.04m),
+                    Candidate("edge", "Gamma III", "gamma", 8.125m, 6, 0.08m),
+                    Candidate("beyond", "Delta V", "delta", 8.126m, 8, 0.5m),
+                    Candidate("far-tie", "Epsilon II", "epsilon", 7m, 9, 0.08m),
+                    Candidate("near-tie-late", "Zeta II", "zeta", 4m, 11, 0.08m),
+                    Candidate("near-tie", "Eta II", "eta", 4m, 10, 0.08m)
+                });
+            Equal("near-tie", selected.Candidate?.Location.BodyIdentifier);
+            Equal(0.08m, selected.Candidate?.CollectionRate);
+            Equal(
+                "Eta II - 4 ly - Deuterium 0.0800/s",
+                selected.Apply(new PreviewClusterStatistics()).Items.Single().Text);
+            Equal(1, selected.Apply(new PreviewClusterStatistics()).Items.Count);
+            NearbyDeuteriumGasGiantSelection rounded =
+                NearbyDeuteriumGasGiantSelection.Select(new[]
+                {
+                    Candidate("rounded", "Theta III", "theta", 3m, 12, 0.08006m)
+                });
+            Equal(
+                "Theta III - 3 ly - Deuterium 0.0801/s",
+                rounded.Apply(new PreviewClusterStatistics()).Items.Single().Text);
+            NearbyDeuteriumGasGiantSelection atBoundary =
+                NearbyDeuteriumGasGiantSelection.Select(new[]
+                {
+                    Candidate("boundary", "Gamma III", "gamma", 8.125m, 6, 0.03m)
+                });
+            Equal("boundary", atBoundary.Candidate?.Location.BodyIdentifier);
+
+            NearbyDeuteriumGasGiantSelection none =
+                NearbyDeuteriumGasGiantSelection.Select(
+                    Array.Empty<NearbyDeuteriumGasGiantCandidate>());
+            Equal(
+                "No Deuterium gas giants within 8.125 ly",
+                none.Apply(new PreviewClusterStatistics()).Items.Single().Text);
+            NearbyDeuteriumGasGiantSelection incomplete =
+                NearbyDeuteriumGasGiantSelection.Select(
+                    new[]
+                    {
+                        Candidate("untrusted", "Iota II", "iota", 2m, 14, 0.5m)
+                    },
+                    false);
+            Equal(0, incomplete.Apply(new PreviewClusterStatistics()).Items.Count);
+
+            WithTemporaryDirectory(path =>
+            {
+                var gate = new RuntimeOperationGate();
+                var previewGateway = new FakeGateway
+                {
+                    Snapshot = Snapshot(nearbyDeuteriumGasGiant: selected)
+                };
+                var completeGateway = new FakeCompleteClusterGateway();
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(previewGateway, gate),
+                    new CompleteClusterRawCoordinator(completeGateway, gate),
+                    new CompleteClusterConclusionCache(path));
+                var statistics = new PreviewStatisticsPanelController();
+
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt scanned = resolver.CurrentPublishedAttempt!;
+                statistics.BeginSession(scanned.Session);
+                True(statistics.Update(scanned));
+                Equal(1, statistics.Current!.Cluster.Items.Count(value =>
+                    value.Key == "deuterium:strongest-nearby"));
+                False(CompletePresentationText(
+                    PreviewConclusionPresenter.Project(scanned))
+                    .Contains("Eta II", StringComparison.Ordinal));
+                while (!scanned.IsTerminal)
+                    resolver.AdvanceCurrent();
+                True(statistics.Update(scanned));
+                Equal(1, statistics.Current!.Cluster.Items.Count(value =>
+                    value.Key == "deuterium:strongest-nearby"));
+                False(CompletePresentationText(
+                    PreviewConclusionPresenter.Project(scanned))
+                    .Contains("Eta II", StringComparison.Ordinal));
+                Equal(1, completeGateway.GenerateCalls);
+
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt cached = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, cached.State);
+                statistics.BeginSession(cached.Session);
+                True(statistics.Update(cached));
+                Equal(1, statistics.Current!.Cluster.Items.Count(value =>
+                    value.Key == "deuterium:strongest-nearby"));
+                Equal(1, completeGateway.GenerateCalls);
+
+                previewGateway.Snapshot = Snapshot(nearbyDeuteriumGasGiant: none);
+                resolver.ObserveCompletedLoad(
+                    3,
+                    PreviewIdentity(73_339_583),
+                    RequestForSeed(73_339_583));
+                PreviewResolutionAttempt replacement = resolver.CurrentPublishedAttempt!;
+                statistics.BeginSession(replacement.Session);
+                True(statistics.Update(replacement));
+                Equal(
+                    "No Deuterium gas giants within 8.125 ly",
+                    statistics.Current!.Cluster.Items.Single(value =>
+                        value.Key == "deuterium:strongest-nearby").Text);
+                True(scanned.Session.IsRetired);
+
+                resolver.ExitPreview();
+                True(statistics.Hide(replacement.Session.SessionId));
+                True(statistics.Current == null);
+            });
+        }
+
         private static void StatisticsPanelFollowsPreviewLifecycleIndependently()
         {
             WithTemporaryDirectory(path =>
@@ -4478,6 +4601,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(ClusterBodyLocation),
                 typeof(ClusterResourceCandidate),
                 typeof(UnipolarMagnetPlanetStatistics),
+                typeof(NearbyDeuteriumGasGiantCandidate),
+                typeof(NearbyDeuteriumGasGiantSelection),
                 typeof(ClusterResourceStatistics),
                 typeof(PreviewStatisticItem),
                 typeof(PreviewStatisticSubsection),
@@ -4798,7 +4923,8 @@ namespace DSPSeedScanner.Runtime.Tests
             decimal primaryDistanceLy = 2m,
             bool includeHomePlanetTopology = true,
             HomeSystemBodyInventory? homeSystemBodyInventory = null,
-            string? homePlanetDisplayDesignation = null)
+            string? homePlanetDisplayDesignation = null,
+            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -4866,7 +4992,8 @@ namespace DSPSeedScanner.Runtime.Tests
                         index == 1 ? "Alpha" : "Star " + index,
                         index == 2 ? "O type star" : "G type star")),
                 homeSystemBodyInventory: homeSystemBodyInventory,
-                homePlanetDisplayDesignation: homePlanetDisplayDesignation);
+                homePlanetDisplayDesignation: homePlanetDisplayDesignation,
+                nearbyDeuteriumGasGiant: nearbyDeuteriumGasGiant);
         }
 
         private static NormalizedBirthPlanetEvidence SolidAttribution(
