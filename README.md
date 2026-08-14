@@ -38,9 +38,11 @@ presentation corrections. The exact CI artifact passed human validation,
 establishing the fully populated home-system panel. FEED-07 was accepted after
 adding bounded nearby resource locations to the cluster panel in light-years.
 FEED-08 was accepted after adding exact per-planet Unipolar Magnet supply and
-distribution to that panel. FEED-09 now awaits owner acceptance at its story
-gate after adding the strongest Deuterium gas giant within 8.125 light-years
-of home from lightweight preview evidence. The completed
+distribution to that panel. FEED-09 was accepted after adding the strongest
+Deuterium gas giant within 8.125 light-years of home and refining the cluster
+facts into compact comparison tables. This established the panel cluster
+populated excluding subsections; FEED-10 is active and pending implementation.
+The completed
 [presentation refinement roadmap](docs/archive/PRESENTATION-REFINEMENT-ROADMAP.md)
 records the preceding stories, acceptance gates, and implementation history.
 

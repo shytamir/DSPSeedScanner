@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DSPSeedScanner.Runtime;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace DSPSeedScanner.Plugin
         private const float CellPadding = 6f;
         private const float HeaderCellPadding = 2f;
         private const float TableRuleThickness = 1f;
+        private const float ClusterTableTitleHeight = 28f;
         private static readonly string[] HomeHeadings =
         {
             "Body",
@@ -33,8 +35,49 @@ namespace DSPSeedScanner.Plugin
             0.14f,
             0.12f
         };
+        private static readonly string[] DeuteriumHeadings =
+        {
+            "Nearby Deuterium Gas Giant",
+            "Distance",
+            "Rate"
+        };
+        private static readonly float[] DeuteriumColumnRatios =
+        {
+            0.55f,
+            0.25f,
+            0.20f
+        };
+        private static readonly string[] RareResourceHeadings =
+        {
+            "Resource",
+            "Closest",
+            "Alternative"
+        };
+        private static readonly float[] RareResourceColumnRatios =
+        {
+            0.24f,
+            0.38f,
+            0.38f
+        };
+        private static readonly string[] UnipolarHeadings =
+        {
+            "Planet",
+            "Distance",
+            "Veins",
+            "Magnets",
+            "Groups"
+        };
+        private static readonly float[] UnipolarColumnRatios =
+        {
+            0.35f,
+            0.15f,
+            0.12f,
+            0.23f,
+            0.15f
+        };
         private GUIStyle? titleStyle;
         private GUIStyle? sectionTitleStyle;
+        private GUIStyle? subsectionTitleStyle;
         private GUIStyle? bodyStyle;
         private GUIStyle? tableHeaderStyle;
         private GUIStyle? panelStyle;
@@ -126,9 +169,28 @@ namespace DSPSeedScanner.Plugin
                 .ToArray() ?? Array.Empty<HomeSystemBodyTableRow>();
             float homeSectionHeight = HomeSectionHeight(homeRows, contentWidth);
             string[] clusterLines = document.Cluster.Sections()
-                .SelectMany(section => section.Items.Select(item => item.Text))
+                .SelectMany(section => section.Items)
+                .Where(item =>
+                    !ClusterResourcePresentation.IsTableItemKey(item.Key) &&
+                    !NearbyDeuteriumGasGiantSelection.IsTableItemKey(item.Key))
+                .Select(item => item.Text)
                 .ToArray();
-            float clusterSectionHeight = SectionHeight(clusterLines, contentWidth);
+            IReadOnlyList<string>[] deuteriumRows =
+                document.NearbyDeuteriumRow == null
+                    ? Array.Empty<IReadOnlyList<string>>()
+                    : new[] { document.NearbyDeuteriumRow.Cells };
+            IReadOnlyList<string>[] rareRows = document.RareResourceRows
+                .Select(row => row.Cells)
+                .ToArray();
+            IReadOnlyList<string>[] unipolarRows = document.UnipolarMagnetRows
+                .Select(row => row.Cells)
+                .ToArray();
+            float clusterSectionHeight = ClusterSectionHeight(
+                deuteriumRows,
+                rareRows,
+                unipolarRows,
+                clusterLines,
+                contentWidth);
             float contentHeight = homeSectionHeight + clusterSectionHeight + SectionGap;
             GUISkin previousSkin = GUI.skin;
             GUI.skin = scrollSkin!;
@@ -149,8 +211,10 @@ namespace DSPSeedScanner.Plugin
                     0f,
                     contentWidth,
                     homeSectionHeight);
-                DrawSection(
-                    PreviewStatisticsDocument.ClusterTitle,
+                DrawClusterSection(
+                    deuteriumRows,
+                    rareRows,
+                    unipolarRows,
                     clusterLines,
                     homeSectionHeight + SectionGap,
                     contentWidth,
@@ -266,9 +330,36 @@ namespace DSPSeedScanner.Plugin
                 ? width - ColumnX(index, width)
                 : width * HomeColumnRatios[index];
 
-        private float SectionHeight(string[] lines, float width)
+        private float ClusterSectionHeight(
+            IReadOnlyList<string>[] deuteriumRows,
+            IReadOnlyList<string>[] rareRows,
+            IReadOnlyList<string>[] unipolarRows,
+            string[] lines,
+            float width)
         {
             float height = 46f;
+            if (deuteriumRows.Length != 0)
+            {
+                height += ClusterTableHeight(
+                    deuteriumRows,
+                    DeuteriumColumnRatios,
+                    width,
+                    includeTitle: false) + 8f;
+            }
+            if (rareRows.Length != 0)
+            {
+                height += ClusterTableHeight(
+                    rareRows,
+                    RareResourceColumnRatios,
+                    width) + 8f;
+            }
+            if (unipolarRows.Length != 0)
+            {
+                height += ClusterTableHeight(
+                    unipolarRows,
+                    UnipolarColumnRatios,
+                    width) + 8f;
+            }
             foreach (string line in lines)
             {
                 height += Math.Max(
@@ -280,28 +371,205 @@ namespace DSPSeedScanner.Plugin
             return Math.Max(88f, height + 8f);
         }
 
-        private void DrawSection(
-            string title,
+        private float ClusterTableHeight(
+            IReadOnlyList<string>[] rows,
+            float[] columnRatios,
+            float width,
+            bool includeTitle = true)
+        {
+            float height = (includeTitle ? ClusterTableTitleHeight : 0f) +
+                TableHeaderHeight;
+            foreach (IReadOnlyList<string> row in rows)
+                height += TableRowHeight(row, columnRatios, width);
+            return height;
+        }
+
+        private float TableRowHeight(
+            IReadOnlyList<string> row,
+            float[] columnRatios,
+            float width)
+        {
+            float height = 28f;
+            for (int index = 0; index < columnRatios.Length; index++)
+            {
+                float cellWidth = TableColumnWidth(
+                    index,
+                    width,
+                    columnRatios) - CellPadding * 2f;
+                height = Math.Max(
+                    height,
+                    bodyStyle!.CalcHeight(
+                        new GUIContent(row[index]),
+                        cellWidth) + CellPadding * 2f);
+            }
+            return height;
+        }
+
+        private void DrawClusterSection(
+            IReadOnlyList<string>[] deuteriumRows,
+            IReadOnlyList<string>[] rareRows,
+            IReadOnlyList<string>[] unipolarRows,
             string[] lines,
             float y,
             float width,
             float height)
         {
             GUI.Box(new Rect(0f, y, width, height), GUIContent.none, sectionStyle);
-            GUI.Label(new Rect(0f, y + 8f, width, 30f), title, sectionTitleStyle);
-            float lineY = y + 42f;
+            GUI.Label(
+                new Rect(0f, y + 8f, width, 30f),
+                PreviewStatisticsDocument.ClusterTitle,
+                sectionTitleStyle);
+            float contentY = y + 42f;
+            if (deuteriumRows.Length != 0)
+            {
+                float tableHeight = ClusterTableHeight(
+                    deuteriumRows,
+                    DeuteriumColumnRatios,
+                    width,
+                    includeTitle: false);
+                DrawClusterTable(
+                    null,
+                    DeuteriumHeadings,
+                    DeuteriumColumnRatios,
+                    deuteriumRows,
+                    contentY,
+                    width,
+                    tableHeight);
+                contentY += tableHeight + 8f;
+            }
+            if (rareRows.Length != 0)
+            {
+                float tableHeight = ClusterTableHeight(
+                    rareRows,
+                    RareResourceColumnRatios,
+                    width);
+                DrawClusterTable(
+                    "Rare resources",
+                    RareResourceHeadings,
+                    RareResourceColumnRatios,
+                    rareRows,
+                    contentY,
+                    width,
+                    tableHeight);
+                contentY += tableHeight + 8f;
+            }
+            if (unipolarRows.Length != 0)
+            {
+                float tableHeight = ClusterTableHeight(
+                    unipolarRows,
+                    UnipolarColumnRatios,
+                    width);
+                DrawClusterTable(
+                    "Unipolar Magnets",
+                    UnipolarHeadings,
+                    UnipolarColumnRatios,
+                    unipolarRows,
+                    contentY,
+                    width,
+                    tableHeight);
+                contentY += tableHeight + 8f;
+            }
             foreach (string line in lines)
             {
                 float lineHeight = Math.Max(
                     24f,
                     bodyStyle!.CalcHeight(new GUIContent(line), width - 24f));
                 GUI.Label(
-                    new Rect(12f, lineY, width - 24f, lineHeight),
+                    new Rect(12f, contentY, width - 24f, lineHeight),
                     line,
                     bodyStyle);
-                lineY += lineHeight + 4f;
+                contentY += lineHeight + 4f;
             }
         }
+
+        private void DrawClusterTable(
+            string? title,
+            string[] headings,
+            float[] columnRatios,
+            IReadOnlyList<string>[] rows,
+            float y,
+            float width,
+            float height)
+        {
+            float titleHeight = title == null ? 0f : ClusterTableTitleHeight;
+            if (title != null)
+            {
+                GUI.Label(
+                    new Rect(0f, y, width, titleHeight),
+                    title,
+                    subsectionTitleStyle);
+            }
+            float headerY = y + titleHeight;
+            GUI.Box(
+                new Rect(0f, headerY, width, TableHeaderHeight),
+                GUIContent.none,
+                tableHeaderBackgroundStyle);
+            for (int index = 0; index < headings.Length; index++)
+            {
+                float columnX = TableColumnX(index, width, columnRatios);
+                float columnWidth = TableColumnWidth(index, width, columnRatios);
+                GUI.Label(
+                    new Rect(
+                        columnX + HeaderCellPadding,
+                        headerY,
+                        columnWidth - HeaderCellPadding * 2f,
+                        TableHeaderHeight),
+                    headings[index],
+                    tableHeaderStyle);
+                if (index != 0)
+                {
+                    GUI.DrawTexture(
+                        new Rect(
+                            columnX,
+                            headerY,
+                            TableRuleThickness,
+                            height - titleHeight),
+                        tableRuleTexture!);
+                }
+            }
+
+            float rowY = headerY + TableHeaderHeight;
+            foreach (IReadOnlyList<string> row in rows)
+            {
+                float rowHeight = TableRowHeight(row, columnRatios, width);
+                GUI.DrawTexture(
+                    new Rect(0f, rowY, width, TableRuleThickness),
+                    tableRuleTexture!);
+                for (int index = 0; index < columnRatios.Length; index++)
+                {
+                    float columnX = TableColumnX(index, width, columnRatios);
+                    float columnWidth = TableColumnWidth(index, width, columnRatios);
+                    GUI.Label(
+                        new Rect(
+                            columnX + CellPadding,
+                            rowY + CellPadding,
+                            columnWidth - CellPadding * 2f,
+                            rowHeight - CellPadding * 2f),
+                        row[index],
+                        bodyStyle);
+                }
+                rowY += rowHeight;
+            }
+        }
+
+        private static float TableColumnX(
+            int index,
+            float width,
+            float[] columnRatios)
+        {
+            float x = 0f;
+            for (int previous = 0; previous < index; previous++)
+                x += TableColumnWidth(previous, width, columnRatios);
+            return x;
+        }
+
+        private static float TableColumnWidth(
+            int index,
+            float width,
+            float[] columnRatios) =>
+            index == columnRatios.Length - 1
+                ? width - TableColumnX(index, width, columnRatios)
+                : width * columnRatios[index];
 
         private void EnsureStyles()
         {
@@ -321,6 +589,14 @@ namespace DSPSeedScanner.Plugin
                 alignment = TextAnchor.UpperCenter,
                 clipping = TextClipping.Clip,
                 fontSize = 18,
+                fontStyle = FontStyle.Bold,
+                wordWrap = false
+            };
+            subsectionTitleStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                clipping = TextClipping.Clip,
+                fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 wordWrap = false
             };

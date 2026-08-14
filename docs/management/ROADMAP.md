@@ -2,9 +2,9 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-09: Show the strongest nearby deuterium gas
-giant](#feed-09-show-the-strongest-nearby-deuterium-gas-giant) is implemented
-at its acceptance gate and awaits owner acceptance.
+**Active user story:** [FEED-10: Show notable-star
+measurements](#feed-10-show-notable-star-measurements) is pending
+implementation.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
@@ -21,8 +21,10 @@ accepted. FEED-06 passed after its narrow runtime corrections and owner-led
 presentation workshop. The exact CI artifact then passed owner validation;
 `ready-for-cluster-panel-population` passed and established the **Panel home
 system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
-FEED-08 was accepted on 2026-08-14. FEED-09 is implemented at its acceptance
-gate. Later stories remain inactive behind their documented gates.
+FEED-08 and FEED-09 were accepted on 2026-08-14 after the cluster presentation
+passed its final table-refinement workshop. `ready-for-subsection-consumer`
+passed and established the **Panel cluster populated excluding subsection**
+milestone. FEED-10 is active and pending implementation.
 
 ## Source coverage
 
@@ -124,8 +126,9 @@ remain valid, and the conclusion panel is unchanged. This gate establishes the
 
 ### `ready-for-subsection-consumer`
 
-**State:** Pending. FEED-07 and FEED-08 are accepted. FEED-09 is implemented at
-its acceptance gate and awaits owner acceptance.
+**State:** Passed on 2026-08-14. FEED-07, FEED-08, and FEED-09 were accepted
+after their combined cluster presentation passed interactive owner validation,
+establishing the **Panel cluster populated excluding subsection** milestone.
 
 The cluster-panel phase excluding subsections is complete when FEED-07,
 FEED-08, and FEED-09 have passed their acceptance gates. Their bounded cluster
@@ -135,6 +138,8 @@ presentation. This gate establishes the **Panel cluster populated excluding
 subsection** milestone.
 
 ### `ready-for-end-to-end-testing`
+
+**State:** Pending. FEED-10 is active and pending implementation.
 
 The cluster-subsection phase is complete when FEED-10 has passed its acceptance
 gate. The `Notable stars` subsection uses the scaffold's existing document and
@@ -687,7 +692,10 @@ If exactly two candidates share the closest measured distance, preserve and
 display that pair without a secondary tie-breaker. If more than two share it,
 retain the first two in stable game order without implying that one tied
 candidate is better. A completed scan with no candidate displays `No
-<resource> found`. Resolve natural resource names and planet designations
+<resource> found`. Present the seven categories as rows under a `Rare resources`
+table with `Resource`, `Closest`, and `Alternative` columns. Candidate cells
+use `<planet> · <distance>`; known absence uses `Not found` in `Closest` and an
+empty `Alternative`. Resolve natural resource names and planet designations
 before adding the keyed presentation facts to the FEED-03 cluster collection;
 do not expose game protos to its document, renderer, or cache.
 
@@ -710,12 +718,15 @@ theme inventory.
 
 **Implemented at this gate:** Complete-scan aggregation now retains only the
 two nearest unique attributed planets per named category and projects one keyed
-cluster line per category. Sulfuric-acid oceans come from the planet ocean
+cluster fact per category. Sulfuric-acid oceans come from the planet ocean
 prototype; Fire Ice requires generated veins; Unipolar Magnets are excluded.
 Locations retain planet designation, host-system identity, measured
 home-to-host distance in light-years, and stable game order. Cache schema 11
 persists only the bounded selected locations, and cache hits republish them
-without a scan.
+without a scan. At the cluster phase gate, the accepted keyed facts gained a
+structured `Rare resources` table projection so players could compare the two
+candidates without parsing repeated sentence lines; selection and cache
+semantics did not change.
 
 **Acceptance evidence:** Focused fixtures covered all seven categories, no-
 result wording, home-system distance, shared-host planets, exact two-way and
@@ -723,7 +734,8 @@ over-bound ties, multiple deposits on one planet, Fire Ice vein/gas separation,
 Unipolar exclusion, three-significant-figure light-year formatting, projection,
 and cache round trips. All 79 Runtime checks passed. Release, installed-runtime,
 and hosted-reference builds completed without warnings. The owner then passed
-FEED-07 and authorized FEED-08.
+FEED-07 and authorized FEED-08. The later phase-gate workshop also validated
+the final table form as part of the combined cluster panel.
 
 ## FEED-08: Show per-planet Unipolar Magnet supply
 
@@ -739,18 +751,18 @@ As a player evaluating a cluster's scarcest ore, I want every Unipolar Magnet
 planet identified with its generated supply and distribution so I can compare
 the actual locations directly.
 
-**Return:** Populate `Cluster` with one Unipolar Magnet line per planet that
-contains generated deposits. Each line shows the planet's in-game display
+**Return:** Populate `Cluster` with one Unipolar Magnet table row per planet
+that contains generated deposits. The table uses `Planet`, `Distance`, `Veins`,
+`Magnets`, and `Groups` columns and shows the planet's in-game display
 designation, its host system's distance from the home system, exact vein-node
 count, exact total Unipolar Magnet amount, and exact vein-group count. Reuse
 FEED-03's cluster-location value, light-year formatter, and stable ordering. Treat
 vein-group count as the existing factual distribution measure; do not rename
 it density or derive a new ratio. The amount is the exact generated runtime
 value under the active resource setting; do not normalize or estimate it. Use
-the line form `<planet> - <distance> - <nodes> veins - <amount> magnets -
-<groups> groups`, with natural singular forms and invariant grouped integers.
-Planets in one system retain their distinct lines. A completed scan with no
-qualifying planet displays `No Unipolar Magnets found`. Persist only these
+invariant grouped integers. Planets in one system retain their distinct rows.
+A completed scan with no qualifying planet displays one `Not found` row.
+Persist only these
 bounded per-planet presentation facts for the active complete-scan identity
 and cache reuse.
 
@@ -773,10 +785,13 @@ changes to Unipolar Magnet conclusions.
 **Implemented at this gate:** The existing complete-cluster pass now reduces
 each planet's generated Unipolar Magnet groups into one bounded presentation
 fact containing its attributed location, exact node count, exact generated
-amount, and exact group count. The cluster document emits one stable keyed line
-per qualifying planet, or the single explicit no-result line. Cache schema 12
+amount, and exact group count. The cluster document retains one stable keyed
+fact per qualifying planet, or one explicit no-result fact. Cache schema 12
 persists only those presentation facts under the complete generation identity;
-it retains no vein positions, raw planets, or game prototypes.
+it retains no vein positions, raw planets, or game prototypes. At the cluster
+phase gate, those facts gained a separate structured Unipolar table projection
+because their exact supply fields do not share the nearest-resource schema;
+the keyed facts and cache payload stayed unchanged.
 
 **Acceptance evidence:** Focused fixtures covered zero, one, and multiple
 qualifying planets across shared and distinct systems; equal-distance stable
@@ -786,11 +801,12 @@ distance; the full solid-planet bound; FEED-07 coexistence; cache round trip,
 deduplication, and resource-setting mismatch; and fail-closed partial exits.
 All 80 Runtime checks passed. Release, installed-runtime, and hosted-reference
 builds completed without warnings. The owner passed FEED-08 and authorized
-FEED-09.
+FEED-09. The later phase-gate workshop also validated the final table form as
+part of the combined cluster panel.
 
 ## FEED-09: Show the strongest nearby deuterium gas giant
 
-**State:** Implemented on 2026-08-14; owner acceptance pending.
+**State:** Accepted on 2026-08-14.
 
 **Category:** feature-request
 
@@ -815,9 +831,12 @@ Highest exact game-provided rate wins. An exact-rate tie selects the nearer
 host system, then stable game order. Do not introduce a rate threshold,
 tolerance, or system-aggregated candidate. Construct the winner's FEED-03
 cluster-location value and show its planet designation, shared light-year distance,
-and exact rate. A complete lightweight preview with no qualifying candidate
-displays `No Deuterium gas giants within 8.125 ly`; incomplete attribution omits
-the item rather than claiming absence.
+and exact rate. Present it first in `Cluster` as a one-row table with `Nearby
+Deuterium Gas Giant`, `Distance`, and `Rate` columns so the lightweight result
+retains a stable, prominent position when complete-scan tables arrive. Do not
+add a redundant table title. A complete lightweight preview with no qualifying
+candidate displays `Not found within 8.125 ly` in the first column; incomplete
+attribution omits the table rather than claiming absence.
 
 **Acceptance gate:** Fixtures cover no Deuterium product; candidates inside,
 at, and beyond 8.125 light-years; one and several in-range candidates; a farther
@@ -841,9 +860,13 @@ per-giant Deuterium products to one attributed candidate within the inclusive
 8.125-light-year bound. Exact game rate, then distance, then stable game order
 select the winner. The lifecycle carries that bounded selection independently
 of complete-scan cache data, and the statistics document merges its one keyed
-line after both scan completion and cache reuse without altering conclusions.
-Known absence emits the specified absence line; incomplete attribution omits
-it.
+fact after both scan completion and cache reuse without altering conclusions.
+Known absence emits the specified absence fact; incomplete attribution omits
+it. Phase-gate visual review then replaced the flat rendered lines with
+structured table rows. A first direct build established separate Rare-resource
+and Unipolar tables. Two narrower Deuterium passes promoted its line into the
+first cluster table and then moved `Nearby Deuterium Gas Giant` into the first
+column header, removing a redundant one-row table title.
 
 **Acceptance evidence:** Focused fixtures covered no product; home, inside,
 boundary, and rejected beyond-bound candidates; a farther higher-rate winner;
@@ -851,11 +874,13 @@ rate, distance, and stable-order ties; fixed four-decimal DSP rate formatting
 and rounding; incomplete attribution; single-key projection; scan completion;
 cache reuse; replacement; exit; and conclusion-panel isolation. All 81 Runtime
 checks passed. Installed-runtime and hosted-reference plugin builds completed
-without warnings. Interactive owner validation remains pending.
+without warnings. The owner interactively validated the combined table layout,
+accepted FEED-09, passed `ready-for-subsection-consumer`, and established the
+**Panel cluster populated excluding subsection** milestone.
 
 ## FEED-10: Show notable-star measurements
 
-**State:** Pending; inactive until `ready-for-subsection-consumer` passes.
+**State:** Pending; active and authorized for implementation.
 
 **Category:** feature-request
 

@@ -3058,6 +3058,22 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(
                 "No Fire Ice veins found",
                 projected.Items.Single(value => value.Key == "resource:fire-ice").Text);
+            IReadOnlyList<ClusterRareResourceTableRow> rareRows =
+                ClusterResourcePresentation.ProjectRareResourceTableRows(
+                    result.ClusterResources);
+            Equal(7, rareRows.Count);
+            Equal("Sulfuric Acid ocean", rareRows[0].Resource);
+            Equal("Planet 103 · 20 ly", rareRows[0].Closest);
+            Equal(String.Empty, rareRows[0].Alternative);
+            ClusterRareResourceTableRow fireIce = rareRows.Single(row =>
+                row.Resource == "Fire Ice veins");
+            Equal("Not found", fireIce.Closest);
+            Equal(String.Empty, fireIce.Alternative);
+            ClusterRareResourceTableRow kimberliteRow = rareRows.Single(row =>
+                row.Resource == "Kimberlite");
+            Equal("Planet 102 · 2 ly", kimberliteRow.Closest);
+            Equal("Planet 104 · 2 ly", kimberliteRow.Alternative);
+            Equal(3, kimberliteRow.Cells.Count);
 
             WithTemporaryDirectory(path =>
             {
@@ -3173,6 +3189,19 @@ namespace DSPSeedScanner.Runtime.Tests
                 "Planet 103 - 2.35 ly - 12 veins - 9,876,543 magnets - 3 groups",
                 projected.Items.Single(value => value.Key == "unipolar:103").Text);
             False(projected.Items.Any(value => value.Key == "unipolar:none"));
+            IReadOnlyList<ClusterUnipolarMagnetTableRow> tableRows =
+                ClusterResourcePresentation.ProjectUnipolarTableRows(statistics);
+            Equal(3, tableRows.Count);
+            Equal("Planet 102", tableRows[0].Planet);
+            Equal("2.35 ly", tableRows[0].Distance);
+            Equal("1", tableRows[0].Veins);
+            Equal("1,234,567", tableRows[0].Magnets);
+            Equal("1", tableRows[0].Groups);
+            Equal("Planet 103", tableRows[1].Planet);
+            Equal("12", tableRows[1].Veins);
+            Equal("9,876,543", tableRows[1].Magnets);
+            Equal("3", tableRows[1].Groups);
+            Equal(5, tableRows[0].Cells.Count);
 
             WithTemporaryDirectory(path =>
             {
@@ -3204,6 +3233,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 "No Unipolar Magnets found",
                 ClusterResourcePresentation.Project(none).Items.Single(value =>
                     value.Key == "unipolar:none").Text);
+            IReadOnlyList<ClusterUnipolarMagnetTableRow> noUnipolarRows =
+                ClusterResourcePresentation.ProjectUnipolarTableRows(none);
+            Equal(1, noUnipolarRows.Count);
+            Equal("Not found", noUnipolarRows[0].Planet);
+            True(noUnipolarRows[0].Cells.Skip(1).All(String.IsNullOrEmpty));
 
             UnipolarMagnetPlanetStatistics[] atBound = Enumerable.Range(
                     1,
@@ -3280,6 +3314,11 @@ namespace DSPSeedScanner.Runtime.Tests
                 "Eta II - 4 ly - Deuterium 0.0800/s",
                 selected.Apply(new PreviewClusterStatistics()).Items.Single().Text);
             Equal(1, selected.Apply(new PreviewClusterStatistics()).Items.Count);
+            NearbyDeuteriumTableRow selectedRow = selected.ProjectTableRow()!;
+            Equal("Eta II", selectedRow.GasGiant);
+            Equal("4 ly", selectedRow.Distance);
+            Equal("0.0800/s", selectedRow.Rate);
+            Equal(3, selectedRow.Cells.Count);
             NearbyDeuteriumGasGiantSelection rounded =
                 NearbyDeuteriumGasGiantSelection.Select(new[]
                 {
@@ -3301,6 +3340,9 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(
                 "No Deuterium gas giants within 8.125 ly",
                 none.Apply(new PreviewClusterStatistics()).Items.Single().Text);
+            NearbyDeuteriumTableRow absentRow = none.ProjectTableRow()!;
+            Equal("Not found within 8.125 ly", absentRow.GasGiant);
+            True(absentRow.Cells.Skip(1).All(String.IsNullOrEmpty));
             NearbyDeuteriumGasGiantSelection incomplete =
                 NearbyDeuteriumGasGiantSelection.Select(
                     new[]
@@ -3309,6 +3351,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     },
                     false);
             Equal(0, incomplete.Apply(new PreviewClusterStatistics()).Items.Count);
+            True(incomplete.ProjectTableRow() == null);
 
             WithTemporaryDirectory(path =>
             {
@@ -3331,6 +3374,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(statistics.Update(scanned));
                 Equal(1, statistics.Current!.Cluster.Items.Count(value =>
                     value.Key == "deuterium:strongest-nearby"));
+                Equal("Eta II", statistics.Current.NearbyDeuteriumRow?.GasGiant);
                 False(CompletePresentationText(
                     PreviewConclusionPresenter.Project(scanned))
                     .Contains("Eta II", StringComparison.Ordinal));
@@ -3365,6 +3409,9 @@ namespace DSPSeedScanner.Runtime.Tests
                     "No Deuterium gas giants within 8.125 ly",
                     statistics.Current!.Cluster.Items.Single(value =>
                         value.Key == "deuterium:strongest-nearby").Text);
+                Equal(
+                    "Not found within 8.125 ly",
+                    statistics.Current.NearbyDeuteriumRow?.GasGiant);
                 True(scanned.Session.IsRetired);
 
                 resolver.ExitPreview();
@@ -4601,7 +4648,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(ClusterBodyLocation),
                 typeof(ClusterResourceCandidate),
                 typeof(UnipolarMagnetPlanetStatistics),
+                typeof(ClusterRareResourceTableRow),
+                typeof(ClusterUnipolarMagnetTableRow),
                 typeof(NearbyDeuteriumGasGiantCandidate),
+                typeof(NearbyDeuteriumTableRow),
                 typeof(NearbyDeuteriumGasGiantSelection),
                 typeof(ClusterResourceStatistics),
                 typeof(PreviewStatisticItem),

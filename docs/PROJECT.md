@@ -14,10 +14,11 @@ reference linkage, DSP planet-number scope, exact resource retention, and the
 home-system table presentation. The owner validated the exact CI artifact;
 `ready-for-cluster-panel-population` passed and established the **Panel home
 system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
-FEED-08 was then accepted. FEED-09 is implemented at its acceptance gate and
-awaits owner acceptance. The statistics panel presents every home-system body
-in stable game order with distinct body, world, Solar, Wind, ores, oil, and
-gas-product fields.
+FEED-08 and FEED-09 were then accepted. `ready-for-subsection-consumer` passed
+and established the **Panel cluster populated excluding subsection** milestone.
+FEED-10 is active and pending implementation. The statistics panel presents
+every home-system body in stable game order with distinct body, world, Solar,
+Wind, ores, oil, and gas-product fields.
 After complete coverage or cache reuse, solid rows show compact exact resource
 amounts and group counts without retaining raw planets or cluster resources.
 FEED-07 adds at most two nearest planet locations for sulfuric-acid oceans and
@@ -27,14 +28,15 @@ Unipolar Magnet deposits, including host-system distance, vein nodes, total
 amount, and groups.
 FEED-09 adds one lightweight-preview statistic for the highest-rate Deuterium
 gas giant within 8.125 light-years of home, with deterministic ties and native
-four-decimal rate formatting; later stories remain inactive behind their
-roadmap gates.
+four-decimal rate formatting. The accepted cluster presentation uses separate
+tables for nearby resources, exact Unipolar Magnet statistics, and nearby
+Deuterium; FEED-10 will consume the remaining titled subsection capability.
 The earlier scanner core, New Game presentation, and presentation refinement
-roadmaps were completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01 corrected
-pathless runtime-assembly fingerprinting, and FSOR-01 completed local runtime-
-filesystem hardening on 2026-08-13 without changing identity or conclusion
-semantics. TD-004 remains pending evaluation and does not affect ordinary
-player behavior.
+roadmaps were completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01
+corrected pathless runtime-assembly fingerprinting, and FSOR-01 completed local
+runtime-filesystem hardening on 2026-08-13 without changing identity or
+conclusion semantics. TD-004 remains pending evaluation and does not affect
+ordinary player behavior.
 
 ## Product decision
 

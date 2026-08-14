@@ -688,6 +688,27 @@ namespace DSPSeedScanner.Runtime
         public decimal CollectionRate { get; }
     }
 
+    public sealed record NearbyDeuteriumTableRow
+    {
+        private readonly IReadOnlyList<string> cells;
+
+        internal NearbyDeuteriumTableRow(
+            string gasGiant,
+            string distance,
+            string rate)
+        {
+            GasGiant = gasGiant;
+            Distance = distance;
+            Rate = rate;
+            cells = Array.AsReadOnly(new[] { GasGiant, Distance, Rate });
+        }
+
+        public string GasGiant { get; }
+        public string Distance { get; }
+        public string Rate { get; }
+        public IReadOnlyList<string> Cells => cells;
+    }
+
     public sealed class NearbyDeuteriumGasGiantSelection
     {
         public const decimal MaximumDistanceLy = 8.125m;
@@ -703,6 +724,21 @@ namespace DSPSeedScanner.Runtime
 
         public bool AttributionComplete { get; }
         public NearbyDeuteriumGasGiantCandidate? Candidate { get; }
+
+        public NearbyDeuteriumTableRow? ProjectTableRow()
+        {
+            if (!AttributionComplete)
+                return null;
+            return Candidate == null
+                ? new NearbyDeuteriumTableRow(
+                    "Not found within 8.125 ly",
+                    String.Empty,
+                    String.Empty)
+                : new NearbyDeuteriumTableRow(
+                    Candidate.Location.DisplayDesignation,
+                    Candidate.Location.FormattedDistance,
+                    FormatRate(Candidate.CollectionRate));
+        }
 
         public static NearbyDeuteriumGasGiantSelection Select(
             IEnumerable<NearbyDeuteriumGasGiantCandidate> candidates,
@@ -746,6 +782,9 @@ namespace DSPSeedScanner.Runtime
                 attributionComplete,
                 attributionComplete ? candidate : null);
         }
+
+        internal static bool IsTableItemKey(string key) =>
+            String.Equals(key, StatisticKey, StringComparison.Ordinal);
 
         public PreviewClusterStatistics Apply(PreviewClusterStatistics statistics)
         {
@@ -850,6 +889,61 @@ namespace DSPSeedScanner.Runtime
             Array.AsReadOnly((UnipolarMagnetPlanetStatistics[])unipolarMagnets.Clone());
     }
 
+    public sealed record ClusterRareResourceTableRow
+    {
+        private readonly IReadOnlyList<string> cells;
+
+        internal ClusterRareResourceTableRow(
+            string resource,
+            string closest,
+            string alternative)
+        {
+            Resource = resource;
+            Closest = closest;
+            Alternative = alternative;
+            cells = Array.AsReadOnly(new[] { Resource, Closest, Alternative });
+        }
+
+        public string Resource { get; }
+        public string Closest { get; }
+        public string Alternative { get; }
+        public IReadOnlyList<string> Cells => cells;
+    }
+
+    public sealed record ClusterUnipolarMagnetTableRow
+    {
+        private readonly IReadOnlyList<string> cells;
+
+        internal ClusterUnipolarMagnetTableRow(
+            string planet,
+            string distance,
+            string veins,
+            string magnets,
+            string groups)
+        {
+            Planet = planet;
+            Distance = distance;
+            Veins = veins;
+            Magnets = magnets;
+            Groups = groups;
+            cells = Array.AsReadOnly(new[]
+            {
+                Planet,
+                Distance,
+                Veins,
+                Magnets,
+                Groups
+            });
+        }
+
+        public string Planet { get; }
+        public string Distance { get; }
+        public string Veins { get; }
+        public string Magnets { get; }
+        public string Groups { get; }
+        public IReadOnlyList<string> Cells => cells;
+    }
+
     public static class ClusterResourcePresentation
     {
         public const string SulfuricAcidOcean = "sulfuric-acid-ocean";
@@ -910,6 +1004,58 @@ namespace DSPSeedScanner.Runtime
             return result;
         }
 
+        public static IReadOnlyList<ClusterRareResourceTableRow>
+            ProjectRareResourceTableRows(ClusterResourceStatistics statistics)
+        {
+            if (statistics == null)
+                throw new ArgumentNullException(nameof(statistics));
+            return Array.AsReadOnly(CategoryIds.Select(categoryId =>
+            {
+                IReadOnlyList<ClusterResourceCandidate> candidates =
+                    statistics.ForCategory(categoryId);
+                return new ClusterRareResourceTableRow(
+                    Names[categoryId].Name,
+                    candidates.Count == 0
+                        ? "Not found"
+                        : FormatLocation(candidates[0].Location),
+                    candidates.Count < 2
+                        ? String.Empty
+                        : FormatLocation(candidates[1].Location));
+            }).ToArray());
+        }
+
+        public static IReadOnlyList<ClusterUnipolarMagnetTableRow>
+            ProjectUnipolarTableRows(ClusterResourceStatistics statistics)
+        {
+            if (statistics == null)
+                throw new ArgumentNullException(nameof(statistics));
+            if (statistics.UnipolarMagnets.Count == 0)
+            {
+                return Array.AsReadOnly(new[]
+                {
+                    new ClusterUnipolarMagnetTableRow(
+                        "Not found",
+                        String.Empty,
+                        String.Empty,
+                        String.Empty,
+                        String.Empty)
+                });
+            }
+            return Array.AsReadOnly(statistics.UnipolarMagnets.Select(planet =>
+                new ClusterUnipolarMagnetTableRow(
+                    planet.Location.DisplayDesignation,
+                    planet.Location.FormattedDistance,
+                    planet.VeinNodes.ToString("N0", CultureInfo.InvariantCulture),
+                    planet.Amount.ToString("N0", CultureInfo.InvariantCulture),
+                    planet.VeinGroups.ToString("N0", CultureInfo.InvariantCulture)))
+                .ToArray());
+        }
+
+        internal static bool IsTableItemKey(string key) =>
+            key != null &&
+            (key.StartsWith("resource:", StringComparison.Ordinal) ||
+                key.StartsWith("unipolar:", StringComparison.Ordinal));
+
         public static bool Supports(string categoryId) =>
             categoryId != null && Names.ContainsKey(categoryId);
 
@@ -927,6 +1073,9 @@ namespace DSPSeedScanner.Runtime
             Count(planet.VeinNodes, "vein", "veins") + " - " +
             Count(planet.Amount, "magnet", "magnets") + " - " +
             Count(planet.VeinGroups, "group", "groups");
+
+        private static string FormatLocation(ClusterBodyLocation location) =>
+            location.DisplayDesignation + " · " + location.FormattedDistance;
 
         private static string Count(long value, string singular, string plural) =>
             value.ToString("N0", CultureInfo.InvariantCulture) + " " +
@@ -1081,6 +1230,8 @@ namespace DSPSeedScanner.Runtime
             string identityLine,
             HomeSystemBodyInventory? homeSystem,
             HomeSystemResourceStatistics? homeSystemResources,
+            ClusterResourceStatistics? clusterResources,
+            NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant,
             PreviewClusterStatistics cluster)
         {
             if (sessionId <= 0)
@@ -1091,6 +1242,15 @@ namespace DSPSeedScanner.Runtime
             IdentityLine = identityLine;
             HomeSystem = homeSystem;
             HomeSystemResources = homeSystemResources;
+            RareResourceRows = clusterResources == null
+                ? Array.Empty<ClusterRareResourceTableRow>()
+                : ClusterResourcePresentation.ProjectRareResourceTableRows(
+                    clusterResources);
+            UnipolarMagnetRows = clusterResources == null
+                ? Array.Empty<ClusterUnipolarMagnetTableRow>()
+                : ClusterResourcePresentation.ProjectUnipolarTableRows(
+                    clusterResources);
+            NearbyDeuteriumRow = nearbyDeuteriumGasGiant?.ProjectTableRow();
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
         }
 
@@ -1098,6 +1258,9 @@ namespace DSPSeedScanner.Runtime
         public string IdentityLine { get; }
         public HomeSystemBodyInventory? HomeSystem { get; }
         public HomeSystemResourceStatistics? HomeSystemResources { get; }
+        public IReadOnlyList<ClusterRareResourceTableRow> RareResourceRows { get; }
+        public IReadOnlyList<ClusterUnipolarMagnetTableRow> UnipolarMagnetRows { get; }
+        public NearbyDeuteriumTableRow? NearbyDeuteriumRow { get; }
         public PreviewClusterStatistics Cluster { get; }
     }
 
@@ -1154,6 +1317,8 @@ namespace DSPSeedScanner.Runtime
                     session.HomePlanetDisplayDesignation),
                 null,
                 null,
+                null,
+                null,
                 new PreviewClusterStatistics());
         }
 
@@ -1175,6 +1340,8 @@ namespace DSPSeedScanner.Runtime
                     attempt.Session.HomePlanetDisplayDesignation),
                 attempt.HomeSystemBodyInventory,
                 attempt.HomeSystemResources,
+                attempt.ClusterResources,
+                attempt.NearbyDeuteriumGasGiant,
                 cluster);
             return true;
         }
