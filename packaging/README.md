@@ -56,3 +56,11 @@ cannot always be detected automatically.
 
 DSP Seed Scanner is an unofficial community project. Dyson Sphere Program and
 its assets belong to their respective owners.
+
+![Home-system scan details](https://shytamir.github.io/DSP_Guide/assets/images/mod/seed-scanner-home-system-detail.png)
+
+![Cluster resources and nearby opportunities](https://shytamir.github.io/DSP_Guide/assets/images/mod/seed-scanner-cluster-resources-detail.png)
+
+![Unipolar magnets and notable stars](https://shytamir.github.io/DSP_Guide/assets/images/mod/seed-scanner-strategic-stars-detail.png)
+
+*From your home system to the most exotic corners of your cluster.*
