@@ -544,6 +544,8 @@ namespace DSPSeedScanner.Runtime
                     categoryId => categoryId,
                     _ => new List<ClusterBodyLocation>(),
                     StringComparer.Ordinal);
+            private readonly List<UnipolarMagnetPlanetStatistics> unipolarMagnets =
+                new List<UnipolarMagnetPlanetStatistics>();
 
             public long CommonTotal { get; private set; }
             public int BirthPlanetCount { get; private set; }
@@ -567,6 +569,19 @@ namespace DSPSeedScanner.Runtime
                     .Where(resourceId => ClusterResourcePresentation.Supports(resourceId)))
                 {
                     clusterCandidates[resourceId].Add(location);
+                }
+                NormalizedRawVeinGroup[] unipolarGroups = planet.Groups.Where(group =>
+                    String.Equals(
+                        group.ResourceId,
+                        "unipolar-magnet",
+                        StringComparison.Ordinal)).ToArray();
+                if (unipolarGroups.Length != 0)
+                {
+                    unipolarMagnets.Add(new UnipolarMagnetPlanetStatistics(
+                        location,
+                        unipolarGroups.Sum(group => group.NodeCount),
+                        unipolarGroups.Sum(group => group.Amount),
+                        unipolarGroups.Length));
                 }
                 if (target.System.Kind == SubjectKind.BirthSystem)
                 {
@@ -635,7 +650,8 @@ namespace DSPSeedScanner.Runtime
                         .ThenBy(location => location.StableGameOrder)
                         .ThenBy(location => location.BodyIdentifier, StringComparer.Ordinal)
                         .Take(ClusterResourceStatistics.MaximumCandidatesPerCategory)
-                        .Select(location => new ClusterResourceCandidate(pair.Key, location))));
+                        .Select(location => new ClusterResourceCandidate(pair.Key, location))),
+                    unipolarMagnets);
 
             public IReadOnlyList<NormalizedRareResourceEvidence> RareResources() =>
                 rare.OrderBy(pair => pair.Key, StringComparer.Ordinal)

@@ -646,13 +646,44 @@ namespace DSPSeedScanner.Runtime
         public ClusterBodyLocation Location { get; }
     }
 
+    public sealed record UnipolarMagnetPlanetStatistics
+    {
+        public UnipolarMagnetPlanetStatistics(
+            ClusterBodyLocation location,
+            int veinNodes,
+            long amount,
+            int veinGroups)
+        {
+            Location = location ?? throw new ArgumentNullException(nameof(location));
+            if (veinNodes <= 0)
+                throw new ArgumentOutOfRangeException(nameof(veinNodes));
+            if (amount < 0)
+                throw new ArgumentOutOfRangeException(nameof(amount));
+            if (veinGroups <= 0)
+                throw new ArgumentOutOfRangeException(nameof(veinGroups));
+            VeinNodes = veinNodes;
+            Amount = amount;
+            VeinGroups = veinGroups;
+        }
+
+        public ClusterBodyLocation Location { get; }
+        public int VeinNodes { get; }
+        public long Amount { get; }
+        public int VeinGroups { get; }
+    }
+
     public sealed class ClusterResourceStatistics
     {
         public const int MaximumCategories = 7;
         public const int MaximumCandidatesPerCategory = 2;
+        public const int MaximumUnipolarPlanets =
+            CompleteClusterRawCoordinator.MaximumSolidPlanets;
         private readonly ClusterResourceCandidate[] candidates;
+        private readonly UnipolarMagnetPlanetStatistics[] unipolarMagnets;
 
-        public ClusterResourceStatistics(IEnumerable<ClusterResourceCandidate> candidates)
+        public ClusterResourceStatistics(
+            IEnumerable<ClusterResourceCandidate> candidates,
+            IEnumerable<UnipolarMagnetPlanetStatistics>? unipolarMagnets = null)
         {
             if (candidates == null)
                 throw new ArgumentNullException(nameof(candidates));
@@ -672,6 +703,20 @@ namespace DSPSeedScanner.Runtime
             {
                 throw new ArgumentException("Cluster-resource candidates exceed their bounds.", nameof(candidates));
             }
+            this.unipolarMagnets = (unipolarMagnets ??
+                    Array.Empty<UnipolarMagnetPlanetStatistics>())
+                .OrderBy(value => value.Location.HostSystemDistanceLy)
+                .ThenBy(value => value.Location.StableGameOrder)
+                .ThenBy(value => value.Location.BodyIdentifier, StringComparer.Ordinal)
+                .ToArray();
+            if (this.unipolarMagnets.Length > MaximumUnipolarPlanets ||
+                this.unipolarMagnets.Select(value => value.Location.BodyIdentifier)
+                    .Distinct(StringComparer.Ordinal).Count() != this.unipolarMagnets.Length)
+            {
+                throw new ArgumentException(
+                    "Unipolar Magnet planet statistics exceed their bounds.",
+                    nameof(unipolarMagnets));
+            }
         }
 
         public IReadOnlyList<ClusterResourceCandidate> Candidates =>
@@ -682,6 +727,9 @@ namespace DSPSeedScanner.Runtime
                 value.CategoryId,
                 categoryId,
                 StringComparison.Ordinal)).ToArray());
+
+        public IReadOnlyList<UnipolarMagnetPlanetStatistics> UnipolarMagnets =>
+            Array.AsReadOnly((UnipolarMagnetPlanetStatistics[])unipolarMagnets.Clone());
     }
 
     public static class ClusterResourcePresentation
@@ -723,6 +771,24 @@ namespace DSPSeedScanner.Runtime
                     text,
                     Names[categoryId].Order));
             }
+            if (statistics.UnipolarMagnets.Count == 0)
+            {
+                result = result.With(new PreviewStatisticItem(
+                    "unipolar:none",
+                    "No Unipolar Magnets found",
+                    100));
+            }
+            else
+            {
+                foreach (UnipolarMagnetPlanetStatistics planet in
+                    statistics.UnipolarMagnets)
+                {
+                    result = result.With(new PreviewStatisticItem(
+                        "unipolar:" + planet.Location.BodyIdentifier,
+                        FormatUnipolar(planet),
+                        100 + planet.Location.StableGameOrder));
+                }
+            }
             return result;
         }
 
@@ -736,6 +802,17 @@ namespace DSPSeedScanner.Runtime
                 : throw new ArgumentException(
                     "A cluster-resource category is unsupported.",
                     nameof(categoryId));
+
+        private static string FormatUnipolar(UnipolarMagnetPlanetStatistics planet) =>
+            planet.Location.DisplayDesignation + " - " +
+            planet.Location.FormattedDistance + " - " +
+            Count(planet.VeinNodes, "vein", "veins") + " - " +
+            Count(planet.Amount, "magnet", "magnets") + " - " +
+            Count(planet.VeinGroups, "group", "groups");
+
+        private static string Count(long value, string singular, string plural) =>
+            value.ToString("N0", CultureInfo.InvariantCulture) + " " +
+            (value == 1 ? singular : plural);
     }
 
     public sealed record PreviewStatisticItem
@@ -805,7 +882,7 @@ namespace DSPSeedScanner.Runtime
 
     public sealed class PreviewClusterStatistics
     {
-        public const int MaximumItems = 128;
+        public const int MaximumItems = 512;
         private readonly PreviewStatisticItem[] items;
 
         public PreviewClusterStatistics()

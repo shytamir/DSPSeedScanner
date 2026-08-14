@@ -2,8 +2,8 @@
 
 **Status:** Active as of 2026-08-13.
 
-**Active user story:** [FEED-07: Show nearest rare-resource
-access](#feed-07-show-nearest-rare-resource-access) is implemented at its
+**Active user story:** [FEED-08: Show per-planet Unipolar Magnet
+supply](#feed-08-show-per-planet-unipolar-magnet-supply) is implemented at its
 acceptance gate and awaits owner acceptance.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
@@ -20,8 +20,9 @@ enabled even if not yet consumed** milestone was established. FEED-05 was
 accepted. FEED-06 passed after its narrow runtime corrections and owner-led
 presentation workshop. The exact CI artifact then passed owner validation;
 `ready-for-cluster-panel-population` passed and established the **Panel home
-system fully populated** milestone. FEED-07 is implemented at its acceptance
-gate. Later stories remain inactive behind their documented gates.
+system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
+FEED-08 is implemented at its acceptance gate. Later stories remain inactive
+behind their documented gates.
 
 ## Source coverage
 
@@ -122,6 +123,9 @@ remain valid, and the conclusion panel is unchanged. This gate establishes the
 **Panel home system fully populated** milestone.
 
 ### `ready-for-subsection-consumer`
+
+**State:** Pending. FEED-07 is accepted, FEED-08 is implemented at its
+acceptance gate, and FEED-09 remains inactive.
 
 The cluster-panel phase excluding subsections is complete when FEED-07,
 FEED-08, and FEED-09 have passed their acceptance gates. Their bounded cluster
@@ -657,7 +661,7 @@ only validation of the exact hosted artifact remains at the phase gate.
 
 ## FEED-07: Show nearest rare-resource access
 
-**State:** Implemented on 2026-08-14; owner acceptance pending.
+**State:** Accepted on 2026-08-14.
 
 **Category:** feature-request
 
@@ -718,12 +722,12 @@ result wording, home-system distance, shared-host planets, exact two-way and
 over-bound ties, multiple deposits on one planet, Fire Ice vein/gas separation,
 Unipolar exclusion, three-significant-figure light-year formatting, projection,
 and cache round trips. All 79 Runtime checks passed. Release, installed-runtime,
-and hosted-reference builds completed without warnings. Interactive owner
-validation remains pending.
+and hosted-reference builds completed without warnings. The owner then passed
+FEED-07 and authorized FEED-08.
 
 ## FEED-08: Show per-planet Unipolar Magnet supply
 
-**State:** Pending; inactive until FEED-07 is accepted.
+**State:** Implemented on 2026-08-14; owner acceptance pending.
 
 **Category:** feature-request
 
@@ -765,6 +769,24 @@ resource data is retained.
 **Out of scope:** Mining yield, vein density, group geometry, Veins
 Utilization, other resource counts, resource rankings, route quality, or
 changes to Unipolar Magnet conclusions.
+
+**Implemented at this gate:** The existing complete-cluster pass now reduces
+each planet's generated Unipolar Magnet groups into one bounded presentation
+fact containing its attributed location, exact node count, exact generated
+amount, and exact group count. The cluster document emits one stable keyed line
+per qualifying planet, or the single explicit no-result line. Cache schema 12
+persists only those presentation facts under the complete generation identity;
+it retains no vein positions, raw planets, or game prototypes.
+
+**Acceptance evidence:** Focused fixtures covered zero, one, and multiple
+qualifying planets across shared and distinct systems; equal-distance stable
+ordering; multiple groups; exact node, amount, and group separation; singular
+and plural wording; invariant grouped integers; host-system light-year
+distance; the full solid-planet bound; FEED-07 coexistence; cache round trip,
+deduplication, and resource-setting mismatch; and fail-closed partial exits.
+All 80 Runtime checks passed. Release, installed-runtime, and hosted-reference
+builds completed without warnings. Interactive owner validation remains
+pending.
 
 ## FEED-09: Show the strongest nearby deuterium gas giant
 

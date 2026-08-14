@@ -80,6 +80,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("cluster statistics are keyed ordered and sectioned", ClusterStatisticsAreKeyedOrderedAndSectioned),
                 ("cluster locations format light-years and preserve stable ties", ClusterLocationsFormatLyAndPreserveStableTies),
                 ("nearest cluster resources are bounded attributed and cacheable", NearestClusterResourcesAreBoundedAttributedAndCacheable),
+                ("Unipolar Magnet planets preserve exact bounded statistics", UnipolarMagnetPlanetsPreserveExactBoundedStatistics),
                 ("statistics panel follows preview lifecycle independently", StatisticsPanelFollowsPreviewLifecycleIndependently),
                 ("home planet designation is shared immutable and session owned", HomePlanetDesignationIsSharedImmutableAndSessionOwned),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
@@ -1202,6 +1203,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(0, cancelled.RareResources.Count);
                 Equal(0, cancelled.Reports.Count);
                 True(cancelled.HomeSystemResources == null);
+                True(cancelled.ClusterResources == null);
                 Equal(101, cancelled.AffectedPlanetId);
                 Equal(1, cancellationGateway.RestoreCalls);
             }
@@ -1215,6 +1217,7 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(0, failed.RareResources.Count);
             Equal(0, failed.Reports.Count);
             True(failed.HomeSystemResources == null);
+            True(failed.ClusterResources == null);
             Equal(102, failed.AffectedPlanetId);
             Equal(1, failureGateway.RestoreCalls);
         }
@@ -3047,7 +3050,7 @@ namespace DSPSeedScanner.Runtime.Tests
 
             PreviewClusterStatistics projected =
                 ClusterResourcePresentation.Project(result.ClusterResources);
-            Equal(7, projected.Items.Count);
+            Equal(8, projected.Items.Count);
             Equal(
                 "Kimberlite: Planet 102 - 2 ly, Planet 104 - 2 ly",
                 projected.Items.Single(value => value.Key == "resource:kimberlite").Text);
@@ -3115,6 +3118,136 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(1, all.ForCategory("spiniform-stalagmite-crystal").Count);
             Equal(1, all.ForCategory(ClusterResourcePresentation.SulfuricAcidOcean).Count);
             False(all.Candidates.Any(value => value.CategoryId == "unipolar-magnet"));
+        }
+
+        private static void UnipolarMagnetPlanetsPreserveExactBoundedStatistics()
+        {
+            var gateway = new FakeCompleteClusterGateway
+            {
+                TargetCount = 4,
+                TargetFactory = (planetId, index) => new CompleteClusterPlanetTarget(
+                    planetId,
+                    index + 1,
+                    new ConclusionSubject(
+                        index == 0 ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                        index == 0 ? Snapshot().BirthSystemIdentifier :
+                            index <= 2 ? "shared-system" : "far-system"),
+                    index == 0 ? 0m : 2.34567m,
+                    "Planet " + planetId,
+                    index,
+                    false),
+                EvidenceFactory = (galaxySeed, target) => target.PlanetId switch
+                {
+                    102 => FakeCompleteClusterGateway.UnipolarSnapshot(
+                        galaxySeed, target, 1, 1_234_567, 1),
+                    103 => FakeCompleteClusterGateway.UnipolarSnapshot(
+                        galaxySeed, target, 12, 9_876_543, 3),
+                    104 => FakeCompleteClusterGateway.UnipolarSnapshot(
+                        galaxySeed, target, 2, 345_678, 2),
+                    _ => FakeCompleteClusterGateway.ClusterSnapshot(
+                        galaxySeed, target, null, 0, 0, 0)
+                }
+            };
+            CompleteClusterRawResult result = new CompleteClusterRawCoordinator(gateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            ClusterResourceStatistics statistics = result.ClusterResources!;
+            Equal(3, statistics.UnipolarMagnets.Count);
+            Equal("Planet 102,Planet 103,Planet 104", String.Join(",",
+                statistics.UnipolarMagnets.Select(value =>
+                    value.Location.DisplayDesignation)));
+            Equal("shared-system", statistics.UnipolarMagnets[0]
+                .Location.HostSystemIdentifier);
+            Equal(12, statistics.UnipolarMagnets[1].VeinNodes);
+            Equal(9_876_543L, statistics.UnipolarMagnets[1].Amount);
+            Equal(3, statistics.UnipolarMagnets[1].VeinGroups);
+
+            PreviewClusterStatistics projected =
+                ClusterResourcePresentation.Project(statistics);
+            Equal(3, projected.Items.Count(value =>
+                value.Key.StartsWith("unipolar:", StringComparison.Ordinal)));
+            Equal(
+                "Planet 102 - 2.35 ly - 1 vein - 1,234,567 magnets - 1 group",
+                projected.Items.Single(value => value.Key == "unipolar:102").Text);
+            Equal(
+                "Planet 103 - 2.35 ly - 12 veins - 9,876,543 magnets - 3 groups",
+                projected.Items.Single(value => value.Key == "unipolar:103").Text);
+            False(projected.Items.Any(value => value.Key == "unipolar:none"));
+
+            WithTemporaryDirectory(path =>
+            {
+                var cache = new CompleteClusterConclusionCache(path);
+                PreviewGenerationIdentity identity = PreviewIdentity(16_315_224);
+                True(cache.TryStore(identity, result));
+                True(cache.TryRead(identity, Fingerprint(), out
+                    CachedCompleteClusterConclusions? restored));
+                Equal(
+                    String.Join("|", statistics.UnipolarMagnets.Select(value =>
+                        value.Location.BodyIdentifier + ":" + value.VeinNodes + ":" +
+                        value.Amount + ":" + value.VeinGroups)),
+                    String.Join("|", restored!.ClusterResources.UnipolarMagnets.Select(
+                        value => value.Location.BodyIdentifier + ":" + value.VeinNodes +
+                            ":" + value.Amount + ":" + value.VeinGroups)));
+                PreviewClusterStatistics restoredProjection =
+                    ClusterResourcePresentation.Project(restored.ClusterResources);
+                Equal(3, restoredProjection.Items.Count(value =>
+                    value.Key.StartsWith("unipolar:", StringComparison.Ordinal)));
+                False(cache.TryRead(
+                    PreviewIdentity(16_315_224, 0.5m),
+                    Fingerprint(),
+                    out _));
+            });
+
+            ClusterResourceStatistics none = new ClusterResourceStatistics(
+                Array.Empty<ClusterResourceCandidate>());
+            Equal(
+                "No Unipolar Magnets found",
+                ClusterResourcePresentation.Project(none).Items.Single(value =>
+                    value.Key == "unipolar:none").Text);
+
+            UnipolarMagnetPlanetStatistics[] atBound = Enumerable.Range(
+                    1,
+                    ClusterResourceStatistics.MaximumUnipolarPlanets)
+                .Select(index => new UnipolarMagnetPlanetStatistics(
+                    new ClusterBodyLocation(
+                        index.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        "Planet " + index,
+                        "system-" + index,
+                        index,
+                        index),
+                    1,
+                    1,
+                    1))
+                .ToArray();
+            Equal(
+                ClusterResourceStatistics.MaximumUnipolarPlanets,
+                new ClusterResourceStatistics(
+                    Array.Empty<ClusterResourceCandidate>(),
+                    atBound).UnipolarMagnets.Count);
+
+            bool overBoundRejected = false;
+            try
+            {
+                _ = new ClusterResourceStatistics(
+                    Array.Empty<ClusterResourceCandidate>(),
+                    atBound.Concat(new[]
+                    {
+                        new UnipolarMagnetPlanetStatistics(
+                            new ClusterBodyLocation(
+                                "over-bound",
+                                "Over bound",
+                                "over-bound-system",
+                                300,
+                                300),
+                            1,
+                            1,
+                            1)
+                    }));
+            }
+            catch (ArgumentException)
+            {
+                overBoundRejected = true;
+            }
+            True(overBoundRejected);
         }
 
         private static void StatisticsPanelFollowsPreviewLifecycleIndependently()
@@ -4344,6 +4477,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 typeof(HomeSystemResourceStatistics),
                 typeof(ClusterBodyLocation),
                 typeof(ClusterResourceCandidate),
+                typeof(UnipolarMagnetPlanetStatistics),
                 typeof(ClusterResourceStatistics),
                 typeof(PreviewStatisticItem),
                 typeof(PreviewStatisticSubsection),
@@ -5248,6 +5382,44 @@ namespace DSPSeedScanner.Runtime.Tests
                     target.AlgorithmId,
                     RawPlanetCoverage.Complete(),
                     nodes,
+                    groups);
+            }
+
+            internal static NormalizedRawPlanetEvidence UnipolarSnapshot(
+                int galaxySeed,
+                CompleteClusterPlanetTarget target,
+                int veinNodes,
+                long amount,
+                int veinGroups)
+            {
+                var groups = new List<NormalizedRawVeinGroup>(veinGroups);
+                int remainingNodes = veinNodes;
+                long remainingAmount = amount;
+                for (int index = 0; index < veinGroups; index++)
+                {
+                    int groupsRemaining = veinGroups - index;
+                    int groupNodes = remainingNodes / groupsRemaining;
+                    long groupAmount = remainingAmount / groupsRemaining;
+                    groups.Add(new NormalizedRawVeinGroup(
+                        index + 1,
+                        14,
+                        "unipolar-magnet",
+                        RawResourceSemantics.FiniteDeposit,
+                        groupNodes,
+                        groupAmount,
+                        0.1m + index,
+                        0.2m + index,
+                        0.3m + index));
+                    remainingNodes -= groupNodes;
+                    remainingAmount -= groupAmount;
+                }
+                return new NormalizedRawPlanetEvidence(
+                    galaxySeed,
+                    target.PlanetId,
+                    1,
+                    target.AlgorithmId,
+                    RawPlanetCoverage.Complete(),
+                    Array.Empty<NormalizedRawVeinNode>(),
                     groups);
             }
 

@@ -156,7 +156,7 @@ namespace DSPSeedScanner.Runtime
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 11;
+        internal const int SchemaVersion = 12;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;
@@ -482,7 +482,9 @@ namespace DSPSeedScanner.Runtime
                     HomeSystemResourceStatistics.MaximumBodies ||
                 result.ClusterResources.Candidates.Count >
                     ClusterResourceStatistics.MaximumCategories *
-                    ClusterResourceStatistics.MaximumCandidatesPerCategory)
+                    ClusterResourceStatistics.MaximumCandidatesPerCategory ||
+                result.ClusterResources.UnipolarMagnets.Count >
+                    ClusterResourceStatistics.MaximumUnipolarPlanets)
             {
                 return false;
             }
@@ -582,6 +584,15 @@ namespace DSPSeedScanner.Runtime
                 writer.Write(candidate.CategoryId);
                 WriteLocation(writer, candidate.Location);
             }
+            writer.Write(clusterResources.UnipolarMagnets.Count);
+            foreach (UnipolarMagnetPlanetStatistics planet in
+                clusterResources.UnipolarMagnets)
+            {
+                WriteLocation(writer, planet.Location);
+                writer.Write(planet.VeinNodes);
+                writer.Write(planet.Amount);
+                writer.Write(planet.VeinGroups);
+            }
         }
 
         private static CachedCompleteClusterConclusions Read(
@@ -654,6 +665,20 @@ namespace DSPSeedScanner.Runtime
                     categoryId,
                     ReadLocation(reader)));
             }
+            int unipolarCount = Bounded(
+                reader.ReadInt32(),
+                ClusterResourceStatistics.MaximumUnipolarPlanets,
+                "Unipolar Magnet planet count");
+            var unipolarMagnets = new List<UnipolarMagnetPlanetStatistics>(
+                unipolarCount);
+            for (int index = 0; index < unipolarCount; index++)
+            {
+                unipolarMagnets.Add(new UnipolarMagnetPlanetStatistics(
+                    ReadLocation(reader),
+                    Positive(reader.ReadInt32(), Int32.MaxValue, "Unipolar vein count"),
+                    NonNegative(reader.ReadInt64(), "Unipolar Magnet amount"),
+                    Positive(reader.ReadInt32(), Int32.MaxValue, "Unipolar group count")));
+            }
 
             return new CachedCompleteClusterConclusions(
                 key.Hash,
@@ -664,7 +689,7 @@ namespace DSPSeedScanner.Runtime
                     expectedPlanets),
                 reports,
                 new HomeSystemResourceStatistics(bodies),
-                new ClusterResourceStatistics(candidates));
+                new ClusterResourceStatistics(candidates, unipolarMagnets));
         }
 
         private static void WriteLocation(BinaryWriter writer, ClusterBodyLocation location)
@@ -818,6 +843,13 @@ namespace DSPSeedScanner.Runtime
         }
 
         private static decimal NonNegative(decimal value, string name)
+        {
+            if (value < 0)
+                throw new InvalidDataException("Invalid " + name + ".");
+            return value;
+        }
+
+        private static long NonNegative(long value, string name)
         {
             if (value < 0)
                 throw new InvalidDataException("Invalid " + name + ".");

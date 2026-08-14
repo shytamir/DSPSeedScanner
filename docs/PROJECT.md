@@ -13,15 +13,19 @@ accepted. FEED-06 passed its story gate on 2026-08-14 after correcting hosted
 reference linkage, DSP planet-number scope, exact resource retention, and the
 home-system table presentation. The owner validated the exact CI artifact;
 `ready-for-cluster-panel-population` passed and established the **Panel home
-system fully populated** milestone. FEED-07 is implemented at its acceptance
-gate and awaits owner acceptance. The statistics panel presents every home-
+system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
+FEED-08 is implemented at its acceptance gate and awaits owner acceptance. The
+statistics panel presents every home-
 system body in stable game order with distinct body, world, Solar, Wind, ores,
 oil, and gas-product fields.
 After complete coverage or cache reuse, solid rows show compact exact resource
 amounts and group counts without retaining raw planets or cluster resources.
 FEED-07 adds at most two nearest planet locations for sulfuric-acid oceans and
 six supported rare ores, measured from home to their host system in light-
-years; later stories remain inactive behind their roadmap gates. The earlier
+years. FEED-08 adds one exact, cacheable line for every planet with generated
+Unipolar Magnet deposits, including host-system distance, vein nodes, total
+amount, and groups; later stories remain inactive behind their roadmap gates.
+The earlier
 scanner core, New Game presentation, and presentation refinement roadmaps were
 completed and accepted on 2026-08-11 and 2026-08-12. HOTFIX-01 corrected
 pathless runtime-assembly fingerprinting, and FSOR-01 completed local runtime-
