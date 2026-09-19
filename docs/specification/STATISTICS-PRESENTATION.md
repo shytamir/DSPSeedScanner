@@ -18,6 +18,20 @@ moon. Primary planets and giants have no second line. The table's body order
 is unchanged. Only the home planet's whole row is green when its entire
 star-centric orbit is contained by the home star's maximum sphere radius.
 
+Mineable Fire Ice and Spiniform entries use green text independently of that
+whole-row highlight. Other ores retain normal formatting; giant gas-product
+text is unchanged.
+
+## Cluster resources
+
+Rare-resource candidate cells are green below 3.5 ly. Sulfuric Acid ocean
+cells are red above 8.5 ly; equality at either endpoint retains normal text.
+If the same system is represented among the displayed candidates in all four
+Spiniform, Fire Ice, Organic Crystal and Sulfuric Acid rows, its cells in those
+rows are green. Both Closest and Alternative participate. Other cells and
+headings are unchanged; resource presence outside the displayed candidates
+does not qualify a system. Selection and cache contents are unchanged.
+
 ## Notable stars
 
 Sphere rows list blue giants first in descending Dyson luminosity, then the

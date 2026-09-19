@@ -284,7 +284,9 @@ namespace DSPSeedScanner.Runtime
                     ", ",
                     values.Where(resource =>
                             resource.Semantics == RawResourceSemantics.FiniteDeposit)
-                        .Select(FormatResourceValues)),
+                        .Select(resource => resource.ResourceId == "fire-ice" ||
+                            resource.ResourceId == "spiniform-stalagmite-crystal"
+                                ? StatisticText.Green(FormatResourceValues(resource)) : FormatResourceValues(resource))),
                 String.Join(
                     "\n",
                     values.Where(resource =>
@@ -1238,6 +1240,24 @@ namespace DSPSeedScanner.Runtime
         {
             if (statistics == null)
                 throw new ArgumentNullException(nameof(statistics));
+            string[] sharedCategories = { "spiniform-stalagmite-crystal", "fire-ice",
+                "organic-crystal", SulfuricAcidOcean };
+            var sharedSystems = new HashSet<string>(statistics.ForCategory(sharedCategories[0])
+                .Select(candidate => candidate.Location.HostSystemIdentifier), StringComparer.Ordinal);
+            foreach (string category in sharedCategories.Skip(1))
+                sharedSystems.IntersectWith(statistics.ForCategory(category)
+                    .Select(candidate => candidate.Location.HostSystemIdentifier));
+
+            string Present(string category, ClusterBodyLocation location)
+            {
+                string text = FormatLocation(location);
+                if (location.HostSystemDistanceLy < 3.5m ||
+                    (sharedCategories.Contains(category, StringComparer.Ordinal) &&
+                        sharedSystems.Contains(location.HostSystemIdentifier)))
+                    return StatisticText.Green(text);
+                return category == SulfuricAcidOcean && location.HostSystemDistanceLy > 8.5m
+                    ? StatisticText.Red(text) : text;
+            }
             return Array.AsReadOnly(CategoryIds.Select(categoryId =>
             {
                 IReadOnlyList<ClusterResourceCandidate> candidates =
@@ -1246,10 +1266,10 @@ namespace DSPSeedScanner.Runtime
                     Names[categoryId].Name,
                     candidates.Count == 0
                         ? "Not found"
-                        : FormatLocation(candidates[0].Location),
+                        : Present(categoryId, candidates[0].Location),
                     candidates.Count < 2
                         ? String.Empty
-                        : FormatLocation(candidates[1].Location));
+                        : Present(categoryId, candidates[1].Location));
             }).ToArray());
         }
 

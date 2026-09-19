@@ -98,6 +98,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("Aquatica group uses brightest-star distance", AquaticaUsesBrightestDistance),
                 ("oil totals match native rate formatting", OilTotalsMatchNativeFormatting),
                 ("moon labels and home highlight use body identity", MoonLabelsUseBodyIdentity),
+                ("rare colors use only displayed candidates", RareColorsUseDisplayedCandidates),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -2929,7 +2930,7 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal("Mediterranean", firstRow.World);
             Equal("120%", firstRow.Solar);
             Equal("80%", firstRow.Wind);
-            Equal("Iron 12.3M / 12, Fire Ice veins 988K / 1", firstRow.Ores);
+            Equal("Iron 12.3M / 12, " + StatisticText.Green("Fire Ice veins 988K / 1"), firstRow.Ores);
             Equal("49.38/s / 4", firstRow.Oil);
             Equal(String.Empty, firstRow.GasProducts);
             False(firstRow.Cells.Any(cell => cell.Contains("|", StringComparison.Ordinal)));
@@ -3141,7 +3142,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     result.ClusterResources);
             Equal(7, rareRows.Count);
             Equal("Sulfuric Acid ocean", rareRows[0].Resource);
-            Equal("Planet 103 · 20 ly", rareRows[0].Closest);
+            Equal(StatisticText.Red("Planet 103 · 20 ly"), rareRows[0].Closest);
             Equal(String.Empty, rareRows[0].Alternative);
             ClusterRareResourceTableRow fireIce = rareRows.Single(row =>
                 row.Resource == "Fire Ice veins");
@@ -3149,8 +3150,8 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(String.Empty, fireIce.Alternative);
             ClusterRareResourceTableRow kimberliteRow = rareRows.Single(row =>
                 row.Resource == "Kimberlite");
-            Equal("Planet 102 · 2 ly", kimberliteRow.Closest);
-            Equal("Planet 104 · 2 ly", kimberliteRow.Alternative);
+            Equal(StatisticText.Green("Planet 102 · 2 ly"), kimberliteRow.Closest);
+            Equal(StatisticText.Green("Planet 104 · 2 ly"), kimberliteRow.Alternative);
             Equal(3, kimberliteRow.Cells.Count);
 
             WithTemporaryDirectory(path =>
@@ -4190,6 +4191,49 @@ namespace DSPSeedScanner.Runtime.Tests
                     .Cards.Select(card => card.Line));
                 Equal(completedFreshText, cachedFreshText);
             });
+        }
+
+        private static void RareColorsUseDisplayedCandidates()
+        {
+            foreach (string category in ClusterResourcePresentation.CategoryIds)
+            foreach (decimal distance in new[] { 3.4999m, 3.5m, 8.5m, 8.5001m })
+            {
+                var stats = new ClusterResourceStatistics(new[] {
+                    new ClusterResourceCandidate(category, Location("1", "Planet", "system", distance, 0)) });
+                string cell = ClusterResourcePresentation.ProjectRareResourceTableRows(stats)
+                    .Single(row => row.Closest.Contains("Planet", StringComparison.Ordinal)).Closest;
+                string expected = "Planet · " + DspLyFormatter.Format(distance);
+                if (distance < 3.5m) expected = StatisticText.Green(expected);
+                else if (category == ClusterResourcePresentation.SulfuricAcidOcean && distance > 8.5m)
+                    expected = StatisticText.Red(expected);
+                Equal(expected, cell);
+            }
+            foreach (bool allFour in new[] { false, true })
+            {
+                string[] categories = { "spiniform-stalagmite-crystal", "fire-ice", "organic-crystal",
+                    ClusterResourcePresentation.SulfuricAcidOcean, "kimberlite" };
+                var candidates = new List<ClusterResourceCandidate>();
+                for (int index = 0; index < categories.Length; index++)
+                {
+                    if (index > 0) candidates.Add(new ClusterResourceCandidate(categories[index],
+                        Location("near" + index, "Near " + index, "near" + index, 4m, index)));
+                    candidates.Add(new ClusterResourceCandidate(categories[index], Location("shared" + index,
+                        "Shared " + index, index == 3 && !allFour ? "other" : "shared", 6m, index + 10)));
+                }
+                var rows = ClusterResourcePresentation.ProjectRareResourceTableRows(new ClusterResourceStatistics(candidates));
+                foreach (var row in rows)
+                foreach (string cell in new[] { row.Closest, row.Alternative }.Where(text => text.Contains("Shared", StringComparison.Ordinal)))
+                    Equal(allFour && row.Resource != "Kimberlite", cell.StartsWith("<color=#80F294>", StringComparison.Ordinal));
+            }
+            var home = HomeSystemBodyInventory.Project("home", new[] {
+                new RuntimeHomeSystemBodyEvidence(101, "Home", 1, 0, null, 0) })!;
+            var resources = new HomeSystemResourceStatistics(new[] { new HomeSystemBodyResources(101,
+                new[] { "fire-ice", "spiniform-stalagmite-crystal", "organic-crystal", "kimberlite" }
+                    .Select(id => new HomeSystemResource(id, RawResourceSemantics.FiniteDeposit, 100_000, 1))) });
+            string ores = HomeSystemBodyPresentation.ProjectTableRow(home.Bodies[0], resources).Ores;
+            Equal(2, ores.Split("<color=", StringSplitOptions.None).Length - 1);
+            True(ores.Contains(StatisticText.Green("Spiniform Stalagmite Crystal 100K / 1"), StringComparison.Ordinal));
+            True(ores.Contains("Organic Crystal 100K / 1", StringComparison.Ordinal));
         }
 
         private static void MoonLabelsUseBodyIdentity()
