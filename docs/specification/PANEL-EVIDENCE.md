@@ -36,3 +36,48 @@ display `0.00/s`, `1.00/s`, and `40.00/s`; test float rounding around half-cent
 rates and a different supplied multiplier. For Deuterium test `0.14999`,
 `0.15`, and `0.15001` before display rounding. These are synthetic check inputs,
 not observations from generated seeds.
+
+## Planet and star attribution
+
+- `PlanetGen.CreatePlanet` assigns `orbitAround` to the parent's primary
+  `number`; it resolves that parent only among bodies whose `orbitAround` is
+  zero. Moon numbers are not globally unique. Keep body ID as identity and
+  sort moons by their local `orbitRadius` within each parent to derive the
+  nearest-first ordinal, including the home moon. `GalaxyData.birthPlanetId`
+  identifies the one home row. Existing topology checks provide the parent
+  and sibling set; display names do not establish relationships.
+- `PlanetData.UpdateRuntimePose` adds the parent's position to the moon's
+  local orbital vector, then scales by 40,000 meters per AU. For complete
+  orbit containment, use the primary radius, or the parent primary radius
+  plus the moon radius, compared inclusively with the maximum sphere radius.
+  This is the outer envelope of the native circular orbits, not the moon's
+  small parent-centric radius or one instantaneous position. `sunDistance`
+  alone is the parent's radius for a moon and omits its local orbit extent.
+- `DysonSphere.Init` computes the default radius as
+  `(float)((double)star.dysonRadius * 40000.0)`, doubles it, and rounds the
+  maximum to 100-meter increments with `Mathf.Round` (ties to even). Use that
+  sequence in the shared geometry calculation. `StarData.radius` remains
+  stellar size in solar radii and is not the sphere radius.
+- `UIStarDetail` uses `StarData.dysonLumino` with three decimal places.
+  `StarData.typeString` classifies a `GiantStar` hotter than A as blue before
+  main-sequence spectral classification. Keep a separate spectral-O flag for
+  excluding O hosts from Aquatica rows, including an O-spectrum blue giant.
+  Sphere-row grouping retains the existing exclusive blue/O display classes.
+- The existing captured native catalogue (`DSPSeedScanner-Offline/LdbSnapshot`,
+  25 themes, manifest 2026-08-04 and live manifest 2026-08-16) identifies the
+  Aquatica/water-world theme as ID 16, invariant `Proto.Name` `Ocean 5`, display
+  key `水世界`. Match the runtime catalogue's invariant name and resolve its
+  actual ID rather than comparing a localized display string. `Name` and `ID`
+  are fields declared on native `Proto`, which `ThemeProto` inherits; hosted
+  compile declarations must preserve this declaring type. Catalogue data was
+  read from that existing capture; no new catalogue export was run.
+- Pairwise `NormalizedSystemDistance` already supplies home and brightest-star
+  origins. Count a host once within the Aquatica group even if several planets
+  match. Do not exclude that host because it appears in another display group.
+
+Pure checks cover shuffled moons, repeated numbers under different parents,
+no sibling, one/two siblings, exact radius equality, and a moon whose parent
+orbit lies outside the sphere. A moon crossing the boundary must not count as
+contained. Star cases cover luminosity 2.0, O-spectrum blue giants, an ordinary
+brightest star, and differing home/brightest distance order. These inputs are
+synthetic geometry/projection fixtures, not game-generated seed observations.
