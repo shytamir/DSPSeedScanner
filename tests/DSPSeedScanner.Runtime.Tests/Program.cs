@@ -88,6 +88,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("home planet designation is shared immutable and session owned", HomePlanetDesignationIsSharedImmutableAndSessionOwned),
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
+                ("starter giant has one verdict", StarterGiantHasOneVerdict),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -4144,6 +4145,26 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void StarterGiantHasOneVerdict()
+        {
+            foreach (string product in new[] { "fire-ice", "deuterium" })
+            {
+                ConclusionReport[] reports = new[] { "fire-ice", "deuterium", "hydrogen" }
+                    .Select(id => PresentationReport(ConclusionContext.FreshStart,
+                        id == product || id == "hydrogen" ? ComponentOutcome.Supports :
+                            ComponentOutcome.DoesNotSupport,
+                        EvidenceStage.GalaxyPreview, "FS-GAS-ROUTE.product:" + id,
+                        new ConclusionSubject(SubjectKind.BirthSystem, "home"))).ToArray();
+                IReadOnlyList<PresentedConclusionCard> cards = FreshCards(reports,
+                    new[] { GasAttribution(103, "Alpha III", "hydrogen", product) }, null);
+                Equal(1, cards.Count);
+                Equal(product == "fire-ice" ? PreviewConclusionColumn.Strength :
+                    PreviewConclusionColumn.Limitation, cards[0].Column);
+                False(cards[0].Line.Contains("lacks", StringComparison.Ordinal));
+                False(cards[0].Line.Contains("Hydrogen", StringComparison.Ordinal));
+            }
+        }
+
         private static void FreshStartCopyIsNaturalBoundedAndAttributed()
         {
             WithTemporaryDirectory(path =>
@@ -4172,8 +4193,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     group.Context == ConclusionContext.FreshStart);
                 string rendered = String.Join("\n", fresh.Cards.Select(card => card.Line));
 
-                True(rendered.Contains("Starter gas giants have Hydrogen", StringComparison.Ordinal));
-                True(rendered.Contains("Starter gas giants lack Deuterium / Fire Ice", StringComparison.Ordinal));
+                False(rendered.Contains("gas giants", StringComparison.Ordinal));
                 True(rendered.Contains("Aspidiske I has bright solar", StringComparison.Ordinal));
                 True(rendered.Contains("Aspidiske I has strong wind", StringComparison.Ordinal));
                 True(rendered.Contains("Aspidiske I is tidally locked", StringComparison.Ordinal));
@@ -4725,7 +4745,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     {
                         SolidAttribution(101, "Alpha I", 1.35m, 1.5m, true),
                         SolidAttribution(102, "Alpha II", 1.20m, 1.1m, false),
-                        GasAttribution(103, "Alpha III", "hydrogen")
+                        GasAttribution(103, "Alpha III", "hydrogen", "deuterium")
                     })
                 };
                 using var resolver = new PreviewResolutionCoordinator(
@@ -4754,7 +4774,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal("Dark Fog: 40 initial hives; 1 in starter system",
                     complete.DarkFogStatusLine);
                 True(CompleteContextText(complete, ConclusionContext.FreshStart)
-                    .Contains("Starter gas giant has Hydrogen", StringComparison.Ordinal));
+                    .Contains("Starter gas giant supplies low Deuterium", StringComparison.Ordinal));
                 True(CompleteContextText(complete, ConclusionContext.Megafactory)
                     .Contains("outshines all", StringComparison.Ordinal));
                 True(CompleteContextText(complete, ConclusionContext.CompactExpansion)

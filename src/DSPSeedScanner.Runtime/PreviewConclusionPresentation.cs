@@ -430,20 +430,7 @@ namespace DSPSeedScanner.Runtime
             NormalizedHomePlanetTopology? homePlanetTopology)
         {
             var cards = new List<PresentedConclusionCard>();
-            foreach (ComponentOutcome outcome in new[]
-            {
-                ComponentOutcome.Supports,
-                ComponentOutcome.PreferenceSensitive,
-                ComponentOutcome.DoesNotSupport
-            })
-            {
-                ConclusionReport[] gasReports = reports.Where(report =>
-                    report.ConclusionId.StartsWith(
-                        "FS-GAS-ROUTE.product:",
-                        StringComparison.Ordinal) &&
-                    report.Outcome == outcome).ToArray();
-                AddFreshCard(cards, gasReports, GasLine(gasReports, birthPlanets));
-            }
+            AddStarterGiantCards(cards, reports, birthPlanets);
             AddFreshCard(cards, Reports(reports, "FS-POWER.solar"), PowerLine(
                 reports,
                 birthPlanets,
@@ -1062,39 +1049,33 @@ namespace DSPSeedScanner.Runtime
             return reports.Where(report => report.ConclusionId == conclusionId).ToArray();
         }
 
-        private static string? GasLine(
+        private static void AddStarterGiantCards(
+            ICollection<PresentedConclusionCard> cards,
             IReadOnlyList<ConclusionReport> reports,
             IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets)
         {
             if (birthPlanets == null)
-                return null;
+                return;
             NormalizedBirthPlanetEvidence[] giants = birthPlanets
                 .Where(planet => planet.IsGasGiant)
                 .ToArray();
-            if (giants.Length == 0)
-                return null;
-
-            if (reports.Count == 0)
-                return null;
-            string[] products = reports
-                .Where(report => giants.Any(giant =>
-                    giant.GasProductIds.Contains(
-                        report.ConclusionId.Substring(
-                            "FS-GAS-ROUTE.product:".Length),
-                        StringComparer.Ordinal)) ==
-                    (report.Outcome == ComponentOutcome.Supports))
-                .Select(report => ResourceLabel(report.ConclusionId))
-                .ToArray();
-            if (products.Length == 0)
-                return null;
-            bool present = reports[0].Outcome == ComponentOutcome.Supports;
-            string subject = giants.Length == 1
-                ? "Starter gas giant"
-                : "Starter gas giants";
-            string verb = present
-                ? (giants.Length == 1 ? " has " : " have ")
-                : (giants.Length == 1 ? " lacks " : " lack ");
-            return subject + verb + String.Join(" / ", products);
+            foreach (NormalizedBirthPlanetEvidence giant in giants)
+            {
+                bool fireIce = giant.GasProductIds.Contains("fire-ice", StringComparer.Ordinal);
+                string product = fireIce ? "fire-ice" : "deuterium";
+                if (!giant.GasProductIds.Contains(product, StringComparer.Ordinal))
+                    continue;
+                ConclusionReport? source = SingleReport(reports, "FS-GAS-ROUTE.product:" + product);
+                if (source == null || source.Outcome == ComponentOutcome.Unknown)
+                    continue;
+                string line = (giants.Length == 1 ? "Starter gas giant" : giant.DisplayName) +
+                    (fireIce ? " supplies Fire Ice" : " supplies low Deuterium");
+                cards.Add(new PresentedConclusionCard(
+                    ConclusionContext.FreshStart, source.Stage,
+                    fireIce ? ComponentOutcome.Supports : ComponentOutcome.DoesNotSupport,
+                    "FS-GAS-ROUTE", line, Array.Empty<string>(),
+                    Bound(line, MaximumLineCharacters), new[] { source.ConclusionId }));
+            }
         }
 
         private static string? PowerLine(
