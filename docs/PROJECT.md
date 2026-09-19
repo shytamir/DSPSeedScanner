@@ -11,15 +11,26 @@ its execution and story-closing commits/pushes to `main`.
 
 **Current phase:** Phase 3 - candidate package and handoff preparation.
 
-**Next story:** `PANEL-D01: Verified candidate package`. G1 and G2 passed;
+**Next story:** `PANEL-D02: Minimal owner preview and closure`. G1 and G2 passed;
 M1 (Implementation evidence ready) and M2 (Panels technically complete) are
 declared. G3-G4 remain pending.
 
 **G2 evidence:** Solution and native-reference plugin builds: zero warnings
 or errors; Core tests 15/15 and Runtime tests 95/95; 196 repository document
 links resolved; diff/scope review clean. Story commits are on `main` and their
-hosted build/test/package runs through `2ee831a` succeeded. No implementer game
+hosted build/test/package runs through `4726a34` succeeded. No implementer game
 execution, environment changes, deployment, or save access occurred.
+
+**Candidate:** `1.3.110`, built from
+`4726a344ebe9e5b3fa40ab5046a05cb24d3f9b6d`; ZIP SHA-256
+`0ca31a412208b319f740665781d198c7a183b510549ac6da9e5e8155376a1323`.
+The downloaded CI package passed the existing build-artifact and package
+checks locally; the versioned native-reference build also had zero warnings
+or errors.
+[Hosted run 110](https://github.com/shytamir/DSPSeedScanner/actions/runs/35429534551)
+passed. Its downloaded artifact matched GitHub's published digest. The inner
+package ZIP hash above identifies the owner candidate; later documentation
+commits and hosted artifacts do not replace it.
 
 | Panel story | State | Evidence |
 | --- | --- | --- |
@@ -39,7 +50,7 @@ execution, environment changes, deployment, or save access occurred.
 | PANEL-T02 | Technically complete | Per-parent moon order and home-only highlight checks; solution/plugin builds. Owner preview awaits G4. |
 | PANEL-T03 | Technically complete | Home resource fragments, strict distances and four-row displayed-candidate checks; solution build and Runtime regressions. Owner preview awaits G4. |
 | PANEL-T04 | Technically complete | Independent amount/distance boundary combinations and unchanged-cell checks; solution build and Runtime regressions. Owner preview awaits G4. |
-| PANEL-D01 | In progress | Preparing the identified package and integrity evidence. |
+| PANEL-D01 | Technically complete | Frozen candidate and package/build verification reports prepared; identity recorded above. |
 | PANEL-D02 | Not started | Follows the verified package. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define
