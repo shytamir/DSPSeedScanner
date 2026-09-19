@@ -22,6 +22,15 @@ results to see how the seed looks for:
 
 Previously scanned seeds load from the local cache automatically.
 
+Fresh-start guidance covers the starter giant, useful Fire Ice deposits,
+sibling-moon power and nearby rich Deuterium supply. Megafactory guidance
+highlights qualified rare-resource systems and plentiful mixed deposits;
+sphere candidates favor nearby luminous stars.
+
+The statistics panel shows oil rates, moon numbers and resource colors.
+Its notable-star table adds distance, maximum sphere radius and contained
+orbits, followed by Aquatica hosts nearest to the brightest star.
+
 The panel appears in the bottom-right corner by default. You can move it by
 changing `Presentation.PanelCorner` in the generated configuration file:
 

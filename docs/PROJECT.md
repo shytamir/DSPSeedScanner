@@ -39,7 +39,8 @@ execution, environment changes, deployment, or save access occurred.
 | PANEL-T02 | Technically complete | Per-parent moon order and home-only highlight checks; solution/plugin builds. Owner preview awaits G4. |
 | PANEL-T03 | Technically complete | Home resource fragments, strict distances and four-row displayed-candidate checks; solution build and Runtime regressions. Owner preview awaits G4. |
 | PANEL-T04 | Technically complete | Independent amount/distance boundary combinations and unchanged-cell checks; solution build and Runtime regressions. Owner preview awaits G4. |
-| PANEL-D01; PANEL-D02 | Not started | Await their roadmap sequence and gates. |
+| PANEL-D01 | In progress | Preparing the identified package and integrity evidence. |
+| PANEL-D02 | Not started | Follows the verified package. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define
 the requested panel changes. The roadmap owns their delivery scope, gates,
