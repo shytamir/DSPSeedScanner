@@ -252,7 +252,10 @@ namespace DSPSeedScanner.Core
                     acceptedSettings);
             }
 
-            if (unavailable != null || starter == null)
+            StarterResourceMetric? fireIce = starter?.Resources.SingleOrDefault(
+                resource => resource.ResourceId == "fire-ice");
+            if (unavailable != null || starter == null ||
+                (starter.ContainsFireIce && fireIce == null))
             {
                 reports.Add(Report(
                     evidence,
@@ -262,7 +265,7 @@ namespace DSPSeedScanner.Core
                     subject,
                     ComponentOutcome.Unknown,
                     null,
-                    unavailable ?? MissingFact("containsFireIce")));
+                    unavailable ?? MissingFact("fireIceAmountAndGroups")));
             }
             else
             {
@@ -272,7 +275,8 @@ namespace DSPSeedScanner.Core
                     "FS-RESOURCES.fire-ice",
                     ConclusionContext.FreshStart,
                     subject,
-                    starter.ContainsFireIce
+                    starter.ContainsFireIce && fireIce!.Amount >= 900_000 &&
+                        fireIce.VeinGroups >= 4
                         ? ComponentOutcome.Supports
                         : ComponentOutcome.DoesNotSupport,
                     Fact("containsFireIce", starter.ContainsFireIce ? "present" : "absent",

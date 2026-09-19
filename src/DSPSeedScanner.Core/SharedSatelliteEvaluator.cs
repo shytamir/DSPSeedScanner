@@ -7,7 +7,7 @@ namespace DSPSeedScanner.Core
     {
         public const string ConclusionId = "FS-TOPOLOGY.shared-satellites";
         public const string ContractVersion = "0.1.0";
-        public const string DefinitionVersion = "0.1.0";
+        public const string DefinitionVersion = ConclusionDefinition.DefinitionVersion;
 
         public static ConclusionReport Evaluate(
             NormalizedBirthTopologyEvidence evidence)

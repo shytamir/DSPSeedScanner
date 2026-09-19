@@ -18,6 +18,7 @@ namespace DSPSeedScanner.Core.Tests
                 ("preview quantitative fixtures", PreviewQuantitativeFixtures),
                 ("range endpoint directions", RangeEndpointDirections),
                 ("starter resource fixtures", StarterResourceFixtures),
+                ("Fire Ice adequacy requires both minima", FireIceAdequacy),
                 ("sphere geometry fixtures", SphereGeometryFixtures),
                 ("Dark Fog evidence remains nonjudgmental", DarkFogEvidenceRemainsNonjudgmental),
                 ("grouping and rare-access fixtures", GroupingAndRareAccessFixtures),
@@ -179,6 +180,25 @@ namespace DSPSeedScanner.Core.Tests
                 ComponentOutcome.Supports);
             AssertRare(12_345_681, "unipolar-magnet", 10m,
                 ComponentOutcome.PreferenceSensitive);
+        }
+
+        private static void FireIceAdequacy()
+        {
+            foreach ((long? amount, int groups, ComponentOutcome expected) in new[]
+            {
+                ((long?)899_999, 4, ComponentOutcome.DoesNotSupport),
+                ((long?)900_000, 3, ComponentOutcome.DoesNotSupport),
+                ((long?)900_000, 4, ComponentOutcome.Supports),
+                ((long?)900_001, 5, ComponentOutcome.Supports),
+                ((long?)null, 4, ComponentOutcome.Unknown)
+            })
+            {
+                FixtureOptions options = Options(45_772);
+                options.ContainsFireIce = true;
+                options.FireIceAmount = amount;
+                options.FireIceGroups = groups;
+                AssertOutcome(options, "FS-RESOURCES.fire-ice", expected);
+            }
         }
 
         private static void StarterResourceFixtures()
@@ -681,6 +701,9 @@ namespace DSPSeedScanner.Core.Tests
                     resourceId,
                     options.ResourceAmounts[resourceId],
                     options.ResourceGroups[resourceId]))
+                .Concat(options.FireIceAmount.HasValue ? new[] {
+                    new StarterResourceMetric("fire-ice", options.FireIceAmount.Value,
+                        options.FireIceGroups) } : Array.Empty<StarterResourceMetric>())
                 .ToArray();
 
             return new NormalizedClusterEvidence(
@@ -899,6 +922,8 @@ namespace DSPSeedScanner.Core.Tests
             public int BirthInitialHiveCount { get; set; }
             public int OtherInitialHiveCount { get; set; }
             public bool ContainsFireIce { get; set; }
+            public long? FireIceAmount { get; set; } = 900_000;
+            public int FireIceGroups { get; set; } = 4;
             public Dictionary<string, long> ResourceAmounts { get; } =
                 new Dictionary<string, long>(StringComparer.Ordinal);
             public Dictionary<string, int> ResourceGroups { get; } =
@@ -933,6 +958,8 @@ namespace DSPSeedScanner.Core.Tests
                     BirthInitialHiveCount = BirthInitialHiveCount,
                     OtherInitialHiveCount = OtherInitialHiveCount,
                     ContainsFireIce = ContainsFireIce,
+                    FireIceAmount = FireIceAmount,
+                    FireIceGroups = FireIceGroups,
                     SystemDistanceLy = SystemDistanceLy,
                     ClusterCommonResourceTotal = ClusterCommonResourceTotal,
                     PartialScope = PartialScope,

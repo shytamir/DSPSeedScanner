@@ -532,7 +532,7 @@ namespace DSPSeedScanner.Runtime
                     _ => new RareAggregate(),
                     StringComparer.Ordinal);
             private readonly Dictionary<string, StarterAggregate> starter =
-                ConclusionDefinition.CommonResourceIds.ToDictionary(
+                ConclusionDefinition.CommonResourceIds.Concat(new[] { "fire-ice" }).ToDictionary(
                     resourceId => resourceId,
                     _ => new StarterAggregate(),
                     StringComparer.Ordinal);

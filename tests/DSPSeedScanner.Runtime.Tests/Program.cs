@@ -47,6 +47,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("raw compatibility diagnostics remain explicit", RawCompatibilityDiagnosticsRemainExplicit),
                 ("preview and raw operations share serialization", PreviewAndRawShareSerialization),
                 ("birth resources aggregate only complete declared coverage", BirthResourcesRequireCompleteCoverage),
+                ("Fire Ice adequacy spans home planets", FireIceAdequacySpansHomePlanets),
                 ("birth resource settings preserve facts but decline ranges", BirthResourceSettingsAreBounded),
                 ("birth resource cancellation and failure retain diagnostics", BirthResourceExitPathsRetainDiagnostics),
                 ("birth request shares serialization and preserves preview report", BirthRequestPreservesPreviewReport),
@@ -1093,6 +1094,27 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(RuntimeScanStatus.Success, raw.Status);
             Equal(RuntimeScanStatus.Busy, nested?.Status);
             Equal(0, previewGateway.GenerateCalls);
+        }
+
+        private static void FireIceAdequacySpansHomePlanets()
+        {
+            var gateway = new FakeCompleteClusterGateway
+            {
+                TargetCount = 2,
+                TargetFactory = (id, order) => new CompleteClusterPlanetTarget(id, 1,
+                    new ConclusionSubject(SubjectKind.BirthSystem, "1"), 0m,
+                    "Home " + id, order, false),
+                EvidenceFactory = (seed, target) => new NormalizedRawPlanetEvidence(
+                    seed, target.PlanetId, 1, target.AlgorithmId, RawPlanetCoverage.Complete(),
+                    Array.Empty<NormalizedRawVeinNode>(), Enumerable.Range(1, 2).Select(id =>
+                        new NormalizedRawVeinGroup(id, 8, "fire-ice",
+                            RawResourceSemantics.FiniteDeposit, 1, 225_000, 0m, 0m, 0m)))
+            };
+            CompleteClusterRawResult result = new CompleteClusterRawCoordinator(gateway)
+                .TryGenerate(Request(), CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, result.Status);
+            Equal(ComponentOutcome.Supports, result.Reports.Single(report =>
+                report.ConclusionId == "FS-RESOURCES.fire-ice").Outcome);
         }
 
         private static void BirthResourcesRequireCompleteCoverage()

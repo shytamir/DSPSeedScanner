@@ -205,6 +205,7 @@ namespace DSPSeedScanner.Runtime
         {
             NormalizedRawPlanetEvidence[] evidence = planets.ToArray();
             StarterResourceMetric[] metrics = ConclusionDefinition.CommonResourceIds
+                .Concat(new[] { "fire-ice" })
                 .Select(resourceId => new StarterResourceMetric(
                     resourceId,
                     checked(evidence.SelectMany(planet => planet.Nodes)

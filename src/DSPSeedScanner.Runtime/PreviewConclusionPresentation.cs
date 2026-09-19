@@ -1163,8 +1163,10 @@ namespace DSPSeedScanner.Runtime
             if (report.ConclusionId == "FS-RESOURCES.fire-ice")
             {
                 return report.Outcome == ComponentOutcome.Supports
-                    ? "Found Fire Ice veins"
-                    : "No Fire Ice veins";
+                    ? "Plentiful Fire Ice veins"
+                    : report.DecisiveFact?.Value == "present"
+                        ? "Scarce Fire Ice veins"
+                        : "No Fire Ice veins";
             }
             return null;
         }
