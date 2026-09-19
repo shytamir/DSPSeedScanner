@@ -16,7 +16,7 @@ The contract depends on the accepted [generation identity](GENERATION-IDENTITY.m
 taxonomy](PLAYER-DECISION-TAXONOMY.md), and [context-to-evidence
 matrix](DECISION-EVIDENCE-MATRIX.md). Its accepted predicates, ranges, and
 validation cases are defined by the [predicate, range, and validation
-catalogue](PREDICATE-RANGE-VALIDATION.md) `0.1.0`.
+catalogue](PREDICATE-RANGE-VALIDATION.md) `0.5.0`.
 
 It specifies conclusion meaning, not interface copy, storage layout, visual
 priority, or implementation design.
@@ -310,13 +310,14 @@ This contract uses semantic versioning independently of the mod package:
 
 Changing an accepted range endpoint, direction, or associated outcome requires
 at least a minor version. Pre-release labels identify unaccepted candidates.
-Acceptance of this artifact established contract version `0.1.0`; later
-changes must record their compatibility impact.
+Contract version `0.1.0` retains its report structure and outcome vocabulary.
+Panel predicate changes use definition `0.5.0`, invalidating older cached
+semantics. Acceptance and work disposition are recorded only in `PROJECT.md`.
 
 ## SPEC-05 conclusion
 
-The revised contract defines twelve automatically evaluated conclusion families
-across six contexts. The product owns their predicates, comparisons, and
+The contract defines automatically evaluated conclusion families across the
+four displayed contexts listed above. The product owns their predicates, comparisons, and
 bounded preference ranges. Players may prioritize, filter, or refine results,
 but they are not required to supply the questions and cannot reverse a neutral
 outcome.

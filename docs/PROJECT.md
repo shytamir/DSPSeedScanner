@@ -9,10 +9,17 @@ progress, acceptance, closure, and release state.
 [Panel Improvement Roadmap](management/ROADMAP.md) on 2026-09-19, authorizing
 its execution and story-closing commits/pushes to `main`.
 
-**Current phase:** Phase 2 - implementation.
+**Current phase:** Phase 3 - candidate package and handoff preparation.
 
-**Next step:** Integrated G2 checks before `PANEL-D01: Verified candidate package`.
-G1 passed and M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
+**Next story:** `PANEL-D01: Verified candidate package`. G1 and G2 passed;
+M1 (Implementation evidence ready) and M2 (Panels technically complete) are
+declared. G3-G4 remain pending.
+
+**G2 evidence:** Solution and native-reference plugin builds: zero warnings
+or errors; Core tests 15/15 and Runtime tests 95/95; 196 repository document
+links resolved; diff/scope review clean. Story commits are on `main` and their
+hosted build/test/package runs through `2ee831a` succeeded. No implementer game
+execution, environment changes, deployment, or save access occurred.
 
 | Panel story | State | Evidence |
 | --- | --- | --- |
@@ -32,13 +39,13 @@ G1 passed and M1 (Implementation evidence ready) is declared. G2-G4 remain pendi
 | PANEL-T02 | Technically complete | Per-parent moon order and home-only highlight checks; solution/plugin builds. Owner preview awaits G4. |
 | PANEL-T03 | Technically complete | Home resource fragments, strict distances and four-row displayed-candidate checks; solution build and Runtime regressions. Owner preview awaits G4. |
 | PANEL-T04 | Technically complete | Independent amount/distance boundary combinations and unchanged-cell checks; solution build and Runtime regressions. Owner preview awaits G4. |
-| Remaining implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
+| PANEL-D01; PANEL-D02 | Not started | Await their roadmap sequence and gates. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define
 the requested panel changes. The roadmap owns their delivery scope, gates,
-and execution restrictions. Existing specifications describe the implemented
-baseline until the relevant stories update them; roadmap acceptance does not
-claim that the new behavior is already implemented or validated.
+and execution restrictions. Specifications describe the implemented panel
+behavior; technical completion does not claim owner acceptance or runtime
+readability validation.
 
 The previous [User Feedback Roadmap](archive/USER-FEEDBACK-ROADMAP.md) remains
 completed history. Older feature requests and technical debt are not activated

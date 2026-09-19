@@ -22,7 +22,7 @@ namespace DSPSeedScanner.Plugin
             "Solar",
             "Wind",
             "Ores (units / groups)",
-            "Oil (flow / wells)",
+            "Oil (rate / wells)",
             "Gas products"
         };
         private static readonly float[] HomeColumnRatios =

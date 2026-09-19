@@ -796,7 +796,7 @@ namespace DSPSeedScanner.Core
                     fact,
                     new DiagnosticCause(
                         "unsupported-definition-scope",
-                        "The value is retained, but definition 0.1.0 has no " +
+                        "The value is retained, but definition " + ConclusionDefinition.DefinitionVersion + " has no " +
                         "range for these settings."),
                     sourceConclusionId));
                 return;
@@ -938,7 +938,7 @@ namespace DSPSeedScanner.Core
         {
             return new DiagnosticCause(
                 "no-accepted-range",
-                "Definition 0.1.0 has no accepted range for " + componentId + ".");
+                "Definition " + ConclusionDefinition.DefinitionVersion + " has no accepted range for " + componentId + ".");
         }
 
         private sealed record RoleAssignment(

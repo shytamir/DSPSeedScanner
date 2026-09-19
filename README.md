@@ -18,6 +18,17 @@ results scroll inside the panel instead of expanding across the preview, and
 sparse contexts share complementary column space. Use the mouse wheel over the
 panel to inspect conclusions below the visible viewport.
 
+Fresh-start guidance distinguishes the starter giant's product, adequate
+mineable Fire Ice, sibling-moon power and the nearest rich Deuterium supply.
+Megafactory guidance identifies qualified rare and plentiful resource systems;
+sphere candidates require luminous stars and are selected by home distance.
+
+The statistics panel shows native oil rates, explicit moon order and resource
+emphasis. Its notable-star table compares blue giants, the brightest star,
+O stars and nearby Aquatica hosts with the requested distance and sphere facts.
+See the [statistics presentation contract](docs/specification/STATISTICS-PRESENTATION.md)
+for column meanings and color boundaries.
+
 The BepInEx setting `Presentation.PanelCorner` selects the panel corner: `1`
 bottom-right (default), `2` bottom-left, `3` top-left, or `4` top-right.
 

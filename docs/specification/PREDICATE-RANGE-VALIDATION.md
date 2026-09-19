@@ -4,12 +4,12 @@
 status, including historical dispositions. This document contains scope,
 requirements, or technical evidence; it does not track status.
 
-**Definition version:** `0.1.0`
+**Definition version:** `0.5.0`
 
 **Compatible conclusion contract:**
 [Seed Conclusion Contract](CONCLUSION-CONTRACT.md) `0.1.0`
 
-This catalogue supplies the first product-owned predicates, bounded preference
+This catalogue supplies the product-owned predicates, bounded preference
 ranges, and runtime-confirmed validation cases for the conclusion contract. It
 defines evaluable questions; it does not rank seeds, prescribe presentation
 copy, or authorize implementation.
@@ -75,7 +75,7 @@ is not a random reference population and therefore does not establish
 cluster-scale amount ranges. Raw probe output remains outside the repository,
 as required by the project rules.
 
-Runtime probing also established two implementation prerequisites:
+Historical runtime probing established two native prerequisites:
 
 - call `RandomTable.Init()` before isolated raw planet generation; without it,
   at least one installed terrain algorithm failed;
@@ -84,7 +84,9 @@ Runtime probing also established two implementation prerequisites:
   distance from `StarData.uPosition / GalaxyData.LY`.
 
 These details are compatibility evidence, not permission to replace DSP's
-generation routines.
+generation routines or run them during the panel roadmap. The precise native
+float sequence and moon containment calculation are documented in
+[Panel evidence](PANEL-EVIDENCE.md#planet-and-star-attribution).
 
 ## Structural and derived predicate registry
 
@@ -92,9 +94,9 @@ generation routines.
 | --- | --- | --- | --- |
 | `FS-TOPOLOGY.shared-satellites` | Count solid planets sharing the birth planet's giant parent, including the birth planet | At least 2 **supports** concentrated early expansion; 1 **does not support** that arrangement | Complete preview birth-system topology. It does not predict travel time or buildable area. |
 | `FS-POWER.birth-tidal` | Any solid planet in the birth system has DSP's tidal-lock singularity | Present **supports** a continuous-daylight opportunity; absent **does not support** that specific opportunity | Complete preview rotation data. It does not predict realized power. |
-| `FS-GAS-ROUTE.product` | Birth-system giant contains each registered runtime product ID | Present **supports** that product opportunity; absent **does not support** it | Evaluate hydrogen, deuterium, and fire ice automatically and separately. Collection prerequisites remain explicit. Rates have no accepted range. |
+| `FS-GAS-ROUTE.product` | Birth-system giant contains each registered runtime product ID | Product evidence records presence independently | Presentation emits one starter-giant verdict: Fire Ice Strength or Deuterium Limitation; opposite absence and Hydrogen entries are omitted. |
 | `FS-RESOURCES.fire-ice` | Complete birth-system Fire Ice totals | Present with amount >= 900,000 and >= 4 groups **supports**; present below either minimum or absent **does not support** | Sum across home-system planets. Missing amount/group evidence stays unknown. |
-| `MF-SPHERE-GEOMETRY.containment` | Number of planetary orbit radii no greater than the system's derived maximum shell radius | Uses adjustable count range `[1, 2]`: 2 or more **supports**, 0 **does not support**, and 1 is **preference-sensitive** | Complete preview orbits and versioned radius derivation. It does not imply receiver effectiveness. |
+| `MF-SPHERE-GEOMETRY.containment` | Number of whole orbits inside the native maximum sphere radius, including the parent radius for moons | `[1, 2]`: 2 or more **supports**, 0 **does not support**, and 1 is **preference-sensitive** | Sphere presentation selects the nearest systems with luminosity >= 2.0. No Megafactory containment duplicate or receiver-effectiveness claim. |
 | `MF-SYSTEM-ROLE.role` | A system satisfies an upstream accepted component predicate | The upstream outcome is preserved for `strong-energy`, `large-shell`, `orbit-containment`, or `rare-access`; the birth system is the fixed `starter-anchor` | A role adds no threshold and cannot upgrade sensitive or unknown evidence. Multiple roles remain separate. |
 
 The containment count uses an interval because player research distinguished
@@ -107,12 +109,15 @@ All increasing ranges use the increasing rule above unless stated otherwise.
 
 | ID | Metric | Accepted range | Scope and settings |
 | --- | --- | --- | --- |
-| `FS-POWER.solar` | Maximum solid-planet solar ratio in the birth system | `[1.16, 1.35]` | Preview; reference identity only |
-| `FS-POWER.wind` | Maximum solid-planet wind ratio in the birth system | `[1.0, 1.5]` | Preview; reference identity only |
+| `FS-POWER.solar` / `FS-POWER.wind` | Legacy system-maximum diagnostic facts | Solar `[1.16, 1.35]`; Wind `[1.0, 1.5]` | Retained diagnostics, not displayed power advice |
+| `FS-POWER.solar:<moon>` / `FS-POWER.wind:<moon>` | Each eligible sibling moon's ratio | `[0.4, 1.15]` independently | One/two siblings of the home moon with verified parent identity; no home-planet advice |
+| Rich Deuterium presentation | Nearest individual giant with rate >= 0.15/s | `[2.5, 10]` ly, decreasing | Conclusions have no distance cap; statistics alone retain <= 8.125 ly |
 | `FS-RESOURCES.common-total` | Sum of finite common deposits (iron, copper, silicon, titanium, stone, and coal) in the birth system | `[74,788,292, 105,667,431]` | Complete raw birth system; resource multiplier `1` only; oil flow remains a separate component |
 | `MF-ENERGY-SYSTEM.output` | Highest Dyson luminosity in the cluster | `[2.4489998817, 2.4900000095]` | Complete preview cluster; reference identity only |
 | `MF-ENERGY-SYSTEM.separation` | Highest Dyson luminosity divided by the second highest | `[1.1104599329, 1.2183275480]` | Complete preview cluster; reference identity only |
-| `MF-SPHERE-GEOMETRY.radius` | Largest derived maximum shell radius in the cluster | `[76,200, 191,400]` radius units | Complete preview cluster; reference identity only |
+| `MF-SPHERE-GEOMETRY.radius` | Native maximum sphere radius | `[76,200, 191,400]` meters | Display nearest candidates with luminosity >= 2.0; retain the existing reference-identity range scope |
+| `MF-RESOURCE-SYSTEM.rare` | System totals: Spiniform > 900,000; Grating > 600,000; Organic presence | `[2.5, 10]` ly, decreasing | Nearest qualifying system per resource; combine descriptions sharing a system; no theme requirement |
+| `MF-RESOURCE-SYSTEM.plentiful` | At least three finite resource totals each > 40 million | `[2.5, 10]` ly, decreasing | Nearest three qualifying systems; split deposits count, oil does not |
 | `CX-GROUPING.distance` | Distance between the starter anchor and, or between, independently supported roles | `[2.5, 10]` light-years, decreasing | Complete role evidence; all role subjects must be known |
 | `RR-ACCESS.distance` | Birth-system distance to a system containing a specified rare resource | `[2.5, 10]` light-years, decreasing | Complete cluster raw coverage for that resource; evaluate each resource separately |
 
@@ -235,7 +240,8 @@ The definition rests on these four points:
 4. the three deferred strength components remain **unknown** until later
    evidence establishes defensible ranges.
 
-This definition is therefore version `0.1.0`. A changed endpoint, direction,
+Definition `0.5.0` incorporates the panel predicates above; the original cohort
+evidence remains attributable to its earlier numeric premises. A changed endpoint, direction,
 predicate, role, or outcome requires a new minor candidate. Editorial
 corrections alone increment the patch candidate.
 

@@ -37,7 +37,7 @@ authority for project steering and all current and historical work status.
 - [Seed conclusion contract](specification/CONCLUSION-CONTRACT.md): Neutral
   outcome semantics, supported contexts, tradeoffs, and declined claims.
 - [Predicate and validation catalogue](specification/PREDICATE-RANGE-VALIDATION.md):
-  Definition `0.1.0`, thresholds, settings scopes, and validation cases.
+  Definition `0.5.0`, thresholds, settings scopes, and validation cases.
 - [Scanner-core implementation boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md):
   Historical planning scope, runtime gates, exclusions, and validation
   obligations for the scanner core.
