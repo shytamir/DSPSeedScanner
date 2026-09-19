@@ -1293,9 +1293,16 @@ namespace DSPSeedScanner.Runtime
             return Array.AsReadOnly(statistics.UnipolarMagnets.Select(planet =>
                 new ClusterUnipolarMagnetTableRow(
                     planet.Location.DisplayDesignation,
-                    planet.Location.FormattedDistance,
+                    planet.Location.HostSystemDistanceLy < 15m
+                        ? StatisticText.Green(planet.Location.FormattedDistance)
+                        : planet.Location.HostSystemDistanceLy > 21m
+                            ? StatisticText.Red(planet.Location.FormattedDistance) : planet.Location.FormattedDistance,
                     planet.VeinNodes.ToString("N0", CultureInfo.InvariantCulture),
-                    planet.Amount.ToString("N0", CultureInfo.InvariantCulture),
+                    planet.Amount > 2_000_000
+                        ? StatisticText.Green(planet.Amount.ToString("N0", CultureInfo.InvariantCulture))
+                        : planet.Amount < 900_000
+                            ? StatisticText.Red(planet.Amount.ToString("N0", CultureInfo.InvariantCulture))
+                            : planet.Amount.ToString("N0", CultureInfo.InvariantCulture),
                     planet.VeinGroups.ToString("N0", CultureInfo.InvariantCulture)))
                 .ToArray());
         }

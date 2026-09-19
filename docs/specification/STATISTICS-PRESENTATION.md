@@ -32,6 +32,11 @@ rows are green. Both Closest and Alternative participate. Other cells and
 headings are unchanged; resource presence outside the displayed candidates
 does not qualify a system. Selection and cache contents are unchanged.
 
+Unipolar Magnets amount cells are green above 2,000,000 and red below 900,000.
+Their Distance cells are independently green below 15 ly and red above 21 ly.
+Exact endpoints use normal text. Compare underlying quantities before display
+rounding; the other cells and row selection remain unchanged.
+
 ## Notable stars
 
 Sphere rows list blue giants first in descending Dyson luminosity, then the

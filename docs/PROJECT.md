@@ -11,8 +11,8 @@ its execution and story-closing commits/pushes to `main`.
 
 **Current phase:** Phase 2 - implementation.
 
-**Next story:** `PANEL-T04: Unipolar amount and distance colors`. G1 passed and
-M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
+**Next step:** Integrated G2 checks before `PANEL-D01: Verified candidate package`.
+G1 passed and M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 
 | Panel story | State | Evidence |
 | --- | --- | --- |
@@ -31,6 +31,7 @@ M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 | PANEL-T01 | Technically complete | Native-rate rounding, multiple-well and cache round-trip checks; solution/plugin builds. Owner preview awaits G4. |
 | PANEL-T02 | Technically complete | Per-parent moon order and home-only highlight checks; solution/plugin builds. Owner preview awaits G4. |
 | PANEL-T03 | Technically complete | Home resource fragments, strict distances and four-row displayed-candidate checks; solution build and Runtime regressions. Owner preview awaits G4. |
+| PANEL-T04 | Technically complete | Independent amount/distance boundary combinations and unchanged-cell checks; solution build and Runtime regressions. Owner preview awaits G4. |
 | Remaining implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define

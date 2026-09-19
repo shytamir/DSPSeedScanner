@@ -99,6 +99,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("oil totals match native rate formatting", OilTotalsMatchNativeFormatting),
                 ("moon labels and home highlight use body identity", MoonLabelsUseBodyIdentity),
                 ("rare colors use only displayed candidates", RareColorsUseDisplayedCandidates),
+                ("Unipolar colors respect independent boundaries", UnipolarColorsRespectBoundaries),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -3272,13 +3273,13 @@ namespace DSPSeedScanner.Runtime.Tests
                 ClusterResourcePresentation.ProjectUnipolarTableRows(statistics);
             Equal(3, tableRows.Count);
             Equal("Planet 102", tableRows[0].Planet);
-            Equal("2.35 ly", tableRows[0].Distance);
+            Equal(StatisticText.Green("2.35 ly"), tableRows[0].Distance);
             Equal("1", tableRows[0].Veins);
             Equal("1,234,567", tableRows[0].Magnets);
             Equal("1", tableRows[0].Groups);
             Equal("Planet 103", tableRows[1].Planet);
             Equal("12", tableRows[1].Veins);
-            Equal("9,876,543", tableRows[1].Magnets);
+            Equal(StatisticText.Green("9,876,543"), tableRows[1].Magnets);
             Equal("3", tableRows[1].Groups);
             Equal(5, tableRows[0].Cells.Count);
 
@@ -4191,6 +4192,26 @@ namespace DSPSeedScanner.Runtime.Tests
                     .Cards.Select(card => card.Line));
                 Equal(completedFreshText, cachedFreshText);
             });
+        }
+
+        private static void UnipolarColorsRespectBoundaries()
+        {
+            foreach (long amount in new[] { 899_999L, 900_000L, 900_001L, 1_999_999L, 2_000_000L, 2_000_001L })
+            foreach (decimal distance in new[] { 14.999m, 15m, 15.001m, 20.999m, 21m, 21.001m })
+            {
+                var stats = new ClusterResourceStatistics(Array.Empty<ClusterResourceCandidate>(), new[] {
+                    new UnipolarMagnetPlanetStatistics(Location("1", "Planet", "system", distance, 0), 7, amount, 2) });
+                var row = ClusterResourcePresentation.ProjectUnipolarTableRows(stats).Single();
+                string magnets = amount.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+                Equal(amount > 2_000_000 ? StatisticText.Green(magnets) :
+                    amount < 900_000 ? StatisticText.Red(magnets) : magnets, row.Magnets);
+                string travel = DspLyFormatter.Format(distance);
+                Equal(distance < 15m ? StatisticText.Green(travel) :
+                    distance > 21m ? StatisticText.Red(travel) : travel, row.Distance);
+                Equal("Planet", row.Planet);
+                Equal("7", row.Veins);
+                Equal("2", row.Groups);
+            }
         }
 
         private static void RareColorsUseDisplayedCandidates()
