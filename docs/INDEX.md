@@ -44,6 +44,8 @@ authority for project steering and all current and historical work status.
 
 ## Delivery
 
+- [Panel preview check](PANEL-PREVIEW-CHECK.md): Identified candidate, package
+  download and one short owner-only New Game preview recipe.
 - [Complete-cluster cache](CACHE.md): Local cache trust boundary, retention,
   failure behavior, and manual clearing instructions.
 - [Thunderstore package contract](THUNDERSTORE-PACKAGE.md): Real plugin build,

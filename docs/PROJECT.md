@@ -9,11 +9,12 @@ progress, acceptance, closure, and release state.
 [Panel Improvement Roadmap](management/ROADMAP.md) on 2026-09-19, authorizing
 its execution and story-closing commits/pushes to `main`.
 
-**Current phase:** Phase 3 - candidate package and handoff preparation.
+**Current phase:** Phase 4 - owner-only final preview validation.
 
-**Next story:** `PANEL-D02: Minimal owner preview and closure`. G1 and G2 passed;
-M1 (Implementation evidence ready) and M2 (Panels technically complete) are
-declared. G3-G4 remain pending.
+**Next action:** Owner preview for `PANEL-D02: Minimal owner preview and closure`.
+G1-G3 passed; M1 (Implementation evidence ready), M2 (Panels technically
+complete), and M3 (Ready for handoff) are declared. G4 and final acceptance
+remain pending. Use the [single-seed owner checklist](PANEL-PREVIEW-CHECK.md).
 
 **G2 evidence:** Solution and native-reference plugin builds: zero warnings
 or errors; Core tests 15/15 and Runtime tests 95/95; 196 repository document
@@ -51,7 +52,7 @@ commits and hosted artifacts do not replace it.
 | PANEL-T03 | Technically complete | Home resource fragments, strict distances and four-row displayed-candidate checks; solution build and Runtime regressions. Owner preview awaits G4. |
 | PANEL-T04 | Technically complete | Independent amount/distance boundary combinations and unchanged-cell checks; solution build and Runtime regressions. Owner preview awaits G4. |
 | PANEL-D01 | Technically complete | Frozen candidate and package/build verification reports prepared; identity recorded above. |
-| PANEL-D02 | Not started | Follows the verified package. |
+| PANEL-D02 | Ready for owner preview | Package, reports and [concise checklist](PANEL-PREVIEW-CHECK.md) prepared; 202 document links resolved and G3 passed. Owner result for the frozen candidate is required at G4 before closure. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define
 the requested panel changes. The roadmap owns their delivery scope, gates,

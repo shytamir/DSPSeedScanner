@@ -26,9 +26,9 @@ read the assembly; decompiled output is an ignored inspection artifact.
   `PlanetData.gasSpeeds` element in `/s` with four decimal places. The adapter
   already normalizes that value into `CollectionRate` without a time conversion.
   Eligibility compares the unrounded rate against `0.15/s`.
-- The complete scan retains per-planet group amounts but does not retain the
-  oil multiplier in its group-only raw path. The rate presentation must receive
-  the inspected native multiplier from extraction; it must not consult player
+- The complete scan retains per-planet group amounts and the supplied native
+  oil multiplier in its group-only raw path. The rate presentation receives
+  that multiplier from extraction; it must not consult player
   history or a different installation. The wells/group count is independent.
 
 Pure numeric cases: amounts `0`, `25000`, and `1000000` at the native multiplier
@@ -122,12 +122,13 @@ resources: `24242424` has one home-giant moon (`feed06-preview-current.tsv`,
 matching assembly hash above); `16315224` has three home-giant moons and a
 Deuterium starter (`spec06-preview.tsv`, runtime-version header). These files
 are prior inspection artifacts in the shared SPEC01 probe directory, not
-saves. Use the first for the main two-panel check and the second only for the
-sibling-power/ordinal check. The default combat configuration can be used;
-none of the changed rules depends on a new combat preset. These captures
+saves. Use `16315224` for the single two-panel owner check: it also covers the
+sibling-power/ordinal case, so a second preview is unnecessary. The default
+combat configuration can be used; none of the changed rules depends on a new
+combat preset. These captures
 establish seed selection, not visual acceptance of the new candidate.
 
-The handoff should give these exact inputs, the candidate identity, a short
-expected-layout checklist and a simple pass/problem reply. Numeric and rare
+The [owner checklist](../PANEL-PREVIEW-CHECK.md) gives the selected input,
+candidate identity, expected layout and a simple pass/problem reply. Numeric and rare
 edge cases belong in synthetic automated tests; the owner need not locate
 additional seeds, measure thresholds or repeat the automated test matrix.
