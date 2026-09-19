@@ -83,11 +83,12 @@ After BepInEx loads `DSPSeedScannerPlugin`, an integration may obtain the
 plugin instance through its GUID `dspseedscanner` and call
 the public `ScanPreview`, `GenerateRawPlanet`,
 `GenerateBirthSystemResources`, `GenerateCompleteClusterResources`, or
-`StartCompleteClusterResources` methods. Complete-scan semantic conclusion
-bundles may be read, stored, or cleared through `TryGetCachedCompleteCluster`,
-`TryStoreCompleteCluster`, and `ClearCompleteClusterCache`. The start method
-returns a disposable presentation-neutral operation; each `Advance` call
-completes at most one solid planet and restores shared DSP state before
+`StartCompleteClusterResources` methods. Audited complete-scan conclusions and
+bounded resource-statistics payloads may be read, stored, or cleared through
+`TryGetCachedCompleteCluster`, `TryStoreCompleteCluster`, and
+`ClearCompleteClusterCache`, under the [cache contract](CACHE.md). The start
+method returns a disposable presentation-neutral operation; each `Advance`
+call completes at most one solid planet and restores shared DSP state before
 returning. Inputs and outputs remain presentation-neutral Core and Runtime
 contracts. The plugin now consumes them automatically from the New Game
 preview lifecycle and shows bounded operational state and context-grouped

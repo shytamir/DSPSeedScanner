@@ -63,10 +63,14 @@ The accepted semantics and thresholds are maintained in the
   bounded full raw scan for that preview load.
 - Replaced or exited previews cancel obsolete work at a safe boundary, and a
   stale result can never update the current panel.
-- Only presentation-ready semantic conclusions derived from a successful
-  complete scan are persisted in a versioned, bounded local cache under the
-  mod configuration area. Raw or normalized resource evidence, execution
-  diagnostics, and rendered wording are not cached.
+- Only audited semantic conclusions and bounded resource-statistics payloads
+  derived from a successful complete scan are persisted in a versioned,
+  bounded local cache under the active BepInEx configuration area. Raw planets,
+  full normalized resource evidence, execution diagnostics, and rendered
+  wording are not cached. The [cache contract](CACHE.md) defines the retained
+  payload and applies the accepted
+  [Peace/Combat reuse rule](specification/GENERATION-IDENTITY.md#peacecombat-reuse-applicability)
+  while preserving canonical generation identity and live Dark Fog status.
 - The panel presents concise natural-language strengths,
   preference-sensitive results, and limitations without requiring player
   input. Unknown and not-applicable components remain omitted. Named candidates
