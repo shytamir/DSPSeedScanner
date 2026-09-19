@@ -94,6 +94,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("rich Deuterium conclusions use uncapped distance", RichDeuteriumConclusionsUseDistance),
                 ("targeted rare systems use deposit totals", TargetedRareSystemsUseDepositTotals),
                 ("plentiful systems use finite split deposits", PlentifulSystemsUseFiniteDeposits),
+                ("sphere geometry is star-centric and nearest-first", SphereGeometryIsStarCentric),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -361,8 +362,8 @@ namespace DSPSeedScanner.Runtime.Tests
 
             Equal(RuntimeScanStatus.Success, result.Status);
             Equal("2,3,4", CandidateIds(candidates.Energy));
-            Equal("5,6,3", CandidateIds(candidates.ShellRadius));
-            Equal("4,5,6", CandidateIds(candidates.ContainedOrbits));
+            Equal("2,3,4", CandidateIds(candidates.ShellRadius));
+            Equal("2,3,4", CandidateIds(candidates.ContainedOrbits));
             Equal(3, candidates.Energy!.Count);
             Equal(5, candidates.EnergySupportingCount);
             Equal(5, candidates.ShellRadiusSupportingCount);
@@ -371,8 +372,8 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal(10m, candidates.Energy[0].DecisiveValue);
             Equal(3_000_000m, candidates.ShellRadius!
                 .Single(value => value.Identifier == "3").DecisiveValue);
-            Equal(6m, candidates.ContainedOrbits!
-                .Single(value => value.Identifier == "5").DecisiveValue);
+            Equal(7m, candidates.ContainedOrbits!
+                .Single(value => value.Identifier == "4").DecisiveValue);
         }
 
         private static void IncompleteSystemCandidateEvidenceStaysUnknown()
@@ -388,8 +389,8 @@ namespace DSPSeedScanner.Runtime.Tests
             True(result.SystemCandidates != null);
             True(result.SystemCandidates!.Energy == null);
             Equal(0, result.SystemCandidates.EnergySupportingCount);
-            Equal(3, result.SystemCandidates.ShellRadius!.Count);
-            Equal(3, result.SystemCandidates.ContainedOrbits!.Count);
+            True(result.SystemCandidates.ShellRadius == null);
+            True(result.SystemCandidates.ContainedOrbits == null);
 
             WithTemporaryDirectory(path =>
             {
@@ -4171,6 +4172,25 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void SphereGeometryIsStarCentric()
+        {
+            Equal(100_000L, PreviewSphereGeometry.MaximumRadiusMeters(1.25f));
+            True(PreviewSphereGeometry.ContainsOrbit(1f, null, 40_000));
+            False(PreviewSphereGeometry.ContainsOrbit(1.01f, null, 40_000));
+            True(PreviewSphereGeometry.ContainsOrbit(0.25f, 1.25f, 60_000));
+            False(PreviewSphereGeometry.ContainsOrbit(0.25f, 1.25f, 59_999));
+            False(PreviewSphereGeometry.ContainsOrbit(0.01f, 2f, 80_000));
+            var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)> {
+                [2] = (2m, 60_000, 0), [3] = (3m, 900_000, 5),
+                [4] = (1.999m, 1_000_000, 9) };
+            RuntimeSystemCandidates candidates = Snapshot(systemCandidateFacts: facts).SystemCandidates;
+            Equal("2,3", CandidateIds(candidates.ShellRadius));
+            Equal("2,3", CandidateIds(candidates.ContainedOrbits));
+            facts[2] = (1.999m, 60_000, 0);
+            facts[3] = (1.999m, 900_000, 5);
+            Equal(0, Snapshot(systemCandidateFacts: facts).SystemCandidates.ShellRadius!.Count);
+        }
+
         private static void PlentifulSystemsUseFiniteDeposits()
         {
             WithTemporaryDirectory(path =>
@@ -4536,7 +4556,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 True(immediateText.Contains(
                     "Many large spheres: Star 2, Star 3, and Star 4",
                     StringComparison.Ordinal));
-                True(immediateText.Contains(
+                False(immediateText.Contains(
                     "Many contained-orbit systems: Star 2, Star 3, and Star 4",
                     StringComparison.Ordinal));
 
@@ -4596,7 +4616,7 @@ namespace DSPSeedScanner.Runtime.Tests
                         group.Context == ConclusionContext.Megafactory)
                     .Cards.Select(card => card.Line));
                 True(text.Contains(
-                    "Star 2: outshines all, large sphere, 4 contained orbits",
+                    "Star 2: outshines all, large sphere",
                     StringComparison.Ordinal));
             });
 
@@ -4622,7 +4642,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     .Cards.Select(card => card.Line));
                 True(text.Contains("Star 2 brightest", StringComparison.Ordinal));
                 True(text.Contains("No large spheres", StringComparison.Ordinal));
-                True(text.Contains("No contained orbits", StringComparison.Ordinal));
+                False(text.Contains("No contained orbits", StringComparison.Ordinal));
             });
 
             WithTemporaryDirectory(path =>
@@ -4775,9 +4795,9 @@ namespace DSPSeedScanner.Runtime.Tests
             {
                 var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
                 {
-                    [1] = (1m, 60_000, 0),
-                    [2] = (1m, 250_000, 4),
-                    [3] = (1m, 100_000, 1)
+                    [1] = (2m, 60_000, 0),
+                    [2] = (2m, 250_000, 4),
+                    [3] = (2m, 100_000, 1)
                 };
                 using var resolver = new PreviewResolutionCoordinator(
                     new PreviewSessionLifecycle(),
@@ -4827,9 +4847,9 @@ namespace DSPSeedScanner.Runtime.Tests
             {
                 var facts = new Dictionary<int, (decimal Energy, long Radius, int Orbits)>
                 {
-                    [2] = (1m, 250_000, 4),
-                    [3] = (1m, 240_000, 3),
-                    [4] = (1m, 230_000, 2)
+                    [2] = (2m, 250_000, 4),
+                    [3] = (2m, 240_000, 3),
+                    [4] = (2m, 230_000, 2)
                 };
                 using var resolver = new PreviewResolutionCoordinator(
                     new PreviewSessionLifecycle(),

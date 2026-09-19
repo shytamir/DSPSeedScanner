@@ -612,51 +612,6 @@ namespace DSPSeedScanner.Runtime
                 }
             }
 
-            ConclusionReport[] containmentReports = reports.Where(report =>
-                report.ConclusionId == "MF-SPHERE-GEOMETRY.containment").ToArray();
-            if (containmentReports.Length != 0 && candidates?.ContainedOrbits != null)
-            {
-                RuntimeSystemCandidate[] contained = candidates.ContainedOrbits.Where(candidate =>
-                    ConclusionDefinition.Evaluate(
-                        candidate.DecisiveValue,
-                        ConclusionDefinition.OrbitContainment) == ComponentOutcome.Supports)
-                    .ToArray();
-                if (contained.Length == 0 && containmentReports.All(report =>
-                    report.Outcome == ComponentOutcome.DoesNotSupport))
-                {
-                    AddMegaCard(cards, containmentReports, "No contained orbits");
-                }
-                else if (candidates.ContainedOrbitsSupportingCount > MaximumSubjectsPerCard)
-                {
-                    AddMegaCard(
-                        cards,
-                        containmentReports.Where(report =>
-                            report.Outcome == ComponentOutcome.Supports).ToArray(),
-                        "Many contained-orbit systems: " + JoinNames(
-                            contained.Select(candidate => candidate.DisplayName)));
-                }
-                else
-                {
-                    foreach (RuntimeSystemCandidate candidate in contained)
-                    {
-                        ConclusionReport? report = containmentReports.SingleOrDefault(value =>
-                            value.Subject.Identifier == candidate.Identifier &&
-                            value.Outcome == ComponentOutcome.Supports);
-                        if (report == null)
-                            continue;
-                        int count = Decimal.ToInt32(candidate.DecisiveValue);
-                        AddMegaRole(
-                            roles,
-                            candidate,
-                            ComponentOutcome.Supports,
-                            count == 1 ? "contained orbit" :
-                                count.ToString(CultureInfo.InvariantCulture) +
-                                " contained orbits",
-                            report);
-                    }
-                }
-            }
-
             AddRareAccessCards(cards, roles, reports, displays);
             foreach (ConclusionReport report in reports.Where(report =>
                 report.ConclusionId == "MF-RESOURCE-SYSTEM.plentiful"))

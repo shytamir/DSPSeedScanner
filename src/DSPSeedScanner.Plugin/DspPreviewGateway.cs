@@ -411,7 +411,8 @@ namespace DSPSeedScanner.Plugin
                         null,
                         planet.orbitAroundPlanet?.id));
                 }
-                if (planet.orbitRadius * 40_000f <= maximumShellRadius)
+                if (PreviewSphereGeometry.ContainsOrbit(planet.orbitRadius,
+                    planet.orbitAroundPlanet?.orbitRadius, maximumShellRadius))
                     containedOrbits++;
 
                 if (planet.gasItems == null)
@@ -492,8 +493,7 @@ namespace DSPSeedScanner.Plugin
 
         private static long MaximumShellRadius(StarData star)
         {
-            return Convert.ToInt64(
-                Mathf.Round(star.dysonRadius * 40_000f * 2f / 100f) * 100f);
+            return PreviewSphereGeometry.MaximumRadiusMeters(star.dysonRadius);
         }
 
         private static string NormalizeGasProductId(int itemId)

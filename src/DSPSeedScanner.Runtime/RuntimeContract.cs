@@ -89,21 +89,45 @@ namespace DSPSeedScanner.Runtime
 
         internal static RuntimeSystemCandidates Project(
             IReadOnlyList<NormalizedSystemEvidence> systems,
-            IReadOnlyList<RuntimeSystemDisplay> displays)
+            IReadOnlyList<RuntimeSystemDisplay> displays,
+            string birthSystemIdentifier,
+            IReadOnlyList<NormalizedSystemDistance> distances)
         {
             var displayByIdentifier = displays.ToDictionary(
                 value => value.Identifier,
                 StringComparer.Ordinal);
             return new RuntimeSystemCandidates(
                 Rank(systems, displayByIdentifier, system => system.DysonLuminosity),
-                Rank(systems, displayByIdentifier, system => system.MaximumShellRadius),
-                Rank(systems, displayByIdentifier, system => system.ContainedOrbitCount),
+                NearestGeometry(systems, displayByIdentifier, birthSystemIdentifier, distances,
+                    system => system.MaximumShellRadius),
+                NearestGeometry(systems, displayByIdentifier, birthSystemIdentifier, distances,
+                    system => system.ContainedOrbitCount),
                 SupportingCount(systems, system => system.DysonLuminosity,
                     ConclusionDefinition.EnergyOutput),
-                SupportingCount(systems, system => system.MaximumShellRadius,
+                SupportingCount(systems.Where(system => system.DysonLuminosity >= 2m).ToArray(), system => system.MaximumShellRadius,
                     ConclusionDefinition.SphereRadius),
-                SupportingCount(systems, system => system.ContainedOrbitCount,
+                SupportingCount(systems.Where(system => system.DysonLuminosity >= 2m).ToArray(), system => system.ContainedOrbitCount,
                     ConclusionDefinition.OrbitContainment));
+        }
+
+        private static RuntimeSystemCandidate[]? NearestGeometry(
+            IReadOnlyList<NormalizedSystemEvidence> systems,
+            IReadOnlyDictionary<string, RuntimeSystemDisplay> displays, string birth,
+            IReadOnlyList<NormalizedSystemDistance> distances,
+            Func<NormalizedSystemEvidence, decimal?> selectValue)
+        {
+            if (systems.Any(system => !system.DysonLuminosity.HasValue || !selectValue(system).HasValue ||
+                !displays.ContainsKey(system.Subject.Identifier))) return null;
+            var eligible = systems.Where(system => system.DysonLuminosity >= 2m)
+                .Select(system => new { System = system, Distance = system.Subject.Identifier == birth
+                    ? 0m : distances.SingleOrDefault(value => value.Connects(birth, system.Subject.Identifier))?.LightYears })
+                .ToArray();
+            if (eligible.Any(value => !value.Distance.HasValue)) return null;
+            return eligible.OrderBy(value => value.Distance)
+                .ThenBy(value => value.System.Subject.Identifier, StringComparer.Ordinal)
+                .Take(MaximumCandidates).Select(value => new RuntimeSystemCandidate(
+                    value.System.Subject.Identifier, displays[value.System.Subject.Identifier].DisplayName,
+                    selectValue(value.System)!.Value)).ToArray();
         }
 
         private static int SupportingCount<T>(
@@ -376,7 +400,7 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentException("At least one generated system is required.", nameof(systems));
             SystemCandidates = RuntimeSystemCandidates.Project(
                 this.systems,
-                this.systemDisplays);
+                this.systemDisplays, birthSystemIdentifier, this.systemDistances);
             BirthSystemIdentifier = birthSystemIdentifier;
             GeneratedStarCount = generatedStarCount;
             UnknownEnumType = unknownEnumType;
