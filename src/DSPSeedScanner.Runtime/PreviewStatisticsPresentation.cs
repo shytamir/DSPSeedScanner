@@ -854,18 +854,22 @@ namespace DSPSeedScanner.Runtime
     public sealed class NearbyDeuteriumGasGiantSelection
     {
         public const decimal MaximumDistanceLy = 8.125m;
-        private const string StatisticKey = "deuterium:strongest-nearby";
+        public const decimal MinimumCollectionRate = 0.15m;
+        private const string StatisticKey = "deuterium:nearest-rich";
 
         private NearbyDeuteriumGasGiantSelection(
             bool attributionComplete,
             NearbyDeuteriumGasGiantCandidate? candidate)
         {
             AttributionComplete = attributionComplete;
-            Candidate = candidate;
+            NearestQualifying = candidate;
         }
 
         public bool AttributionComplete { get; }
-        public NearbyDeuteriumGasGiantCandidate? Candidate { get; }
+        public NearbyDeuteriumGasGiantCandidate? NearestQualifying { get; }
+        public NearbyDeuteriumGasGiantCandidate? Candidate =>
+            NearestQualifying?.Location.HostSystemDistanceLy <= MaximumDistanceLy
+                ? NearestQualifying : null;
 
         public NearbyDeuteriumTableRow? ProjectTableRow()
         {
@@ -907,7 +911,7 @@ namespace DSPSeedScanner.Runtime
         {
             if (candidate == null)
                 throw new ArgumentNullException(nameof(candidate));
-            if (candidate.Location.HostSystemDistanceLy > MaximumDistanceLy)
+            if (candidate.CollectionRate < MinimumCollectionRate)
                 return current;
             return current == null || Better(candidate, current)
                 ? candidate
@@ -918,8 +922,8 @@ namespace DSPSeedScanner.Runtime
             NearbyDeuteriumGasGiantCandidate? candidate,
             bool attributionComplete)
         {
-            if (candidate?.Location.HostSystemDistanceLy > MaximumDistanceLy)
-                throw new ArgumentException("The selected Deuterium giant is outside the distance bound.", nameof(candidate));
+            if (candidate?.CollectionRate < MinimumCollectionRate)
+                throw new ArgumentException("The selected Deuterium giant is below the rate minimum.", nameof(candidate));
             return new NearbyDeuteriumGasGiantSelection(
                 attributionComplete,
                 attributionComplete ? candidate : null);
@@ -936,7 +940,7 @@ namespace DSPSeedScanner.Runtime
                 return statistics;
 
             string text = Candidate == null
-                ? "No Deuterium gas giants within 8.125 ly"
+                ? "No rich Deuterium gas giants within 8.125 ly"
                 : Candidate.Location.DisplayDesignation + " - " +
                     Candidate.Location.FormattedDistance + " - " +
                     "Deuterium " + FormatRate(Candidate.CollectionRate);
@@ -950,9 +954,6 @@ namespace DSPSeedScanner.Runtime
             NearbyDeuteriumGasGiantCandidate candidate,
             NearbyDeuteriumGasGiantCandidate current)
         {
-            int rate = candidate.CollectionRate.CompareTo(current.CollectionRate);
-            if (rate != 0)
-                return rate > 0;
             int distance = candidate.Location.HostSystemDistanceLy.CompareTo(
                 current.Location.HostSystemDistanceLy);
             if (distance != 0)

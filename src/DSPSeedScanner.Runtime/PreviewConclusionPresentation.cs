@@ -192,7 +192,8 @@ namespace DSPSeedScanner.Runtime
                     attempt.HasCompleteBirthPlanetAttribution
                         ? attempt.BirthPlanetAttributions
                         : null,
-                    attempt.HomePlanetTopology),
+                    attempt.HomePlanetTopology,
+                    attempt.NearbyDeuteriumGasGiant),
                 Group(
                     detailReports,
                     displays,
@@ -268,7 +269,8 @@ namespace DSPSeedScanner.Runtime
             IReadOnlyDictionary<string, RuntimeSystemDisplay> displays,
             RuntimeSystemCandidates? candidates,
             IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets,
-            NormalizedHomePlanetTopology? homePlanetTopology)
+            NormalizedHomePlanetTopology? homePlanetTopology,
+            NearbyDeuteriumGasGiantSelection? deuterium = null)
         {
             ConclusionReport[] reports = source
                 .Where(report => report.Outcome != ComponentOutcome.Unknown &&
@@ -285,11 +287,23 @@ namespace DSPSeedScanner.Runtime
 
                 if (context == ConclusionContext.FreshStart)
                 {
-                    IReadOnlyList<PresentedConclusionCard> freshStart =
+                    var freshStart =
                         BuildFreshStartCards(
                             contextReports,
                             birthPlanets,
-                            homePlanetTopology);
+                            homePlanetTopology).ToList();
+                    NearbyDeuteriumGasGiantCandidate? giant = deuterium?.NearestQualifying;
+                    if (giant != null)
+                    {
+                        string line = "Rich Deuterium at " + giant.Location.DisplayDesignation +
+                            " - " + giant.Location.FormattedDistance;
+                        freshStart.Add(new PresentedConclusionCard(
+                            ConclusionContext.FreshStart, EvidenceStage.GalaxyPreview,
+                            ConclusionDefinition.Evaluate(giant.Location.HostSystemDistanceLy,
+                                ConclusionDefinition.RareAccessDistance),
+                            "FS-GAS-ROUTE", "Rich Deuterium", new[] { giant.Location.BodyIdentifier },
+                            Bound(line, MaximumLineCharacters), Array.Empty<string>()));
+                    }
                     if (freshStart.Count != 0)
                     {
                         groups.Add(new PresentedContextGroup(

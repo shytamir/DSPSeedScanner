@@ -37,7 +37,7 @@ namespace DSPSeedScanner.Plugin
         };
         private static readonly string[] DeuteriumHeadings =
         {
-            "Nearby Deuterium Gas Giant",
+            "Nearest Rich Deuterium Gas-Giant",
             "Distance",
             "Rate"
         };
