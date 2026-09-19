@@ -5,16 +5,21 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Active development. The owner accepted and activated the
-[Panel Improvement Roadmap](management/ROADMAP.md) on 2026-09-19, authorizing
-its execution and story-closing commits/pushes to `main`.
+**Current status:** The [Panel Improvement Roadmap](management/ROADMAP.md)
+is complete and owner-accepted. The owner authorized its execution and
+story-closing commits/pushes to `main` on 2026-09-19.
 
-**Current phase:** Phase 4 - owner-only final preview validation.
+**Current phase:** None. Phases 1-4 are complete.
 
-**Next action:** Owner preview for `PANEL-D02: Minimal owner preview and closure`.
-G1-G3 passed; M1 (Implementation evidence ready), M2 (Panels technically
-complete), and M3 (Ready for handoff) are declared. G4 and final acceptance
-remain pending. Use the [single-seed owner checklist](PANEL-PREVIEW-CHECK.md).
+**Next action:** None under this roadmap. All stories and epics E1-E6 are
+complete; G1-G4 passed. M1 (Implementation evidence ready), M2 (Panels
+technically complete), M3 (Ready for owner preview), and M4 (Owner accepted)
+are declared. Further work requires owner direction.
+
+**G4 evidence:** On 2026-09-19 the owner replied **“Pass for 1.3.110.”** to the
+[final preview checklist](PANEL-PREVIEW-CHECK.md). This accepts the exact
+candidate identified below and closes `PANEL-D02`; no defects were reported.
+Store publication and tagging remain outside this roadmap.
 
 **G2 evidence:** Solution and native-reference plugin builds: zero warnings
 or errors; Core tests 15/15 and Runtime tests 95/95; 196 repository document
@@ -35,34 +40,34 @@ commits and hosted artifacts do not replace it.
 
 | Panel story | State | Evidence |
 | --- | --- | --- |
-| PANEL-I01 | Technically complete | Read-only native unit inspection and numeric cases in [Panel evidence](specification/PANEL-EVIDENCE.md#native-resource-units); no game execution. |
-| PANEL-I02 | Technically complete | Read-only source and catalogue inspection; attribution cases in [Panel evidence](specification/PANEL-EVIDENCE.md#planet-and-star-attribution). |
-| PANEL-I03 | Technically complete | [Data routes and verification inputs](specification/PANEL-EVIDENCE.md#data-routes-and-verification-inputs); no unresolved investigation. |
-| PANEL-F01 | Technically complete | Solution build and Runtime projection checks; owner preview awaits G4. |
-| PANEL-F02 | Technically complete | Core boundary/coverage checks and Runtime split-deposit check; scarcity regressions retained. Owner preview awaits G4. |
-| PANEL-F03 | Technically complete | Solution/plugin builds and sibling attribution/independent-boundary checks. Owner preview awaits G4. |
-| PANEL-F04 | Technically complete | Rate/distance boundaries, nearest selection and scan/cache lifecycle checks; solution/plugin builds. Owner preview awaits G4. |
-| PANEL-M01 | Technically complete | System-total qualification and cache parity checks; solution build and Core/Runtime suites. Owner preview awaits G4. |
-| PANEL-M02 | Technically complete | Strict thresholds, split totals, finite-resource and nearest-selection checks; cache parity and solution build. Owner preview awaits G4. |
-| PANEL-S01 | Technically complete | Geometry, luminosity and distance-selection checks; solution/plugin builds. Owner preview awaits G4. |
-| PANEL-S02 | Technically complete | Star-group ordering, distance/column/color and lifecycle checks; solution/plugin builds. Owner preview awaits G4. |
-| PANEL-S03 | Technically complete | Aquatica eligibility, caps, distance origin, blank cells and overlapping-role checks; solution/plugin builds. Owner preview awaits G4. |
-| PANEL-T01 | Technically complete | Native-rate rounding, multiple-well and cache round-trip checks; solution/plugin builds. Owner preview awaits G4. |
-| PANEL-T02 | Technically complete | Per-parent moon order and home-only highlight checks; solution/plugin builds. Owner preview awaits G4. |
-| PANEL-T03 | Technically complete | Home resource fragments, strict distances and four-row displayed-candidate checks; solution build and Runtime regressions. Owner preview awaits G4. |
-| PANEL-T04 | Technically complete | Independent amount/distance boundary combinations and unchanged-cell checks; solution build and Runtime regressions. Owner preview awaits G4. |
-| PANEL-D01 | Technically complete | Frozen candidate and package/build verification reports prepared; identity recorded above. |
-| PANEL-D02 | Ready for owner preview | Package, reports and [concise checklist](PANEL-PREVIEW-CHECK.md) prepared; 202 document links resolved and G3 passed. Owner result for the frozen candidate is required at G4 before closure. |
+| PANEL-I01 | Complete | Read-only native unit inspection and numeric cases in [Panel evidence](specification/PANEL-EVIDENCE.md#native-resource-units); no game execution. |
+| PANEL-I02 | Complete | Read-only source and catalogue inspection; attribution cases in [Panel evidence](specification/PANEL-EVIDENCE.md#planet-and-star-attribution). |
+| PANEL-I03 | Complete | [Data routes and verification inputs](specification/PANEL-EVIDENCE.md#data-routes-and-verification-inputs); no unresolved investigation. |
+| PANEL-F01 | Complete | Solution build and Runtime projection checks. |
+| PANEL-F02 | Complete | Core boundary/coverage checks and Runtime split-deposit check; scarcity regressions retained. |
+| PANEL-F03 | Complete | Solution/plugin builds and sibling attribution/independent-boundary checks. |
+| PANEL-F04 | Complete | Rate/distance boundaries, nearest selection and scan/cache lifecycle checks; solution/plugin builds. |
+| PANEL-M01 | Complete | System-total qualification and cache parity checks; solution build and Core/Runtime suites. |
+| PANEL-M02 | Complete | Strict thresholds, split totals, finite-resource and nearest-selection checks; cache parity and solution build. |
+| PANEL-S01 | Complete | Geometry, luminosity and distance-selection checks; solution/plugin builds. |
+| PANEL-S02 | Complete | Star-group ordering, distance/column/color and lifecycle checks; solution/plugin builds. |
+| PANEL-S03 | Complete | Aquatica eligibility, caps, distance origin, blank cells and overlapping-role checks; solution/plugin builds. |
+| PANEL-T01 | Complete | Native-rate rounding, multiple-well and cache round-trip checks; solution/plugin builds. |
+| PANEL-T02 | Complete | Per-parent moon order and home-only highlight checks; solution/plugin builds. |
+| PANEL-T03 | Complete | Home resource fragments, strict distances and four-row displayed-candidate checks; solution build and Runtime regressions. |
+| PANEL-T04 | Complete | Independent amount/distance boundary combinations and unchanged-cell checks; solution build and Runtime regressions. |
+| PANEL-D01 | Complete | Frozen candidate and package/build verification reports prepared; identity recorded above. |
+| PANEL-D02 | Complete | Package, reports and [concise checklist](PANEL-PREVIEW-CHECK.md); 202 document links resolved at G3. Owner acceptance at G4 is recorded above. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define
 the requested panel changes. The roadmap owns their delivery scope, gates,
 and execution restrictions. Specifications describe the implemented panel
-behavior; technical completion does not claim owner acceptance or runtime
-readability validation.
+behavior; the technical evidence and final owner acceptance are recorded
+separately above.
 
 The previous [User Feedback Roadmap](archive/USER-FEEDBACK-ROADMAP.md) remains
 completed history. Older feature requests and technical debt are not activated
-by this work, and historical validation procedures do not override the active
+by this work, and historical validation procedures do not override this
 roadmap's prohibition on implementer game execution, environment changes, or
 save access.
 
