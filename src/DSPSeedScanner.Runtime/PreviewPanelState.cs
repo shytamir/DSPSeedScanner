@@ -350,7 +350,7 @@ namespace DSPSeedScanner.Runtime
                     sessionId,
                     corner,
                     PreviewPanelOperationalState.Unsupported,
-                    "Unsupported runtime",
+                    "Game not supported",
                     UnsupportedDetail(diagnosticCode),
                     null),
                 PreviewResolutionState.Busy => View(
@@ -358,14 +358,14 @@ namespace DSPSeedScanner.Runtime
                     corner,
                     PreviewPanelOperationalState.Failed,
                     "Scanner unavailable",
-                    "Another runtime operation was active",
+                    "The scanner was busy with another request",
                     null),
                 PreviewResolutionState.Failed => View(
                     sessionId,
                     corner,
                     PreviewPanelOperationalState.Failed,
                     "Scan failed",
-                    "No complete result was published",
+                    "The cluster scan could not finish",
                     null),
                 _ => throw new ArgumentOutOfRangeException(nameof(state))
             };
@@ -406,8 +406,8 @@ namespace DSPSeedScanner.Runtime
             diagnosticCode switch
             {
                 "game-version-mismatch" or "request-identity-unsupported" =>
-                    "This DSP version is outside the supported contract",
-                _ => "Generation runtime differs from the supported contract"
+                    "This DSP version is not supported",
+                _ => "The scanner cannot read this game setup"
             };
 
         private static void ValidateSession(long sessionId)

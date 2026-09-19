@@ -23,13 +23,14 @@ results to see how the seed looks for:
 Previously scanned seeds load from the local cache automatically.
 
 Fresh-start guidance covers the starter giant, useful Fire Ice deposits,
-sibling-moon power and nearby rich Deuterium supply. Megafactory guidance
-highlights qualified rare-resource systems and plentiful mixed deposits;
+power on neighboring moons and nearby rich Deuterium supply. Megafactory guidance
+highlights systems with useful rare resources and plentiful deposits;
 sphere candidates favor nearby luminous stars.
 
 The statistics panel shows oil rates, moon numbers and resource colors.
-Its notable-star table adds distance, maximum sphere radius and contained
-orbits, followed by Aquatica hosts nearest to the brightest star.
+Its notable-star table shows distance, maximum sphere radius and the number
+of planets whose orbits fit inside it, followed by systems with Aquatica
+planets nearest to the brightest star.
 
 The panel appears in the bottom-right corner by default. You can move it by
 changing `Presentation.PanelCorner` in the generated configuration file:
@@ -52,8 +53,9 @@ game folder.
 
 ## Compatibility
 
-This release supports Dyson Sphere Program `0.10.34.28529`. Other game
-versions or missing required game APIs are reported as unsupported.
+DSP Seed Scanner supports Dyson Sphere Program `0.10.34.28529`. Other game
+versions are reported as unsupported. The scanner also stops if it cannot
+read the information it needs from the game.
 
 DSP Seed Scanner can run alongside other BepInEx plugins. Their changes may
 affect the generated cluster, scan results, or runtime behavior, and conflicts
@@ -65,11 +67,5 @@ cannot always be detected automatically.
 
 DSP Seed Scanner is an unofficial community project. Dyson Sphere Program and
 its assets belong to their respective owners.
-
-![Home-system scan details](https://shytamir.github.io/DSP_Guide/assets/images/mod/seed-scanner-home-system-detail.png)
-
-![Cluster resources and nearby opportunities](https://shytamir.github.io/DSP_Guide/assets/images/mod/seed-scanner-cluster-resources-detail.png)
-
-![Unipolar magnets and notable stars](https://shytamir.github.io/DSP_Guide/assets/images/mod/seed-scanner-strategic-stars-detail.png)
 
 *From your home system to the most exotic corners of your cluster.*

@@ -282,7 +282,7 @@ namespace DSPSeedScanner.Plugin
                 previewPanel.ShowUnavailable(
                     sessionId,
                     ConfiguredPanelCorner(),
-                    exception.Message);
+                    "The scanner could not access the game files");
                 Logger.LogError("Filesystem: " + exception.Diagnostic);
             }
             catch (Exception exception)
@@ -292,7 +292,7 @@ namespace DSPSeedScanner.Plugin
                 previewPanel.ShowUnavailable(
                     sessionId,
                     ConfiguredPanelCorner(),
-                    "Runtime identity could not be read");
+                    "The scanner could not read the game information");
                 Logger.LogError("Completed preview load could not be resolved: " + exception);
             }
         }

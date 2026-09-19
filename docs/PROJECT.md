@@ -5,16 +5,28 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** The [Panel Improvement Roadmap](management/ROADMAP.md)
-is complete and owner-accepted. The owner authorized its execution and
-story-closing commits/pushes to `main` on 2026-09-19.
+**Current status:** Preparing a `1.4` release candidate, as requested by the
+owner on 2026-09-19. Publishing will be performed manually by the owner after
+candidate review; no publication or tag is authorized for the implementer.
 
-**Current phase:** None. Phases 1-4 are complete.
+**Current phase:** Release preparation: source/package wording and version
+review, followed by a separate review of the produced artifact.
 
-**Next action:** None under this roadmap. All stories and epics E1-E6 are
+**Next action:** Build and identify the `1.4` candidate, complete both review
+passes, and provide the verified ZIP for owner review. Game execution,
+environment changes and save access remain prohibited for the implementer.
+
+**Release review pass 1:** Source version routing and player-facing copy
+reviewed. Obsolete package screenshots were removed; product documentation
+and error wording were clarified. The existing 15 Core and 95 Runtime checks
+pass. Artifact review and final candidate identification remain pending.
+
+The [Panel Improvement Roadmap](management/ROADMAP.md) is complete and
+owner-accepted. The owner authorized its execution and story-closing pushes
+on 2026-09-19. All stories and epics E1-E6 are
 complete; G1-G4 passed. M1 (Implementation evidence ready), M2 (Panels
 technically complete), M3 (Ready for owner preview), and M4 (Owner accepted)
-are declared. Further work requires owner direction.
+are declared. Release preparation is separate from that completed roadmap.
 
 **G4 evidence:** On 2026-09-19 the owner replied **“Pass for 1.3.110.”** to the
 [final preview checklist](PANEL-PREVIEW-CHECK.md). This accepts the exact
@@ -27,7 +39,7 @@ links resolved; diff/scope review clean. Story commits are on `main` and their
 hosted build/test/package runs through `4726a34` succeeded. No implementer game
 execution, environment changes, deployment, or save access occurred.
 
-**Candidate:** `1.3.110`, built from
+**Accepted panel candidate:** `1.3.110`, built from
 `4726a344ebe9e5b3fa40ab5046a05cb24d3f9b6d`; ZIP SHA-256
 `0ca31a412208b319f740665781d198c7a183b510549ac6da9e5e8155376a1323`.
 The downloaded CI package passed the existing build-artifact and package

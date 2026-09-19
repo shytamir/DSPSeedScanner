@@ -1,8 +1,8 @@
 # Thunderstore Package Contract
 
 The GitHub Actions workflow builds, validates, and retains an installable
-presentation-neutral scanner-core package. It does not publish or promote a
-Thunderstore release.
+scanner plugin package, including its New Game panels. It does not publish or
+promote a Thunderstore release.
 
 ## ZIP layout
 
@@ -36,10 +36,15 @@ Assembly/file version:  M.m.N.0
 Diagnostic label:       M.m.N.<short-commit>
 ```
 
-The current release line is `1.3`. The same generated semantic version is used
-by the manifest and BepInEx plugin attribute; all three scanner assemblies use
-the generated four-part assembly/file version. The diagnostic commit suffix is
-kept in product metadata and build reports.
+`VERSION` is the source for the selected major/minor line. The same generated
+semantic version is used by the manifest and BepInEx plugin attribute; all
+three scanner assemblies use the generated four-part assembly/file version.
+The diagnostic commit suffix is
+kept in product metadata and build reports. The checked-in `BuildVersion.cs`
+contains local-development defaults; the workflow replaces them before the
+versioned plugin build. Those defaults are not a release package identity.
+Candidate identity, acceptance and publication state belong in
+[PROJECT.md](PROJECT.md).
 
 ## Build and validation
 
