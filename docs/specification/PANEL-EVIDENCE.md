@@ -81,3 +81,53 @@ orbit lies outside the sphere. A moon crossing the boundary must not count as
 contained. Star cases cover luminosity 2.0, O-spectrum blue giants, an ordinary
 brightest star, and differing home/brightest distance order. These inputs are
 synthetic geometry/projection fixtures, not game-generated seed observations.
+
+## Data routes and verification inputs
+
+The existing Core evaluator, Runtime projection/coordinators, Plugin native
+adapter/IMGUI renderer, and console test suites provide the required routes:
+
+| Behavior | Minimal route and pure verification |
+| --- | --- |
+| Starter giant and sibling power | Preserve product facts; project a single verdict. Carry verified parent IDs with birth-body evidence for sibling attribution. Check both giant products and independent moon boundaries. |
+| Home Fire Ice adequacy | Retain amount/groups in both existing birth-system aggregators. Check split deposits, equality, insufficiency and unavailable coverage without changing common-resource scarcity. |
+| Rich Deuterium | Reuse individual giant candidates and home distances, comparing unrounded rates. Retain a nearest qualifying candidate for conclusions independently of the statistics distance cap. |
+| Targeted rares and plentiful systems | Accumulate per-system finite totals during the existing complete scan. Existing cluster-wide rare totals cannot establish a particular system's quantity. Select nearest qualifying systems per requested resource, merge shared-system descriptions, and use existing distance columns. Preserve nearest-first selection; do not introduce combination scoring. Retain semantic reports, not an extra raw-system cache. |
+| Sphere conclusions and notable stars | Reuse system IDs/distances and native geometry; extend preview-only star evidence with geometry, origins and Aquatica membership. Check luminosity boundaries, distance order, exclusive sphere roles and the separate five-host Aquatica group. |
+| Oil and moon/home formatting | Carry the native oil multiplier through group-only extraction to the home resource statistic. Extend the existing body inventory with radius/home facts; check native rounding, per-parent ordinals and home-only whole-row highlighting. |
+| Rare and magnet colors | Derive colors from existing selected candidate locations and numeric quantities. Intersect the four displayed resource rows by system ID; no new scan or retained cache fields are needed for colors. Check strict boundaries and independent cells. |
+
+The presentation bound is three subjects per conclusion card; statistical
+rare rows retain their two nearest planet candidates. Distance conclusions
+reuse the existing 2.5/10 ly range; plentiful systems do not introduce a new
+quantity score or a new range. Existing luminosity, shell and containment
+bands remain where the owner did not replace them.
+
+The cache currently uses schema 12 and includes definition/contract versions
+in its key. Changed semantic conclusions must invalidate old entries; the oil
+payload change also requires a schema increment and read/write round-trip
+checks. Keep fresh preview attribution outside the persisted raw-result
+payload, as the existing lifecycle already does. Preserve cancellation,
+incomplete-coverage and cache isolation checks.
+
+The solution and Runtime/Core console suites execute repository-owned .NET
+code only. The plugin can compile against read-only installed references;
+hosted CI uses source-only declarations. The existing main-branch workflow
+builds, tests and validates the three-DLL package. None of these checks is a
+Unity rendering or gameplay test.
+
+For the final owner recipe, existing attributable preview captures provide
+two fixed inputs on DSP 0.10.34.28529, algorithm 20200403, 64 stars and 1x
+resources: `24242424` has one home-giant moon (`feed06-preview-current.tsv`,
+matching assembly hash above); `16315224` has three home-giant moons and a
+Deuterium starter (`spec06-preview.tsv`, runtime-version header). These files
+are prior inspection artifacts in the shared SPEC01 probe directory, not
+saves. Use the first for the main two-panel check and the second only for the
+sibling-power/ordinal check. The default combat configuration can be used;
+none of the changed rules depends on a new combat preset. These captures
+establish seed selection, not visual acceptance of the new candidate.
+
+The handoff should give these exact inputs, the candidate identity, a short
+expected-layout checklist and a simple pass/problem reply. Numeric and rare
+edge cases belong in synthetic automated tests; the owner need not locate
+additional seeds, measure thresholds or repeat the automated test matrix.

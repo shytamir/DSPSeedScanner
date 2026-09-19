@@ -9,16 +9,17 @@ progress, acceptance, closure, and release state.
 [Panel Improvement Roadmap](management/ROADMAP.md) on 2026-09-19, authorizing
 its execution and story-closing commits/pushes to `main`.
 
-**Current phase:** Phase 1 - human-free investigations.
+**Current phase:** Phase 2 - implementation.
 
-**Next story:** `PANEL-I03: Minimal data routes and verification inputs`. G1-G4 are pending;
-no milestone has been declared. Phase 2 cannot begin until G1 passes.
+**Next story:** `PANEL-F01: Single starter-giant conclusion`. G1 passed and
+M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 
 | Panel story | State | Evidence |
 | --- | --- | --- |
 | PANEL-I01 | Technically complete | Read-only native unit inspection and numeric cases in [Panel evidence](specification/PANEL-EVIDENCE.md#native-resource-units); no game execution. |
 | PANEL-I02 | Technically complete | Read-only source and catalogue inspection; attribution cases in [Panel evidence](specification/PANEL-EVIDENCE.md#planet-and-star-attribution). |
-| PANEL-I03; all implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
+| PANEL-I03 | Technically complete | [Data routes and verification inputs](specification/PANEL-EVIDENCE.md#data-routes-and-verification-inputs); no unresolved investigation. |
+| All implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define
 the requested panel changes. The roadmap owns their delivery scope, gates,
