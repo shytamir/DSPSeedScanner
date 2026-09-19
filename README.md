@@ -25,17 +25,14 @@ Other BepInEx plugins may be installed alongside DSP Seed Scanner. The scanner
 uses the live runtime it receives; generation changes or conflicts introduced
 by another plugin may affect its results and are not always detectable.
 
-## Project status
+## Project documentation
 
-[docs/PROJECT.md](docs/PROJECT.md) is the authoritative source for current
-project status and steering decisions. The repository is in maintenance mode
-with no active user story. The latest completed scope, acceptance gates, and
-implementation history are preserved in the archived
-[User Feedback Roadmap](docs/archive/USER-FEEDBACK-ROADMAP.md); the current
-[maintenance roadmap](docs/management/ROADMAP.md) authorizes no new work.
+[PROJECT.md](docs/PROJECT.md) is the sole authority for project steering and
+work status. The [Panel Improvement Roadmap](docs/management/ROADMAP.md)
+defines delivery scope, execution restrictions, and validation gates.
 
-The [documentation index](docs/INDEX.md) lists the accepted specifications,
-delivery notes, management documents, and archived planning material.
+The [documentation index](docs/INDEX.md) links specifications, delivery notes,
+management documents, and archived scope and evidence.
 
 ## Development
 
@@ -57,7 +54,7 @@ integration boundary are documented in the
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
 [project steering document](docs/PROJECT.md), and the current
-[maintenance roadmap](docs/management/ROADMAP.md) before changing scope or
+[Panel Improvement Roadmap](docs/management/ROADMAP.md) before changing scope or
 behavior.
 
 ## License

@@ -1,10 +1,11 @@
 # Release Candidate 1.0.85 Validation
 
-**Status:** Approved by the owner on 2026-08-14 after final human validation.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
-This record identified the single candidate that established the roadmap's
-**Release candidate ready** milestone. Later documentation-only builds did not
-supersede it.
+This record identifies the tested candidate and preserves its build, package,
+and runtime evidence.
 
 ## Candidate identity
 
@@ -46,8 +47,8 @@ and product version `1.0.85.ab1ad34`. Their SHA-256 values were:
 - The exact candidate loaded under BepInEx `5.4.17` with the normal three-mod
   development set: DSP Seed Scanner, DSP Mirror Blueprint, and DSP Guide
   Check. Its captured runtime log contained no warning, error, or exception.
-- Owner validation accepted FEED-10 on this candidate after confirming the
-  completed statistics panel and its Notable stars subsection. Runtime
+- The owner inspected the statistics panel and its Notable stars subsection
+  on this candidate. Runtime
   fixtures covered cache miss and hit, Peace and Combat reuse, Dark Fog toggle
   reuse, seed replacement, preview exit, return to a prior seed, scrolling,
   every supported corner pairing, cancellation, and multi-plugin inventory.
@@ -56,11 +57,7 @@ and product version `1.0.85.ab1ad34`. Their SHA-256 values were:
 
 ## Release boundary
 
-No release-blocking residual was identified. TD-004 concerns containment for a
+TD-004 concerns containment for a
 developer-only probe write and does not affect ordinary player operation. A
 Unity player build, scene validation, and prefab validation are not applicable
 to this BepInEx package.
-
-The **Release candidate ready** milestone passed for the exact candidate above.
-The owner then completed final human validation against that candidate and
-explicitly accepted it, passing the **Release candidate approved** milestone.

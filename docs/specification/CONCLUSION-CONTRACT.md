@@ -1,6 +1,8 @@
 # Seed Conclusion Contract
 
-**Status:** Accepted on 2026-08-11.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 **Contract version:** `0.1.0`
 
@@ -268,9 +270,8 @@ identified. Complete but preference-dependent evidence resolves to
 
 ## Validation obligations addressed by SPEC-06
 
-This contract became an implementation baseline with the accepted matching
-predicate and preference-range definition. SPEC-06 addressed these required
-cases:
+This contract uses the matching predicate and preference-range definition.
+SPEC-06 specifies these required cases:
 
 - stable positive evidence across the full accepted range;
 - stable negative or caution evidence where that outcome is allowed;

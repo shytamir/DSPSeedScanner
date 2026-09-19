@@ -1,6 +1,8 @@
 # SPEC-01 Evidence and Experiment Record
 
-**Status:** Completed investigation record supporting the accepted contract.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 ## Question
 
@@ -101,8 +103,6 @@ the baseline preview hash was
 
 ## Outcome
 
-The investigation produced the
-[generation identity contract](GENERATION-IDENTITY.md). The story reached its
-defined evidence deliverables without assuming acceptance. The contract was
-subsequently accepted on 2026-08-11 under its documented limitations after
-SPEC-02 confirmed that the intended BepInEx boundary could support it.
+The observations support the [generation identity contract](GENERATION-IDENTITY.md).
+SPEC-02's runtime evidence establishes the intended BepInEx access boundary;
+the contract retains the documented limitations.

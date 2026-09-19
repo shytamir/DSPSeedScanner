@@ -1,8 +1,8 @@
 # Implementation-Planning Boundary
 
-**Status:** Accepted on 2026-08-11 and fulfilled by the completed scanner-core
-roadmap. This is a historical implementation handoff, not current delivery
-steering.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This handoff prepared closure of product specification without creating
 implementation stories. It identified the smallest useful product contract,
@@ -17,8 +17,8 @@ generate the required preview and raw evidence. The accepted contracts define
 deterministic identity, evidence stages, neutral outcomes, predicates, ranges,
 validation fixtures, and declined claims.
 
-This completed specification roadmap did not itself approve implementation.
-The scanner-core roadmap was subsequently accepted and completed.
+Implementation authorization and delivery dispositions are recorded in
+[PROJECT.md](../PROJECT.md).
 
 ## Historical normative baseline
 
@@ -118,7 +118,7 @@ quantitative range under different settings.
 | Cross-machine reproducibility not established | Make no shared-cache or byte-identical cross-machine guarantee. Initial results are local and carry full provenance. |
 | Presentation versus the scanner-core contract | The core produced presentation-neutral conclusions and diagnostics; UI hooks, layout, and copy were deferred from this handoff. |
 
-No contradiction requires reopening an accepted specification artifact.
+The baseline's consistency rationale is recorded below.
 
 ## Required architecture boundaries
 
@@ -230,7 +230,7 @@ first raw proof remained a developer-invoked harness until the raw runtime
 gates passed. This sequencing limited risk without prescribing classes,
 frameworks, schedules, or estimates.
 
-## Accepted SPEC-07 resolution
+## SPEC-07 planning rationale
 
 Acceptance confirmed that:
 
@@ -239,8 +239,4 @@ Acceptance confirmed that:
 3. the architecture and runtime gates are sufficient implementation
    constraints;
 4. the deferred list is outside the initial implementation plan; and
-5. implementation work would be planned in a separate roadmap, which was later
-   completed and archived.
-
-Acceptance without semantic change closed the product-specification phase on
-2026-08-11.
+5. implementation scope belongs in a separate roadmap.

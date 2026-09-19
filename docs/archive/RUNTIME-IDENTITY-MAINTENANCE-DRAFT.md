@@ -1,18 +1,14 @@
 # Runtime Identity Maintenance Draft
 
-**Status:** Archived after HOTFIX-01 and FSOR-01 were implemented and passed
-their repository acceptance gates on 2026-08-13. COMPAT-02 was retired without
-implementation. External confirmation from the original reporter was not
-recorded before archival.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
-This record preserved the completed path-resolution hotfix, retired proposal
-to change conclusion eligibility, and a separate filesystem-robustness story.
+This record describes a path-resolution hotfix, a conclusion-eligibility
+proposal, and a separate filesystem-robustness story.
 Filesystem recovery did not broaden conclusion eligibility.
 
 ## HOTFIX-01: Resolve pathless game assemblies safely
-
-**State:** Implemented; automated, game-linked build, and package gates passed.
-Confirmation on the reporting user's affected installation was not recorded.
 
 **User story:** As a player using the supported DSP version, I want the New
 Game scanner to start when the loaded game assembly exposes no filesystem
@@ -54,7 +50,7 @@ assembly hash, changing any conclusion outcome or threshold, redefining cache
 identity, migrating existing cache entries, supporting another DSP version,
 or claiming compatibility with every loader or plugin combination.
 
-**Implemented:** Runtime fingerprinting now prefers a readable loaded-assembly
+**Implementation details:** Runtime fingerprinting now prefers a readable loaded-assembly
 path, falls back to BepInEx's canonical managed `Assembly-CSharp.dll`, and
 records `unavailable` instead of throwing when neither file can be read.
 Preloader inventory retains readable hashes and records an unavailable item
@@ -68,12 +64,9 @@ The existing readable path won over fallback and retained the same SHA-256
 format. The panel fixture kept the identity failure visible and bounded. The
 Release solution built without warnings; 14 core checks and 61 runtime checks
 passed; the installed-game-linked plugin build and exact artifact and
-Thunderstore-package validators passed. The reporting user's confirmation is
-still required to close the final gate.
+Thunderstore-package validators passed.
 
 ## COMPAT-02: Apply conclusion gates by evidence basis
-
-**State:** Retired without implementation.
 
 The investigation found no demonstrated conclusion-gate defect behind the
 reported failure. HOTFIX-01 addressed the actual empty-path filesystem failure
@@ -101,8 +94,6 @@ Any future narrowing must begin as a separately authorized specification
 investigation for the affected predicate, not as this compatibility story.
 
 ## FSOR-01: Make runtime filesystem access resilient
-
-**State:** Implemented; acceptance gate passed on 2026-08-13.
 
 **User story:** As a player, I want scanner-owned file access to recover from
 missing, blank, stale, inaccessible, or concurrently changed paths, so a
@@ -173,7 +164,7 @@ calls, developer-probe output hardening tracked as
 changing build/package scripts, removing developer probes, UI redesign, or
 supporting another plugin manager.
 
-**Implemented:** One resolver now selects the active runtime context from the
+**Implementation details:** One resolver now selects the active runtime context from the
 current DSP executable, with BepInEx game-root fallback only when that path is
 unavailable. Required root and assembly conflicts fail closed; plugin,
 preloader, and configuration paths cannot select another installation.
@@ -191,10 +182,3 @@ touch, trim, delete, clear, and guarded setting failures. The Release solution
 built without warnings; 14 core checks and 66 runtime checks passed; the
 installed-game-linked plugin build passed; and exact versioned artifact and
 Thunderstore package validation passed for `1.0.0`.
-
-## Sequence
-
-HOTFIX-01 retained the existing conclusion semantics. COMPAT-02 was retired
-after investigation and did not proceed to implementation. FSOR-01 was an
-implemented filesystem-robustness correction that preserved the existing
-identity and conclusion contracts.

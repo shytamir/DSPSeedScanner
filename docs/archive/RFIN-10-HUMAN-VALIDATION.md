@@ -1,14 +1,15 @@
 # RFIN-10 Human Validation
 
-**Status:** Passed on 2026-08-12 against the supported installed runtime at
-3840 by 2160.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
-The validation used successive local release-candidate builds while resolving
-observed defects, followed by the accepted build on the supported unmodified
-runtime identity documented in [project steering](../PROJECT.md). The final
-build retained the three scanner-owned DLL boundary.
+The 2026-08-12 validation at 3840 by 2160 used successive local candidate
+builds while resolving observed defects. The final tested build used the
+supported unmodified runtime identity and retained the three scanner-owned
+DLL boundary.
 
-The sequence below records the acceptance observations. Screenshots and direct
+The sequence below records the preview observations. Screenshots and direct
 runtime feedback informed the repair iterations.
 
 ## Seven-step sequence
@@ -32,14 +33,13 @@ runtime feedback informed the repair iterations.
    available without Combat-only Dark Fog metadata, and no blocking residual
    presentation, pacing, cache, or lifecycle defect was recorded.
 
-## Acceptance record
+## Observed behavior
 
-All seven steps passed on 2026-08-12. The final uncached scan retained visible,
+The final uncached scan retained visible,
 monotonic planet progress and completed without observable frame drops. The
 four-context panel, Dark Fog metadata boundary, scrolling, cache reuse, seed
-replacement, preview exit, and Peace-mode behavior worked as specified. No
-residual human-validation blocker was recorded.
+replacement, preview exit, and Peace-mode behavior worked as specified.
 
-Return to the completed
+Return to the
 [presentation refinement roadmap](PRESENTATION-REFINEMENT-ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

@@ -1,24 +1,24 @@
 # Documentation Index
 
-This index provides navigation only. [Project steering](PROJECT.md) owns
-current status and decisions; completed roadmap history resides in the
-[archive](archive/INDEX.md).
+This index provides navigation only. [PROJECT.md](PROJECT.md) is the sole
+authority for project steering and all current and historical work status.
 
 ## Steering and management
 
-- [Project steering](PROJECT.md): Authoritative accepted decisions and current
-  tracked project status.
-- [Maintenance roadmap](management/ROADMAP.md): Inactive placeholder recording
-  that no roadmap or user story is active.
-- [Feature-request register](management/FEATURE-REQUESTS.md): Unauthorized
-  product requests retained with their evaluation gates and scope boundaries.
-- [Technical debt register](management/TECHNICAL-DEBT.md): Explicitly deferred
-  engineering obligations, including pending developer-probe failure
-  containment, temporary constraints, and mandatory closure gates.
+- [Project steering](PROJECT.md): Decisions, authorization, progress,
+  blockers, and current and historical dispositions.
+- [Panel validation findings](management/PANEL-VALIDATION-FINDINGS.md): Owner
+  observations and requirements for the panel changes.
+- [Panel improvement roadmap](management/ROADMAP.md): Epics, stories,
+  execution boundaries, phase-gate and milestone definitions, and owner handoff.
+- [Feature-request register](management/FEATURE-REQUESTS.md): Request scope,
+  rationale, and evaluation criteria.
+- [Technical debt register](management/TECHNICAL-DEBT.md): Engineering
+  obligations, technical evidence, and evaluation criteria.
 - [Scanner core conformance](CONFORMANCE.md): Checks, supported-runtime
-  evidence, operating bounds, and residual limits for the implemented core.
+  evidence, operating bounds, and residual limits for the scanner core.
 
-## Accepted specification
+## Specification
 
 - [Generation identity contract](specification/GENERATION-IDENTITY.md): Inputs
   and compatibility information required to reproduce generated evidence.
@@ -33,11 +33,10 @@ current status and decisions; completed roadmap history resides in the
 - [Seed conclusion contract](specification/CONCLUSION-CONTRACT.md): Neutral
   outcome semantics, supported contexts, tradeoffs, and declined claims.
 - [Predicate and validation catalogue](specification/PREDICATE-RANGE-VALIDATION.md):
-  Accepted definition `0.1.0`, thresholds, settings scopes, and validation
-  cases.
+  Definition `0.1.0`, thresholds, settings scopes, and validation cases.
 - [Scanner-core implementation boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md):
-  Historical planning boundary, runtime gates, deferrals, and validation
-  obligations that governed the completed scanner core.
+  Historical planning scope, runtime gates, exclusions, and validation
+  obligations for the scanner core.
 
 ## Delivery
 
@@ -49,25 +48,20 @@ current status and decisions; completed roadmap history resides in the
 
 ## Archive
 
-- [Archive index](archive/INDEX.md): Navigation for completed or superseded
-  planning documents.
+- [Archive index](archive/INDEX.md): Navigation for historical scope and evidence.
 - [Product specification planning roadmap](archive/PLANNING-ROADMAP.md):
-  Completed SPEC-01 through SPEC-07 story record and the presentation work it
-  deferred at that time.
-- [Scanner core roadmap](archive/CORE-ROADMAP.md): Completed IMPL-01 through
-  IMPL-09 implementation and acceptance record.
-- [New Game presentation roadmap](archive/PRESENTATION-ROADMAP.md): Completed
-  PRES-01 through PRES-07 hands-off panel implementation, validation, and
-  refinement handoff.
+  SPEC-01 through SPEC-07 scope and presentation planning boundaries.
+- [Scanner core roadmap](archive/CORE-ROADMAP.md): IMPL-01 through IMPL-09
+  scope, implementation details, and validation evidence.
+- [New Game presentation roadmap](archive/PRESENTATION-ROADMAP.md): PRES-01
+  through PRES-07 panel scope, implementation details, and validation evidence.
 - [Presentation refinement roadmap](archive/PRESENTATION-REFINEMENT-ROADMAP.md):
-  Completed RFIN-01 through RFIN-10 scope, implementation history, and passed
-  acceptance gates.
-- [User Feedback Roadmap](archive/USER-FEEDBACK-ROADMAP.md): Latest completed
-  FEED-01 through FEED-10 delivery record, phase gates, and owner acceptance.
+  RFIN-01 through RFIN-10 scope, implementation details, and validation evidence.
+- [User Feedback Roadmap](archive/USER-FEEDBACK-ROADMAP.md): FEED-01 through
+  FEED-10 scope, gate definitions, implementation details, and validation evidence.
 - [Runtime identity maintenance record](archive/RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
-  Completed path-resolution and filesystem-robustness work plus the retired
-  compatibility proposal.
-- [RFIN-10 human validation](archive/RFIN-10-HUMAN-VALIDATION.md): Passed
-  seven-step installed 4K acceptance record for the refinement roadmap.
+  Path resolution, filesystem robustness, and compatibility proposal scope.
+- [RFIN-10 human validation](archive/RFIN-10-HUMAN-VALIDATION.md): Seven-step
+  installed 4K observations for the refinement roadmap.
 - [Release Candidate 1.0.85 validation](archive/RELEASE-CANDIDATE-1.0.85.md):
-  Exact candidate identity, readiness evidence, and final owner approval.
+  Candidate identity and technical/runtime evidence.

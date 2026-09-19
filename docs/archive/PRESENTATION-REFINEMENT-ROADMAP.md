@@ -1,9 +1,8 @@
 # Presentation Refinement Roadmap
 
-**Status:** Completed and accepted on 2026-08-12. RFIN-01 through RFIN-10
-passed their acceptance gates, including the final installed 4K validation.
-
-**Active user story:** None.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This roadmap refined the accepted New Game panel without reopening its
 lifecycle, cache, or 37% by 37% viewport contracts. It replaced mechanical
@@ -24,10 +23,9 @@ redundant trait conclusions were removed.
   shown only when it is uniquely useful and brief.
 - Strength, preference-sensitive, and limitation remain the three columns.
   Unknown and not-applicable results remain omitted.
-- Removing Dark Fog judgments removed every emitted tradeoff and
-  caution. The approved provisional `T` and `C` badge treatment is therefore
-  retained as a deferred presentation rule, not an active story, until a future
-  accepted conclusion emits one of those outcomes.
+- Removing Dark Fog judgments removed every emitted tradeoff and caution.
+  The provisional `T` and `C` badge rule applies only to conclusions that emit
+  those outcomes; see [PROJECT.md](../PROJECT.md) for its disposition.
 - Player-visible names are evidence-backed. The presenter never invents a
   planet or assigns separate facts to the same planet without attribution.
 - Lists contain at most three examples. Larger sets use an approved natural
@@ -57,10 +55,6 @@ phase.
 
 ### RFIN-01: Add scan recovery frames
 
-**State:** Accepted on 2026-08-12 without semantic change. Its initial
-recovery-frame implementation was superseded during RFIN-10 validation by the
-scanner-owned terrain-worker correction.
-
 As a player inspecting a new seed, I want the automatic scan to disrupt the
 preview less, even if complete conclusions arrive later.
 
@@ -75,7 +69,7 @@ human gate records cache-miss smoothness and duration.
 **Out of scope:** Background or parallel generation, adaptive frame budgets,
 yielding while DSP generation statics are installed, or scan acceleration.
 
-**Implemented:** The cooperative complete-cluster operation alternated each
+**Implementation details:** The cooperative complete-cluster operation alternated each
 planet-generation advance with one recovery-only advance. The recovery advance
 does not enter DSP generation, does not change progress, and completes only
 after confirming the runtime session remains restored. The final planet also
@@ -105,8 +99,6 @@ replaced this tactic without changing scan evidence or conclusions.
 
 ### RFIN-02: Preserve planet attribution
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want every named planet to own the fact that qualified it.
 
 **Return:** Retain presentation-safe planet attribution for per-planet Solar,
@@ -124,7 +116,7 @@ incompatible entries fail as cache misses.
 **Out of scope:** New thresholds, planet scoring, terrain judgments, localized
 name guarantees, or copy changes.
 
-**Implemented:** The normalized birth-system evidence retained every solid
+**Implementation details:** The normalized birth-system evidence retained every solid
 planet's DSP ID, display name, Solar ratio, Wind ratio, and tidal-lock state.
 Each starter gas giant separately owns its DSP display name and complete
 product membership. Attribution is sorted by DSP planet ID and remains one
@@ -155,8 +147,6 @@ remain reusable and attribution is always regenerated from the loaded preview.
 
 ### RFIN-03: Preserve bounded system candidates
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want the panel to name several useful systems when the evidence
 supports more than one candidate.
 
@@ -173,7 +163,7 @@ is versioned and incompatible entries fail as cache misses.
 **Out of scope:** New thresholds, composite scores, changed role predicates,
 copy, or displaying more than three candidates.
 
-**Implemented:** A presentation-safe candidate projection derived three
+**Implementation details:** A presentation-safe candidate projection derived three
 independent lanes from complete normalized preview evidence: Dyson luminosity,
 maximum shell radius, and contained-orbit count. Each lane retains at most
 three systems with its DSP display name, stable system identity, and the one
@@ -205,8 +195,6 @@ contract version changed and existing valid entries remain cache-compatible.
 
 ### RFIN-04: Rewrite Fresh start conclusions
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want to know how this seed's conditions complement a fresh
 start.
 
@@ -222,7 +210,7 @@ omitted. The Fresh start wording decisions were resolved during implementation.
 **Out of scope:** New predicates, changed ranges, resource viability, mining
 performance, or raw evidence views.
 
-**Implemented:** Fresh start received a dedicated natural-language presenter.
+**Implementation details:** Fresh start received a dedicated natural-language presenter.
 It uses starter-gas-giant singular or plural product presence and known
 absence; attributed planet-first Solar, Wind, and permanent-solar-source
 statements; gas-giant-neighbor conclusions; and concise per-resource amount,
@@ -259,8 +247,6 @@ were included in the persisted presentation result.
 
 ### RFIN-05: Separate Dark Fog facts from judgments
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want the generated Dark Fog occupation reported without a
 farming verdict.
 
@@ -283,7 +269,7 @@ older semantic-cache entries safely.
 **Out of scope:** Farming suitability, bases, levels, loot, threat, attack
 timing, future occupation, icons, or combat-setting changes.
 
-**Implemented:** Dark Fog hive counts no longer enter the conclusion engine.
+**Implementation details:** Dark Fog hive counts no longer enter the conclusion engine.
 The preview runtime instead projects one immutable occupation fact containing
 the exact cluster and starter-system initial-hive counts only when Combat mode
 and complete preview evidence make both counts authoritative. The panel renders
@@ -319,8 +305,6 @@ Dark Fog judgments cannot survive the changed conclusion set.
 
 ### RFIN-06: Rewrite Megafactory candidates
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want to know which candidates exist for each supported
 megafactory role.
 
@@ -337,7 +321,7 @@ unchanged.
 **Out of scope:** Factory capacity, throughput, logistics performance, new
 resource-abundance ranges, or new system roles.
 
-**Implemented:** Megafactory received a dedicated natural-language presenter
+**Implementation details:** Megafactory received a dedicated natural-language presenter
 for energy, large-shell, contained-orbit, and rare-access candidates. It uses
 the existing accepted predicates against the bounded RFIN-03 candidate lanes,
 groups several supported roles under one DSP system name, and names no more
@@ -383,8 +367,6 @@ needed by the presentation contract.
 
 ### RFIN-07: Summarize Compact expansion routes
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want to know how easy or difficult expansion is for the roles
 this seed supports.
 
@@ -400,7 +382,7 @@ resolved shortest-eligible-route rule below is applied consistently.
 **Out of scope:** Route planning, travel time, throughput, system-pair display,
 or new role predicates.
 
-**Implemented:** Compact expansion reduced pair-level distance conclusions
+**Implementation details:** Compact expansion reduced pair-level distance conclusions
 to one natural route class per supported role. `starter-anchor`,
 `strong-energy`, `large-shell`, `orbit-containment`, and `rare-access` map only
 to `starter`, `energy`, `sphere`, `orbits`, and `rares`. The presenter emits
@@ -443,8 +425,6 @@ entries omitted complete-scan rare routes from their persisted grouping set.
 
 ### RFIN-08: Rewrite Sphere / energy candidates
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want to know how favorable this seed is for sphere construction.
 
 **Return:** Present shell size and contained-orbit roles using the approved
@@ -459,7 +439,7 @@ lists remain deterministic and bounded, and no internal radius, orbit distance,
 **Out of scope:** Sphere design, receiver effectiveness, aesthetics, composite
 ranking, or threshold changes.
 
-**Implemented:** Sphere / energy applied the accepted radius and
+**Implementation details:** Sphere / energy applied the accepted radius and
 contained-orbit predicates independently to the existing bounded candidate
 lanes. Shell results read `Grand shell`, `Normal shell`, or `Tiny shell`;
 containment results read `Many contained orbits`, `1 contained orbit`, or `No
@@ -494,8 +474,6 @@ and runtime evidence contract were unchanged.
 
 ### RFIN-09: Remove redundant traits and finish the panel
 
-**State:** Accepted on 2026-08-12 without semantic change.
-
 As a player, I want every panel section to add a distinct decision and remain
 easy to scan.
 
@@ -513,7 +491,7 @@ older semantic-cache entries safely.
 **Out of scope:** New summaries, sorting, filters, tabs, charts, comparisons,
 final icons, or panel resizing.
 
-**Implemented:** The redundant trait registry, evaluator, subject and context
+**Implementation details:** The redundant trait registry, evaluator, subject and context
 enum values, presenter mappings, and positive trait fixtures were removed.
 Fresh start, Megafactory, Compact expansion, and Sphere / energy remain the
 only decision contexts. The former trait sources continue to emit unchanged in
@@ -553,9 +531,6 @@ panel-matched native scrollbar skin. No source predicate, context copy,
 viewport geometry, ordering policy, filter, or new interaction was introduced.
 
 ### RFIN-10: Validate the refined experience
-
-**State:** Accepted on 2026-08-12 after the single installed-game human
-validation phase passed.
 
 As a player installing the refined package, I want smoother scanning and the
 revised conclusions to work together in the supported New Game flow.
@@ -603,8 +578,8 @@ scrollable four-context conclusions, correct Dark Fog metadata boundaries,
 cache reuse, safe seed replacement, safe preview exit, and correct Peace-mode
 behavior.
 
-**Produced:** A validated release-candidate contract, the passed seven-step
-installed 4K record, and the accepted refined presentation experience.
+**Produced:** A release-candidate contract, seven-step installed 4K observations,
+and the presentation implementation described above.
 
 ## Context contracts
 
@@ -750,12 +725,6 @@ new Dark Fog judgment, localization, publication, or compatibility expansion.
 The scanner-owned terrain worker added during RFIN-10 was the bounded
 correction to the failed pacing tactic, not parallel seed generation.
 
-## Completion
-
-RFIN-01 through RFIN-10 were individually accepted, and RFIN-10 recorded the
-passing single installed-game validation on 2026-08-12. No story remains
-active.
-
 ## Refinement and validation record
 
 The presentation was refined through direct 4K observation: layout and copy
@@ -775,5 +744,5 @@ removed. Automated equivalence, restoration, presentation, build, and package
 checks passed, followed by all seven installed 4K steps with the original
 progress sequence intact and no observed frame drops.
 
-Return to the [maintenance roadmap](../management/ROADMAP.md),
+Return to the [panel improvement roadmap](../management/ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

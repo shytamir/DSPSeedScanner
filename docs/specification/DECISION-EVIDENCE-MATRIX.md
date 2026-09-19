@@ -1,6 +1,8 @@
 # Context-to-Evidence Decision Matrix
 
-**Status:** Accepted on 2026-08-11.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This matrix crosses the accepted [player seed-decision
 taxonomy](PLAYER-DECISION-TAXONOMY.md) with the accepted [runtime evidence

@@ -1,13 +1,14 @@
 # Scanner Core Conformance Record
 
-**Status:** Accepted with IMPL-08 on 2026-08-11; packaging was subsequently
-implemented by IMPL-09 without changing the conformance result.
+[PROJECT.md](PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This record distinguishes pure checks, compilation, and evidence collected by
 executing the scanner inside an isolated supported Dyson Sphere Program
 runtime. It establishes conformance for the presentation-neutral core only.
-IMPL-08 itself did not approve the product or replace the then-current dummy
-package, and it made no claim for another game build or modded generator.
+Its evidence excludes product approval, package replacement, other game
+builds, and modded generators.
 
 ## Supported identity
 
@@ -20,7 +21,7 @@ and no other loaded BepInEx plugins or preloader assemblies. The loaded IL for
 `PlanetData.RegenerateRawDataImmediately()` had combined SHA-256
 `A0CC806F17FD8A88468AA8CF05CDD4C1A8728A33BA1A4C0FA967C2EF50775C9B`.
 
-At IMPL-08 acceptance, any exact identity mismatch, missing required member,
+In the IMPL-08 probe, any exact identity mismatch, missing required member,
 other plugin, preloader assembly, or changed generation-method digest was
 rejected before evaluation. The later 1.0 coexistence correction retained
 those observed values as cache identity but stopped treating plugin presence

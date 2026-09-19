@@ -1,33 +1,16 @@
 # User Feedback Roadmap
 
-**Status:** Completed and owner-accepted on 2026-08-14.
-
-**Final story state:** No story remained active. All authorized stories, phase
-gates, and release-candidate milestones passed.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 **Source:** [GitHub issue #1: User List of Desired Features and
 Fixes](https://github.com/shytamir/DSPSeedScanner/issues/1).
 
-This roadmap decomposed every independently valuable request in the issue and
-recorded the approved presentation boundary used during implementation.
-Urgency described how soon the work warranted attention; importance described
-its expected effect on product trust or player value. FEED-01 and FEED-02 were
-accepted, `ready-for-new-panel` passed, and the **Clean slate for panel work**
-milestone was established. FEED-03 and FEED-04 were accepted,
-`ready-for-panel-population` passed, and the **Panel renders with all features
-enabled even if not yet consumed** milestone was established. FEED-05 was
-accepted. FEED-06 passed after its narrow runtime corrections and owner-led
-presentation workshop. The exact CI artifact then passed owner validation;
-`ready-for-cluster-panel-population` passed and established the **Panel home
-system fully populated** milestone. FEED-07 was accepted on 2026-08-14.
-FEED-08 and FEED-09 were accepted on 2026-08-14 after the cluster presentation
-passed its final table-refinement workshop. `ready-for-subsection-consumer`
-passed and established the **Panel cluster populated excluding subsection**
-milestone. FEED-10 was accepted on 2026-08-14,
-`ready-for-end-to-end-testing` passed, and the **Panel fully populated**
-milestone was established. Release candidate `1.0.85` then passed its readiness
-checks and final owner validation, establishing the **Release candidate
-approved** milestone.
+This roadmap decomposed the issue into independently valuable requests and
+presentation requirements. Urgency describes how soon the work warrants
+attention; importance describes its expected effect on product trust or player
+value. The story sections retain scope, implementation details, and evidence.
 
 ## Source coverage
 
@@ -80,31 +63,22 @@ this roadmap.
 
 ## Phase gates
 
-Document order defined implementation order. Each gate closed the phase named
-in its definition and passed before the next story began. Passing a story's
-acceptance gate did not by itself pass a phase gate or milestone.
+Document order defines implementation order. Each gate must pass before the
+next phase begins. Story, phase, and milestone criteria are distinct; their
+recorded outcomes belong only in [PROJECT.md](../PROJECT.md).
 
 ### `ready-for-new-panel`
 
-**State:** Passed on 2026-08-13. The owner accepted FEED-01 and FEED-02 with no
-unresolved residual or blocking issue, establishing the **Clean slate for
-panel work** milestone.
-
-The pre-new-panel phase was completed when FEED-01 and FEED-02 passed their
-acceptance gates. Their conclusion-copy, topology, reuse-key, active-preview
-status, cache, replacement, cancellation, and exit behavior have no unresolved
-regression that would contaminate new panel work. This gate establishes the
+**Gate criteria:** FEED-01 and FEED-02 must pass their acceptance gates. Their
+conclusion-copy, topology, reuse-key, active-preview status, cache, replacement,
+cancellation, and exit behavior must have no unresolved regression that would
+contaminate new panel work. This gate establishes the
 **Clean slate for panel work** milestone.
 
 ### `ready-for-panel-population`
 
-**State:** Passed on 2026-08-13. The owner accepted FEED-03 and FEED-04,
-establishing the **Panel renders with all features enabled even if not yet
-consumed** milestone.
-
-The panel-scaffold-and-prior-concern phase was completed when FEED-03 and
-FEED-04 passed their acceptance gates. The statistics panel rendered in every
-configured corner pairing with its independent document, scrolling, lifecycle,
+**Gate criteria:** FEED-03 and FEED-04 must pass their acceptance gates. The
+statistics panel must render in every configured corner pairing with its independent document, scrolling, lifecycle,
 empty `Home system` and `Cluster` containers, home-system inventory, keyed
 cluster collection, titled-subsection support, shared location formatting, and
 shared home-planet title value functional and tested. No dummy statistic line
@@ -113,64 +87,44 @@ enabled even if not yet consumed** milestone.
 
 ### `ready-for-cluster-panel-population`
 
-**State:** Passed on 2026-08-14. FEED-05 and FEED-06 were accepted, and the
-owner validated the exact generated CI artifact with successful scan and
-conclusion behavior plus complete home-system table population.
-
-The home-system-panel phase was completed when FEED-05 and FEED-06 passed
-their acceptance gates. Every supported home-system body fact and exact raw-
-resource fact is attached to the correct body row, cache and lifecycle behavior
-remain valid, and the conclusion panel is unchanged. This gate establishes the
+**Gate criteria:** FEED-05 and FEED-06 must pass their acceptance gates. Every
+supported home-system body fact and exact raw-resource fact must attach to the
+correct body row, preserve cache and lifecycle behavior, and leave the
+conclusion panel unchanged. This gate establishes the
 **Panel home system fully populated** milestone.
 
 ### `ready-for-subsection-consumer`
 
-**State:** Passed on 2026-08-14. FEED-07, FEED-08, and FEED-09 were accepted
-after their combined cluster presentation passed interactive owner validation,
-establishing the **Panel cluster populated excluding subsection** milestone.
-
-The cluster-panel phase excluding subsections was completed when FEED-07,
-FEED-08, and FEED-09 passed their acceptance gates. Their bounded cluster
-selections, locations, distances, exact resource facts, cache payloads,
-ordering, and absence behavior coexist without duplicate ownership or stale
-presentation. This gate establishes the **Panel cluster populated excluding
+**Gate criteria:** FEED-07, FEED-08, and FEED-09 must pass their acceptance
+gates. Their bounded cluster selections, locations, distances, exact resource
+facts, cache payloads, ordering, and absence behavior must coexist without
+duplicate ownership or stale presentation. This gate establishes the **Panel cluster populated excluding
 subsection** milestone.
 
 ### `ready-for-end-to-end-testing`
 
-**State:** Passed on 2026-08-14. The owner accepted FEED-10, establishing the
-**Panel fully populated** milestone and authorizing release-candidate work.
-
-The cluster-subsection phase was completed when FEED-10 passed its acceptance
-gate. The `Notable stars` subsection used the scaffold's existing document and
-scrollbar, remained correct at the full star-count bound, and coexisted with
-every earlier home-system and cluster item. This gate established the **Panel
-fully populated** milestone and authorized release-candidate work; it did not
-approve a release candidate by itself.
+**Gate criteria:** FEED-10 must pass its acceptance gate. The `Notable stars`
+subsection must use the scaffold's existing document and scrollbar, remain
+correct at the full star-count bound, and coexist with every earlier
+home-system and cluster item. This gate defines the **Panel fully populated**
+milestone and the prerequisite for release-candidate work; it does not approve
+a release candidate by itself.
 
 ## Release-candidate milestones
 
-**State:** Release candidate ready was established on 2026-08-14. Exact
-candidate `1.0.85` from Build 85 passed the required source, automated,
-release-build, package, installed-runtime, lifecycle, layout, and normal-
-plugin-coexistence checks. The candidate identity, evidence, and residual
-assessment are recorded in
-[Release Candidate 1.0.85 Validation](RELEASE-CANDIDATE-1.0.85.md).
+**Release candidate ready criteria:** All story and phase gates must pass.
+One candidate artifact must pass the full automated suite, release build,
+package validation, and installed DSP end-to-end procedure covering cache miss
+and hit, Peace and Combat, Dark Fog toggle reuse, seed replacement, preview
+exit, scrolling, supported panel corners, and normal-plugin coexistence,
+without a release-blocking residual. Candidate identity and observations are
+in [Release Candidate 1.0.85 Validation](RELEASE-CANDIDATE-1.0.85.md).
 
-**Release candidate ready:** All roadmap stories and phase gates passed. The
-full automated suite, release build, package validation, and installed DSP end-
-to-end procedure passed on one candidate artifact. Cache miss and hit, Peace
-and Combat, Dark Fog toggle reuse, seed replacement, preview exit, scrolling,
-supported panel corners, and normal-plugin coexistence were covered, and no
-release-blocking residual remained open.
-
-**Release candidate approved — passed on 2026-08-14:** The owner completed final
-human validation against exact candidate `1.0.85` and explicitly accepted it.
-Technical checks and package success had not inferred this milestone.
+**Release candidate approved criteria:** The owner must explicitly accept the
+exact candidate after final human validation. Technical checks and package
+success cannot imply owner acceptance.
 
 ## FEED-01: Use literal home-system terminology
-
-**State:** Accepted on 2026-08-13.
 
 **Category:** bug-fix
 
@@ -218,7 +172,7 @@ or unrelated conclusion copy.
 moon rankings, power-output predictions, factual statistics, or conclusion
 thresholds.
 
-**Implemented:** Preview normalization now resolves the home planet's native
+**Implementation details:** Preview normalization now resolves the home planet's native
 orbit parent, verifies that it is a generated giant in the same home system,
 and records either known direct-star orbit or the exact same-parent solid-moon
 count. Inconsistent topology omits only this conclusion. The presenter consumes
@@ -247,8 +201,6 @@ acceptance fixtures. Interactive DSP presentation validation was not required
 by this story's automated acceptance gate and was not performed.
 
 ## FEED-02: Reuse results across the Dark Fog toggle
-
-**State:** Accepted on 2026-08-13.
 
 **Category:** feature-request
 
@@ -284,7 +236,7 @@ generation identity, changing conclusion predicates, adding Dark Fog
 judgments, or sharing results between game versions or materially different
 generation environments.
 
-**Implemented:** Cache schema 8 gives only the audited completed payload a
+**Implementation details:** Cache schema 8 gives only the audited completed payload a
 mode-neutral reuse key while preserving mode in the source identity stored
 inside the entry. A hit attaches source-attributed reports to the newly loaded
 preview session; that active preview remains authoritative for its identity,
@@ -318,8 +270,6 @@ Interactive DSP validation was not required by this story's automated gate and
 was not performed.
 
 ## FEED-03: Establish the statistics panel
-
-**State:** Accepted on 2026-08-13.
 
 **Category:** feature-request
 
@@ -397,7 +347,7 @@ panel, cluster enumeration or candidate selection, shared renderer state, a
 generic panel framework, nested scrolling, caching, or installed-game layout
 approval.
 
-**Implemented:** The plugin now renders an independently owned statistics
+**Implementation details:** The plugin now renders an independently owned statistics
 document opposite the configured conclusion panel using a horizontal reflection
 of the one authoritative conclusion layout. It displays the active preview
 identity and distinct empty `Home system` and `Cluster` containers in its own
@@ -433,10 +383,9 @@ consumers; no statistic line was added.
 controller, renderer, and scroll state; horizontally mirrored panel geometry;
 empty headed containers; session-owned home-body inventory; bounded cluster and
 subsection contracts; a common cluster-location/light-year value; and focused
-  acceptance fixtures. Installed-game visual layout approval was deferred from
-  this story and later passed at its owner-led phase gate.
+acceptance fixtures. These fixtures do not establish installed visual behavior.
 
-**Post-acceptance scaffold extension:** FEED-06's owner workshop established a
+**Scaffold extension:** FEED-06's owner workshop established a
 shared columnar home-system row presentation within the existing container. Its
 fixed fields are `Body`, `World`, `Solar`, `Wind`, `Ores (units / groups)`, `Oil
 (flow / wells)`, and `Gas products`. The scaffold uses thin rules, compact
@@ -444,8 +393,6 @@ single-line headings, wrapped body values, the existing document and scrollbar,
 and no independent lifecycle or data ownership.
 
 ## FEED-04: Share the home-planet title designation
-
-**State:** Accepted on 2026-08-13.
 
 **Category:** feature-request
 
@@ -476,7 +423,7 @@ and visual state.
 persisting the designation separately, changing title fields beyond the
 home planet, coupling the renderers, or changing either panel's layout.
 
-**Implemented:** Lightweight preview normalization resolves the exact display
+**Implementation details:** Lightweight preview normalization resolves the exact display
 designation of DSP's `birthPlanetId` from its home-system planet and carries
 only that string across the runtime boundary. The active preview session accepts
 it once as an immutable presentation value. The single identity-title formatter
@@ -509,8 +456,6 @@ story's automated gate and was not performed.
 
 ## FEED-05: Show home-system layout and energy facts
 
-**State:** Accepted on 2026-08-13.
-
 **Category:** feature-request
 
 **Urgency:** Medium
@@ -537,7 +482,7 @@ scan does not start, and conclusion-panel content remains unchanged.
 output predictions, preferred-planet selection, sorting by quality, or new
 energy thresholds.
 
-**Implemented:** The existing lightweight home-system body projection now
+**Implementation details:** The existing lightweight home-system body projection now
 retains DSP's body kind, theme display name, and exact Solar and Wind ratios in
 the same stable inventory entry. DSP's native per-planet ice flag distinguishes
 ice giants from gas giants. The statistics renderer formats one row per body in
@@ -565,8 +510,6 @@ lifecycle fixtures. Interactive DSP visual validation was not required by
 this story's automated gate and was not performed.
 
 ## FEED-06: Show home-system resource statistics
-
-**State:** Accepted on 2026-08-14 after exact CI artifact validation.
 
 **Category:** feature-request
 
@@ -612,7 +555,7 @@ absence. Neither raw planet objects nor cluster resource data are retained.
 cluster-wide resource inventory, gas-product rates, mining throughput, or
 changes to the conclusion panel.
 
-**Implemented:** Lightweight preview normalization attaches supported gas
+**Implementation details:** Lightweight preview normalization attaches supported gas
 product names to each giant's existing inventory entry. The complete scan
 aggregates supported resources for each fully generated home-system solid body
 by resource identifier and semantics, retaining only exact amount and group
@@ -647,9 +590,9 @@ payload alongside audited conclusions.
 per-body exact amounts and group counts; presentation-time row joining; the
 seven-field home-system table with thin rules, compact single-line headings,
 grouped wrapping ores, and separate oil and gas fields; cache schema 10; and
-focused completion, cache, cancellation, replacement, and exit fixtures. The
-owner passed the direct-build story gate after interactive 4K refinement of
-column allocation, wrapping, rule thickness, heading fit, and compact values.
+focused completion, cache, cancellation, replacement, and exit fixtures.
+Interactive 4K refinement covered column allocation, wrapping, rule thickness,
+heading fit, and compact values.
 
 **Corrective finding:** The first interactive roadmap test found that the
 hosted artifact referenced `ThemeProtoSet.dataArray`, while DSP declares that
@@ -667,11 +610,9 @@ only rows did not deliver the requested exact statistics. The accepted narrow
 refinement added exact amounts and groups, compact units, and the columnar
 presentation recorded above. Scan, cache/replacement, lifecycle, populated
 rows, scrolling, and the final direct-build layout passed interactive checks.
-The exact hosted artifact then passed owner validation at the phase gate.
+The exact hosted artifact was also used for the owner's preview checks.
 
 ## FEED-07: Show nearest rare-resource access
-
-**State:** Accepted on 2026-08-14.
 
 **Category:** feature-request
 
@@ -744,8 +685,6 @@ the final table form as part of the combined cluster panel.
 
 ## FEED-08: Show per-planet Unipolar Magnet supply
 
-**State:** Accepted on 2026-08-14.
-
 **Category:** feature-request
 
 **Urgency:** Low
@@ -810,8 +749,6 @@ FEED-09. The later phase-gate workshop also validated the final table form as
 part of the combined cluster panel.
 
 ## FEED-09: Show the strongest nearby deuterium gas giant
-
-**State:** Accepted on 2026-08-14.
 
 **Category:** feature-request
 
@@ -879,13 +816,9 @@ rate, distance, and stable-order ties; fixed four-decimal DSP rate formatting
 and rounding; incomplete attribution; single-key projection; scan completion;
 cache reuse; replacement; exit; and conclusion-panel isolation. All 81 Runtime
 checks passed. Installed-runtime and hosted-reference plugin builds completed
-without warnings. The owner interactively validated the combined table layout,
-accepted FEED-09, passed `ready-for-subsection-consumer`, and established the
-**Panel cluster populated excluding subsection** milestone.
+without warnings. The owner inspected the combined table layout interactively.
 
 ## FEED-10: Show notable-star measurements
-
-**State:** Accepted on 2026-08-14.
 
 **Category:** feature-request
 
@@ -946,15 +879,13 @@ The focused runtime suite passed 82/82, covering exclusive grouping, singular
 and plural summaries, all maximum-luminosity placements, equal-value stable
 ties, native formatting, full 64-star coverage, partial evidence, cache reuse,
 replacement, exit, and return. Installed-runtime and hosted-reference plugin
-builds completed with no warnings. The owner interactively validated and
-accepted the headed Notable stars table in the exact Build 85 candidate. The
-conclusion panel was unchanged. This passed `ready-for-end-to-end-testing` and
-established the **Panel fully populated** milestone.
+builds completed with no warnings. The owner inspected the headed Notable stars
+table in the exact Build 85 candidate. The conclusion panel was unchanged.
 
 ## Delivery relationships
 
 - FEED-01 and FEED-02 were independent of the statistics-panel work and of each
-  other; both passed the pre-new-panel phase gate.
+  other.
 - FEED-03 supplied the panel lifecycle, home-system inventory, keyed cluster
   collection, titled subsections, and shared cluster-location value required by
   the later panel stories.

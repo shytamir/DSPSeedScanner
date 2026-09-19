@@ -1,8 +1,8 @@
 # Product Specification Planning Roadmap
 
-**Status:** Completed and accepted on 2026-08-11.
-
-**Active user story:** None.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This roadmap orders the evidence needed to define DSP Seed Scanner before
 implementation planning. Stories become active only through an explicit
@@ -49,8 +49,6 @@ against the installed DSP runtime.
 
 ### SPEC-01: Identify the complete generation identity
 
-**State:** Accepted on 2026-08-11.
-
 As a player comparing seeds, I want every result tied to all inputs that shape
 the cluster so that repeating the same selection produces the same evidence.
 
@@ -74,8 +72,6 @@ the installed runtime did.
 **Excluded:** Performance optimization, batch scanning, scoring, and UI.
 
 ### SPEC-02: Map reproducible runtime facts
-
-**State:** Accepted on 2026-08-11.
 
 As a player evaluating a cluster, I want recommendations limited to facts the
 installed game can reproduce before play begins so that the scanner never
@@ -107,8 +103,6 @@ activating SPEC-03, scoring, profiles, UI, and implementation design.
 
 ### SPEC-03: Build the player decision taxonomy
 
-**State:** Accepted on 2026-08-11.
-
 As a player choosing a seed, I want the scanner to understand the kind of run I
 intend so that it evaluates relevant tradeoffs instead of applying a universal
 definition of good.
@@ -137,8 +131,6 @@ implementing profiles.
 
 ### SPEC-04: Cross player value with reproducible evidence
 
-**State:** Accepted on 2026-08-11.
-
 As a player choosing among seeds, I want only characteristics that are both
 trustworthy and relevant to my intended run so that the result reduces a real
 decision rather than displaying trivia.
@@ -166,8 +158,6 @@ implementation estimates.
 ## Phase 4 - Define the first conclusion contract
 
 ### SPEC-05: Specify bounded seed conclusions
-
-**State:** Accepted on 2026-08-11.
 
 As a player in New Game selection, I want a small set of justified conclusions
 and decisive tradeoffs so that I can accept, reject, or compare a seed without
@@ -200,8 +190,6 @@ result serialization, interaction behavior, and scan orchestration.
 ## Phase 5 - Validate that the specification discriminates usefully
 
 ### SPEC-06: Establish predicates, ranges, and the validation seed set
-
-**State:** Accepted on 2026-08-11.
 
 As a player relying on a neutral conclusion, I want its predicate and preference
 range challenged by representative robust, sensitive, and mixed seeds so that
@@ -239,8 +227,6 @@ automated test implementation, and product code.
 
 ### SPEC-07: Prepare the implementation-planning boundary
 
-**State:** Accepted on 2026-08-11.
-
 As a maintainer planning implementation, I want the accepted product contract,
 remaining uncertainties, and required technical probes in one bounded handoff
 so that engineering work begins from evidence rather than rediscovering scope.
@@ -264,28 +250,23 @@ database architecture, UI behavior, or third-party threshold was adopted.
 **Excluded:** Creating implementation stories inside this roadmap, activating
 the then-future presentation story, and beginning product code.
 
-## Presentation work deferred at completion
+## Presentation planning boundary
 
 ### FUTURE-UI-01: Present conclusions in New Game selection
-
-**State:** This story remained inactive when the specification roadmap closed.
-Its subject was later replanned in the approved New Game presentation roadmap.
 
 As a player considering a generated seed, I want concise context-aware
 conclusions integrated into the New Game seed-selection flow so that I can make
 a decision without leaving the game or decoding raw statistics.
 
-A separate roadmap was required to select presentation scope. This completed
-roadmap did not authorize that work.
+Presentation scope belongs in a separate roadmap.
 
 **Prior-art targets recorded at the time:** DSP-Seed-Finder's interactive
 exploration and DSPSeedSearch's New Game hook were possible workflow inputs.
 They were not presentation requirements, and this roadmap authorized no UI
 research.
 
-**Historical activation prerequisite:** SPEC-01 through SPEC-07 had to be
-complete before separate presentation planning. That prerequisite was later
-satisfied and the New Game presentation roadmap was approved on 2026-08-12.
+**Historical sequencing requirement:** SPEC-01 through SPEC-07 had to be
+complete before separate presentation planning.
 
 **Excluded from this roadmap:** UI implementation, mockups, input interception,
 New Game patches, styling, and presentation-specific telemetry.

@@ -1,42 +1,39 @@
 # Documentation Archive
 
-This directory retains completed or superseded planning material. Archived
-documents are historical records, not current steering or implementation
-authority.
+This directory retains historical scope, requirements, implementation details,
+and technical evidence. [PROJECT.md](../PROJECT.md) is the sole authority for
+project steering and all work status, including historical dispositions.
+Archived procedures do not authorize work; consult PROJECT.md for the governing
+roadmap and execution restrictions.
 
-## Current authorities
+## Project documents
 
-- [Project steering](../PROJECT.md): Authoritative accepted decisions and
-  current tracked project status.
-- [Maintenance roadmap](../management/ROADMAP.md): Inactive placeholder
-  recording that no roadmap or user story is active.
-- [Feature-request register](../management/FEATURE-REQUESTS.md): Unauthorized
-  product requests retained for future evaluation.
-- [Technical debt register](../management/TECHNICAL-DEBT.md): Deferred
-  engineering obligations and their closure gates.
+- [Project steering](../PROJECT.md): Decisions and work status.
+- [Panel improvement roadmap](../management/ROADMAP.md): Delivery scope,
+  execution boundaries, and gate definitions.
+- [Feature-request register](../management/FEATURE-REQUESTS.md): Request scope
+  and evaluation criteria.
+- [Technical debt register](../management/TECHNICAL-DEBT.md): Engineering
+  obligations, evaluation criteria, and technical evidence.
 
 ## Archived documents
 
-- [Product specification planning roadmap](PLANNING-ROADMAP.md): Completed
-  SPEC-01 through SPEC-07 story record and the presentation work it deferred
-  at that time.
-- [Scanner core roadmap](CORE-ROADMAP.md): Completed IMPL-01 through IMPL-09
-  implementation and acceptance record.
-- [New Game presentation roadmap](PRESENTATION-ROADMAP.md): Completed PRES-01
-  through PRES-07 hands-off panel implementation, validation, and refinement
-  handoff.
+- [Product specification planning roadmap](PLANNING-ROADMAP.md):
+  SPEC-01 through SPEC-07 scope and presentation planning boundaries.
+- [Scanner core roadmap](CORE-ROADMAP.md): IMPL-01 through IMPL-09
+  scope, implementation details, and validation evidence.
+- [New Game presentation roadmap](PRESENTATION-ROADMAP.md): PRES-01
+  through PRES-07 panel scope, implementation details, and validation evidence.
 - [Presentation refinement roadmap](PRESENTATION-REFINEMENT-ROADMAP.md):
-  Completed RFIN-01 through RFIN-10 implementation, acceptance evidence, and
-  final installed-game validation record.
-- [User Feedback Roadmap](USER-FEEDBACK-ROADMAP.md): Latest completed FEED-01
-  through FEED-10 delivery record, phase gates, release-candidate work, and
-  owner acceptance.
+  RFIN-01 through RFIN-10 scope, implementation details, and validation evidence.
+- [User Feedback Roadmap](USER-FEEDBACK-ROADMAP.md): FEED-01 through
+  FEED-10 scope, gate definitions, implementation details, and validation evidence.
 - [Runtime identity maintenance record](RUNTIME-IDENTITY-MAINTENANCE-DRAFT.md):
-  Completed path-resolution and filesystem-robustness work plus the retired
-  compatibility proposal.
-- [RFIN-10 human validation](RFIN-10-HUMAN-VALIDATION.md): Passed seven-step
-  installed 4K acceptance record for the refinement roadmap.
-- [Release Candidate 1.0.85 validation](RELEASE-CANDIDATE-1.0.85.md): Exact
-  candidate identity, readiness evidence, and final owner approval.
+  Path resolution, filesystem robustness, and compatibility proposal scope.
+- [RFIN-10 human validation](RFIN-10-HUMAN-VALIDATION.md): Seven-step
+  installed 4K observations for the refinement roadmap.
+- [Release Candidate 1.0.85 validation](RELEASE-CANDIDATE-1.0.85.md):
+  Candidate identity and technical/runtime evidence.
 
-Return to the [documentation index](../INDEX.md) for all current documents.
+
+Return to the [documentation index](../INDEX.md) for all project documents.

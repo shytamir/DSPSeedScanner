@@ -1,6 +1,8 @@
 # Runtime Evidence Feasibility Matrix
 
-**Status:** Accepted on 2026-08-11.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This matrix records what the installed Dyson Sphere Program runtime can
 faithfully provide before a player starts a game. It establishes evidence

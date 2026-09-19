@@ -68,15 +68,19 @@ temporary diagnostics, secrets, credentials, or editor and OS noise.
 
 ## 7. Documentation
 
-`docs/PROJECT.md` is authoritative for project steering decisions and current
-tracked status. Do not duplicate that authority in this file or elsewhere.
+[docs/PROJECT.md](docs/PROJECT.md) is the sole authority for project steering
+and all work state/status, including historical dispositions. Follow its
+tracking rules; other documents contain scope, contracts, procedures, or
+technical evidence and link there for state. Do not keep status fields,
+progress logs, or acceptance/closure records elsewhere, including in archives.
 
 Update user, contributor, project, and management documentation only when the
 change affects their respective contracts. Keep authoritative information in
 the repository document designated for it instead of duplicating it here.
 
-Do not present proposed behavior as implemented. Mark unsettled decisions,
-skipped validation, and future work plainly.
+Do not present proposed behavior as implemented. Keep requirements distinct
+from observed behavior, report skipped validation accurately, and record
+unsettled decisions and future-work status only in `docs/PROJECT.md`.
 
 ## 8. Git discipline
 

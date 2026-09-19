@@ -1,6 +1,8 @@
 # Player Seed-Decision Taxonomy
 
-**Status:** Accepted on 2026-08-11.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This taxonomy records why players inspect Dyson Sphere Program seeds and which
 cluster characteristics they use when making those decisions. It establishes

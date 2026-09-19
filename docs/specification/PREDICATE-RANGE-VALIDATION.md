@@ -1,6 +1,8 @@
 # Predicate, Range, and Validation Catalogue
 
-**Status:** Accepted on 2026-08-11.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 **Definition version:** `0.1.0`
 
@@ -220,9 +222,9 @@ The validation set must fail an implementation that:
 - replaces a missing raw planet with partial totals; or
 - converts **unknown** or **not applicable** into a negative result.
 
-## Accepted resolution
+## Definition rationale
 
-The product review accepted these four points without semantic change:
+The definition rests on these four points:
 
 1. the fixed predicates answer recognizable decisions without prohibited
    inference;

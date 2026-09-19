@@ -1,21 +1,17 @@
 # Scanner Core Roadmap
 
-**Status:** Completed and accepted on 2026-08-11.
-
-**Final story state:** IMPL-01 through IMPL-09 were accepted; no story remained
-active when the scanner core roadmap closed.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This roadmap turned the accepted product specification into a trustworthy,
 presentation-neutral scanner core. It selected stories by the usable
 capability they delivered while respecting the dependency order and runtime gates in the
 [implementation-planning boundary](../specification/IMPLEMENTATION-PLANNING-BOUNDARY.md).
 
-Each story was activated explicitly, completed with its stated evidence,
-reviewed, and accepted before dependent work began.
-
 ## Product return
 
-Completion produced an installable BepInEx scanner core that safely evaluated
+The scanner core described here evaluated
 one requested DSP generation identity, produced all accepted immediate preview
 conclusions, generated exact starter-resource and rare-access conclusions, and
 refused or qualified every unsupported case without modifying the player's
@@ -71,17 +67,15 @@ be revised before activation rather than widening the active story silently.
 
 ### IMPL-01: Prove the normalized conclusion boundary
 
-**State:** Accepted on 2026-08-11.
-
 As a maintainer building decision support, I want one accepted conclusion to
 flow through normalized evidence into an attributed report so that the core
 architecture is proven before the full rule catalogue is implemented.
 
-**Delivered:** A runtime-independent vertical slice evaluated
+**Implementation details:** A runtime-independent vertical slice evaluated
 `FS-TOPOLOGY.shared-satellites` from fixtures and returned deterministic
 positive, negative, and unknown reports.
 
-**Implemented:**
+**Implementation details:**
 
 - buildable core and test projects without DSP or BepInEx references;
 - immutable models for generation identity, evidence stage and coverage,
@@ -114,17 +108,15 @@ derivation, DSP runtime access, orchestration, persistence, UI, and packaging.
 
 ### IMPL-02: Complete the accepted conclusion engine
 
-**State:** Accepted on 2026-08-11.
-
 As a maintainer extending the proven decision boundary, I want the complete
 accepted predicate catalogue executable against normalized fixtures so that
 runtime integration cannot introduce policy or hidden scoring.
 
-**Delivered:** A pure engine evaluated every active definition `0.1.0`
+**Implementation details:** A pure engine evaluated every active definition `0.1.0`
 component and every mandatory unknown or not-applicable case without loading
 DSP.
 
-**Implemented:**
+**Implementation details:**
 
 - immutable normalized cluster, system, gas, starter-resource, rare-resource,
   distance, settings, compatibility, and coverage inputs;
@@ -167,18 +159,16 @@ outside definition `0.1.0`.
 
 ### IMPL-03: Establish the compatible runtime boundary
 
-**State:** Accepted on 2026-08-11 with deferred technical debt.
-
 As a player relying on generated evidence, I want the scanner to recognize its
 exact runtime and isolate a preview request from game state so that unsupported
 or unsafe environments cannot produce apparently valid conclusions.
 
-**Delivered:** A developer-invoked BepInEx operation captured the supported
+**Implementation details:** A developer-invoked BepInEx operation captured the supported
 runtime identity, generated one isolated preview, normalized birth topology,
 and returned the existing shared-satellite conclusion without retaining DSP
 objects.
 
-**Implemented:**
+**Implementation details:**
 
 - a game-independent serialized coordinator and a thin locally referenced
   BepInEx/DSP adapter;
@@ -216,12 +206,9 @@ initial `DSPSeedScanner.Plugin` project, and CI coverage for the runtime-neutral
 boundary. The plugin still requires local DSP and BepInEx references and is not
 the packaged artifact.
 
-**Historical debt:** Acceptance allowed implementation to proceed without more
-game execution at that stage. [TD-001](../management/TECHNICAL-DEBT.md#td-001-complete-non-success-runtime-isolation-probes)
-recorded the missing in-game failure, cancellation, and busy isolation proof;
-[TD-002](../management/TECHNICAL-DEBT.md#td-002-detect-preloader-and-in-memory-generation-patch-uncertainty)
-recorded conservative preloader and in-memory patch detection. IMPL-08 later
-closed both entries at its conformance gate.
+**Related evidence requirements:** [TD-001](../management/TECHNICAL-DEBT.md#td-001-complete-non-success-runtime-isolation-probes)
+describes non-success runtime isolation proof; [TD-002](../management/TECHNICAL-DEBT.md#td-002-detect-preloader-and-in-memory-generation-patch-uncertainty)
+describes preloader and in-memory patch detection.
 
 **Excluded:** Broad preview extraction, quantitative derivations, raw planet
 generation, batch or parallel scanning, another runtime identity,
@@ -229,17 +216,15 @@ player-facing invocation, persistence, and packaging replacement.
 
 ### IMPL-04: Return all immediate preview conclusions
 
-**State:** Accepted on 2026-08-11.
-
 As a player considering a generated cluster, I want all supported immediate
 conclusions from one safe preview request so that I receive useful decision
 evidence without starting expensive raw generation.
 
-**Delivered:** The developer-invoked BepInEx operation captured a complete
+**Implementation details:** The developer-invoked BepInEx operation captured a complete
 compatible 64-system preview and returned every applicable definition `0.1.0`
 preview conclusion in one deterministic attributed report.
 
-**Implemented:**
+**Implementation details:**
 
 - immutable normalized system evidence for birth topology, tidal locking,
   solar and wind ratios, gas products and diagnostic rates, Dyson luminosity,
@@ -284,10 +269,6 @@ repeatable multi-seed developer probe. No scan output or external game
 assembly entered the repository, and the real plugin is still not the package
 artifact.
 
-**Historical debt:** IMPL-04 retained [TD-001 and TD-002](../management/TECHNICAL-DEBT.md)
-for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
-both entries.
-
 **Excluded:** Raw evidence, starter or rare-resource conclusions, batch search,
 persistent caching, New Game hooks, player controls, layout, and presentation
 copy.
@@ -296,18 +277,16 @@ copy.
 
 ### IMPL-05: Certify isolated raw planet generation
 
-**State:** Accepted on 2026-08-11.
-
 As a maintainer adding exact evidence, I want one safe normalized raw-planet
 boundary certified across the supported catalogue so that later raw-generation
 features do not discover algorithm or cleanup failures in player operations.
 
-**Delivered:** A developer-invoked BepInEx operation generated and released one
+**Implementation details:** A developer-invoked BepInEx operation generated and released one
 isolated candidate planet through every solid-planet algorithm reachable from
 the supported theme catalogue and returned exact normalized evidence or an
 explicit non-success result.
 
-**Implemented:**
+**Implementation details:**
 
 - an immutable single-planet request, coverage, node, group, evidence, result,
   and compatibility-diagnostic boundary without DSP, Unity, or BepInEx types;
@@ -361,17 +340,11 @@ conversion, not preserved as their original IEEE-754 bit patterns. That loss
 is accepted because no active conclusion depends on bit-exact raw positions;
 resource type, product, amount, group, provenance, and coverage remain exact.
 
-**Historical debt:** IMPL-05 retained [TD-001 and TD-002](../management/TECHNICAL-DEBT.md)
-for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
-both entries.
-
 **Excluded:** Birth-system or cluster orchestration, resource conclusions,
 per-planet queue progress, performance bounds, background work, UI, and broad
 terrain or buildable-area interpretation.
 
 ### IMPL-06: Return exact starter-resource conclusions
-
-**State:** Accepted on 2026-08-11.
 
 As a player judging a fresh start, I wanted exact birth-system resources from
 the developer-invoked raw operation so that starter conclusions used generated
@@ -407,12 +380,12 @@ elsewhere.
 conclusions, other resource ranges, buildable-area judgments, player controls,
 background queues, and generalized benchmarking.
 
-**Delivered:** An explicit developer-invoked operation declared every solid
+**Implementation details:** An explicit developer-invoked operation declared every solid
 birth-system planet, generated each through the accepted raw boundary, reported
 immutable per-planet progress, and returned a new complete `FS-RESOURCES`
 report without changing the earlier preview result.
 
-**Implemented:**
+**Implementation details:**
 
 - a runtime-neutral plan, target, progress, coverage, and result contract with
   exact expected/completed counts and affected-planet attribution;
@@ -458,13 +431,7 @@ common total.
 repeatable developer harness. Generated evidence and copied game-linked
 artifacts remained outside the repository.
 
-**Historical debt:** IMPL-06 retained [TD-001 and TD-002](../management/TECHNICAL-DEBT.md)
-for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
-both entries.
-
 ### IMPL-07: Return exact rare-resource access
-
-**State:** Accepted on 2026-08-11.
 
 As a player planning expansion, I want an explicit complete-cluster scan for
 rare-resource distance so that nearby access is based on actual deposits and
@@ -503,12 +470,12 @@ eligible roles, grouping, and traits.
 exhaustive search, unattended queues, travel time, logistics throughput,
 databases, exports, UI, and performance optimization.
 
-**Delivered:** An explicit developer-invoked complete-cluster operation
+**Implementation details:** An explicit developer-invoked complete-cluster operation
 generated every solid planet in one owned candidate galaxy and returned a new
 complete report with exact rare-resource access, eligible derived roles,
 grouping, and traits.
 
-**Implemented:**
+**Implementation details:**
 
 - immutable complete-cluster plan, target, progress, coverage, evidence, and
   result contracts without game, Unity, or BepInEx types;
@@ -565,15 +532,9 @@ performance guarantee or authorization for queues or parallel scans.
 repeatable developer acceptance harness. Generated evidence, observations,
 and game-linked artifacts remained outside the repository.
 
-**Historical debt:** IMPL-07 retained [TD-001 and TD-002](../management/TECHNICAL-DEBT.md)
-for the then-future IMPL-08 conformance gate. IMPL-08 subsequently closed
-both entries.
-
 ## Phase 4 - Prove conformance and package the core
 
 ### IMPL-08: Prove scanner-core runtime conformance
-
-**State:** Accepted on 2026-08-11.
 
 As a player relying on scanner results, I want failures, cancellation, and
 unsupported environments challenged across the complete core so that no
@@ -611,12 +572,12 @@ is packaged as a real mod.
 extensions, broad performance optimization, another runtime identity,
 packaging replacement, publication, UI, and telemetry.
 
-**Delivered:** A reviewable [scanner core conformance record](../CONFORMANCE.md)
+**Implementation details:** A reviewable [scanner core conformance record](../CONFORMANCE.md)
 ties the pure suites and every required runtime gate to exact supported-runtime
 evidence, enforced bounds, failure behavior, state isolation, and residual
 limits.
 
-**Implemented:**
+**Implementation details:**
 
 - the compatibility fingerprint now includes the loaded IL of the two exact
   generation entry points and a deterministic inventory of BepInEx preloader
@@ -668,14 +629,11 @@ focused bound test, and durable conformance record. Exact probe outputs,
 controlled fixture binaries, and game-linked artifacts remained outside the
 repository.
 
-**Closed debt:** IMPL-08 closed
-[TD-001 and TD-002](../management/TECHNICAL-DEBT.md). Packaging still uses its intentional
-dummy artifact and placeholder metadata until IMPL-09; no player-facing
-invocation or broader runtime claim was introduced.
+**Evidence scope:** The [debt register](../management/TECHNICAL-DEBT.md)
+contains the runtime-isolation and patch-detection evidence. IMPL-08 did not
+introduce player-facing invocation, real packaging, or broader runtime claims.
 
 ### IMPL-09: Package the conformant scanner core
-
-**State:** Accepted on 2026-08-11.
 
 As a maintainer preparing presentation work, I want the conformant core built
 as an installable BepInEx package so that later integration depends on a real
@@ -711,11 +669,11 @@ with automatic semantic versioning and accurate package metadata.
 promotion, player-facing hooks or controls, UI, keybindings, telemetry, batch
 search, wider compatibility, persistence, and deferred predicates.
 
-**Delivered:** CI now produces an automatically versioned, installable
+**Implementation details:** CI now produces an automatically versioned, installable
 presentation-neutral scanner package from the real plugin, Core, and Runtime
 assemblies rather than the dummy artifact.
 
-**Implemented:**
+**Implementation details:**
 
 - generated `M.m.N` version values now synchronize the manifest, BepInEx
   plugin attribute, and all scanner assembly and file versions;
@@ -756,9 +714,8 @@ source control.
 **Residual limits:** This story did not publish or promote a release. The
 package has no player-facing panel, hook, control, keybinding, telemetry,
 batch search, persistence, or wider compatibility claim. Optional
-single-assembly packaging is tracked as [TD-003](../management/TECHNICAL-DEBT.md#td-003-evaluate-single-assembly-packaging).
-Presentation remained a separate decision at IMPL-09 acceptance; the New Game
-presentation roadmap was subsequently approved on 2026-08-12.
+single-assembly packaging has separate criteria in
+[TD-003](../management/TECHNICAL-DEBT.md#td-003-evaluate-single-assembly-packaging).
 
 ## Roadmap coverage
 
@@ -796,10 +753,3 @@ The following are not backlog items hidden inside these stories:
 Adding an excluded item required an explicit roadmap change or later roadmap.
 Accepted conclusion semantics remained subject to their independent contract
 versioning rules.
-
-## Roadmap completion
-
-This roadmap was completed when IMPL-01 through IMPL-09 were individually
-accepted and the conformant scanner core package existed. Completion
-authorized proposal of a separate presentation roadmap but did not activate or
-predefine the New Game panel work.

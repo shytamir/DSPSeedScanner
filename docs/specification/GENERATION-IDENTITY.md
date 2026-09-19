@@ -1,11 +1,13 @@
 # Generation Identity Contract
 
-**Status:** Accepted on 2026-08-11 under the documented limits.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This contract defines the inputs that DSP Seed Scanner must retain when it
 claims that generated evidence can be reproduced. It describes the installed
-Dyson Sphere Program runtime examined on 2026-08-11 and was accepted because
-the intended BepInEx mod can obtain the required identity from that runtime.
+Dyson Sphere Program runtime examined on 2026-08-11. The intended BepInEx mod
+can obtain the required identity from that runtime.
 
 ## Contract
 

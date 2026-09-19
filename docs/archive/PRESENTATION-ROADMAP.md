@@ -1,18 +1,12 @@
 # New Game Presentation Roadmap
 
-**Status:** Completed and accepted on 2026-08-12. PRES-01 through PRES-07 are
-accepted.
-
-**Active user story:** None. Presentation refinement planning followed this
-completed roadmap.
+[PROJECT.md](../PROJECT.md) is the sole authority for project steering and work
+status, including historical dispositions. This document contains scope,
+requirements, or technical evidence; it does not track status.
 
 This roadmap turned the accepted scanner core into a hands-off decision panel
 in Dyson Sphere Program's New Game cluster preview. It was deliberately limited
 to the behavior accepted during presentation planning.
-
-Approval of this roadmap did not activate its first story. Each story was
-subsequently activated, implemented through its stated automated gate,
-reviewed, and accepted before dependent work began.
 
 ## Product return
 
@@ -74,8 +68,6 @@ not authorize new product behavior.
 
 ### PRES-01: Recognize one current preview session
 
-**State:** Accepted on 2026-08-12.
-
 As a player changing New Game seeds, I want the scanner to respond to the
 cluster that DSP actually loaded so that edits and duplicate callbacks cannot
 start redundant or stale work.
@@ -93,11 +85,11 @@ publication behavior without starting a scan.
 **Out of scope:** Scanning, caching, panel creation, conclusion copy, placement,
 retry, and changes to DSP's seed controls.
 
-**Delivered:** A presentation-neutral lifecycle boundary now creates one
+**Implementation details:** A presentation-neutral lifecycle boundary now creates one
 current session from each completed preview-load sequence and retains the full
 layered galaxy, resource, and pre-play combat identity for later resolution.
 
-**Implemented:**
+**Implementation details:**
 
 - a monotonic load-sequence contract that coalesces repeated callbacks while
   treating a later sequence as a new session even when its identity is equal;
@@ -132,8 +124,6 @@ validation policy, no human in-game validation was performed or required.
 
 ### PRES-02: Keep the full scan responsive
 
-**State:** Accepted on 2026-08-12.
-
 As a player waiting on exact conclusions, I want the long scan to yield between
 safe units so that the New Game interface and its activity indicator can remain
 responsive.
@@ -152,12 +142,12 @@ enough for presentation updates between completed planets.
 **Out of scope:** Background DSP generation, parallelism, throughput tuning,
 automatic invocation, cache storage, panel code, and new scan bounds.
 
-**Delivered:** Complete-cluster raw generation now exposes a cooperative
+**Implementation details:** Complete-cluster raw generation now exposes a cooperative
 game-thread operation that completes at most one solid planet per explicit
 advance. The established synchronous entry point remains available and drives
 the same operation to completion without changing its result contract.
 
-**Implemented:**
+**Implementation details:**
 
 - a disposable operation with explicit ready and completed states, bounded
   planet progress, one-planet advances, and a result only at a terminal state;
@@ -198,8 +188,6 @@ performed or required by this story.
 
 ### PRES-03: Reuse trustworthy local results
 
-**State:** Accepted on 2026-08-12.
-
 As a player revisiting a preview, I want an already completed local scan reused
 so that I do not repeatedly wait for identical evidence.
 
@@ -220,12 +208,12 @@ cache browsing UI, migration promises, incomplete-result resumption, and
 changes to conclusion semantics. Raw and normalized scan evidence, execution
 history, and rendered presentation copy are explicitly not cache payloads.
 
-**Delivered:** Presentation-ready complete-cluster semantic conclusions can
+**Implementation details:** Presentation-ready complete-cluster semantic conclusions can
 now be reused from a bounded local cache only when the current supported
 runtime, full generation identity, complete evidence stage, and scanner
 contracts match exactly.
 
-**Implemented:**
+**Implementation details:**
 
 - a deterministic canonical key and SHA-256 filename covering the DSP build,
   generation implementation, ordered themes, seed and star count, creation and
@@ -281,8 +269,6 @@ in-game validation remained outside this story.
 
 ### PRES-04: Resolve every preview automatically once
 
-**State:** Accepted on 2026-08-12.
-
 As a player entering a cluster preview, I want its available conclusions
 resolved automatically so that using the mod requires no scan command.
 
@@ -301,7 +287,7 @@ result.
 **Out of scope:** Panel rendering, presentation wording, player controls,
 multiple queued identities, batch scanning, and cache management UI.
 
-**Implemented:** The presentation-neutral `PreviewResolutionCoordinator`
+**Implementation details:** The presentation-neutral `PreviewResolutionCoordinator`
 now owns one attributable attempt per lifecycle session. It evaluates the
 live preview, reads the validated complete-conclusion cache, or starts one
 cooperative complete scan; a successful scan is admitted to that cache.
@@ -343,9 +329,6 @@ identities, and human in-game validation remained outside this story.
 
 ### PRES-05: Show current operational state
 
-**State:** Accepted on 2026-08-12. The corner-anchor
-requirement was resolved on 2026-08-12.
-
 As a player viewing a cluster preview, I want a small panel to show what the
 scanner is doing so that waiting, cache reuse, completion, and failure are
 never ambiguous.
@@ -367,7 +350,7 @@ agreed text bounds at each configured corner.
 anchors, conclusion cards, raw evidence tables, preferences, manual retry, and
 visual redesign of DSP controls.
 
-**Implemented:** A presentation-neutral panel model now maps the current
+**Implementation details:** A presentation-neutral panel model now maps the current
 resolution attempt to waiting, cached, scanning, complete, cancelled,
 unsupported, or failed operational state. Active states use a four-frame ASCII
 spinner and scanning includes completed-versus-expected planet progress.
@@ -410,8 +393,6 @@ publication fixtures. Conclusion cards, raw evidence tables, adaptive layout,
 player controls, and human in-game validation remained outside this story.
 
 ### PRES-06: Present concise neutral conclusions
-
-**State:** Accepted on 2026-08-12.
 
 As a player deciding whether a seed suits an intended run, I want its supported
 conclusions grouped by context so that I can understand strengths, limitations,
@@ -487,8 +468,6 @@ localization, and human in-game validation remained outside this story.
 
 ### PRES-07: Validate the complete New Game experience
 
-**State:** Accepted on 2026-08-12.
-
 As a player installing DSP Seed Scanner, I want the hands-off panel to behave
 correctly through real New Game preview changes so that I can rely on what it
 shows before starting a game.
@@ -510,7 +489,7 @@ mod compatibility, performance guarantees beyond the accepted operation bound,
 publication, telemetry, comparison, preferences, exports, and closure of
 unrelated technical debt.
 
-**Implemented:** The first isolated 4K run exposed two acceptance defects and
+**Implementation details:** The first isolated 4K run exposed two acceptance defects and
 one misleading diagnostic. The panel now scales its readable coordinate space,
 reserves additional bottom clearance, and replaces the tall indented document
 with three wrapped columns for strengths, preference-sensitive results, and
@@ -533,8 +512,7 @@ usable despite the expected performance cost, and a 204-solid-planet scan
 completed within the previously estimated acceptable duration. The completed
 result rendered without text overlap or clipping. That pass also found the
 excessive footprint, unknown cards, raw system identifiers, omitted distance
-values, and redundant stage headings repaired above; therefore it did not
-close this story's human gate.
+values, and redundant stage headings repaired above.
 
 **Automated evidence:** The Release solution and installed-game plugin build
 with zero warnings, all 14 conclusion checks and 49 runtime-boundary checks
@@ -543,8 +521,7 @@ and focused fixtures enforce outcome-to-column mapping, suppression of unknown
 and not-applicable cards, player-visible system labels, short distance values,
 bottom clearance, stale-state rejection, and bounded copy. The installed- and
 hosted-reference plugin builds and the exact semantic-versioned package
-validation also passed locally; pushed CI was still part of the final gate at
-that stage.
+validation also passed locally.
 
 **Second human pass and repair:** The first three-column candidate was readable
 and retained acceptable scan responsiveness, but repeated each context heading
@@ -562,13 +539,12 @@ surface has no background, while conclusion and class-heading fonts are
 larger. The cache applies its report-count ceiling to the complete-stage
 payload it actually serializes; a focused regression stores and reloads that
 payload from a successful result containing more than 1,024 total reports.
-Dark Fog conclusions remain unchanged pending broader seed sampling.
+This repair did not change Dark Fog conclusions.
 
 This second repair passed all 14 conclusion and 49 runtime-boundary checks and
-the installed-game plugin build with zero warnings. Human revalidation and the
-pushed package/CI gates were still required before PRES-07 acceptance.
+the installed-game plugin build with zero warnings.
 
-**Bounded-viewport repair note (approved 2026-08-12):** The second human image
+**Bounded-viewport repair evidence (2026-08-12):** The second human image
 showed that content-sized placement could not converge: a verbose seed grew
 the document across most of the preview, transparent conclusion text crossed
 the stellar legend, and one full three-column row per context left large blank
@@ -590,9 +566,8 @@ packed into complementary spaces in shared rows below, so a strength-only
 context can share a row with a preference-and-limitation context. Each card
 keeps one centered neutral title, bounded wrapped copy, and its existing class
 colors. This repair introduces no tabs, collapsing, automatic paging,
-preference controls, or changes to Dark Fog conclusions. At that stage, human
-validation still had to confirm the safe areas, scrolling, readability, and
-lifecycle behavior in the installed game before PRES-07 could be accepted.
+preference controls, or changes to Dark Fog conclusions. Safe areas, scrolling,
+readability, and lifecycle behavior require installed-game observations.
 
 Focused placement fixtures now lock the resolution-relative geometry and the
 top-right and bottom-left safe clearances. The accepted viewport occupies 37%
@@ -608,15 +583,12 @@ worked; complete results joined the immediate conclusions as expected; a
 revisited identity reused its cache; a replacement seed could not receive the
 previous session's result; and leaving the preview retired the current work.
 The accepted local `0.1.4104` test package also passed exact DLL and
-Thunderstore-package validation. These observations closed the PRES-07 human
-gate without asserting that the current conclusion wording needs no further
-refinement.
+Thunderstore-package validation. These observations concern the installed
+workflow; the wording issues below are separate findings.
 
 ## Refinement planning handoff
 
-The completed panel exposed presentation issues that did not invalidate its
-workflow acceptance. These issues were carried into the subsequent refinement
-roadmap:
+The panel exposed these presentation issues:
 
 - five semantic outcomes collapsed into three visual classes; tradeoffs shared
   preference-sensitive presentation and cautions shared
@@ -661,12 +633,5 @@ This roadmap did not add adaptive panel placement, player scoring or required
 preferences, manual scan or retry controls, seed comparison, batch search,
 parallel generation, background DSP generation, shared caches, databases,
 exports, telemetry, new conclusions, wider compatibility, publication, or
-package icon and marketing-copy refinement. TD-003 remained independent and
-did not block this roadmap.
-
-## Completion
-
-PRES-01 through PRES-07 were individually accepted, and PRES-07 recorded the
-sole human in-game validation of the installed experience. This roadmap was
-completed on 2026-08-12. Its completion did not authorize external publication
-or the refinement work listed above.
+package icon and marketing-copy refinement. Single-assembly packaging has
+separate criteria in [TD-003](../management/TECHNICAL-DEBT.md#td-003-evaluate-single-assembly-packaging).
