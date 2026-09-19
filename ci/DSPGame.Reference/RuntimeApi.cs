@@ -169,9 +169,14 @@ public sealed class ThemeProtoSet : ProtoSet<ThemeProto>
     public int Length => dataArray.Length;
 }
 
-public sealed class ThemeProto
+public class Proto
 {
     public int ID;
+    public string Name = string.Empty;
+}
+
+public sealed class ThemeProto : Proto
+{
     public string displayName => string.Empty;
     public EPlanetType PlanetType;
     public int[]? Algos;

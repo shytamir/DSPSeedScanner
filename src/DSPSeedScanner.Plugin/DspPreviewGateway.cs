@@ -253,6 +253,12 @@ namespace DSPSeedScanner.Plugin
             NormalizedSystemEvidence[] systems, NormalizedSystemDistance[] distances, string homeSystem)
         {
             var evidence = new List<RuntimeNotableStarEvidence>(stars.Length);
+            int aquaticaThemeId = LDB.themes.dataArray.Single(theme =>
+                String.Equals(theme.Name, "Ocean 5", StringComparison.Ordinal)).ID;
+            int brightestIndex = Enumerable.Range(0, stars.Length)
+                .OrderByDescending(index => Convert.ToDecimal(stars[index].dysonLumino))
+                .ThenBy(index => index).First();
+            string brightestSystem = systems[brightestIndex].Subject.Identifier;
             for (int index = 0; index < stars.Length; index++)
             {
                 StarData star = stars[index];
@@ -280,7 +286,11 @@ namespace DSPSeedScanner.Plugin
                     index,
                     systems[index].Subject.Identifier == homeSystem ? 0m : distances.Single(value =>
                         value.Connects(homeSystem, systems[index].Subject.Identifier)).LightYears,
-                    systems[index].MaximumShellRadius, systems[index].ContainedOrbitCount));
+                    systems[index].MaximumShellRadius, systems[index].ContainedOrbitCount,
+                    star.planets.Any(planet => planet.theme == aquaticaThemeId),
+                    star.spectr == ESpectrType.O,
+                    index == brightestIndex ? 0m : distances.Single(value =>
+                        value.Connects(brightestSystem, systems[index].Subject.Identifier)).LightYears));
             }
             return NotableStarStatistics.Project(evidence, stars.Length);
         }
@@ -566,7 +576,8 @@ namespace DSPSeedScanner.Plugin
                 (typeof(PlanetData), "gasItems", MemberTypes.Field),
                 (typeof(PlanetData), "gasSpeeds", MemberTypes.Field),
                 (typeof(PlanetData), "type", MemberTypes.Field),
-                (typeof(ThemeProto), "displayName", MemberTypes.Property)
+                (typeof(ThemeProto), "displayName", MemberTypes.Property),
+                (typeof(Proto), "Name", MemberTypes.Field)
             };
             foreach ((Type type, string member, MemberTypes kind) in required)
             {

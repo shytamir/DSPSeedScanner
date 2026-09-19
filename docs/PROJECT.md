@@ -11,7 +11,7 @@ its execution and story-closing commits/pushes to `main`.
 
 **Current phase:** Phase 2 - implementation.
 
-**Next story:** `PANEL-S03: Final Aquatica group`. G1 passed and
+**Next story:** `PANEL-T01: Native oil totals`. G1 passed and
 M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 
 | Panel story | State | Evidence |
@@ -27,6 +27,7 @@ M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 | PANEL-M02 | Technically complete | Strict thresholds, split totals, finite-resource and nearest-selection checks; cache parity and solution build. Owner preview awaits G4. |
 | PANEL-S01 | Technically complete | Geometry, luminosity and distance-selection checks; solution/plugin builds. Owner preview awaits G4. |
 | PANEL-S02 | Technically complete | Star-group ordering, distance/column/color and lifecycle checks; solution/plugin builds. Owner preview awaits G4. |
+| PANEL-S03 | Technically complete | Aquatica eligibility, caps, distance origin, blank cells and overlapping-role checks; solution/plugin builds. Owner preview awaits G4. |
 | Remaining implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define

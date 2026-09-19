@@ -95,6 +95,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("targeted rare systems use deposit totals", TargetedRareSystemsUseDepositTotals),
                 ("plentiful systems use finite split deposits", PlentifulSystemsUseFiniteDeposits),
                 ("sphere geometry is star-centric and nearest-first", SphereGeometryIsStarCentric),
+                ("Aquatica group uses brightest-star distance", AquaticaUsesBrightestDistance),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -4187,6 +4188,39 @@ namespace DSPSeedScanner.Runtime.Tests
                     .Cards.Select(card => card.Line));
                 Equal(completedFreshText, cachedFreshText);
             });
+        }
+
+        private static void AquaticaUsesBrightestDistance()
+        {
+            foreach (int count in new[] { 0, 2, 5, 7 })
+            {
+                var stars = Enumerable.Range(0, count).Select(index => new RuntimeNotableStarEvidence(
+                    "Host " + index, "A type star", NotableStarDisplayClass.Other,
+                    2m, 1m, index, index, 80_000, 1, true, false, count - index)).ToList();
+                stars.Add(new RuntimeNotableStarEvidence("Peak", "A type star", NotableStarDisplayClass.Other,
+                    2m, 10m, 100, 9m, 90_000, 1));
+                stars.Add(new RuntimeNotableStarEvidence("O host", "O type star", NotableStarDisplayClass.OType,
+                    2m, 3m, 101, 1m, 90_000, 1, true, true, 0.1m));
+                stars.Add(new RuntimeNotableStarEvidence("O blue", "Blue Giant", NotableStarDisplayClass.BlueGiant,
+                    2m, 3m, 102, 1m, 90_000, 1, true, true, 0.1m));
+                NotableStarStatistics result = NotableStarStatistics.Project(stars, stars.Count)!;
+                NotableStarTableRow[] aquatic = result.Rows.Where(row => row.Note == "Aquatica").ToArray();
+                Equal(Math.Min(5, count), aquatic.Length);
+                if (count > 0)
+                {
+                    Equal("Host " + (count - 1), aquatic[0].Star);
+                    Equal("1 ly", aquatic[0].Distance);
+                    True(result.Rows.TakeLast(aquatic.Length).SequenceEqual(aquatic));
+                }
+                True(aquatic.All(row => row.Luminosity == "" && row.Contained == "" &&
+                    row.Size == "2.00 R" && row.MaximumSphere == "80,000 m"));
+            }
+            var duplicateRoles = NotableStarStatistics.Project(new[] {
+                new RuntimeNotableStarEvidence("Peak", "A type star", NotableStarDisplayClass.Other,
+                    2m, 10m, 0, 9m, 90_000, 1, true, false, 0m),
+                new RuntimeNotableStarEvidence("Blue", "Blue Giant", NotableStarDisplayClass.BlueGiant,
+                    2m, 9m, 1, 3m, 90_000, 1, true, false, 1m) }, 2)!;
+            Equal("Blue,Peak,Peak,Blue", String.Join(",", duplicateRoles.Rows.Select(row => row.Star)));
         }
 
         private static void SphereGeometryIsStarCentric()

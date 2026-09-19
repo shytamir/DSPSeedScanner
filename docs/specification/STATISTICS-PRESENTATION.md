@@ -14,3 +14,13 @@ Columns are Star, Type, Size (stellar radius in R), Luminosity (three decimals
 in L), Distance (from home), Max Sphere (native maximum radius in meters),
 Contained (whole-orbit planet count), and Note. Brightest retains its note.
 The shared native geometry definition is in [Panel evidence](PANEL-EVIDENCE.md).
+
+The final group contains up to five non-O Aquatica host stars, selected and
+sorted by distance from the brightest star. Each host appears once in this
+group regardless of its matching planet count; another displayed role does
+not disqualify it. Aquatica uses the native catalogue's invariant theme name
+`Ocean 5`. O-spectrum blue giants are excluded from this group too.
+
+Aquatica rows leave Luminosity and Contained empty, keep stellar Size and
+Max Sphere, and show their distance from the brightest star. The existing
+Note column identifies these rows as Aquatica.

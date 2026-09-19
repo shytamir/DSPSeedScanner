@@ -706,7 +706,10 @@ namespace DSPSeedScanner.Runtime
             int stableGameOrder,
             decimal? distanceFromHomeLy = null,
             long? maximumSphereRadius = null,
-            int? containedOrbits = null)
+            int? containedOrbits = null,
+            bool hasAquatica = false,
+            bool isOSpectrum = false,
+            decimal? distanceFromBrightestLy = null)
         {
             if (String.IsNullOrWhiteSpace(displayName))
                 throw new ArgumentException("Star display name is required.", nameof(displayName));
@@ -730,6 +733,9 @@ namespace DSPSeedScanner.Runtime
             DistanceFromHomeLy = distanceFromHomeLy;
             MaximumSphereRadius = maximumSphereRadius;
             ContainedOrbits = containedOrbits;
+            HasAquatica = hasAquatica;
+            IsOSpectrum = isOSpectrum;
+            DistanceFromBrightestLy = distanceFromBrightestLy;
         }
 
         public string DisplayName { get; }
@@ -740,6 +746,9 @@ namespace DSPSeedScanner.Runtime
         public decimal? DistanceFromHomeLy { get; }
         public long? MaximumSphereRadius { get; }
         public int? ContainedOrbits { get; }
+        public bool HasAquatica { get; }
+        public bool IsOSpectrum { get; }
+        public decimal? DistanceFromBrightestLy { get; }
         public int StableGameOrder { get; }
     }
 
@@ -836,18 +845,25 @@ namespace DSPSeedScanner.Runtime
                 value.DisplayClass == NotableStarDisplayClass.OType && !ReferenceEquals(value, brightest))
                 .OrderBy(value => value.DistanceFromHomeLy).ThenBy(value => value.StableGameOrder));
 
-            NotableStarTableRow[] rows = displayed.Select(value =>
-                new NotableStarTableRow(
+            NotableStarTableRow Row(RuntimeNotableStarEvidence value, bool aquatica)
+            {
+                decimal? distance = aquatica ? value.DistanceFromBrightestLy : value.DistanceFromHomeLy;
+                return new NotableStarTableRow(
                     value.DisplayName,
                     value.DisplayedType,
                     value.Radius.ToString("0.00", CultureInfo.InvariantCulture) + " R",
-                    value.Luminosity.ToString("0.000", CultureInfo.InvariantCulture) + " L",
-                    ReferenceEquals(value, brightest) ? "Brightest" : String.Empty,
-                    value.DistanceFromHomeLy.HasValue ? DspLyFormatter.Format(value.DistanceFromHomeLy.Value) : String.Empty,
+                    aquatica ? String.Empty : value.Luminosity.ToString("0.000", CultureInfo.InvariantCulture) + " L",
+                    aquatica ? "Aquatica" : ReferenceEquals(value, brightest) ? "Brightest" : String.Empty,
+                    distance.HasValue ? DspLyFormatter.Format(distance.Value) : String.Empty,
                     value.MaximumSphereRadius?.ToString("N0", CultureInfo.InvariantCulture) + (value.MaximumSphereRadius.HasValue ? " m" : String.Empty),
-                    value.ContainedOrbits?.ToString(CultureInfo.InvariantCulture) ?? String.Empty,
-                    value.DisplayClass == NotableStarDisplayClass.BlueGiant))
-                .ToArray();
+                    aquatica ? String.Empty : value.ContainedOrbits?.ToString(CultureInfo.InvariantCulture) ?? String.Empty,
+                    value.DisplayClass == NotableStarDisplayClass.BlueGiant);
+            }
+            NotableStarTableRow[] rows = displayed.Select(value => Row(value, false)).Concat(values
+                .Where(value => value.HasAquatica && !value.IsOSpectrum &&
+                    value.DisplayClass != NotableStarDisplayClass.OType && value.DistanceFromBrightestLy.HasValue)
+                .OrderBy(value => value.DistanceFromBrightestLy).ThenBy(value => value.StableGameOrder)
+                .Take(5).Select(value => Row(value, true))).ToArray();
             return new NotableStarStatistics(
                 notable.Count(value => value.DisplayClass == NotableStarDisplayClass.OType),
                 notable.Count(value => value.DisplayClass == NotableStarDisplayClass.BlueGiant),
