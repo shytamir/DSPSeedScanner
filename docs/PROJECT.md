@@ -11,9 +11,13 @@ its execution and story-closing commits/pushes to `main`.
 
 **Current phase:** Phase 1 - human-free investigations.
 
-**Next story:** `PANEL-I01: Native resource units`, ready to start. No story
-execution has begun; all stories are Not started, G1-G4 are pending, and no
-milestone has been declared. Phase 2 implementation cannot begin until G1 passes.
+**Next story:** `PANEL-I02: Planet and star attribution`. G1-G4 are pending;
+no milestone has been declared. Phase 2 cannot begin until G1 passes.
+
+| Panel story | State | Evidence |
+| --- | --- | --- |
+| PANEL-I01 | Technically complete | Read-only native unit inspection and numeric cases in [Panel evidence](specification/PANEL-EVIDENCE.md#native-resource-units); no game execution. |
+| PANEL-I02, PANEL-I03; all implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define
 the requested panel changes. The roadmap owns their delivery scope, gates,

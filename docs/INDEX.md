@@ -20,6 +20,8 @@ authority for project steering and all current and historical work status.
 
 ## Specification
 
+- [Panel evidence and verification](specification/PANEL-EVIDENCE.md): Native
+  source observations and repository verification cases for the panel changes.
 - [Generation identity contract](specification/GENERATION-IDENTITY.md): Inputs
   and compatibility information required to reproduce generated evidence.
 - [SPEC-01 experiment record](specification/SPEC-01-EXPERIMENTS.md): Runtime
