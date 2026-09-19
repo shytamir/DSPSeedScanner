@@ -514,6 +514,7 @@ namespace DSPSeedScanner.Runtime
                 id.StartsWith("RR-ACCESS.distance:", StringComparison.Ordinal) ||
                 id.StartsWith("RR-ACCESS.amount:", StringComparison.Ordinal) ||
                 id.StartsWith("MF-RESOURCE-SYSTEM.rare:", StringComparison.Ordinal) ||
+                String.Equals(id, "MF-RESOURCE-SYSTEM.plentiful", StringComparison.Ordinal) ||
                 id.StartsWith("MF-SYSTEM-ROLE.role:", StringComparison.Ordinal);
         }
 

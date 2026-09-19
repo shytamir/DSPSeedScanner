@@ -11,7 +11,7 @@ its execution and story-closing commits/pushes to `main`.
 
 **Current phase:** Phase 2 - implementation.
 
-**Next story:** `PANEL-M02: Plentiful resource-system conclusions`. G1 passed and
+**Next story:** `PANEL-S01: Sphere-only geometry conclusions`. G1 passed and
 M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 
 | Panel story | State | Evidence |
@@ -24,6 +24,7 @@ M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 | PANEL-F03 | Technically complete | Solution/plugin builds and sibling attribution/independent-boundary checks. Owner preview awaits G4. |
 | PANEL-F04 | Technically complete | Rate/distance boundaries, nearest selection and scan/cache lifecycle checks; solution/plugin builds. Owner preview awaits G4. |
 | PANEL-M01 | Technically complete | System-total qualification and cache parity checks; solution build and Core/Runtime suites. Owner preview awaits G4. |
+| PANEL-M02 | Technically complete | Strict thresholds, split totals, finite-resource and nearest-selection checks; cache parity and solution build. Owner preview awaits G4. |
 | Remaining implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define

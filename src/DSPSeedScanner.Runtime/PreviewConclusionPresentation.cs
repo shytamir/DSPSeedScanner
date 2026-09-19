@@ -658,6 +658,17 @@ namespace DSPSeedScanner.Runtime
             }
 
             AddRareAccessCards(cards, roles, reports, displays);
+            foreach (ConclusionReport report in reports.Where(report =>
+                report.ConclusionId == "MF-RESOURCE-SYSTEM.plentiful"))
+            {
+                if (report.DecisiveFact == null || !displays.TryGetValue(
+                    report.Subject.Identifier, out RuntimeSystemDisplay? display))
+                    continue;
+                string resources = String.Join(", ", report.DecisiveFact.Value.Split(',')
+                    .Select(ResourcePresentation.OreName));
+                AddMegaRole(roles, new RuntimeSystemCandidate(report.Subject.Identifier,
+                    display.DisplayName, 0m), report.Outcome, "plentiful " + resources, report);
+            }
             foreach (MegaSystemCard role in roles.Values
                 .OrderBy(value => value.Outcome)
                 .ThenBy(value => value.DisplayName, StringComparer.Ordinal))

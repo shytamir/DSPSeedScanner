@@ -563,6 +563,19 @@ namespace DSPSeedScanner.Core
                         ConclusionContext.Megafactory, nearest.System, "distanceFromBirth",
                         nearest.DistanceFromBirthLy, ConclusionDefinition.RareAccessDistance, true);
             }
+            foreach (NormalizedSystemResources system in evidence.SystemResources
+                .Where(system => system.FiniteAmounts.Count(pair => pair.Value > 40_000_000) >= 3)
+                .OrderBy(system => system.DistanceFromBirthLy)
+                .ThenBy(system => system.System.Identifier, StringComparer.Ordinal).Take(3))
+            {
+                string resources = String.Join(",", system.FiniteAmounts
+                    .Where(pair => pair.Value > 40_000_000)
+                    .Select(pair => pair.Key).OrderBy(id => id, StringComparer.Ordinal));
+                reports.Add(Report(evidence, coverage, "MF-RESOURCE-SYSTEM.plentiful",
+                    ConclusionContext.Megafactory, system.System,
+                    ConclusionDefinition.Evaluate(system.DistanceFromBirthLy, ConclusionDefinition.RareAccessDistance),
+                    Fact("plentifulResources", resources, "resource-ids"), null));
+            }
         }
 
         private static IReadOnlyList<RoleAssignment> EvaluateRoles(

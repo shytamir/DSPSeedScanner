@@ -40,7 +40,7 @@ namespace DSPSeedScanner.Core
     public static class ConclusionDefinition
     {
         public const string ContractVersion = "0.1.0";
-        public const string DefinitionVersion = "0.3.0";
+        public const string DefinitionVersion = "0.4.0";
         public const string ReferenceGameVersion = "0.10.34.28529";
         public const int ReferenceGalaxyAlgorithm = 20_200_403;
         public const int ReferenceStarCount = 64;

@@ -93,6 +93,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("sibling moon power is independent", SiblingMoonPowerIsIndependent),
                 ("rich Deuterium conclusions use uncapped distance", RichDeuteriumConclusionsUseDistance),
                 ("targeted rare systems use deposit totals", TargetedRareSystemsUseDepositTotals),
+                ("plentiful systems use finite split deposits", PlentifulSystemsUseFiniteDeposits),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -4170,6 +4171,41 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void PlentifulSystemsUseFiniteDeposits()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var raw = new FakeCompleteClusterGateway {
+                    TargetCount = 8,
+                    TargetFactory = (id, order) => new CompleteClusterPlanetTarget(id, 1,
+                        new ConclusionSubject(id == 101 ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                            id == 101 ? "1" : id <= 103 ? "2" : (id - 101).ToString()),
+                        id == 101 ? 0m : id <= 103 ? 1m : id - 102m, "Planet " + id, order, false),
+                    EvidenceFactory = (seed, target) => ResourceSnapshot(seed, target,
+                        target.PlanetId == 101 ? new[] { ("iron", 1L) } :
+                        target.PlanetId <= 103 ? new[] { ("iron", 20_000_001L),
+                            ("copper", 20_000_001L), ("stone", 20_000_001L) } :
+                        new[] { ("iron", 41_000_000L), ("copper", 42_000_000L),
+                            ("stone", target.PlanetId == 104 ? 40_000_000L : 43_000_000L),
+                            ("oil", 900_000_000L) }) };
+                using var resolver = new PreviewResolutionCoordinator(new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway()), new CompleteClusterRawCoordinator(raw),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                while (!resolver.CurrentPublishedAttempt!.IsTerminal) resolver.AdvanceCurrent();
+                var reports = resolver.CurrentPublishedAttempt!.CompleteReports.Where(report =>
+                    report.ConclusionId == "MF-RESOURCE-SYSTEM.plentiful").ToArray();
+                Equal("2,4,5", String.Join(",", reports.Select(report => report.Subject.Identifier)));
+                True(reports.All(report => report.DecisiveFact?.Value == "copper,iron,stone"));
+                var text = CompleteContextText(PreviewConclusionPresenter.Project(
+                    resolver.CurrentPublishedAttempt), ConclusionContext.Megafactory);
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                Equal(PreviewResolutionState.Cached, resolver.CurrentPublishedAttempt!.State);
+                Equal(text, CompleteContextText(PreviewConclusionPresenter.Project(
+                    resolver.CurrentPublishedAttempt), ConclusionContext.Megafactory));
+            });
+        }
+
         private static void TargetedRareSystemsUseDepositTotals()
         {
             WithTemporaryDirectory(path =>
@@ -4212,7 +4248,8 @@ namespace DSPSeedScanner.Runtime.Tests
             new NormalizedRawPlanetEvidence(seed, target.PlanetId, 1, target.AlgorithmId,
                 RawPlanetCoverage.Complete(), Array.Empty<NormalizedRawVeinNode>(),
                 resources.Select((resource, index) => new NormalizedRawVeinGroup(index + 1,
-                    index + 1, resource.Resource, RawResourceSemantics.FiniteDeposit, 1,
+                    index + 1, resource.Resource, resource.Resource == "oil"
+                        ? RawResourceSemantics.OilFlow : RawResourceSemantics.FiniteDeposit, 1,
                     resource.Amount, 0m, 0m, 0m)));
 
         private static void RichDeuteriumConclusionsUseDistance()
