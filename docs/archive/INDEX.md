@@ -9,8 +9,8 @@ roadmap and execution restrictions.
 ## Project documents
 
 - [Project steering](../PROJECT.md): Decisions and work status.
-- [Panel improvement roadmap](../management/ROADMAP.md): Delivery scope,
-  execution boundaries, and gate definitions.
+- [Roadmap placeholder](../management/ROADMAP.md): Location for a future
+  owner-authorized plan.
 - [Feature-request register](../management/FEATURE-REQUESTS.md): Request scope
   and evaluation criteria.
 - [Technical debt register](../management/TECHNICAL-DEBT.md): Engineering
@@ -18,6 +18,12 @@ roadmap and execution restrictions.
 
 ## Archived documents
 
+- [Panel improvement roadmap](PANEL-IMPROVEMENT-ROADMAP.md): Historical epics,
+  stories, execution restrictions, gates and handoff requirements.
+- [Panel validation findings](PANEL-VALIDATION-FINDINGS.md): Owner observations
+  and requirements that informed the panel work.
+- [Panel preview recipe](PANEL-PREVIEW-CHECK.md): The 1.3.110 package identity
+  and owner-only preview instructions supplied for the panel check.
 - [Product specification planning roadmap](PLANNING-ROADMAP.md):
   SPEC-01 through SPEC-07 scope and presentation planning boundaries.
 - [Scanner core roadmap](CORE-ROADMAP.md): IMPL-01 through IMPL-09

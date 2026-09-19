@@ -131,5 +131,5 @@ whether one shared helper and focused injected-writer tests can close the
 failure pattern without widening production filesystem policy. Close as
 declined if the maintenance and test surface is disproportionate.
 
-Return to the [current roadmap](ROADMAP.md),
+Return to the [roadmap placeholder](ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

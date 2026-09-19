@@ -31,8 +31,10 @@ or affect the scanner's results.
 ## Project documentation
 
 [PROJECT.md](docs/PROJECT.md) is the sole authority for project steering and
-work status. The [Panel Improvement Roadmap](docs/management/ROADMAP.md)
-defines delivery scope, execution restrictions, and validation gates.
+work status. The [roadmap placeholder](docs/management/ROADMAP.md) is reserved
+for a future owner-authorized plan. The
+[archived panel roadmap](docs/archive/PANEL-IMPROVEMENT-ROADMAP.md) records the
+scope and constraints that governed the panel improvements.
 
 The [documentation index](docs/INDEX.md) links specifications, delivery notes,
 management documents, and archived scope and evidence.
@@ -56,9 +58,8 @@ integration boundary are documented in the
 [Thunderstore package contract](docs/THUNDERSTORE-PACKAGE.md).
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
-[project steering document](docs/PROJECT.md), and the current
-[Panel Improvement Roadmap](docs/management/ROADMAP.md) before changing scope or
-behavior.
+[project steering document](docs/PROJECT.md), and the
+[roadmap location](docs/management/ROADMAP.md) before changing scope or behavior.
 
 ## License
 

@@ -71,5 +71,5 @@ surface. A third subcontainer remained the smallest recommended option.
 absence lines, scaffold changes, theme or vein presentation, raw-scan
 retention, cache changes, aesthetic rankings, or a new panel surface.
 
-Return to the [current roadmap](ROADMAP.md),
+Return to the [roadmap placeholder](ROADMAP.md),
 [project steering](../PROJECT.md), or the [documentation index](../INDEX.md).

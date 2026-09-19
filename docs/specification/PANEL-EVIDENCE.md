@@ -116,19 +116,19 @@ hosted CI uses source-only declarations. The existing main-branch workflow
 builds, tests and validates the three-DLL package. None of these checks is a
 Unity rendering or gameplay test.
 
-For the final owner recipe, existing attributable preview captures provide
+For the final owner recipe, existing attributable preview captures provided
 two fixed inputs on DSP 0.10.34.28529, algorithm 20200403, 64 stars and 1x
 resources: `24242424` has one home-giant moon (`feed06-preview-current.tsv`,
 matching assembly hash above); `16315224` has three home-giant moons and a
 Deuterium starter (`spec06-preview.tsv`, runtime-version header). These files
 are prior inspection artifacts in the shared SPEC01 probe directory, not
-saves. Use `16315224` for the single two-panel owner check: it also covers the
-sibling-power/ordinal case, so a second preview is unnecessary. The default
-combat configuration can be used; none of the changed rules depends on a new
-combat preset. These captures
-establish seed selection, not visual acceptance of the new candidate.
+saves. `16315224` was selected for the single two-panel owner check because
+it also covered the sibling-power/ordinal case, without a second preview.
+Default combat settings were suitable; the changed rules did not depend on
+a new preset. Those captures supported seed selection, not a visual observation
+of the candidate.
 
-The [owner checklist](../PANEL-PREVIEW-CHECK.md) gives the selected input,
-candidate identity, expected layout and a simple pass/problem reply. Numeric and rare
-edge cases belong in synthetic automated tests; the owner need not locate
-additional seeds, measure thresholds or repeat the automated test matrix.
+The [historical owner checklist](../archive/PANEL-PREVIEW-CHECK.md) supplied the
+input, candidate identity, expected layout and pass/problem reply. Numeric and
+rare edge cases were assigned to synthetic tests, without requiring owner seed
+searches, measurements or repetition of the automated matrix.

@@ -7,10 +7,8 @@ authority for project steering and all current and historical work status.
 
 - [Project steering](PROJECT.md): Decisions, authorization, progress,
   blockers, and current and historical dispositions.
-- [Panel validation findings](management/PANEL-VALIDATION-FINDINGS.md): Owner
-  observations and requirements for the panel changes.
-- [Panel improvement roadmap](management/ROADMAP.md): Epics, stories,
-  execution boundaries, phase-gate and milestone definitions, and owner handoff.
+- [Roadmap placeholder](management/ROADMAP.md): Location for a future
+  owner-authorized plan and links to the historical panel work.
 - [Feature-request register](management/FEATURE-REQUESTS.md): Request scope,
   rationale, and evaluation criteria.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Engineering
@@ -44,8 +42,6 @@ authority for project steering and all current and historical work status.
 
 ## Delivery
 
-- [Panel preview check](PANEL-PREVIEW-CHECK.md): Identified candidate, package
-  download and one short owner-only New Game preview recipe.
 - [Complete-cluster cache](CACHE.md): Local cache trust boundary, retention,
   failure behavior, and manual clearing instructions.
 - [Thunderstore package contract](THUNDERSTORE-PACKAGE.md): Real plugin build,
@@ -55,6 +51,12 @@ authority for project steering and all current and historical work status.
 ## Archive
 
 - [Archive index](archive/INDEX.md): Navigation for historical scope and evidence.
+- [Panel improvement roadmap](archive/PANEL-IMPROVEMENT-ROADMAP.md): Historical
+  epics, stories, execution restrictions, gates and handoff requirements.
+- [Panel validation findings](archive/PANEL-VALIDATION-FINDINGS.md): Owner
+  observations and requirements that informed the panel work.
+- [Panel preview recipe](archive/PANEL-PREVIEW-CHECK.md): The identified
+  1.3.110 package and owner-only recipe supplied for the final panel check.
 - [Product specification planning roadmap](archive/PLANNING-ROADMAP.md):
   SPEC-01 through SPEC-07 scope and presentation planning boundaries.
 - [Scanner core roadmap](archive/CORE-ROADMAP.md): IMPL-01 through IMPL-09
