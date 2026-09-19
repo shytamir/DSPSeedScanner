@@ -97,6 +97,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("sphere geometry is star-centric and nearest-first", SphereGeometryIsStarCentric),
                 ("Aquatica group uses brightest-star distance", AquaticaUsesBrightestDistance),
                 ("oil totals match native rate formatting", OilTotalsMatchNativeFormatting),
+                ("moon labels and home highlight use body identity", MoonLabelsUseBodyIdentity),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -4189,6 +4190,37 @@ namespace DSPSeedScanner.Runtime.Tests
                     .Cards.Select(card => card.Line));
                 Equal(completedFreshText, cachedFreshText);
             });
+        }
+
+        private static void MoonLabelsUseBodyIdentity()
+        {
+            foreach (bool contained in new[] { false, true })
+            {
+                RuntimeHomeSystemBodyEvidence Body(int id, int number, int around, int? parent,
+                    int order, float radius, bool giant = false, bool home = false) =>
+                    new RuntimeHomeSystemBodyEvidence(id, "Body " + id, number, around, parent, order,
+                        giant ? HomeSystemBodyKind.GasGiant : HomeSystemBodyKind.Solid,
+                        giant ? null : "Ocean", giant ? null : 1m, giant ? null : 1m,
+                        null, radius, home, contained);
+                var inventory = HomeSystemBodyInventory.Project("home", new[] {
+                    Body(201, 1, 2, 200, 1, 0.02f, home: true),
+                    Body(203, 3, 2, 200, 3, 0.03f), Body(202, 2, 2, 200, 2, 0.01f),
+                    Body(200, 2, 0, null, 0, 1.25f, giant: true),
+                    Body(400, 4, 0, null, 4, 2f, giant: true),
+                    Body(401, 1, 4, 400, 5, 0.01f), Body(500, 5, 0, null, 6, 3f) })!;
+                Equal(2, inventory.Bodies.Single(body => body.BodyId == 201).MoonOrdinal);
+                Equal(1, inventory.Bodies.Single(body => body.BodyId == 202).MoonOrdinal);
+                Equal(3, inventory.Bodies.Single(body => body.BodyId == 203).MoonOrdinal);
+                Equal(1, inventory.Bodies.Single(body => body.BodyId == 401).MoonOrdinal);
+                foreach (HomeSystemBody body in inventory.Bodies)
+                {
+                    HomeSystemBodyTableRow row = HomeSystemBodyPresentation.ProjectTableRow(body);
+                    Equal(body.MoonOrdinal.HasValue, row.Body.Contains("\nMoon", StringComparison.Ordinal));
+                    bool green = body.BodyId == 201 && contained;
+                    True(row.Cells.Where(text => text.Length > 0).All(text =>
+                        text.StartsWith("<color=#80F294>", StringComparison.Ordinal) == green));
+                }
+            }
         }
 
         private static void OilTotalsMatchNativeFormatting()

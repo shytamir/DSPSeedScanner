@@ -187,7 +187,11 @@ namespace DSPSeedScanner.Plugin
                             planet.type == EPlanetType.Gas && planet.gasItems != null
                                 ? planet.gasItems.Select(NormalizeGasProductId)
                                     .Where(ResourcePresentation.Supports)
-                                : null)));
+                                : null,
+                            planet.orbitRadius,
+                            planet.id == galaxy.birthPlanetId,
+                            PreviewSphereGeometry.ContainsOrbit(planet.orbitRadius,
+                                planet.orbitAroundPlanet?.orbitRadius, MaximumShellRadius(birthStar)))));
             NormalizedHomePlanetTopology? homePlanetTopology =
                 PreviewHomeTopologyNormalizer.Normalize(
                     birthSystemIdentifier,

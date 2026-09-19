@@ -32,7 +32,10 @@ namespace DSPSeedScanner.Runtime
             string? themeName = null,
             decimal? solarRatio = null,
             decimal? windRatio = null,
-            IEnumerable<string>? gasProducts = null)
+            IEnumerable<string>? gasProducts = null,
+            float? orbitRadius = null,
+            bool isHomePlanet = false,
+            bool isOrbitContained = false)
         {
             if (bodyId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(bodyId));
@@ -82,6 +85,9 @@ namespace DSPSeedScanner.Runtime
             SolarRatio = solarRatio;
             WindRatio = windRatio;
             GasProducts = Array.AsReadOnly(products);
+            OrbitRadius = orbitRadius;
+            IsHomePlanet = isHomePlanet;
+            IsOrbitContained = isOrbitContained;
         }
 
         public int BodyId { get; }
@@ -95,6 +101,9 @@ namespace DSPSeedScanner.Runtime
         public decimal? SolarRatio { get; }
         public decimal? WindRatio { get; }
         public IReadOnlyList<string> GasProducts { get; }
+        public float? OrbitRadius { get; }
+        public bool IsHomePlanet { get; }
+        public bool IsOrbitContained { get; }
     }
 
     public sealed record HomeSystemBody
@@ -109,7 +118,9 @@ namespace DSPSeedScanner.Runtime
             string? themeName,
             decimal? solarRatio,
             decimal? windRatio,
-            IEnumerable<string> gasProducts)
+            IEnumerable<string> gasProducts,
+            int? moonOrdinal,
+            bool highlightContainedHome)
         {
             BodyId = bodyId;
             DisplayDesignation = displayDesignation;
@@ -121,6 +132,8 @@ namespace DSPSeedScanner.Runtime
             SolarRatio = solarRatio;
             WindRatio = windRatio;
             GasProducts = Array.AsReadOnly(gasProducts.ToArray());
+            MoonOrdinal = moonOrdinal;
+            HighlightContainedHome = highlightContainedHome;
         }
 
         public int BodyId { get; }
@@ -133,6 +146,8 @@ namespace DSPSeedScanner.Runtime
         public decimal? SolarRatio { get; }
         public decimal? WindRatio { get; }
         public IReadOnlyList<string> GasProducts { get; }
+        public int? MoonOrdinal { get; }
+        public bool HighlightContainedHome { get; }
     }
 
     public sealed class HomeSystemBodyInventory
@@ -195,7 +210,8 @@ namespace DSPSeedScanner.Runtime
                         value.ThemeName,
                         value.SolarRatio,
                         value.WindRatio,
-                        value.GasProducts));
+                        value.GasProducts, null,
+                        value.IsHomePlanet && value.IsOrbitContained && value.BodyKind == HomeSystemBodyKind.Solid));
                     continue;
                 }
 
@@ -210,6 +226,12 @@ namespace DSPSeedScanner.Runtime
                 {
                     return null;
                 }
+                RuntimeHomeSystemBodyEvidence[] moons = values.Where(candidate =>
+                    candidate.OrbitAround == value.OrbitAround && candidate.BodyKind == HomeSystemBodyKind.Solid)
+                    .OrderBy(candidate => candidate.OrbitRadius).ThenBy(candidate => candidate.StableGameOrder).ToArray();
+                int? ordinal = moons.All(moon => moon.OrbitRadius.HasValue) &&
+                    value.BodyKind == HomeSystemBodyKind.Solid
+                        ? Array.FindIndex(moons, moon => moon.BodyId == value.BodyId) + 1 : null;
                 projected.Add(new HomeSystemBody(
                     value.BodyId,
                     value.DisplayDesignation,
@@ -220,7 +242,8 @@ namespace DSPSeedScanner.Runtime
                     value.ThemeName,
                     value.SolarRatio,
                     value.WindRatio,
-                    value.GasProducts));
+                    value.GasProducts, ordinal,
+                    value.IsHomePlanet && value.IsOrbitContained && value.BodyKind == HomeSystemBodyKind.Solid));
             }
 
             return new HomeSystemBodyInventory(homeSystemIdentifier, projected.ToArray());
@@ -243,7 +266,9 @@ namespace DSPSeedScanner.Runtime
             HomeSystemResource[] values = bodyResources?.Resources.ToArray() ??
                 Array.Empty<HomeSystemResource>();
             return new HomeSystemBodyTableRow(
-                body.DisplayDesignation,
+                body.DisplayDesignation + (body.OrbitKind == HomeSystemBodyOrbitKind.Satellite &&
+                    body.BodyKind == HomeSystemBodyKind.Solid ? "\nMoon" +
+                    (body.MoonOrdinal.HasValue ? " " + body.MoonOrdinal.Value.ToString(CultureInfo.InvariantCulture) : String.Empty) : String.Empty),
                 body.BodyKind == HomeSystemBodyKind.Solid
                     ? body.ThemeName ?? String.Empty
                     : body.BodyKind == HomeSystemBodyKind.IceGiant
@@ -269,7 +294,7 @@ namespace DSPSeedScanner.Runtime
                             resource.VeinGroups.ToString(CultureInfo.InvariantCulture))),
                 String.Join(
                     "\n",
-                    body.GasProducts.Select(ResourcePresentation.GasProductName)));
+                    body.GasProducts.Select(ResourcePresentation.GasProductName)), body.HighlightContainedHome);
         }
 
         public static string Format(
@@ -387,7 +412,8 @@ namespace DSPSeedScanner.Runtime
             string wind,
             string ores,
             string oil,
-            string gasProducts)
+            string gasProducts,
+            bool green = false)
         {
             Body = body;
             World = world;
@@ -405,7 +431,7 @@ namespace DSPSeedScanner.Runtime
                 Ores,
                 Oil,
                 GasProducts
-            });
+            }.Select(text => green ? StatisticText.Green(text) : text).ToArray());
         }
 
         public string Body { get; }

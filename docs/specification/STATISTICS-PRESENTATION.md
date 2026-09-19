@@ -12,6 +12,12 @@ rounding described in [Panel evidence](PANEL-EVIDENCE.md#native-resource-units).
 Resource settings are already reflected in the amounts. Missing multiplier
 evidence displays Unavailable, never a guessed rate. Ore counts are unchanged.
 
+Each solid moon's Body cell has a second line, `Moon 1`, `Moon 2`, and so on,
+ordered from nearest to farthest around its own parent, including the home
+moon. Primary planets and giants have no second line. The table's body order
+is unchanged. Only the home planet's whole row is green when its entire
+star-centric orbit is contained by the home star's maximum sphere radius.
+
 ## Notable stars
 
 Sphere rows list blue giants first in descending Dyson luminosity, then the
