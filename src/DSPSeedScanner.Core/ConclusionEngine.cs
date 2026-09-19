@@ -22,6 +22,7 @@ namespace DSPSeedScanner.Core
             EvaluateSphereGeometry(evidence, reports);
             EvaluateDeferredResourceScope(evidence, reports);
             EvaluateRareAccess(evidence, reports);
+            EvaluateResourceSystems(evidence, reports);
 
             IReadOnlyList<RoleAssignment> roles = EvaluateRoles(evidence, reports);
             EvaluateGrouping(evidence, roles, reports);
@@ -538,6 +539,29 @@ namespace DSPSeedScanner.Core
                             "runtime-amount-units")
                         : null,
                     unavailable ?? NoAcceptedRange("RR-ACCESS.amount")));
+            }
+        }
+
+        private static void EvaluateResourceSystems(NormalizedClusterEvidence evidence,
+            ICollection<ConclusionReport> reports)
+        {
+            EvidenceCoverage coverage = evidence.Coverage(EvidenceScope.CompleteClusterResources,
+                EvidenceStage.CompleteClusterRaw);
+            if (UnavailableCause(evidence, coverage) != null || evidence.SystemResources == null)
+                return;
+            foreach ((string resource, long minimum) in new[] {
+                ("spiniform-stalagmite-crystal", 900_000L),
+                ("optical-grating-crystal", 600_000L), ("organic-crystal", 0L) })
+            {
+                NormalizedSystemResources? nearest = evidence.SystemResources
+                    .Where(system => resource == "organic-crystal"
+                        ? system.FiniteAmounts.ContainsKey(resource) : system.Amount(resource) > minimum)
+                    .OrderBy(system => system.DistanceFromBirthLy)
+                    .ThenBy(system => system.System.Identifier, StringComparer.Ordinal).FirstOrDefault();
+                if (nearest != null)
+                    AddRangeReport(evidence, reports, coverage, "MF-RESOURCE-SYSTEM.rare:" + resource,
+                        ConclusionContext.Megafactory, nearest.System, "distanceFromBirth",
+                        nearest.DistanceFromBirthLy, ConclusionDefinition.RareAccessDistance, true);
             }
         }
 

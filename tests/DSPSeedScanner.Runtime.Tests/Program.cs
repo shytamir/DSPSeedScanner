@@ -92,6 +92,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("starter giant has one verdict", StarterGiantHasOneVerdict),
                 ("sibling moon power is independent", SiblingMoonPowerIsIndependent),
                 ("rich Deuterium conclusions use uncapped distance", RichDeuteriumConclusionsUseDistance),
+                ("targeted rare systems use deposit totals", TargetedRareSystemsUseDepositTotals),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -4169,6 +4170,51 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void TargetedRareSystemsUseDepositTotals()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var raw = new FakeCompleteClusterGateway {
+                    TargetCount = 4,
+                    TargetFactory = (id, order) => new CompleteClusterPlanetTarget(id, 1,
+                        new ConclusionSubject(id == 101 ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                            id == 101 ? "1" : id == 104 ? "3" : "2"),
+                        id == 101 ? 0m : id == 104 ? 2m : 3m, "Planet " + id, order, false),
+                    EvidenceFactory = (seed, target) => ResourceSnapshot(seed, target,
+                        target.PlanetId == 101 ? new[] { ("iron", 1L) } :
+                        target.PlanetId == 104 ? new[] {
+                            ("spiniform-stalagmite-crystal", 900_000L), ("optical-grating-crystal", 600_000L) } :
+                        new[] { ("spiniform-stalagmite-crystal", target.PlanetId == 102 ? 450_001L : 450_000L),
+                            ("optical-grating-crystal", target.PlanetId == 102 ? 300_001L : 300_000L),
+                            ("organic-crystal", 0L) }) };
+                using var resolver = new PreviewResolutionCoordinator(new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway()), new CompleteClusterRawCoordinator(raw),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                while (!resolver.CurrentPublishedAttempt!.IsTerminal) resolver.AdvanceCurrent();
+                var attempt = resolver.CurrentPublishedAttempt!;
+                var reports = attempt.CompleteReports.Where(report =>
+                    report.ConclusionId.StartsWith("MF-RESOURCE-SYSTEM.rare:", StringComparison.Ordinal)).ToArray();
+                Equal(3, reports.Length);
+                True(reports.All(report => report.Subject.Identifier == "2"));
+                var text = CompleteContextText(PreviewConclusionPresenter.Project(attempt), ConclusionContext.Megafactory);
+                True(text.Contains("Spiniform Stalagmite Crystal", StringComparison.Ordinal));
+                False(text.Contains("Many rares", StringComparison.Ordinal));
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                Equal(PreviewResolutionState.Cached, resolver.CurrentPublishedAttempt!.State);
+                Equal(text, CompleteContextText(PreviewConclusionPresenter.Project(
+                    resolver.CurrentPublishedAttempt), ConclusionContext.Megafactory));
+            });
+        }
+
+        private static NormalizedRawPlanetEvidence ResourceSnapshot(int seed,
+            CompleteClusterPlanetTarget target, params (string Resource, long Amount)[] resources) =>
+            new NormalizedRawPlanetEvidence(seed, target.PlanetId, 1, target.AlgorithmId,
+                RawPlanetCoverage.Complete(), Array.Empty<NormalizedRawVeinNode>(),
+                resources.Select((resource, index) => new NormalizedRawVeinGroup(index + 1,
+                    index + 1, resource.Resource, RawResourceSemantics.FiniteDeposit, 1,
+                    resource.Amount, 0m, 0m, 0m)));
+
         private static void RichDeuteriumConclusionsUseDistance()
         {
             foreach ((decimal distance, PreviewConclusionColumn expected) in new[] {
@@ -4462,13 +4508,13 @@ namespace DSPSeedScanner.Runtime.Tests
                 PreviewConclusionPresentation complete =
                     PreviewConclusionPresenter.Project(attempt);
                 string detailText = String.Join("\n", complete.DetailGroups
-                    .Single(group => group.Context == ConclusionContext.Megafactory)
-                    .Cards.Select(card => card.Line));
-                True(detailText.Contains("Nearby Kimberlite in Star 2", StringComparison.Ordinal));
-                True(detailText.Contains(
+                    .Where(group => group.Context == ConclusionContext.Megafactory)
+                    .SelectMany(group => group.Cards).Select(card => card.Line));
+                False(detailText.Contains("Nearby Kimberlite in Star 2", StringComparison.Ordinal));
+                False(detailText.Contains(
                     "Distant Unipolar Magnet in Star 3",
                     StringComparison.Ordinal));
-                True(detailText.Contains(
+                False(detailText.Contains(
                     "Many rare resources absent: Fire Ice, Fractal Silicon, and Optical Grating Crystal",
                     StringComparison.Ordinal));
 
@@ -4493,9 +4539,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(PreviewResolutionState.Cached, cached.State);
                 string cachedDetailText = String.Join("\n", PreviewConclusionPresenter
                     .Project(cached)
-                    .DetailGroups.Single(group =>
+                    .DetailGroups.Where(group =>
                         group.Context == ConclusionContext.Megafactory)
-                    .Cards.Select(card => card.Line));
+                    .SelectMany(group => group.Cards).Select(card => card.Line));
                 Equal(detailText, cachedDetailText);
             });
 

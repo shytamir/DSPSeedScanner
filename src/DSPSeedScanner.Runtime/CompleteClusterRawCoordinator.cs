@@ -347,7 +347,8 @@ namespace DSPSeedScanner.Runtime
                 rareResources: rareResources,
                 rareCoverage: rareCoverage,
                 clusterCommonResourceTotal: aggregate.CommonTotal,
-                clusterResourceCoverage: resourceCoverage);
+                clusterResourceCoverage: resourceCoverage,
+                systemResources: aggregate.SystemResources());
             affectedPlanet = null;
             trace.Add("evaluation:complete");
             Finish(
@@ -526,6 +527,8 @@ namespace DSPSeedScanner.Runtime
 
         private sealed class ClusterAggregate
         {
+            private readonly Dictionary<string, (ConclusionSubject Subject, decimal Distance,
+                Dictionary<string, long> Amounts)> systemResources = new();
             private readonly Dictionary<string, RareAggregate> rare =
                 ConclusionDefinition.RareResourceIds.ToDictionary(
                     resourceId => resourceId,
@@ -555,6 +558,18 @@ namespace DSPSeedScanner.Runtime
                 CompleteClusterPlanetTarget target,
                 NormalizedRawPlanetEvidence planet)
             {
+                if (!systemResources.TryGetValue(target.System.Identifier, out var system))
+                {
+                    system = (target.System, target.DistanceFromBirthLy,
+                        new Dictionary<string, long>(StringComparer.Ordinal));
+                    systemResources.Add(target.System.Identifier, system);
+                }
+                foreach (NormalizedRawVeinGroup group in planet.Groups.Where(value =>
+                    value.Semantics == RawResourceSemantics.FiniteDeposit))
+                {
+                    system.Amounts.TryGetValue(group.ResourceId, out long amount);
+                    system.Amounts[group.ResourceId] = checked(amount + group.Amount);
+                }
                 var location = new ClusterBodyLocation(
                     planet.PlanetId.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     target.DisplayDesignation,
@@ -632,6 +647,10 @@ namespace DSPSeedScanner.Runtime
                     }
                 }
             }
+
+            public IReadOnlyList<NormalizedSystemResources> SystemResources() =>
+                systemResources.Values.Select(system => new NormalizedSystemResources(
+                    system.Subject, system.Distance, system.Amounts)).ToArray();
 
             public HomeSystemResourceStatistics HomeSystemResources() =>
                 new HomeSystemResourceStatistics(homeResources.Select(pair =>

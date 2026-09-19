@@ -491,7 +491,8 @@ namespace DSPSeedScanner.Core
             IEnumerable<NormalizedSystemDistance>? systemDistances = null,
             long? clusterCommonResourceTotal = null,
             CompatibilityState compatibility = CompatibilityState.Supported,
-            DiagnosticCause? compatibilityFailure = null)
+            DiagnosticCause? compatibilityFailure = null,
+            IEnumerable<NormalizedSystemResources>? systemResources = null)
         {
             Identity = identity ?? throw new ArgumentNullException(nameof(identity));
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -595,6 +596,7 @@ namespace DSPSeedScanner.Core
             ClusterCommonResourceTotal = clusterCommonResourceTotal;
             Compatibility = compatibility;
             CompatibilityFailure = compatibilityFailure;
+            SystemResources = systemResources == null ? null : Array.AsReadOnly(systemResources.ToArray());
         }
 
         public GenerationIdentity Identity { get; }
@@ -610,6 +612,7 @@ namespace DSPSeedScanner.Core
         public IReadOnlyList<NormalizedSystemEvidence> Systems { get; }
 
         public NormalizedStarterResourceEvidence? StarterResources { get; }
+        public IReadOnlyList<NormalizedSystemResources>? SystemResources { get; }
 
         public IReadOnlyList<NormalizedRareResourceEvidence> RareResources { get; }
 

@@ -513,6 +513,7 @@ namespace DSPSeedScanner.Runtime
                 String.Equals(id, "CX-GROUPING.distance", StringComparison.Ordinal) ||
                 id.StartsWith("RR-ACCESS.distance:", StringComparison.Ordinal) ||
                 id.StartsWith("RR-ACCESS.amount:", StringComparison.Ordinal) ||
+                id.StartsWith("MF-RESOURCE-SYSTEM.rare:", StringComparison.Ordinal) ||
                 id.StartsWith("MF-SYSTEM-ROLE.role:", StringComparison.Ordinal);
         }
 

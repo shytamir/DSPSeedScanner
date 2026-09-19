@@ -885,80 +885,24 @@ namespace DSPSeedScanner.Runtime
             IReadOnlyList<ConclusionReport> reports,
             IReadOnlyDictionary<string, RuntimeSystemDisplay> displays)
         {
-            ConclusionReport[] rareReports = reports.Where(report =>
-                report.ConclusionId.StartsWith("RR-ACCESS.distance:", StringComparison.Ordinal))
-                .ToArray();
-            foreach (IGrouping<(ComponentOutcome Outcome, bool IsAbsent), ConclusionReport>
-                group in rareReports.GroupBy(report =>
-                    (report.Outcome, report.Subject.Kind == SubjectKind.Resource)))
+            foreach (ConclusionReport report in reports.Where(report =>
+                report.ConclusionId.StartsWith("MF-RESOURCE-SYSTEM.rare:", StringComparison.Ordinal)))
             {
-                ConclusionReport[] values = group
-                    .OrderBy(report => report.ConclusionId, StringComparer.Ordinal)
-                    .ToArray();
-                if (values.Length > MaximumSubjectsPerCard)
-                {
-                    string qualifier = group.Key switch
-                    {
-                        (ComponentOutcome.Supports, false) => "Many nearby rares: ",
-                        (ComponentOutcome.PreferenceSensitive, false) => "Many rares: ",
-                        (ComponentOutcome.DoesNotSupport, false) => "Many distant rares: ",
-                        (ComponentOutcome.DoesNotSupport, true) =>
-                            "Many rare resources absent: ",
-                        _ => String.Empty
-                    };
-                    if (qualifier.Length != 0)
-                    {
-                        IEnumerable<string> examples = group.Key.IsAbsent
-                            ? values.Select(value => ResourceLabel(value.ConclusionId))
-                            : values.Select(value =>
-                                displays.TryGetValue(
-                                    value.Subject.Identifier,
-                                    out RuntimeSystemDisplay? display)
-                                    ? ResourceLabel(value.ConclusionId) + " in " +
-                                        display.DisplayName
-                                    : ResourceLabel(value.ConclusionId));
-                        AddMegaCard(cards, values, qualifier + JoinNames(examples));
-                    }
+                if (!displays.TryGetValue(report.Subject.Identifier, out RuntimeSystemDisplay? display))
                     continue;
-                }
-
-                foreach (ConclusionReport report in values)
+                string resource = ResourceLabel(report.ConclusionId);
+                string description = report.Outcome switch
                 {
-                    string resource = ResourceLabel(report.ConclusionId);
-                    if (report.Subject.Kind == SubjectKind.Resource)
-                    {
-                        AddMegaCard(cards, new[] { report }, "No " + resource);
-                        continue;
-                    }
-                    if (!displays.TryGetValue(
-                        report.Subject.Identifier,
-                        out RuntimeSystemDisplay? display))
-                    {
-                        continue;
-                    }
-                    string description = report.Outcome switch
-                    {
-                        ComponentOutcome.Supports => "nearby " + resource,
-                        ComponentOutcome.PreferenceSensitive => resource,
-                        ComponentOutcome.DoesNotSupport => "distant " + resource,
-                        _ => String.Empty
-                    };
-                    if (description.Length != 0)
-                    {
-                        AddMegaRole(
-                            roles,
-                            new RuntimeSystemCandidate(
-                                report.Subject.Identifier,
-                                display.DisplayName,
-                                0m),
-                            report.Outcome,
-                            description,
-                            report);
-                    }
-                }
+                    ComponentOutcome.Supports => "nearby " + resource,
+                    ComponentOutcome.PreferenceSensitive => resource,
+                    ComponentOutcome.DoesNotSupport => "distant " + resource,
+                    _ => String.Empty
+                };
+                if (description.Length != 0)
+                    AddMegaRole(roles, new RuntimeSystemCandidate(report.Subject.Identifier,
+                        display.DisplayName, 0m), report.Outcome, description, report);
             }
         }
-
         private static ConclusionReport? SingleReport(
             IEnumerable<ConclusionReport> reports,
             string conclusionId) => reports.SingleOrDefault(report =>

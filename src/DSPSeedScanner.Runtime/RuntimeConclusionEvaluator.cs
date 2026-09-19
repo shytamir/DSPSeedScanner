@@ -15,7 +15,8 @@ namespace DSPSeedScanner.Runtime
             IEnumerable<NormalizedRareResourceEvidence>? rareResources = null,
             EvidenceCoverage? rareCoverage = null,
             long? clusterCommonResourceTotal = null,
-            EvidenceCoverage? clusterResourceCoverage = null)
+            EvidenceCoverage? clusterResourceCoverage = null,
+            IEnumerable<NormalizedSystemResources>? systemResources = null)
         {
             var identity = new GenerationIdentity(
                 fingerprint.GameVersion,
@@ -60,7 +61,8 @@ namespace DSPSeedScanner.Runtime
                 starterResources,
                 rareResources,
                 systemDistances: snapshot.SystemDistances,
-                clusterCommonResourceTotal: clusterCommonResourceTotal);
+                clusterCommonResourceTotal: clusterCommonResourceTotal,
+                systemResources: systemResources);
             return ConclusionEngine.Evaluate(evidence);
         }
 
