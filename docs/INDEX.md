@@ -20,6 +20,8 @@ authority for project steering and all current and historical work status.
 
 ## Specification
 
+- [Statistics presentation](specification/STATISTICS-PRESENTATION.md): Factual
+  table columns, ordering, units, and highlighting.
 - [Panel evidence and verification](specification/PANEL-EVIDENCE.md): Native
   source observations and repository verification cases for the panel changes.
 - [Generation identity contract](specification/GENERATION-IDENTITY.md): Inputs

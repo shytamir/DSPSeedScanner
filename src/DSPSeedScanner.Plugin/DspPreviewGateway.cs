@@ -234,7 +234,8 @@ namespace DSPSeedScanner.Plugin
                     birthStar,
                     galaxy.stars,
                     distances);
-            NotableStarStatistics? notableStars = NormalizeNotableStars(galaxy.stars);
+            NotableStarStatistics? notableStars = NormalizeNotableStars(galaxy.stars,
+                systems, distances, birthSystemIdentifier);
             recordTrace("preview:normalized");
             return new RuntimePreviewSnapshot(
                 birthSystemIdentifier,
@@ -248,7 +249,8 @@ namespace DSPSeedScanner.Plugin
                 notableStars: notableStars);
         }
 
-        private static NotableStarStatistics? NormalizeNotableStars(StarData[] stars)
+        private static NotableStarStatistics? NormalizeNotableStars(StarData[] stars,
+            NormalizedSystemEvidence[] systems, NormalizedSystemDistance[] distances, string homeSystem)
         {
             var evidence = new List<RuntimeNotableStarEvidence>(stars.Length);
             for (int index = 0; index < stars.Length; index++)
@@ -275,7 +277,10 @@ namespace DSPSeedScanner.Plugin
                     displayClass,
                     Convert.ToDecimal(star.radius),
                     Convert.ToDecimal(star.dysonLumino),
-                    index));
+                    index,
+                    systems[index].Subject.Identifier == homeSystem ? 0m : distances.Single(value =>
+                        value.Connects(homeSystem, systems[index].Subject.Identifier)).LightYears,
+                    systems[index].MaximumShellRadius, systems[index].ContainedOrbitCount));
             }
             return NotableStarStatistics.Project(evidence, stars.Length);
         }

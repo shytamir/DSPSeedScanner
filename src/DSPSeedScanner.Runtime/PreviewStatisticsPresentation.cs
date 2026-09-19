@@ -703,7 +703,10 @@ namespace DSPSeedScanner.Runtime
             NotableStarDisplayClass displayClass,
             decimal radius,
             decimal luminosity,
-            int stableGameOrder)
+            int stableGameOrder,
+            decimal? distanceFromHomeLy = null,
+            long? maximumSphereRadius = null,
+            int? containedOrbits = null)
         {
             if (String.IsNullOrWhiteSpace(displayName))
                 throw new ArgumentException("Star display name is required.", nameof(displayName));
@@ -724,6 +727,9 @@ namespace DSPSeedScanner.Runtime
             Radius = radius;
             Luminosity = luminosity;
             StableGameOrder = stableGameOrder;
+            DistanceFromHomeLy = distanceFromHomeLy;
+            MaximumSphereRadius = maximumSphereRadius;
+            ContainedOrbits = containedOrbits;
         }
 
         public string DisplayName { get; }
@@ -731,6 +737,9 @@ namespace DSPSeedScanner.Runtime
         public NotableStarDisplayClass DisplayClass { get; }
         public decimal Radius { get; }
         public decimal Luminosity { get; }
+        public decimal? DistanceFromHomeLy { get; }
+        public long? MaximumSphereRadius { get; }
+        public int? ContainedOrbits { get; }
         public int StableGameOrder { get; }
     }
 
@@ -743,14 +752,23 @@ namespace DSPSeedScanner.Runtime
             string type,
             string size,
             string luminosity,
-            string note)
+            string note,
+            string distance,
+            string maximumSphere,
+            string contained,
+            bool green)
         {
             Star = star;
             Type = type;
             Size = size;
             Luminosity = luminosity;
             Note = note;
-            cells = Array.AsReadOnly(new[] { Star, Type, Size, Luminosity, Note });
+            Distance = distance;
+            MaximumSphere = maximumSphere;
+            Contained = contained;
+            IsGreen = green;
+            cells = Array.AsReadOnly(new[] { Star, Type, Size, Luminosity, Distance,
+                MaximumSphere, Contained, Note }.Select(text => green ? StatisticText.Green(text) : text).ToArray());
         }
 
         public string Star { get; }
@@ -758,6 +776,10 @@ namespace DSPSeedScanner.Runtime
         public string Size { get; }
         public string Luminosity { get; }
         public string Note { get; }
+        public string Distance { get; }
+        public string MaximumSphere { get; }
+        public string Contained { get; }
+        public bool IsGreen { get; }
         public IReadOnlyList<string> Cells => cells;
     }
 
@@ -804,12 +826,15 @@ namespace DSPSeedScanner.Runtime
                 .First();
             RuntimeNotableStarEvidence[] notable = values
                 .Where(value => value.DisplayClass != NotableStarDisplayClass.Other)
-                .OrderBy(value => value.DisplayClass == NotableStarDisplayClass.OType ? 0 : 1)
-                .ThenBy(value => value.StableGameOrder)
                 .ToArray();
-            IEnumerable<RuntimeNotableStarEvidence> displayed = notable;
-            if (brightest.DisplayClass == NotableStarDisplayClass.Other)
+            IEnumerable<RuntimeNotableStarEvidence> displayed = notable
+                .Where(value => value.DisplayClass == NotableStarDisplayClass.BlueGiant)
+                .OrderByDescending(value => value.Luminosity).ThenBy(value => value.StableGameOrder);
+            if (brightest.DisplayClass != NotableStarDisplayClass.BlueGiant)
                 displayed = displayed.Append(brightest);
+            displayed = displayed.Concat(notable.Where(value =>
+                value.DisplayClass == NotableStarDisplayClass.OType && !ReferenceEquals(value, brightest))
+                .OrderBy(value => value.DistanceFromHomeLy).ThenBy(value => value.StableGameOrder));
 
             NotableStarTableRow[] rows = displayed.Select(value =>
                 new NotableStarTableRow(
@@ -817,7 +842,11 @@ namespace DSPSeedScanner.Runtime
                     value.DisplayedType,
                     value.Radius.ToString("0.00", CultureInfo.InvariantCulture) + " R",
                     value.Luminosity.ToString("0.000", CultureInfo.InvariantCulture) + " L",
-                    ReferenceEquals(value, brightest) ? "Brightest" : String.Empty))
+                    ReferenceEquals(value, brightest) ? "Brightest" : String.Empty,
+                    value.DistanceFromHomeLy.HasValue ? DspLyFormatter.Format(value.DistanceFromHomeLy.Value) : String.Empty,
+                    value.MaximumSphereRadius?.ToString("N0", CultureInfo.InvariantCulture) + (value.MaximumSphereRadius.HasValue ? " m" : String.Empty),
+                    value.ContainedOrbits?.ToString(CultureInfo.InvariantCulture) ?? String.Empty,
+                    value.DisplayClass == NotableStarDisplayClass.BlueGiant))
                 .ToArray();
             return new NotableStarStatistics(
                 notable.Count(value => value.DisplayClass == NotableStarDisplayClass.OType),

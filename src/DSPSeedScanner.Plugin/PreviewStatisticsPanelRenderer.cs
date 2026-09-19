@@ -81,15 +81,21 @@ namespace DSPSeedScanner.Plugin
             "Type",
             "Size",
             "Luminosity",
+            "Distance",
+            "Max Sphere",
+            "Contained",
             "Note"
         };
         private static readonly float[] NotableStarColumnRatios =
         {
-            0.32f,
-            0.24f,
-            0.13f,
-            0.17f,
-            0.14f
+            0.18f,
+            0.19f,
+            0.09f,
+            0.105f,
+            0.115f,
+            0.12f,
+            0.09f,
+            0.11f
         };
         private GUIStyle? titleStyle;
         private GUIStyle? sectionTitleStyle;
@@ -696,6 +702,7 @@ namespace DSPSeedScanner.Plugin
             };
             bodyStyle = new GUIStyle(GUI.skin.label)
             {
+                richText = true,
                 alignment = TextAnchor.UpperLeft,
                 clipping = TextClipping.Clip,
                 fontSize = 16,

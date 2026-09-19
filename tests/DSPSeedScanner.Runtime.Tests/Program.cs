@@ -3503,13 +3503,14 @@ namespace DSPSeedScanner.Runtime.Tests
                 NotableStarDisplayClass displayClass,
                 decimal radius,
                 decimal luminosity,
-                int order) => new RuntimeNotableStarEvidence(
+                int order,
+                decimal distance = 0m) => new RuntimeNotableStarEvidence(
                     name,
                     type,
                     displayClass,
                     radius,
                     luminosity,
-                    order);
+                    order, distance, 200_000, 3);
 
             NotableStarStatistics selected = NotableStarStatistics.Project(
                 new[]
@@ -3522,14 +3523,18 @@ namespace DSPSeedScanner.Runtime.Tests
                 4)!;
             Equal("2 O stars - 1 blue giant", selected.Summary);
             Equal(3, selected.Rows.Count);
-            Equal("Orion", selected.Rows[0].Star);
-            Equal("Bellatrix", selected.Rows[1].Star);
-            Equal("Rigel", selected.Rows[2].Star);
-            Equal("2.35 R", selected.Rows[0].Size);
-            Equal("8.765 L", selected.Rows[0].Luminosity);
-            Equal("Brightest", selected.Rows[2].Note);
+            Equal("Rigel", selected.Rows[0].Star);
+            Equal("Orion", selected.Rows[1].Star);
+            Equal("Bellatrix", selected.Rows[2].Star);
+            Equal("2.35 R", selected.Rows[1].Size);
+            Equal("8.765 L", selected.Rows[1].Luminosity);
+            Equal("Brightest", selected.Rows[0].Note);
             Equal(1, selected.Rows.Count(row => row.Note == "Brightest"));
-            Equal(5, selected.Rows[0].Cells.Count);
+            Equal(8, selected.Rows[0].Cells.Count);
+            True(selected.Rows[0].IsGreen);
+            True(selected.Rows[0].Cells.Where(text => text.Length > 0)
+                .All(text => text.StartsWith("<color=#80F294>", StringComparison.Ordinal)));
+            False(selected.Rows[1].IsGreen);
 
             NotableStarStatistics oMaximum = NotableStarStatistics.Project(
                 new[]
@@ -3538,7 +3543,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     Star("Blue", "Blue Giant", NotableStarDisplayClass.BlueGiant, 10m, 11m, 1)
                 },
                 2)!;
-            Equal("Brightest", oMaximum.Rows[0].Note);
+            Equal("Brightest", oMaximum.Rows[1].Note);
             Equal(1, oMaximum.Rows.Count(row => row.Note == "Brightest"));
 
             NotableStarStatistics equalMaximum = NotableStarStatistics.Project(
@@ -3551,10 +3556,10 @@ namespace DSPSeedScanner.Runtime.Tests
                 3)!;
             Equal("1 O star - 1 blue giant", equalMaximum.Summary);
             Equal(3, equalMaximum.Rows.Count);
-            Equal("Second", equalMaximum.Rows[0].Star);
-            Equal("Blue O", equalMaximum.Rows[1].Star);
-            Equal("First", equalMaximum.Rows[2].Star);
-            Equal("Brightest", equalMaximum.Rows[2].Note);
+            Equal("Blue O", equalMaximum.Rows[0].Star);
+            Equal("First", equalMaximum.Rows[1].Star);
+            Equal("Second", equalMaximum.Rows[2].Star);
+            Equal("Brightest", equalMaximum.Rows[1].Note);
             Equal(1, equalMaximum.Rows.Count(row => row.Note == "Brightest"));
 
             NotableStarStatistics noNotable = NotableStarStatistics.Project(
@@ -3587,6 +3592,18 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal("Brightest", full.Rows.Single(row => row.Star == "Star 63").Note);
             True(NotableStarStatistics.Project(fullBound.Take(63), 64) == null);
 
+            var ordered = NotableStarStatistics.Project(new[] {
+                Star("Far O", "O type star", NotableStarDisplayClass.OType, 1m, 1.5m, 0, 20m),
+                Star("Dim blue", "Blue Giant", NotableStarDisplayClass.BlueGiant, 1m, 2m, 1, 1m),
+                Star("Peak", "A type star", NotableStarDisplayClass.Other, 1m, 5m, 2, 8m),
+                Star("Near O", "O type star", NotableStarDisplayClass.OType, 1m, 1.4m, 3, 2m),
+                Star("Bright blue", "Blue Giant", NotableStarDisplayClass.BlueGiant, 1m, 3m, 4, 9m)
+            }, 5)!;
+            Equal("Bright blue,Dim blue,Peak,Near O,Far O", String.Join(",", ordered.Rows.Select(row => row.Star)));
+            Equal("2 ly", ordered.Rows[3].Distance);
+            Equal("200,000 m", ordered.Rows[3].MaximumSphere);
+            Equal("3", ordered.Rows[3].Contained);
+
             WithTemporaryDirectory(path =>
             {
                 var gate = new RuntimeOperationGate();
@@ -3617,7 +3634,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 Equal(PreviewResolutionState.Cached, cached.State);
                 statistics.BeginSession(cached.Session);
                 True(statistics.Update(cached));
-                Equal("Rigel", statistics.Current!.NotableStars?.Rows[2].Star);
+                Equal("Rigel", statistics.Current!.NotableStars?.Rows[0].Star);
                 Equal(1, completeGateway.GenerateCalls);
 
                 previewGateway.Snapshot = Snapshot(notableStars: noNotable);
