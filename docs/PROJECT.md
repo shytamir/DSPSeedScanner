@@ -11,7 +11,7 @@ its execution and story-closing commits/pushes to `main`.
 
 **Current phase:** Phase 2 - implementation.
 
-**Next story:** `PANEL-F03: Sibling-moon power conclusions`. G1 passed and
+**Next story:** `PANEL-F04: Nearest qualifying Deuterium supply`. G1 passed and
 M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 
 | Panel story | State | Evidence |
@@ -21,6 +21,7 @@ M1 (Implementation evidence ready) is declared. G2-G4 remain pending.
 | PANEL-I03 | Technically complete | [Data routes and verification inputs](specification/PANEL-EVIDENCE.md#data-routes-and-verification-inputs); no unresolved investigation. |
 | PANEL-F01 | Technically complete | Solution build and Runtime projection checks; owner preview awaits G4. |
 | PANEL-F02 | Technically complete | Core boundary/coverage checks and Runtime split-deposit check; scarcity regressions retained. Owner preview awaits G4. |
+| PANEL-F03 | Technically complete | Solution/plugin builds and sibling attribution/independent-boundary checks. Owner preview awaits G4. |
 | Remaining implementation and handoff stories | Not started | Await their roadmap sequence and gates. |
 
 The accepted [owner findings](management/PANEL-VALIDATION-FINDINGS.md) define

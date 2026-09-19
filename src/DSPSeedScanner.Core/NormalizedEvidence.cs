@@ -71,7 +71,8 @@ namespace DSPSeedScanner.Core
             decimal? solarRatio,
             decimal? windRatio,
             bool? isTidalLocked,
-            IEnumerable<string>? gasProductIds)
+            IEnumerable<string>? gasProductIds,
+            int? parentPlanetId = null)
         {
             if (planetId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(planetId));
@@ -124,6 +125,7 @@ namespace DSPSeedScanner.Core
             WindRatio = windRatio;
             IsTidalLocked = isTidalLocked;
             this.gasProductIds = products;
+            ParentPlanetId = parentPlanetId;
         }
 
         public int PlanetId { get; }
@@ -132,6 +134,7 @@ namespace DSPSeedScanner.Core
         public decimal? SolarRatio { get; }
         public decimal? WindRatio { get; }
         public bool? IsTidalLocked { get; }
+        public int? ParentPlanetId { get; }
         public IReadOnlyList<string> GasProductIds =>
             Array.AsReadOnly((string[])gasProductIds.Clone());
     }

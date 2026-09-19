@@ -431,24 +431,22 @@ namespace DSPSeedScanner.Runtime
         {
             var cards = new List<PresentedConclusionCard>();
             AddStarterGiantCards(cards, reports, birthPlanets);
-            AddFreshCard(cards, Reports(reports, "FS-POWER.solar"), PowerLine(
-                reports,
-                birthPlanets,
-                "FS-POWER.solar",
-                "solar",
-                "bright",
-                "normal",
-                "dim",
-                planet => planet.SolarRatio));
-            AddFreshCard(cards, Reports(reports, "FS-POWER.wind"), PowerLine(
-                reports,
-                birthPlanets,
-                "FS-POWER.wind",
-                "wind",
-                "strong",
-                "normal",
-                "weak",
-                planet => planet.WindRatio));
+            foreach (NormalizedBirthPlanetEvidence moon in birthPlanets ??
+                Array.Empty<NormalizedBirthPlanetEvidence>())
+            {
+                foreach (string power in new[] { "solar", "wind" })
+                {
+                    ConclusionReport? source = SingleReport(reports,
+                        "FS-POWER." + power + ":" + moon.PlanetId.ToString(CultureInfo.InvariantCulture));
+                    if (source == null || !CandidateOutcomes().Contains(source.Outcome))
+                        continue;
+                    string adjective = OutcomeWord(source.Outcome,
+                        power == "solar" ? "bright" : "strong", "normal",
+                        power == "solar" ? "dim" : "weak");
+                    AddFreshCard(cards, new[] { source }, moon.DisplayName + " has " +
+                        adjective + " " + power);
+                }
+            }
             AddFreshCard(cards, Reports(reports, "FS-POWER.birth-tidal"), TidalLine(
                 reports,
                 birthPlanets));
@@ -1076,44 +1074,6 @@ namespace DSPSeedScanner.Runtime
                     "FS-GAS-ROUTE", line, Array.Empty<string>(),
                     Bound(line, MaximumLineCharacters), new[] { source.ConclusionId }));
             }
-        }
-
-        private static string? PowerLine(
-            IReadOnlyList<ConclusionReport> reports,
-            IReadOnlyList<NormalizedBirthPlanetEvidence>? birthPlanets,
-            string conclusionId,
-            string noun,
-            string strong,
-            string middle,
-            string weak,
-            Func<NormalizedBirthPlanetEvidence, decimal?> selectValue)
-        {
-            ConclusionReport? report = reports.SingleOrDefault(value =>
-                value.ConclusionId == conclusionId);
-            if (report == null || birthPlanets == null)
-                return null;
-            AcceptedRange range = noun == "solar"
-                ? ConclusionDefinition.Solar
-                : ConclusionDefinition.Wind;
-            NormalizedBirthPlanetEvidence[] matching = birthPlanets
-                .Where(planet => !planet.IsGasGiant && selectValue(planet).HasValue &&
-                    ConclusionDefinition.Evaluate(selectValue(planet)!.Value, range) ==
-                        report.Outcome)
-                .OrderBy(planet => planet.PlanetId)
-                .ToArray();
-            if (matching.Length == 0)
-                return null;
-            string adjective = report.Outcome switch
-            {
-                ComponentOutcome.Supports => strong,
-                ComponentOutcome.PreferenceSensitive => middle,
-                ComponentOutcome.DoesNotSupport => weak,
-                _ => throw new ArgumentOutOfRangeException(nameof(report.Outcome))
-            };
-            if (matching.Length > MaximumSubjectsPerCard)
-                return "Many planets have " + adjective + " " + noun;
-            return JoinNames(matching.Select(planet => planet.DisplayName)) +
-                (matching.Length == 1 ? " has " : " have ") + adjective + " " + noun;
         }
 
         private static string? TidalLine(

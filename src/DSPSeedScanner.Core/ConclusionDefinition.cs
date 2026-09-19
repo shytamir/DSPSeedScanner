@@ -56,6 +56,9 @@ namespace DSPSeedScanner.Core
         public static readonly IReadOnlyList<string> GasProductIds = Array.AsReadOnly(
             new[] { "deuterium", "fire-ice", "hydrogen" });
 
+        public static readonly AcceptedRange SiblingPower =
+            new AcceptedRange(0.4m, 1.15m, ThresholdDirection.Increasing, "ratio");
+
         public static readonly IReadOnlyList<string> CommonResourceIds = Array.AsReadOnly(
             new[] { "coal", "copper", "iron", "oil", "silicon", "stone", "titanium" });
 

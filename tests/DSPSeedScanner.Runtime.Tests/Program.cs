@@ -90,6 +90,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("panel rejects obsolete sessions and hides exactly", PanelRejectsObsoleteSessions),
                 ("conclusion cards map every outcome and subject kind", ConclusionCardsMapEveryOutcomeAndSubject),
                 ("starter giant has one verdict", StarterGiantHasOneVerdict),
+                ("sibling moon power is independent", SiblingMoonPowerIsIndependent),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -4167,6 +4168,45 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void SiblingMoonPowerIsIndependent()
+        {
+            foreach (HomePlanetOrbitKind orbit in Enum.GetValues<HomePlanetOrbitKind>())
+            foreach (int count in new[] { 0, 1, 2 })
+            WithTemporaryDirectory(path =>
+            {
+                var planets = new List<NormalizedBirthPlanetEvidence> {
+                    new NormalizedBirthPlanetEvidence(101, "Home", false, 1m, 1m, false, null, 104),
+                    GasAttribution(104, "Giant", "deuterium") };
+                if (count > 0) planets.Add(new NormalizedBirthPlanetEvidence(
+                    102, "Moon A", false, 0.399m, 1.15m, false, null, 104));
+                if (count > 1) planets.Add(new NormalizedBirthPlanetEvidence(
+                    103, "Moon B", false, 0.4m, 1.149m, false, null, 104));
+                planets.Add(new NormalizedBirthPlanetEvidence(
+                    106, "Other moon", false, 2m, 2m, false, null, 105));
+                using var resolver = new PreviewResolutionCoordinator(new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway { Snapshot = Snapshot(
+                        birthPlanetAttributions: planets, homeOrbit: orbit) }),
+                    new CompleteClusterRawCoordinator(new FakeCompleteClusterGateway()),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                PresentedConclusionCard[] cards = PreviewConclusionPresenter.Project(
+                    resolver.CurrentPublishedAttempt!).ImmediateGroups.SelectMany(group => group.Cards)
+                    .Where(card => card.SourceConclusionIds.Any(id =>
+                        id.StartsWith("FS-POWER.solar:", StringComparison.Ordinal) ||
+                        id.StartsWith("FS-POWER.wind:", StringComparison.Ordinal))).ToArray();
+                Equal(orbit == HomePlanetOrbitKind.GiantMoon ? count * 2 : 0, cards.Length);
+                if (cards.Length > 0)
+                {
+                    Equal(PreviewConclusionColumn.Limitation, cards.Single(card =>
+                        card.Line == "Moon A has dim solar").Column);
+                    Equal(PreviewConclusionColumn.Strength, cards.Single(card =>
+                        card.Line == "Moon A has strong wind").Column);
+                }
+                if (cards.Length == 4)
+                    Equal(2, cards.Count(card => card.Column == PreviewConclusionColumn.PreferenceSensitive));
+            });
+        }
+
         private static void StarterGiantHasOneVerdict()
         {
             foreach (string product in new[] { "fire-ice", "deuterium" })
@@ -4216,8 +4256,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 string rendered = String.Join("\n", fresh.Cards.Select(card => card.Line));
 
                 False(rendered.Contains("gas giants", StringComparison.Ordinal));
-                True(rendered.Contains("Aspidiske I has bright solar", StringComparison.Ordinal));
-                True(rendered.Contains("Aspidiske I has strong wind", StringComparison.Ordinal));
+                False(rendered.Contains("Aspidiske I has bright solar", StringComparison.Ordinal));
+                False(rendered.Contains("Aspidiske I has strong wind", StringComparison.Ordinal));
                 True(rendered.Contains("Aspidiske I is tidally locked", StringComparison.Ordinal));
                 True(rendered.Contains("3 moons orbit the home giant", StringComparison.Ordinal));
                 False(rendered.Contains("Combined starter deposits", StringComparison.Ordinal));
@@ -5226,7 +5266,8 @@ namespace DSPSeedScanner.Runtime.Tests
             HomeSystemBodyInventory? homeSystemBodyInventory = null,
             string? homePlanetDisplayDesignation = null,
             NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant = null,
-            NotableStarStatistics? notableStars = null)
+            NotableStarStatistics? notableStars = null,
+            HomePlanetOrbitKind homeOrbit = HomePlanetOrbitKind.GiantMoon)
         {
             var systems = new List<NormalizedSystemEvidence>();
             for (int index = 0; index < generatedStarCount; index++)
@@ -5267,8 +5308,8 @@ namespace DSPSeedScanner.Runtime.Tests
                         ? new NormalizedHomePlanetTopology(
                             birthPlanetAttributions?.FirstOrDefault(value => !value.IsGasGiant)
                                 ?.PlanetId ?? 101,
-                            HomePlanetOrbitKind.GiantMoon,
-                            3)
+                            homeOrbit,
+                            homeOrbit == HomePlanetOrbitKind.GiantMoon ? 3 : null)
                         : null));
             }
 

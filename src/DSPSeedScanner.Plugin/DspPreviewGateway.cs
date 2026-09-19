@@ -408,7 +408,8 @@ namespace DSPSeedScanner.Plugin
                         Convert.ToDecimal(planet.luminosity),
                         Convert.ToDecimal(planet.windStrength),
                         (planet.singularity & EPlanetSingularity.TidalLocked) != 0,
-                        null));
+                        null,
+                        planet.orbitAroundPlanet?.id));
                 }
                 if (planet.orbitRadius * 40_000f <= maximumShellRadius)
                     containedOrbits++;

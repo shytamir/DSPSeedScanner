@@ -127,6 +127,29 @@ namespace DSPSeedScanner.Core
                 birth?.MaximumWindRatio,
                 ConclusionDefinition.Wind,
                 ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity));
+
+            NormalizedHomePlanetTopology? topology = birth?.HomePlanetTopology;
+            NormalizedBirthPlanetEvidence? home = birth?.BirthPlanets?.SingleOrDefault(
+                planet => planet.PlanetId == topology?.HomePlanetId);
+            if (topology?.OrbitKind != HomePlanetOrbitKind.GiantMoon ||
+                home?.ParentPlanetId == null || birth?.BirthPlanets == null ||
+                !birth.BirthPlanets.Any(planet => planet.PlanetId == home.ParentPlanetId &&
+                    planet.IsGasGiant))
+                return;
+            NormalizedBirthPlanetEvidence[] siblings = birth.BirthPlanets.Where(planet =>
+                !planet.IsGasGiant && planet.PlanetId != home.PlanetId &&
+                planet.ParentPlanetId == home.ParentPlanetId).ToArray();
+            if (siblings.Length < 1 || siblings.Length > 2)
+                return;
+            foreach (NormalizedBirthPlanetEvidence moon in siblings)
+            {
+                foreach ((string kind, decimal? value) in new[] {
+                    ("solar", moon.SolarRatio), ("wind", moon.WindRatio) })
+                    AddRangeReport(evidence, reports, power,
+                        "FS-POWER." + kind + ":" + moon.PlanetId.ToString(CultureInfo.InvariantCulture),
+                        ConclusionContext.FreshStart, subject, kind + "Ratio", value,
+                        ConclusionDefinition.SiblingPower, true);
+            }
         }
 
         private static void EvaluateGasProducts(
