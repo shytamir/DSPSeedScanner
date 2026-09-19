@@ -5,21 +5,38 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Preparing a `1.4` release candidate, as requested by the
-owner on 2026-09-19. Publishing will be performed manually by the owner after
-candidate review; no publication or tag is authorized for the implementer.
+**Current status:** Release candidate `1.4.114` is prepared and technically
+reviewed. The owner's final release decision is pending. Publishing will be
+performed manually by the owner; no publication or tag is authorized for the
+implementer.
 
-**Current phase:** Release preparation: source/package wording and version
-review, followed by a separate review of the produced artifact.
+**Current phase:** Owner release review. Both requested preparation passes
+are complete.
 
-**Next action:** Build and identify the `1.4` candidate, complete both review
-passes, and provide the verified ZIP for owner review. Game execution,
-environment changes and save access remain prohibited for the implementer.
+**Next action:** Owner reviews the identified candidate and decides whether
+to publish it manually. No release-preparation blocker was found. Game
+execution, environment changes and save access remain prohibited for the
+implementer.
 
 **Release review pass 1:** Source version routing and player-facing copy
 reviewed. Obsolete package screenshots were removed; product documentation
 and error wording were clarified. The existing 15 Core and 95 Runtime checks
-pass. Artifact review and final candidate identification remain pending.
+pass; solution and native-reference builds had zero warnings/errors.
+
+**Release review pass 2:** The downloaded CI artifact matches its published
+digest. Compiled/plugin/package versions agree, and package contents, DLL
+integrity, README/icon fidelity and player-facing copy checks passed. All
+203 local document links resolved. No new in-game validation was performed;
+the prior owner acceptance below remains tied to `1.3.110`.
+
+**Release candidate:** `1.4.114`, source
+`9a0c5c9d6dd9837768da13d275e3b6ef320341ec`, built by successful
+[Actions run 114](https://github.com/shytamir/DSPSeedScanner/actions/runs/35430985790).
+[Download candidate and reports](https://nightly.link/shytamir/DSPSeedScanner/actions/runs/35430985790/DSPSeedScanner-1.4.114.zip);
+the installable ZIP is `packages/DSPSeedScanner-1.4.114.zip` inside the download.
+Its SHA-256 is
+`6d6938e3c23ed9ee0094c3851bd1004fdf663be87054aaf906928d9df29a2001`.
+The candidate stays fixed through subsequent documentation-only builds.
 
 The [Panel Improvement Roadmap](management/ROADMAP.md) is complete and
 owner-accepted. The owner authorized its execution and story-closing pushes
