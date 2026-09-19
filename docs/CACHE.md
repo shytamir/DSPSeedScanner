@@ -54,10 +54,11 @@ A cache hit returns only the audited presentation payload admitted from a
 successful complete scan:
 
 - semantic reports for Fresh start resources, cluster-resource strength,
-  rare access, derived system roles, and compact routes, retaining their
+  targeted rare/plentiful systems, rare access, derived system roles, and compact routes, retaining their
   original birth-system-raw or complete-cluster-raw evidence stages; and
 - bounded resource statistics: per-body home-system amounts and vein-group
-  counts with resource semantics; up to two nearest locations per supported
+  counts with resource semantics and the native oil multiplier for oil-rate
+  display; up to two nearest locations per supported
   sulfuric-acid-ocean or rare-resource category; and per-planet Unipolar Magnet
   locations, vein-node counts, amounts, and vein-group counts.
 
@@ -67,6 +68,12 @@ measurements. Dark Fog status is never cached. The bounded resource-statistics
 payload does not retain raw planets, vein positions, full normalized resource
 evidence, or a complete cluster graph. Rendered wording, elapsed time, memory,
 per-planet progress, and execution diagnostics are not persisted.
+
+Targeted system conclusions derive only from the same complete raw deposits
+already covered by the Peace/Combat reuse rule. Oil formatting uses the
+captured native multiplier and those raw amounts, with no player-history or
+combat-mode term. Definition changes invalidate older conclusions; schema
+changes invalidate older payloads rather than guessing missing rate inputs.
 
 ## Storage bounds
 

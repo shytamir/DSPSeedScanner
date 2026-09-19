@@ -96,6 +96,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("plentiful systems use finite split deposits", PlentifulSystemsUseFiniteDeposits),
                 ("sphere geometry is star-centric and nearest-first", SphereGeometryIsStarCentric),
                 ("Aquatica group uses brightest-star distance", AquaticaUsesBrightestDistance),
+                ("oil totals match native rate formatting", OilTotalsMatchNativeFormatting),
                 ("fresh start copy is natural bounded and attributed", FreshStartCopyIsNaturalBoundedAndAttributed),
                 ("tidal lock copy is bounded and literal", TidalLockCopyIsBoundedAndLiteral),
                 ("fresh start omits unavailable attribution", FreshStartOmitsUnavailableAttribution),
@@ -2880,7 +2881,7 @@ namespace DSPSeedScanner.Runtime.Tests
                     new HomeSystemResource(
                         "fire-ice", RawResourceSemantics.FiniteDeposit, 987_654, 1),
                     new HomeSystemResource(
-                        "oil", RawResourceSemantics.OilFlow, 1_234_567, 4)
+                        "oil", RawResourceSemantics.OilFlow, 1_234_567, 4, 4E-05f)
                 }),
                 new HomeSystemBodyResources(103, new[]
                 {
@@ -2895,7 +2896,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 "Alpha I | Mediterranean | Solar 120% | Wind 80% | " +
                     "Ores (units / vein groups): Iron 12.3M / 12; " +
                     "Fire Ice veins 988K / 1 | " +
-                    "Crude Oil (flow units / groups): 1.23M / 4",
+                    "Crude Oil (rate / wells): 49.38/s / 4",
                 HomeSystemBodyPresentation.Format(inventory.Bodies[0], resources));
             Equal(
                 "Alpha II | Gas giant | Gas products: Fire Ice, Hydrogen",
@@ -2928,7 +2929,7 @@ namespace DSPSeedScanner.Runtime.Tests
             Equal("120%", firstRow.Solar);
             Equal("80%", firstRow.Wind);
             Equal("Iron 12.3M / 12, Fire Ice veins 988K / 1", firstRow.Ores);
-            Equal("1.23M / 4", firstRow.Oil);
+            Equal("49.38/s / 4", firstRow.Oil);
             Equal(String.Empty, firstRow.GasProducts);
             False(firstRow.Cells.Any(cell => cell.Contains("|", StringComparison.Ordinal)));
             HomeSystemBodyTableRow giantRow =
@@ -4190,6 +4191,36 @@ namespace DSPSeedScanner.Runtime.Tests
             });
         }
 
+        private static void OilTotalsMatchNativeFormatting()
+        {
+            foreach ((long amount, float multiplier, string expected) in new[] {
+                (0L, 4E-05f, "0.00/s"), (25_000L, 4E-05f, "1.00/s"),
+                (1_000_000L, 4E-05f, "40.00/s"), (25_000L, 1E-04f, "2.50/s"),
+                (1L, 0.005f, "0.00/s"), (3L, 0.005f, "0.02/s"), (5L, 0.005f, "0.02/s") })
+                Equal(expected, HomeSystemBodyPresentation.FormatOilRate(new HomeSystemResource(
+                    "oil", RawResourceSemantics.OilFlow, amount, 1, multiplier)));
+            Equal("Unavailable", HomeSystemBodyPresentation.FormatOilRate(new HomeSystemResource(
+                "oil", RawResourceSemantics.OilFlow, 25_000, 1)));
+            WithTemporaryDirectory(path =>
+            {
+                var raw = new FakeCompleteClusterGateway { TargetCount = 1,
+                    EvidenceFactory = (seed, target) => ResourceSnapshot(seed, target,
+                        ("oil", 12_500L), ("oil", 12_500L)) };
+                using var resolver = new PreviewResolutionCoordinator(new PreviewSessionLifecycle(),
+                    new PreviewScanCoordinator(new FakeGateway()), new CompleteClusterRawCoordinator(raw),
+                    new CompleteClusterConclusionCache(path));
+                resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request());
+                while (!resolver.CurrentPublishedAttempt!.IsTerminal) resolver.AdvanceCurrent();
+                HomeSystemResource oil = resolver.CurrentPublishedAttempt!.HomeSystemResources!
+                    .ForBody(101)!.Resources.Single();
+                Equal(2, oil.VeinGroups);
+                Equal("1.00/s", HomeSystemBodyPresentation.FormatOilRate(oil));
+                resolver.ObserveCompletedLoad(2, PreviewIdentity(16_315_224), Request());
+                Equal(PreviewResolutionState.Cached, resolver.CurrentPublishedAttempt!.State);
+                Equal(oil, resolver.CurrentPublishedAttempt.HomeSystemResources!.ForBody(101)!.Resources.Single());
+            });
+        }
+
         private static void AquaticaUsesBrightestDistance()
         {
             foreach (int count in new[] { 0, 2, 5, 7 })
@@ -4321,7 +4352,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 resources.Select((resource, index) => new NormalizedRawVeinGroup(index + 1,
                     index + 1, resource.Resource, resource.Resource == "oil"
                         ? RawResourceSemantics.OilFlow : RawResourceSemantics.FiniteDeposit, 1,
-                    resource.Amount, 0m, 0m, 0m)));
+                    resource.Amount, 0m, 0m, 0m)), 4E-05f);
 
         private static void RichDeuteriumConclusionsUseDistance()
         {

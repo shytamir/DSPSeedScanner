@@ -103,7 +103,7 @@ reuse the existing 2.5/10 ly range; plentiful systems do not introduce a new
 quantity score or a new range. Existing luminosity, shell and containment
 bands remain where the owner did not replace them.
 
-The cache currently uses schema 12 and includes definition/contract versions
+The pre-change cache used schema 12 and includes definition/contract versions
 in its key. Changed semantic conclusions must invalidate old entries; the oil
 payload change also requires a schema increment and read/write round-trip
 checks. Keep fresh preview attribution outside the persisted raw-result

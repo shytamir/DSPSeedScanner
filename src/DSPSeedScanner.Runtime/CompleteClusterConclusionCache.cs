@@ -156,7 +156,7 @@ namespace DSPSeedScanner.Runtime
 
     public sealed class CompleteClusterConclusionCache
     {
-        internal const int SchemaVersion = 12;
+        internal const int SchemaVersion = 13;
         internal const string EntryExtension = ".dspseedscan";
         private const string Magic = "DSPSeedScanner.CompleteClusterCache";
         private const int MaximumEntryBytes = 256 * 1024;
@@ -578,6 +578,8 @@ namespace DSPSeedScanner.Runtime
                     writer.Write((int)resource.Semantics);
                     writer.Write(resource.Amount);
                     writer.Write(resource.VeinGroups);
+                    writer.Write(resource.OilSpeedMultiplier.HasValue);
+                    if (resource.OilSpeedMultiplier.HasValue) writer.Write(resource.OilSpeedMultiplier.Value);
                 }
             }
             writer.Write(clusterResources.Candidates.Count);
@@ -648,7 +650,7 @@ namespace DSPSeedScanner.Runtime
                         resourceId,
                         (RawResourceSemantics)semanticsValue,
                         amount,
-                        veinGroups));
+                        veinGroups, reader.ReadBoolean() ? reader.ReadSingle() : null));
                 }
                 bodies.Add(new HomeSystemBodyResources(bodyId, resources));
             }

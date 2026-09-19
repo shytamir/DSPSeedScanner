@@ -3,6 +3,15 @@
 [PROJECT.md](../PROJECT.md) owns steering and work status. This document
 describes the factual table presentation contract.
 
+## Home system
+
+Oil is the planet's total native rate with two decimals in `/s`, followed by
+the existing wells count. Sum native amounts before applying the captured
+`VeinData.oilSpeedMultiplier`; use the native float and ties-to-even display
+rounding described in [Panel evidence](PANEL-EVIDENCE.md#native-resource-units).
+Resource settings are already reflected in the amounts. Missing multiplier
+evidence displays Unavailable, never a guessed rate. Ore counts are unchanged.
+
 ## Notable stars
 
 Sphere rows list blue giants first in descending Dyson luminosity, then the

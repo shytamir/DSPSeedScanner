@@ -265,7 +265,7 @@ namespace DSPSeedScanner.Runtime
                     values.Where(resource =>
                             resource.Semantics == RawResourceSemantics.OilFlow)
                         .Select(resource =>
-                            FormatAmount(resource.Amount) + " / " +
+                            FormatOilRate(resource) + " / " +
                             resource.VeinGroups.ToString(CultureInfo.InvariantCulture))),
                 String.Join(
                     "\n",
@@ -321,8 +321,8 @@ namespace DSPSeedScanner.Runtime
                         resource => resource.Semantics == RawResourceSemantics.OilFlow);
                     if (oil != null)
                     {
-                        facts.Add("Crude Oil (flow units / groups): " +
-                            FormatAmount(oil.Amount) + " / " +
+                        facts.Add("Crude Oil (rate / wells): " +
+                            FormatOilRate(oil) + " / " +
                             oil.VeinGroups.ToString(CultureInfo.InvariantCulture));
                     }
                 }
@@ -339,6 +339,14 @@ namespace DSPSeedScanner.Runtime
             return (ratio * 100m).ToString(
                 "0.############################",
                 CultureInfo.InvariantCulture) + "%";
+        }
+
+        public static string FormatOilRate(HomeSystemResource resource)
+        {
+            if (!resource.OilSpeedMultiplier.HasValue) return "Unavailable";
+            float rate = (float)((double)resource.Amount * (double)resource.OilSpeedMultiplier.Value);
+            decimal rounded = (decimal)Math.Round(rate * 100f) / 100m;
+            return rounded.ToString("0.00", CultureInfo.InvariantCulture) + "/s";
         }
 
         private static string FormatResourceValues(HomeSystemResource resource) =>
@@ -417,7 +425,8 @@ namespace DSPSeedScanner.Runtime
             string resourceId,
             RawResourceSemantics semantics,
             long amount,
-            int veinGroups)
+            int veinGroups,
+            float? oilSpeedMultiplier = null)
         {
             if (!ResourcePresentation.Supports(resourceId))
                 throw new ArgumentException("A resource identifier is unsupported.", nameof(resourceId));
@@ -427,17 +436,23 @@ namespace DSPSeedScanner.Runtime
                 throw new ArgumentOutOfRangeException(nameof(amount));
             if (veinGroups <= 0)
                 throw new ArgumentOutOfRangeException(nameof(veinGroups));
+            if (oilSpeedMultiplier.HasValue && (semantics != RawResourceSemantics.OilFlow ||
+                oilSpeedMultiplier.Value <= 0 || Single.IsNaN(oilSpeedMultiplier.Value) ||
+                Single.IsInfinity(oilSpeedMultiplier.Value)))
+                throw new ArgumentOutOfRangeException(nameof(oilSpeedMultiplier));
 
             ResourceId = resourceId;
             Semantics = semantics;
             Amount = amount;
             VeinGroups = veinGroups;
+            OilSpeedMultiplier = oilSpeedMultiplier;
         }
 
         public string ResourceId { get; }
         public RawResourceSemantics Semantics { get; }
         public long Amount { get; }
         public int VeinGroups { get; }
+        public float? OilSpeedMultiplier { get; }
     }
 
     public sealed record HomeSystemBodyResources

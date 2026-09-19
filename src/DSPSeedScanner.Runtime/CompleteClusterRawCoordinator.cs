@@ -609,7 +609,8 @@ namespace DSPSeedScanner.Runtime
                                 group.ResourceId,
                                 out HomeResourceAggregate? bodyResource))
                         {
-                            bodyResource = new HomeResourceAggregate(group.Semantics);
+                            bodyResource = new HomeResourceAggregate(group.Semantics,
+                                group.Semantics == RawResourceSemantics.OilFlow ? planet.OilSpeedMultiplier : null);
                             bodyResources.Add(group.ResourceId, bodyResource);
                         }
                         else if (bodyResource.Semantics != group.Semantics)
@@ -660,7 +661,7 @@ namespace DSPSeedScanner.Runtime
                             resource.Key,
                             resource.Value.Semantics,
                             resource.Value.Amount,
-                            resource.Value.Groups)))));
+                            resource.Value.Groups, resource.Value.OilSpeedMultiplier)))));
 
             public ClusterResourceStatistics ClusterResources() =>
                 new ClusterResourceStatistics(clusterCandidates.SelectMany(pair =>
@@ -715,12 +716,14 @@ namespace DSPSeedScanner.Runtime
 
             private sealed class HomeResourceAggregate
             {
-                public HomeResourceAggregate(RawResourceSemantics semantics)
+                public HomeResourceAggregate(RawResourceSemantics semantics, float? oilSpeedMultiplier)
                 {
                     Semantics = semantics;
+                    OilSpeedMultiplier = oilSpeedMultiplier;
                 }
 
                 public RawResourceSemantics Semantics { get; }
+                public float? OilSpeedMultiplier { get; }
                 public long Amount { get; set; }
                 public int Groups { get; set; }
             }

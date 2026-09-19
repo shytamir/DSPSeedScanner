@@ -620,7 +620,8 @@ namespace DSPSeedScanner.Plugin
                 planet.algoId,
                 RawPlanetCoverage.Complete(),
                 nodes,
-                groups);
+                groups,
+                VeinData.oilSpeedMultiplier);
         }
 
         private static NormalizedRawPlanetEvidence NormalizeGroups(
@@ -654,7 +655,8 @@ namespace DSPSeedScanner.Plugin
                 planet.algoId,
                 RawPlanetCoverage.Complete(),
                 Array.Empty<NormalizedRawVeinNode>(),
-                groups);
+                groups,
+                VeinData.oilSpeedMultiplier);
         }
 
         private static string ResourceId(int type)

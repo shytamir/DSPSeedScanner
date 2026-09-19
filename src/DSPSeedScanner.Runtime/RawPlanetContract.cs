@@ -170,7 +170,8 @@ namespace DSPSeedScanner.Runtime
             int algorithmId,
             RawPlanetCoverage coverage,
             IEnumerable<NormalizedRawVeinNode> nodes,
-            IEnumerable<NormalizedRawVeinGroup> groups)
+            IEnumerable<NormalizedRawVeinGroup> groups,
+            float? oilSpeedMultiplier = null)
         {
             if (galaxySeed < 0 || galaxySeed > 99_999_999)
                 throw new ArgumentOutOfRangeException(nameof(galaxySeed));
@@ -199,12 +200,14 @@ namespace DSPSeedScanner.Runtime
             PlanetId = planetId;
             ThemeId = themeId;
             AlgorithmId = algorithmId;
+            OilSpeedMultiplier = oilSpeedMultiplier;
         }
 
         public int GalaxySeed { get; }
         public int PlanetId { get; }
         public int ThemeId { get; }
         public int AlgorithmId { get; }
+        public float? OilSpeedMultiplier { get; }
         public RawPlanetCoverage Coverage { get; }
         public IReadOnlyList<NormalizedRawVeinNode> Nodes =>
             Array.AsReadOnly((NormalizedRawVeinNode[])nodes.Clone());
