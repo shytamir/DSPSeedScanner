@@ -449,6 +449,8 @@ namespace DSPSeedScanner.Runtime.Tests
 
         private static void UnsupportedGameIdentityRejectsSafely()
         {
+            True(CompatibilityPolicy.Evaluate(Fingerprint()).Supported);
+            AssertRejected(Fingerprint(gameVersion: "0.10.34.28529"), "game-version-mismatch");
             AssertRejected(Fingerprint(gameVersion: "0.10.34.0"), "game-version-mismatch");
             True(CompatibilityPolicy.Evaluate(Fingerprint(assembly: "MODIFIED")).Supported);
         }

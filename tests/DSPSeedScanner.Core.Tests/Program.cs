@@ -18,6 +18,7 @@ namespace DSPSeedScanner.Core.Tests
                 ("preview quantitative fixtures", PreviewQuantitativeFixtures),
                 ("range endpoint directions", RangeEndpointDirections),
                 ("starter resource fixtures", StarterResourceFixtures),
+                ("updated game calibration fixtures", UpdatedGameCalibrationFixtures),
                 ("Fire Ice adequacy requires both minima", FireIceAdequacy),
                 ("sphere geometry fixtures", SphereGeometryFixtures),
                 ("Dark Fog evidence remains nonjudgmental", DarkFogEvidenceRemainsNonjudgmental),
@@ -224,11 +225,15 @@ namespace DSPSeedScanner.Core.Tests
                     "amount", ComponentOutcome.DoesNotSupport);
                 AssertStarterMetric(resourceId, (long)amount.Lower, (int)groups.Lower,
                     "amount", ComponentOutcome.PreferenceSensitive);
+                AssertStarterMetric(resourceId, (long)amount.Upper - 1, (int)groups.Lower,
+                    "amount", ComponentOutcome.PreferenceSensitive);
                 AssertStarterMetric(resourceId, (long)amount.Upper, (int)groups.Lower,
                     "amount", ComponentOutcome.Supports);
                 AssertStarterMetric(resourceId, (long)amount.Lower, (int)groups.Lower - 1,
                     "groups", ComponentOutcome.DoesNotSupport);
                 AssertStarterMetric(resourceId, (long)amount.Lower, (int)groups.Lower,
+                    "groups", ComponentOutcome.PreferenceSensitive);
+                AssertStarterMetric(resourceId, (long)amount.Lower, (int)groups.Upper - 1,
                     "groups", ComponentOutcome.PreferenceSensitive);
                 AssertStarterMetric(resourceId, (long)amount.Lower, (int)groups.Upper,
                     "groups", ComponentOutcome.Supports);
@@ -243,6 +248,27 @@ namespace DSPSeedScanner.Core.Tests
                 Find(reports, "FS-RESOURCES.amount:iron").Outcome);
             Equal(ComponentOutcome.DoesNotSupport,
                 Find(reports, "FS-RESOURCES.groups:iron").Outcome);
+        }
+
+        private static void UpdatedGameCalibrationFixtures()
+        {
+            AssertStarterMetric("iron", 9_125_000, 20,
+                "amount", ComponentOutcome.PreferenceSensitive);
+            AssertStarterMetric("coal", 9_520_000, 14,
+                "amount", ComponentOutcome.DoesNotSupport);
+            // Measured updated-game oil totals from the retained offline fixtures.
+            AssertStarterMetric("oil", 1_380_451, 20,
+                "amount", ComponentOutcome.DoesNotSupport);
+            AssertStarterMetric("oil", 1_490_997, 22,
+                "amount", ComponentOutcome.PreferenceSensitive);
+            AssertStarterMetric("oil", 1_567_358, 22,
+                "amount", ComponentOutcome.Supports);
+            AssertStarterMetric("oil", 1_490_997, 19,
+                "groups", ComponentOutcome.DoesNotSupport);
+            AssertStarterMetric("oil", 1_380_451, 20,
+                "groups", ComponentOutcome.PreferenceSensitive);
+            AssertStarterMetric("oil", 1_490_997, 22,
+                "groups", ComponentOutcome.Supports);
         }
 
         private static void SphereGeometryFixtures()

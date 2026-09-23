@@ -40,18 +40,18 @@ namespace DSPSeedScanner.Core
     public static class ConclusionDefinition
     {
         public const string ContractVersion = "0.1.0";
-        public const string DefinitionVersion = "0.5.0";
-        public const string ReferenceGameVersion = "0.10.34.28529";
+        public const string DefinitionVersion = "0.6.0";
+        public const string ReferenceGameVersion = "0.10.35.29057";
         public const int ReferenceGalaxyAlgorithm = 20_200_403;
         public const int ReferenceStarCount = 64;
         public const string ReferenceAssemblySha256 =
-            "AE0BA95F75BD879A62AA4CE253B2AB78EAA4FB3C7C595F5E1FEE75EBE0E0EF85";
+            "E75D3FE4B6A9CA822766189F826BA3A8348DFB7E301AA37FF6779DB29A83FD8D";
         public const string ReferenceGenerationMethodIlSha256 =
-            "A0CC806F17FD8A88468AA8CF05CDD4C1A8728A33BA1A4C0FA967C2EF50775C9B";
+            "DAA3676DB1CCE742391387A75B8BCECCD02AEC0197A7C0BFF00A5022DB0B665E";
         public const string ReferenceOrderedThemeIds =
             "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25";
         public const string ReferenceCombatSettingsKey =
-            "GameDesc.SetForNewGame:0.10.34.28529";
+            "GameDesc.SetForNewGame:0.10.35.29057";
 
         public static readonly IReadOnlyList<string> GasProductIds = Array.AsReadOnly(
             new[] { "deuterium", "fire-ice", "hydrogen" });
@@ -123,13 +123,13 @@ namespace DSPSeedScanner.Core
         {
             return resourceId switch
             {
-                "iron" => Increasing(9_151_265m, 26_773_650m, "runtime-amount-units"),
+                "iron" => Increasing(9_100_885m, 26_773_650m, "runtime-amount-units"),
                 "copper" => Increasing(12_078_923m, 29_497_621m, "runtime-amount-units"),
                 "silicon" => Increasing(3_355_497m, 12_453_357m, "runtime-amount-units"),
                 "titanium" => Increasing(11_403_989m, 21_808_706m, "runtime-amount-units"),
                 "stone" => Increasing(8_939_801m, 20_925_618m, "runtime-amount-units"),
-                "coal" => Increasing(9_495_641m, 10_938_129m, "runtime-amount-units"),
-                "oil" => Increasing(1_196_959m, 1_304_446m, "runtime-amount-units"),
+                "coal" => Increasing(9_539_996m, 10_938_129m, "runtime-amount-units"),
+                "oil" => Increasing(1_419_033m, 1_511_204m, "runtime-amount-units"),
                 _ => throw new ArgumentOutOfRangeException(nameof(resourceId))
             };
         }
@@ -144,7 +144,7 @@ namespace DSPSeedScanner.Core
                 "titanium" => Increasing(8m, 15m, "vein-groups"),
                 "stone" => Increasing(14m, 21m, "vein-groups"),
                 "coal" => Increasing(13m, 15m, "vein-groups"),
-                "oil" => Increasing(17m, 19m, "vein-groups"),
+                "oil" => Increasing(20m, 22m, "vein-groups"),
                 _ => throw new ArgumentOutOfRangeException(nameof(resourceId))
             };
         }

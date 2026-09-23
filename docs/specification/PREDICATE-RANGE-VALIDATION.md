@@ -4,7 +4,7 @@
 status, including historical dispositions. This document contains scope,
 requirements, or technical evidence; it does not track status.
 
-**Definition version:** `0.5.0`
+**Definition version:** `0.6.0`
 
 **Compatible conclusion contract:**
 [Seed Conclusion Contract](CONCLUSION-CONTRACT.md) `0.1.0`
@@ -41,7 +41,7 @@ occupation **not applicable**.
 
 ## Evidence basis and limitations
 
-The reference runtime was DSP `0.10.34.28529`, galaxy algorithm `20200403`, 64
+The original reference runtime was DSP `0.10.34.28529`, galaxy algorithm `20200403`, 64
 stars, resource multiplier `1`, and the combat settings created by
 `GameDesc.SetForNewGame` with combat enabled. The theme catalogue and remaining
 identity fields are those recorded by the accepted
@@ -67,6 +67,22 @@ preview run's evidence file SHA-256 was
 The repeated starter run's file SHA-256, including its non-contract timing
 column and added named cases, was
 `6F5CF7853D474E1ABC5F690A095F48584EECC2052A5D7E23D75A92ACE7DEB00F`.
+
+Definition `0.6.0` uses DSP `0.10.35.29057` with the same algorithm, ordered
+themes, 64 stars, 1x resources and default combat settings. The original
+cohorts were regenerated on 2026-09-23: all 518 preview rows retained their
+measured metrics, and two starter runs agreed excluding elapsed time. The
+96-seed quartile calculation changes only iron amount, coal amount, oil amount
+and oil groups, as listed below. The common total and other bands are retained.
+New preview file SHA-256:
+`8A6082E81FE518C6A04A4FE30177BFE8DA218F9CD1B7C66E24D291BD7489637D`;
+new starter file SHA-256:
+`1D5C6DE4051E5D9E6D0C9236D6F750E701B5957B88C514722F2293C167BC8284`.
+Evaluating these retained starter rows with the compiled `0.6.0` definition
+gives oil amount outcomes of 25 supports / 48 preference-sensitive / 23 limited
+and oil-well outcomes of 34 / 62 / 0. Both old oil bands instead give 96 supports.
+Raw evidence remains in the shared untracked
+`DSPSeedScanner-Update-0.10.35.29057` resource directory.
 
 Eight deliberately selected clusters were generated fully to challenge raw
 resource and rare-access behavior: `45772`, `73339583`, `96178012`,
@@ -136,13 +152,13 @@ described as ore. No component cancels another.
 
 | Resource | Amount range | Vein-group range |
 | --- | ---: | ---: |
-| Iron | `[9,151,265, 26,773,650]` | `[16, 27]` |
+| Iron | `[9,100,885, 26,773,650]` | `[16, 27]` |
 | Copper | `[12,078,923, 29,497,621]` | `[18, 28]` |
 | Silicon | `[3,355,497, 12,453,357]` | `[4, 11]` |
 | Titanium | `[11,403,989, 21,808,706]` | `[8, 15]` |
 | Stone | `[8,939,801, 20,925,618]` | `[14, 21]` |
-| Coal | `[9,495,641, 10,938,129]` | `[13, 15]` |
-| Oil | `[1,196,959, 1,304,446]` | `[17, 19]` |
+| Coal | `[9,539,996, 10,938,129]` | `[13, 15]` |
+| Oil | `[1,419,033, 1,511,204]` | `[20, 22]` |
 
 These ranges apply only to the reference identity and multiplier `1`. SPEC-02
 confirmed for a controlled seed that resource multipliers changed amounts but
@@ -240,7 +256,8 @@ The definition rests on these four points:
 4. the three deferred strength components remain **unknown** until later
    evidence establishes defensible ranges.
 
-Definition `0.5.0` incorporates the panel predicates above; the original cohort
+Definition `0.5.0` introduced the panel predicates above; `0.6.0` retains them
+and recalibrates the four affected starter bands for the updated game. Original cohort
 evidence remains attributable to its earlier numeric premises. A changed endpoint, direction,
 predicate, role, or outcome requires a new minor candidate. Editorial
 corrections alone increment the patch candidate.

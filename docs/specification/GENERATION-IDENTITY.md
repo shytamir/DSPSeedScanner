@@ -5,9 +5,9 @@ status, including historical dispositions. This document contains scope,
 requirements, or technical evidence; it does not track status.
 
 This contract defines the inputs that DSP Seed Scanner must retain when it
-claims that generated evidence can be reproduced. It describes the installed
-Dyson Sphere Program runtime examined on 2026-08-11. The intended BepInEx mod
-can obtain the required identity from that runtime.
+claims that generated evidence can be reproduced. The current reference is
+DSP `0.10.35.29057`, examined on 2026-09-23. Dated observations below retain
+their original runtime provenance.
 
 ## Contract
 
@@ -26,7 +26,15 @@ Every layer requires:
 - the scanner compatibility version and the presence of any mod or runtime
   patch capable of changing generation.
 
-For the examined installation these values were DSP `0.10.34.28529`, Steam
+For the current installation the reference is DSP `0.10.35.29057`,
+`UniverseGen.algoVersion` `20200403`, and ordered theme IDs `1` through `25`.
+The original `Assembly-CSharp.dll` SHA-256 is
+`E75D3FE4B6A9CA822766189F826BA3A8348DFB7E301AA37FF6779DB29A83FD8D`.
+The combined method-body fingerprint is
+`DAA3676DB1CCE742391387A75B8BCECCD02AEC0197A7C0BFF00A5022DB0B665E`;
+[conformance](../CONFORMANCE.md#dsp-0103529057-evidence) describes its capture.
+
+For the original 2026-08-11 installation these values were DSP `0.10.34.28529`, Steam
 build `23109513`, `UniverseGen.algoVersion` `20200403`, and 25 ordered theme
 IDs. The examined `Assembly-CSharp.dll` SHA-256 was
 `AE0BA95F75BD879A62AA4CE253B2AB78EAA4FB3C7C595F5E1FEE75EBE0E0EF85`.

@@ -15,13 +15,13 @@ on 2026-09-19 to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p
 and [GitHub release/tag 1.4](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.4).
 Both publication artifacts matched the verified package hash recorded below.
 
-**Current phase:** Record the approved scope, then implement runtime identity
-and calibration (Stories 1-2), naming/cache propagation (Story 3), and integrated
-validation and candidate preparation (Story 4).
+**Current phase:** Runtime identity and calibration checkpoint validated;
+naming/cache propagation (Story 3) is next, followed by integrated validation
+and candidate preparation (Story 4).
 
-**Next action:** Push the scope and management update before changing code.
-Then proceed through the approved stories, stopping at coherent validated
-boundaries to commit and push. Owner acceptance remains a separate decision;
+**Next action:** Push the Stories 1-2 checkpoint, then implement native naming
+and cache propagation. Continue committing at coherent validated boundaries.
+Owner acceptance remains a separate decision;
 this authorization does not declare the future candidate accepted or authorize
 release publication. Candidate preparation and bounded New Game validation
 serve that handoff; saves and started games remain outside scope. Older requests
@@ -35,8 +35,8 @@ The approved starting source is `51c3a447d7802dbe90a7eaf1935ac87c54db2fa5`.
 
 | Work | State and next boundary |
 | --- | --- |
-| Scope approval | Accepted by the owner on 2026-09-23; this documentation commit records the authorization before implementation. |
-| Stories 1-2: runtime identity and calibration | Authorized next; capture the exact method digest, update identities and four ranges, then validate and push with this record. |
+| Scope approval | Accepted by the owner on 2026-09-23; scope and management commit `7c8e42e` pushed to `main` before implementation; hosted run 117 passed. |
+| Stories 1-2: runtime identity and calibration | Technically complete in this checkpoint: exact native assembly/method hashes, definition 0.6.0 and four bands updated. Release solution/game-linked Plugin builds passed with zero warnings/errors; Core 16/16 and Runtime 95/95 passed; compiled evaluator reproduced the retained 96-seed oil distributions. Evidence: [conformance](CONFORMANCE.md#dsp-0103529057-evidence) and [predicate catalogue](specification/PREDICATE-RANGE-VALIDATION.md). |
 | Story 3: naming and cache | Authorized after Stories 1-2; retain exact native naming input and isolate cached labels, then validate and push. |
 | Story 4: integration and candidate | Authorized after implementation; reuse retained native evidence, run changed-path checks and prepare an identified package. |
 | Owner acceptance | Pending a validated candidate and owner feedback; technical validation does not grant acceptance. |

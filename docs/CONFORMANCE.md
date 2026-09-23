@@ -10,7 +10,34 @@ runtime. It establishes conformance for the presentation-neutral core only.
 Its evidence excludes product approval, package replacement, other game
 builds, and modded generators.
 
-## Supported identity
+## DSP 0.10.35.29057 evidence
+
+The updated native assembly was rechecked on 2026-09-23 with SHA-256
+`E75D3FE4B6A9CA822766189F826BA3A8348DFB7E301AA37FF6779DB29A83FD8D`.
+Its combined generation-method SHA-256 is
+`DAA3676DB1CCE742391387A75B8BCECCD02AEC0197A7C0BFF00A5022DB0B665E`.
+The capture reads raw method bodies from the original PE metadata: 948 bytes
+for `UniverseGen.CreateGalaxy`, then 161 for
+`PlanetData.RegenerateRawDataImmediately`, each preceded by the production
+UTF-8 `DeclaringType.MethodName\n` label. This is the production hash format,
+not the investigation's resolved-IL comparison or a renamed private DLL hash.
+
+The updated identity/calibration checkpoint passed Release solution and
+game-linked Plugin builds with zero warnings/errors, 16 Core checks and
+95 Runtime checks. The compiled evaluator reproduced the retained 96-seed
+oil distributions recorded in the [predicate catalogue](specification/PREDICATE-RANGE-VALIDATION.md).
+The initial sandbox build could not read Windows SDK discovery metadata;
+the build with normal SDK access passed without a source workaround.
+
+The preceding updated-game private-player investigation covered 25 native
+versus worker targets spanning algorithms 1-13, 24 settings comparisons and
+success/cancellation/failure state restoration. Its evidence remains under
+`D:\Shy\Shared Untracked Repo Resources\DSPSeedScanner-Update-0.10.35.29057`.
+These observations do not establish installed BepInEx startup or UI acceptance
+for the changed mod. The historical installed-runtime record below is retained
+under its original identity and does not substitute for updated-game testing.
+
+## Historical supported identity
 
 The passing runtime was DSP `0.10.34.28529`, galaxy algorithm `20200403`,
 Assembly-CSharp SHA-256
