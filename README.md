@@ -31,8 +31,8 @@ or affect the scanner's results.
 ## Project documentation
 
 [PROJECT.md](docs/PROJECT.md) is the sole authority for project steering and
-work status. The [roadmap placeholder](docs/management/ROADMAP.md) is reserved
-for a future owner-authorized plan. The
+work status. The [game-update scope](docs/management/GAME-UPDATE-0.10.35.29057.md)
+defines the runtime identity, calibration and naming work. The
 [archived panel roadmap](docs/archive/PANEL-IMPROVEMENT-ROADMAP.md) records the
 scope and constraints that governed the panel improvements.
 
@@ -59,7 +59,8 @@ integration boundary are documented in the
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
 [project steering document](docs/PROJECT.md), and the
-[roadmap location](docs/management/ROADMAP.md) before changing scope or behavior.
+[applicable implementation scope](docs/management/GAME-UPDATE-0.10.35.29057.md)
+before changing scope or behavior.
 
 ## License
 

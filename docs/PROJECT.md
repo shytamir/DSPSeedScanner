@@ -5,20 +5,42 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Maintenance mode. The owner published package **1.4.114**
+**Current status:** Approved game-update implementation. On 2026-09-23 the
+owner accepted the [DSP 0.10.35.29057 scope](management/GAME-UPDATE-0.10.35.29057.md)
+and authorized implementation through the owner-acceptance handoff, with
+bounded commits and pushes to `main`, each accompanied by an update here.
+
+**Published baseline:** The owner published package **1.4.114**
 on 2026-09-19 to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
 and [GitHub release/tag 1.4](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.4).
 Both publication artifacts matched the verified package hash recorded below.
 
-**Current phase:** None. The panel roadmap, owner validation and release
-preparation are closed; no implementation story, validation gate or publication
-step is active.
+**Current phase:** Record the approved scope, then implement runtime identity
+and calibration (Stories 1-2), naming/cache propagation (Story 3), and integrated
+validation and candidate preparation (Story 4).
 
-**Next action:** Await owner-directed maintenance or a separately authorized
-plan. The [roadmap placeholder](management/ROADMAP.md) is reserved for that plan.
-Older requests and archived requirements do not activate work. The implementer
-must not run DSP, change the game environment or access saves under this
-maintenance closeout.
+**Next action:** Push the scope and management update before changing code.
+Then proceed through the approved stories, stopping at coherent validated
+boundaries to commit and push. Owner acceptance remains a separate decision;
+this authorization does not declare the future candidate accepted or authorize
+release publication. Candidate preparation and bounded New Game validation
+serve that handoff; saves and started games remain outside scope. Older requests
+and archived requirements do not activate work.
+
+## DSP 0.10.35.29057 work state
+
+The single [implementation plan](management/GAME-UPDATE-0.10.35.29057.md)
+defines requirements and acceptance criteria instead of a new roadmap.
+The approved starting source is `51c3a447d7802dbe90a7eaf1935ac87c54db2fa5`.
+
+| Work | State and next boundary |
+| --- | --- |
+| Scope approval | Accepted by the owner on 2026-09-23; this documentation commit records the authorization before implementation. |
+| Stories 1-2: runtime identity and calibration | Authorized next; capture the exact method digest, update identities and four ranges, then validate and push with this record. |
+| Story 3: naming and cache | Authorized after Stories 1-2; retain exact native naming input and isolate cached labels, then validate and push. |
+| Story 4: integration and candidate | Authorized after implementation; reuse retained native evidence, run changed-path checks and prepare an identified package. |
+| Owner acceptance | Pending a validated candidate and owner feedback; technical validation does not grant acceptance. |
+| Publication | Not authorized by this implementation request. |
 
 ## Product decision
 
@@ -121,12 +143,14 @@ universal seed ranking, subjective quality claims, post-start guarantees,
 adaptive panel placement, player scoring or required preferences, manual scan
 or retry controls, seed comparison, broad compatibility promises, telemetry,
 or publication to an external service. New scope requires an explicit steering
-decision and corresponding roadmap change.
+decision and corresponding scope-document change.
 
 ## Management and documentation
 
-The [roadmap placeholder](management/ROADMAP.md) is the location for a future
-owner-authorized plan. It contains no independent state tracking. The
+The [game-update plan](management/GAME-UPDATE-0.10.35.29057.md) defines the
+approved maintenance scope. The [roadmap placeholder](management/ROADMAP.md)
+remains available for larger future work. Neither contains independent state
+tracking. The
 [archived panel roadmap](archive/PANEL-IMPROVEMENT-ROADMAP.md),
 [owner findings](archive/PANEL-VALIDATION-FINDINGS.md) and
 [preview recipe](archive/PANEL-PREVIEW-CHECK.md) preserve historical scope and
@@ -134,8 +158,8 @@ evidence, not instructions to resume the work.
 
 The [feature-request register](management/FEATURE-REQUESTS.md) and
 [technical-debt register](management/TECHNICAL-DEBT.md) describe older requests
-and obligations. Their dispositions below are unchanged; maintenance mode does
-not activate them. The [documentation index](INDEX.md) links current contracts
+and obligations. Their dispositions below are unchanged; the game-update work
+does not activate them. The [documentation index](INDEX.md) links current contracts
 and historical records.
 
 ## State-tracking rules
