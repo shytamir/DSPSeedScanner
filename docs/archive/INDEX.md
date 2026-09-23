@@ -18,6 +18,8 @@ roadmap and execution restrictions.
 
 ## Archived documents
 
+- [DSP 0.10.35.29057 scope](GAME-UPDATE-0.10.35.29057.md): Historical runtime
+  identity, calibration, naming/cache behavior and validation requirements.
 - [Panel improvement roadmap](PANEL-IMPROVEMENT-ROADMAP.md): Historical epics,
   stories, execution restrictions, gates and handoff requirements.
 - [Panel validation findings](PANEL-VALIDATION-FINDINGS.md): Owner observations

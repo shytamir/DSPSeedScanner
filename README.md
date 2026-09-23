@@ -31,8 +31,8 @@ or affect the scanner's results.
 ## Project documentation
 
 [PROJECT.md](docs/PROJECT.md) is the sole authority for project steering and
-work status. The [game-update scope](docs/management/GAME-UPDATE-0.10.35.29057.md)
-defines the runtime identity, calibration and naming work. The
+work status. The [archived game-update scope](docs/archive/GAME-UPDATE-0.10.35.29057.md)
+preserves the runtime identity, calibration and naming requirements. The
 [archived panel roadmap](docs/archive/PANEL-IMPROVEMENT-ROADMAP.md) records the
 scope and constraints that governed the panel improvements.
 
@@ -58,9 +58,8 @@ integration boundary are documented in the
 [Thunderstore package contract](docs/THUNDERSTORE-PACKAGE.md).
 
 Contributors should read [AGENTS.md](AGENTS.md), the authoritative
-[project steering document](docs/PROJECT.md), and the
-[applicable implementation scope](docs/management/GAME-UPDATE-0.10.35.29057.md)
-before changing scope or behavior.
+[project steering document](docs/PROJECT.md), and any scope it authorizes
+before changing scope or behavior. Archived plans provide historical context.
 
 ## License
 

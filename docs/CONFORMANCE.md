@@ -84,7 +84,7 @@ update directory. No configuration or cache purge was performed.
 These automated checks do not establish installed BepInEx startup, the actual
 New Game UI, Chinese interface rendering or resolution confirmation.
 The owner-controlled recipe is in the
-[scope document](management/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance);
+[scope document](archive/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance);
 The owner's reported execution results and acceptance are recorded only in
 [PROJECT.md](PROJECT.md).
 

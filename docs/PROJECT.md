@@ -5,26 +5,27 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Maintenance mode. The `1.5` minor-version promotion
-authorized by the owner on 2026-09-23 is complete; Actions package **1.5.122**
-passed artifact verification. The
-[DSP 0.10.35.29057 scope](management/GAME-UPDATE-0.10.35.29057.md) remains
-complete and owner-accepted for installed candidate **1.4.119**; no outstanding
-finding was reported.
+**Current status:** Maintenance mode. On 2026-09-24 the owner confirmed `1.5`
+tagging and store publication and requested closeout. The
+[DSP 0.10.35.29057 scope](archive/GAME-UPDATE-0.10.35.29057.md), owner
+acceptance, minor-version promotion and publication are complete. No active
+story, validation gate or release work remains; no outstanding finding was
+reported.
 
-**Published baseline:** The owner published package **1.4.114**
-on 2026-09-19 to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
-and [GitHub release/tag 1.4](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.4).
-Both publication artifacts matched the verified package hash recorded below.
+**Published baseline:** The owner published package **1.5.123**
+on 2026-09-24 (Europe/Madrid) to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
+and [GitHub release/tag 1.5](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.5).
+Both public downloads match the verified package hash recorded below.
 
-**Current phase:** None. Candidate publication remains a separate owner decision.
+**Current phase:** None.
 
-**Next action:** Await explicit publication direction or new work. Keep verified
-promotion package `1.5.122` distinct from installed, owner-accepted `1.4.119`
-and later documentation builds. No further game/environment changes or save
-access are authorized. Older requests and archives do not activate work.
+**Next action:** Await new owner-directed work. The published `1.5.123` package
+and installed, owner-accepted `1.4.119` candidate retain their recorded
+identities; later documentation builds do not replace them. No further
+game/environment changes or save access are authorized. Older requests and
+archives do not activate work.
 
-## 1.5 version promotion
+## 1.5 release history
 
 The owner requested a minor increment from `1.4` to `1.5` on 2026-09-23.
 `VERSION` selects the new line and checked-in plugin defaults use `1.5.0`;
@@ -48,12 +49,28 @@ ZIP SHA-256:
 `6cb96b0ca258200d0814879fafcc1b6ccb5e7947b509964c061a16e88cdac775`.
 Local ZIP:
 `artifacts/minor-promotion-1.5/run-122/download/packages/DSPSeedScanner-1.5.122.zip`.
-Later documentation builds do not replace this verified promotion artifact.
-The promotion did not install a new candidate or publish a release.
+This remains the promotion verification record; the owner subsequently selected
+the following documentation build for publication. No new candidate was installed
+by the promotion or this closeout.
+
+**Published artifact:** `1.5.123`, source and tag `1.5` commit
+`03e1971c41dd3cd09d376e87ded7e5b25ea30651`, built by successful
+[Actions run 123](https://github.com/shytamir/DSPSeedScanner/actions/runs/35924277592).
+[Published ZIP](https://github.com/shytamir/DSPSeedScanner/releases/download/1.5/DSPSeedScanner-1.5.123.zip).
+The source differs from the verified `1.5.122` source only in `docs/PROJECT.md`.
+On 2026-09-24, the GitHub release download, its published asset digest and the
+Thunderstore download all matched SHA-256
+`fc30dfad76bf18eaa5f2a0c23de75ad2e0404169c41dc377d2cf47bb3a026837`.
+The public ZIP passed the existing build/package validators and compiled-plugin
+metadata inspection: package/plugin `1.5.123`, all three DLL assembly/file
+versions `1.5.123.0`, and diagnostic/product label `1.5.123.03e1971`.
+Publication closes the release work; the scope document is archived and the
+roadmap remains a placeholder. Later documentation builds do not replace this
+published artifact.
 
 ## DSP 0.10.35.29057 work state
 
-The single [implementation plan](management/GAME-UPDATE-0.10.35.29057.md)
+The single [implementation plan](archive/GAME-UPDATE-0.10.35.29057.md)
 defines requirements and acceptance criteria instead of a new roadmap.
 The approved starting source is `51c3a447d7802dbe90a7eaf1935ac87c54db2fa5`.
 
@@ -63,8 +80,8 @@ The approved starting source is `51c3a447d7802dbe90a7eaf1935ac87c54db2fa5`.
 | Stories 1-2: runtime identity and calibration | Pushed in `e79029d`; hosted run 118 passed. Technically complete: exact native assembly/method hashes, definition 0.6.0 and four bands updated. Release solution/game-linked Plugin builds passed with zero warnings/errors; Core 16/16 and Runtime 95/95 passed; compiled evaluator reproduced the retained 96-seed oil distributions. Evidence: [conformance](CONFORMANCE.md#dsp-0103529057-evidence) and [predicate catalogue](specification/PREDICATE-RANGE-VALIDATION.md). |
 | Story 3: naming and cache | Pushed in `13f33bd`; hosted run 119 passed. Exact LCID propagation, session/request equality, canonical cache separation and source identity retained. Core 16/16 and Runtime 96/96 passed; Release solution, game-linked Plugin and hosted-reference Plugin builds passed with zero warnings/errors. Native integration passed as recorded below. |
 | Story 4: integration and candidate | Complete. Production native checks passed 15 naming cases, four fresh/cache baselines (852 planets), Chinese fresh/reuse (207 planets), cancellation/failure/restoration and full presentation parity. Exact candidate DLLs passed a focused repeat (414 planets), existing package validators and installed-file hash verification. Evidence and handoff were pushed in `97818fc`; [conformance](CONFORMANCE.md#dsp-0103529057-evidence) records provenance and limits. Owner acceptance below closes the installed-game gate. |
-| Owner acceptance | Passed on 2026-09-23 for installed candidate 1.4.119. After confirming they would run the scope's [New Game checks](management/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance), the owner reported: "Owner acceptance passed on all validations." This covers installed startup, fresh/cache behavior, English/Chinese naming and pending toggles, Peace/Combat, preview exit/re-entry and resolution confirmation. These are owner-reported results, not agent-operated UI checks. |
-| Publication | Not authorized by this implementation request. |
+| Owner acceptance | Passed on 2026-09-23 for installed candidate 1.4.119. After confirming they would run the scope's [New Game checks](archive/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance), the owner reported: "Owner acceptance passed on all validations." This covers installed startup, fresh/cache behavior, English/Chinese naming and pending toggles, Peace/Combat, preview exit/re-entry and resolution confirmation. These are owner-reported results, not agent-operated UI checks. |
+| Publication | Complete. The owner published `1.5.123` to Thunderstore and GitHub release/tag `1.5` on 2026-09-24; exact public-package identity is recorded above. Implementation, owner acceptance and release work are closed. |
 
 **Accepted candidate:** `1.4.119` from
 `13f33bdeeeffc17c6719006d42216a3fb9223d5c`,
@@ -183,10 +200,10 @@ decision and corresponding scope-document change.
 
 ## Management and documentation
 
-The [game-update plan](management/GAME-UPDATE-0.10.35.29057.md) defines the
-approved maintenance scope. The [roadmap placeholder](management/ROADMAP.md)
-remains available for larger future work. Neither contains independent state
-tracking. The
+The [archived game-update plan](archive/GAME-UPDATE-0.10.35.29057.md) preserves
+the requirements of the delivered update. The
+[roadmap placeholder](management/ROADMAP.md) remains available for future
+owner-authorized work. Neither contains independent state tracking. The
 [archived panel roadmap](archive/PANEL-IMPROVEMENT-ROADMAP.md),
 [owner findings](archive/PANEL-VALIDATION-FINDINGS.md) and
 [preview recipe](archive/PANEL-PREVIEW-CHECK.md) preserve historical scope and
