@@ -35,7 +35,57 @@ Peace/Combat reuse, fresh/same-mode/switch-back labels, pending-work replacement
 and preview exit/re-entry). Core remained 16/16. Release solution, game-linked
 Plugin and hosted-reference Plugin builds passed with zero warnings/errors.
 These deterministic naming fixtures exercise lifecycle and cache behavior;
-native label parity is a separate runtime check.
+the following private-player checks supply the separate native label evidence.
+
+The updated production coordinators, compatibility policy, native gateway and
+terrain-worker session were exercised in the existing private Unity player.
+The original native DLL and exported current catalogue were reused. The
+player supplied its own BepInEx paths, configuration and cache; it did not
+launch `DSPGAME.exe`, attach to the installed game, or access a save.
+
+| Check | Observed result |
+| --- | --- |
+| Runtime fingerprint | Production capture matched both assembly and method digests above, including the new required native member. |
+| Native naming | Seeds `45772`, `73339583`, `96178012`, `16315224`, `61571387`, each with LCID `0`, `2052`, `1033`: all 960 star labels and 3,144 solid-planet target labels matched native generation; home labels and request diagnostics also matched. |
+| Full default-name scans | Seeds `29519403`, `32395590`, `25064027`, `42424242`: 852/852 solid planets completed. Every projected statistic and conclusion matched the retained updated-game/mod-1.4.114 baseline, excluding session ID and cache flag. |
+| Same-mode cache | All four complete semantic reports matched their fresh results exactly after those same two exclusions. |
+| Chinese naming and reuse | Seed `29519403`: another 207/207 planets completed; physical home-resource payload matched default naming. Native labels matched fresh and cached results, including cached rare/unipolar locations. Same-LCID Peace/Combat reuse retained source LCID and source mode; switching back reproduced the default report exactly. |
+| Replacement and cleanup | LCID `1033` did not reuse LCID `0` despite equal wording. Switching during pending work cancelled the old session; exit/re-entry reused the correct cache. Injected raw failure failed closed. Borrowed game-data/descriptor sentinels were restored after yields and terminal paths; incomplete work was not cached. |
+
+Evidence is in the shared untracked update directory's `implementation-run3/`:
+`integration.tsv`, `comparison.json`, `assemblies.json`, and the projected JSON
+reports. The first two integration attempts stopped on harness setup/identifier
+parsing errors and are not passing evidence. The probe build was pinned to its
+declared assembly references after it initially found older copies in its
+player directory; no production workaround was introduced.
+
+### Candidate 1.4.119
+
+Hosted [run 119](https://github.com/shytamir/DSPSeedScanner/actions/runs/35921054961)
+built source `13f33bdeeeffc17c6719006d42216a3fb9223d5c` as `1.4.119`,
+assembly/file version `1.4.119.0`, release label `1.4.119.13f33bd`.
+Its downloaded package SHA-256 is
+`5793A116A8C40B7E1E2601338F21BAF28C272AEE375AED9709727AC69A9579A9`.
+The existing build-artifact and package validators passed locally. Generated
+version-source validation used an ignored temporary copy, leaving the tracked
+local-development version defaults intact.
+
+The exact downloaded three candidate assemblies also passed the private native
+check: all 15 naming cases, fresh/default and Chinese scans of seed `29519403`
+(414 complete planets), baseline/cache/switch-back parity, Peace/Combat reuse,
+pending replacement, exit/re-entry and injected-failure restoration. Those
+records are in `candidate-1.4.119/` beside `implementation-run3/`.
+
+The three installed scanner DLLs were replaced while DSP was stopped and their
+hashes matched the validated candidate. The prior `1.4.114` DLLs and a before/
+after hash manifest are retained in `before-installed-1.4.119/` under the shared
+update directory. No configuration or cache purge was performed.
+
+Installed BepInEx startup, the actual New Game UI, Chinese interface rendering,
+resolution confirmation and owner acceptance are not established by these
+checks. The owner-controlled recipe is in the
+[scope document](management/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance);
+its execution and acceptance state belong only in [PROJECT.md](PROJECT.md).
 
 The preceding updated-game private-player investigation covered 25 native
 versus worker targets spanning algorithms 1-13, 24 settings comparisons and
