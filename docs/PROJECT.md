@@ -5,9 +5,9 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Preparing the `1.5` minor-version promotion authorized by
-the owner on 2026-09-23, including pushes to `main` and verification of the
-produced Actions package. The
+**Current status:** Maintenance mode. The `1.5` minor-version promotion
+authorized by the owner on 2026-09-23 is complete; Actions package **1.5.122**
+passed artifact verification. The
 [DSP 0.10.35.29057 scope](management/GAME-UPDATE-0.10.35.29057.md) remains
 complete and owner-accepted for installed candidate **1.4.119**; no outstanding
 finding was reported.
@@ -17,14 +17,12 @@ on 2026-09-19 to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p
 and [GitHub release/tag 1.4](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.4).
 Both publication artifacts matched the verified package hash recorded below.
 
-**Current phase:** Version promotion and Actions artifact verification.
+**Current phase:** None. Candidate publication remains a separate owner decision.
 
-**Next action:** Verify the generated `1.5` package, plugin, assembly/file and
-diagnostic versions against the [package contract](THUNDERSTORE-PACKAGE.md),
-then record the exact artifact and validation here. Publication remains a
-separate owner decision. The installed, owner-accepted `1.4.119` identity is
-retained; no further game/environment changes or save access are authorized.
-Older requests and archives do not activate work.
+**Next action:** Await explicit publication direction or new work. Keep verified
+promotion package `1.5.122` distinct from installed, owner-accepted `1.4.119`
+and later documentation builds. No further game/environment changes or save
+access are authorized. Older requests and archives do not activate work.
 
 ## 1.5 version promotion
 
@@ -33,8 +31,25 @@ The owner requested a minor increment from `1.4` to `1.5` on 2026-09-23.
 Actions continues to supply the patch number and commit-qualified diagnostic
 label. Product behavior, conclusion definitions and cache schema are unchanged
 by this promotion. Local version-generation checks and the game-linked Release
-plugin build passed with zero warnings/errors. Verification of the resulting
-hosted artifact is pending.
+plugin build passed with zero warnings/errors.
+
+**Verified promotion artifact:** `1.5.122`, source
+`890bd724a82d95e1d115e77c7087d6007cf40125`,
+[hosted run 122](https://github.com/shytamir/DSPSeedScanner/actions/runs/35923902944).
+The hosted solution/plugin builds, Core 16/16, Runtime 96/96 and both artifact
+validators passed. The downloaded ZIP independently passed both existing
+validators; compiled BepInEx attribute and plugin constants are `1.5.122`, all
+three DLLs have assembly/file version `1.5.122.0` and product version
+`1.5.122.890bd72`. Manifest, ZIP/artifact names, build information and reports
+agree. ZIP DLL hashes match the loose build outputs; README and icon match
+their source assets, and the exact archive allowlist passed.
+
+ZIP SHA-256:
+`6cb96b0ca258200d0814879fafcc1b6ccb5e7947b509964c061a16e88cdac775`.
+Local ZIP:
+`artifacts/minor-promotion-1.5/run-122/download/packages/DSPSeedScanner-1.5.122.zip`.
+Later documentation builds do not replace this verified promotion artifact.
+The promotion did not install a new candidate or publish a release.
 
 ## DSP 0.10.35.29057 work state
 
