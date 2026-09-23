@@ -11,6 +11,8 @@ the existing wells count. Sum native amounts before applying the captured
 rounding described in [Panel evidence](PANEL-EVIDENCE.md#native-resource-units).
 Resource settings are already reflected in the amounts. Missing multiplier
 evidence displays Unavailable, never a guessed rate. Ore counts are unchanged.
+Generated oil supply includes underwater wells introduced by DSP
+`0.10.35.29057`; the total does not promise immediate extractor access.
 
 Each solid moon's Body cell has a second line, `Moon 1`, `Moon 2`, and so on,
 ordered from nearest to farthest around its own parent, including the home

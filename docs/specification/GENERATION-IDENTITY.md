@@ -58,6 +58,21 @@ The actual generated star count must be recorded as output. The generator may
 return the number of positions it could generate rather than blindly echoing
 the requested count.
 
+### Native naming identity
+
+The preview identity also retains the exact integer `GameDesc.starNameLCID`
+introduced in DSP `0.10.35.29057`. The native UI supplies this input; the scanner
+captures it with the completed preview and restores it after `SetForNewGame`
+when recreating the descriptor. It does not infer it later from the current
+interface language or replace it with an English/Chinese boolean.
+
+Preview equality, request validation and cached location labels require the
+same naming input. LCID `0`, `2052` and `1033` remain distinct even when two
+values produce the same names. Naming does not add a calibration restriction
+to physical metrics: the retained five-seed comparison found equal geometry
+with different native star and planet names. Session replacement cancels the
+old naming context before its results can update the current panel.
+
 ### Resource realization identity
 
 Reproducing resource evidence requires the galaxy structure identity plus the
@@ -91,7 +106,8 @@ because the same default combat values were already present in `GameDesc`.
 
 A focused follow-up on 2026-08-13 established that `isPeaceMode` may be omitted
 from the reuse key for explicitly toggle-invariant pre-play evidence when every
-other identity input, including `initialColonize` and `maxDensity`, remains
+other identity input, including `initialColonize`, `maxDensity` and the native
+naming input, remains
 equal. It may not be omitted from the canonical generation identity or from
 Dark Fog status.
 

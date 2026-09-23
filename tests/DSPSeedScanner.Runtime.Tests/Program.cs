@@ -60,6 +60,7 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("incremental cluster cancellation and failure restore state", IncrementalClusterExitPathsRestoreState),
                 ("incremental cluster keeps serialization between yields", IncrementalClusterKeepsSerializationBetweenYields),
                 ("complete cache keys cover the audited reusable identity", CompleteCacheKeysCoverReusableIdentity),
+                ("native naming isolates cache and preview sessions", NativeNamingIsolatesCacheAndPreviewSessions),
                 ("complete cache reuses only audited payload across mode", CompleteCacheReusesOnlyAuditedPayloadAcrossMode),
                 ("complete cache round trips and replaces atomically", CompleteCacheRoundTripsAndReplacesAtomically),
                 ("complete cache bounds retention and clears manually", CompleteCacheBoundsRetentionAndClears),
@@ -1670,6 +1671,113 @@ namespace DSPSeedScanner.Runtime.Tests
                     scannerCompatibility: "changed"), out _));
                 False(cache.TryRead(peace, Fingerprint(
                     scannerContract: "changed"), out _));
+            });
+        }
+
+        private static void NativeNamingIsolatesCacheAndPreviewSessions()
+        {
+            var identities = new HashSet<PreviewGenerationIdentity>();
+            var keys = new HashSet<CompleteClusterCacheKey>();
+            foreach (int lcid in new[] { 0, 2052, 1033 })
+            {
+                PreviewGenerationIdentity identity = PreviewIdentity(16_315_224, starNameLcid: lcid);
+                Equal(lcid, Request(starNameLcid: lcid).StarNameLcid);
+                Equal(identity, PreviewIdentity(16_315_224, starNameLcid: lcid));
+                Equal(identity.GetHashCode(), PreviewIdentity(16_315_224, starNameLcid: lcid).GetHashCode());
+                True(identities.Add(identity));
+                True(CompleteClusterCacheKey.TryCreate(identity, Fingerprint(), out CompleteClusterCacheKey? key));
+                True(keys.Add(key!));
+            }
+
+            WithTemporaryDirectory(path =>
+            {
+                string designation = "Default";
+                var gate = new RuntimeOperationGate();
+                var previewGateway = new FakeGateway();
+                var completeGateway = new FakeCompleteClusterGateway
+                {
+                    PreviewFactory = () => previewGateway.Snapshot,
+                    TargetFactory = (planetId, index) => new CompleteClusterPlanetTarget(
+                        planetId, index + 1,
+                        new ConclusionSubject(index == 0 ? SubjectKind.BirthSystem : SubjectKind.StarSystem,
+                            (index + 1).ToString()),
+                        index * 2m, designation + " " + planetId, index, index == 2)
+                };
+                var lifecycle = new PreviewSessionLifecycle();
+                using var resolver = new PreviewResolutionCoordinator(
+                    lifecycle, new PreviewScanCoordinator(previewGateway, gate),
+                    new CompleteClusterRawCoordinator(completeGateway, gate),
+                    new CompleteClusterConclusionCache(path));
+                long load = 0;
+                PreviewResolutionAttempt Open(int lcid, CombatMode mode = CombatMode.Combat)
+                {
+                    designation = lcid == 2052 ? "Chinese" : "Default";
+                    previewGateway.Snapshot = Snapshot(homePlanetDisplayDesignation: designation + " I");
+                    resolver.ObserveCompletedLoad(++load,
+                        PreviewIdentity(16_315_224, combatMode: mode, starNameLcid: lcid),
+                        Request(combatMode: mode, starNameLcid: lcid));
+                    return resolver.CurrentPublishedAttempt!;
+                }
+                void Finish(PreviewResolutionAttempt attempt)
+                {
+                    while (!attempt.IsTerminal) resolver.AdvanceCurrent();
+                    Equal(PreviewResolutionState.Complete, attempt.State);
+                    True(attempt.CacheStored);
+                }
+                void AssertNames(PreviewResolutionAttempt attempt, string expected)
+                {
+                    Equal(expected + " I", attempt.Session.HomePlanetDisplayDesignation);
+                    True(attempt.ClusterResources!.Candidates.Count > 0);
+                    True(attempt.ClusterResources.Candidates.All(value =>
+                        value.Location.DisplayDesignation.StartsWith(expected, StringComparison.Ordinal)));
+                }
+
+                try
+                {
+                    resolver.ObserveCompletedLoad(1, PreviewIdentity(16_315_224), Request(starNameLcid: 2052));
+                    throw new InvalidOperationException("A naming mismatch must be rejected.");
+                }
+                catch (ArgumentException) { }
+                Equal(0, previewGateway.GenerateCalls);
+
+                PreviewResolutionAttempt original = Open(0);
+                Finish(original);
+                AssertNames(original, "Default");
+                Equal(PreviewResolutionState.Cached, Open(0).State);
+                Equal(1, completeGateway.GenerateCalls);
+
+                PreviewResolutionAttempt localized = Open(2052);
+                Equal(PreviewResolutionState.Scanning, localized.State);
+                Finish(localized);
+                AssertNames(localized, "Chinese");
+                Equal(2, completeGateway.GenerateCalls);
+                PreviewResolutionAttempt crossMode = Open(2052, CombatMode.Peace);
+                Equal(PreviewResolutionState.Cached, crossMode.State);
+                Equal(2052, crossMode.CachedPayloadSourceIdentity!.StarNameLcid);
+                Equal(CombatMode.Combat, crossMode.CachedPayloadSourceIdentity.CombatMode);
+                AssertNames(crossMode, "Chinese");
+
+                PreviewResolutionAttempt restored = Open(0);
+                Equal(PreviewResolutionState.Cached, restored.State);
+                AssertNames(restored, "Default");
+                Equal(2, completeGateway.GenerateCalls);
+                Equal(2, Directory.GetFiles(path, "*.dspseedscan").Length);
+
+                // Equal native wording does not make different LCID inputs interchangeable.
+                PreviewResolutionAttempt pending = Open(1033);
+                resolver.AdvanceCurrent();
+                Equal(PreviewResolutionState.Scanning, pending.State);
+                PreviewResolutionAttempt replacement = Open(2052);
+                Equal(PreviewResolutionState.Cancelled, pending.State);
+                False(lifecycle.CanPublish(pending.Session));
+                Equal(PreviewResolutionState.Cached, replacement.State);
+                AssertNames(replacement, "Chinese");
+                resolver.ExitPreview();
+                False(lifecycle.CanPublish(replacement.Session));
+                PreviewResolutionAttempt reopened = Open(2052);
+                Equal(PreviewResolutionState.Cached, reopened.State);
+                AssertNames(reopened, "Chinese");
+                Equal(2, Directory.GetFiles(path, "*.dspseedscan").Length);
             });
         }
 
@@ -5279,7 +5387,8 @@ namespace DSPSeedScanner.Runtime.Tests
             decimal resourceMultiplier = 1m,
             CombatMode combatMode = CombatMode.Combat,
             decimal initialColonize = 1m,
-            decimal maxDensity = 1m)
+            decimal maxDensity = 1m,
+            int starNameLcid = 0)
         {
             return new PreviewScanRequest(
                 16_315_224,
@@ -5289,7 +5398,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 combatMode,
                 PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
                 initialColonize,
-                maxDensity);
+                maxDensity,
+                starNameLcid);
         }
 
         private static PreviewScanRequest RequestForSeed(
@@ -5481,7 +5591,8 @@ namespace DSPSeedScanner.Runtime.Tests
             decimal resourceMultiplier = 1m,
             CombatMode combatMode = CombatMode.Combat,
             decimal initialColonize = 1m,
-            decimal maxDensity = 1m)
+            decimal maxDensity = 1m,
+            int starNameLcid = 0)
         {
             var galaxy = new GenerationIdentity(
                 ConclusionDefinition.ReferenceGameVersion,
@@ -5498,7 +5609,8 @@ namespace DSPSeedScanner.Runtime.Tests
                 combatMode,
                 PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
                 initialColonize,
-                maxDensity);
+                maxDensity,
+                starNameLcid);
         }
 
         private static RawPlanetRequest RawRequest()

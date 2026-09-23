@@ -57,6 +57,10 @@ DSP Seed Scanner supports Dyson Sphere Program `0.10.35.29057`. Other game
 versions are reported as unsupported. The scanner also stops if it cannot
 read the information it needs from the game.
 
+Star and planet names follow the game's native naming option. Changing that
+option may trigger a fresh scan; returning to a previously scanned choice can
+reuse its cached results.
+
 DSP Seed Scanner can run alongside other BepInEx plugins. Their changes may
 affect the generated cluster, scan results, or runtime behavior, and conflicts
 cannot always be detected automatically.

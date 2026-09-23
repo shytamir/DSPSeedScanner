@@ -397,7 +397,8 @@ namespace DSPSeedScanner.Runtime
                 identity.CombatMode != request.CombatMode ||
                 !String.Equals(identity.CombatSettingsKey, request.CombatSettingsKey, StringComparison.Ordinal) ||
                 identity.InitialColonize != request.InitialColonize ||
-                identity.MaxDensity != request.MaxDensity)
+                identity.MaxDensity != request.MaxDensity ||
+                identity.StarNameLcid != request.StarNameLcid)
             {
                 throw new ArgumentException(
                     "The preview request does not match the completed-load identity.",

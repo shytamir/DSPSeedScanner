@@ -15,12 +15,11 @@ on 2026-09-19 to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p
 and [GitHub release/tag 1.4](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.4).
 Both publication artifacts matched the verified package hash recorded below.
 
-**Current phase:** Runtime identity and calibration checkpoint validated;
-naming/cache propagation (Story 3) is next, followed by integrated validation
-and candidate preparation (Story 4).
+**Current phase:** Naming/cache propagation checkpoint validated; integrated
+runtime validation and candidate preparation (Story 4) are next.
 
-**Next action:** Push the Stories 1-2 checkpoint, then implement native naming
-and cache propagation. Continue committing at coherent validated boundaries.
+**Next action:** Push the Story 3 checkpoint, then exercise the changed native
+adapter and prepare the owner-acceptance candidate.
 Owner acceptance remains a separate decision;
 this authorization does not declare the future candidate accepted or authorize
 release publication. Candidate preparation and bounded New Game validation
@@ -36,8 +35,8 @@ The approved starting source is `51c3a447d7802dbe90a7eaf1935ac87c54db2fa5`.
 | Work | State and next boundary |
 | --- | --- |
 | Scope approval | Accepted by the owner on 2026-09-23; scope and management commit `7c8e42e` pushed to `main` before implementation; hosted run 117 passed. |
-| Stories 1-2: runtime identity and calibration | Technically complete in this checkpoint: exact native assembly/method hashes, definition 0.6.0 and four bands updated. Release solution/game-linked Plugin builds passed with zero warnings/errors; Core 16/16 and Runtime 95/95 passed; compiled evaluator reproduced the retained 96-seed oil distributions. Evidence: [conformance](CONFORMANCE.md#dsp-0103529057-evidence) and [predicate catalogue](specification/PREDICATE-RANGE-VALIDATION.md). |
-| Story 3: naming and cache | Authorized after Stories 1-2; retain exact native naming input and isolate cached labels, then validate and push. |
+| Stories 1-2: runtime identity and calibration | Pushed in `e79029d`; hosted run 118 passed. Technically complete: exact native assembly/method hashes, definition 0.6.0 and four bands updated. Release solution/game-linked Plugin builds passed with zero warnings/errors; Core 16/16 and Runtime 95/95 passed; compiled evaluator reproduced the retained 96-seed oil distributions. Evidence: [conformance](CONFORMANCE.md#dsp-0103529057-evidence) and [predicate catalogue](specification/PREDICATE-RANGE-VALIDATION.md). |
+| Story 3: naming and cache | Technically complete in this checkpoint: exact LCID propagation, session/request equality, canonical cache separation and source identity retained. Core 16/16 and Runtime 96/96 passed; Release solution, game-linked Plugin and hosted-reference Plugin builds passed with zero warnings/errors. Native label integration follows in Story 4. |
 | Story 4: integration and candidate | Authorized after implementation; reuse retained native evidence, run changed-path checks and prepare an identified package. |
 | Owner acceptance | Pending a validated candidate and owner feedback; technical validation does not grant acceptance. |
 | Publication | Not authorized by this implementation request. |

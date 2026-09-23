@@ -26,7 +26,7 @@ coverage and restored runtime state, and while these inputs still match exactly:
 
 - DSP version, galaxy algorithm, game-assembly digest, ordered theme catalogue,
   generation-method digest, and detected generation mods or patchers;
-- seed, requested star count, creation version, resource multiplier, and
+- seed, requested star count, creation version, exact native `starNameLCID`, resource multiplier, and
   canonical pre-play combat settings, including `initialColonize` and
   `maxDensity`; and
 - complete-cluster evidence stage, cache schema, scanner compatibility,
@@ -43,6 +43,14 @@ The active preview supplies its own mode, immediate facts, and Dark Fog status.
 Numeric combat settings and every other key input must still match. New
 payload fields require the same invariance evidence before they can be reused;
 partial work is never reused across the toggle.
+
+Native naming choices have separate entries because cached resource locations
+retain display designations. A naming change starts a new scan if that exact
+input has no entry; switching back can reuse its earlier result. Even LCID
+values that currently produce equal names remain distinct inputs. The naming
+value survives source-identity reconstruction during Peace/Combat reuse.
+Definition `0.6.0` and the added canonical key field separate older entries;
+the binary payload remains schema `13`. No blanket cache deletion is needed.
 
 Partial, failed, cancelled, incompatible, corrupt, oversized, or obsolete
 entries are cache misses. Each entry carries a payload checksum; corrupt or

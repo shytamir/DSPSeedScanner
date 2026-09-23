@@ -183,6 +183,10 @@ research; implementation must not invent fallback thresholds.
 
 ## Runtime-confirmed validation catalogue
 
+The named numeric examples below retain the original `0.10.34.28529`
+measurements. Updated-game recalibration and evidence identities are recorded
+above; old deposit amounts are not asserted unchanged by the game update.
+
 Every row is a normal 64-star, multiplier-1 cluster unless a settings variant
 is stated. Named seeds are fixtures for their evidence, never special cases in
 evaluation code.

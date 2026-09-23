@@ -232,7 +232,8 @@ namespace DSPSeedScanner.Plugin
                     descriptor.isPeaceMode ? CombatMode.Peace : CombatMode.Combat,
                     PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
                     initialColonize,
-                    maxDensity);
+                    maxDensity,
+                    descriptor.starNameLCID);
                 RuntimeFingerprint fingerprint = previewGateway.CaptureFingerprint(request);
                 var galaxyIdentity = new GenerationIdentity(
                     fingerprint.GameVersion,
@@ -249,7 +250,8 @@ namespace DSPSeedScanner.Plugin
                     request.CombatMode,
                     request.CombatSettingsKey,
                     request.InitialColonize,
-                    request.MaxDensity);
+                    request.MaxDensity,
+                    request.StarNameLcid);
                 PreviewLoadTransition transition = previewResolution.ObserveCompletedLoad(
                     sessionId,
                     identity,

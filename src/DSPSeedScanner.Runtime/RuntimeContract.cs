@@ -210,7 +210,8 @@ namespace DSPSeedScanner.Runtime
             CombatMode combatMode,
             string combatSettingsKey,
             decimal initialColonize = 1m,
-            decimal maxDensity = 1m)
+            decimal maxDensity = 1m,
+            int starNameLcid = 0)
         {
             if (galaxySeed < 0 || galaxySeed > 99_999_999)
                 throw new ArgumentOutOfRangeException(nameof(galaxySeed));
@@ -240,6 +241,7 @@ namespace DSPSeedScanner.Runtime
             CombatSettingsKey = combatSettingsKey;
             InitialColonize = initialColonize;
             MaxDensity = maxDensity;
+            StarNameLcid = starNameLcid;
         }
 
         public int GalaxySeed { get; }
@@ -250,6 +252,7 @@ namespace DSPSeedScanner.Runtime
         public string CombatSettingsKey { get; }
         public decimal InitialColonize { get; }
         public decimal MaxDensity { get; }
+        public int StarNameLcid { get; }
 
         public static string CombatSettingsKeyFor(
             decimal initialColonize,

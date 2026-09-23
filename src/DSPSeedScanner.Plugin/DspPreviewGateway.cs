@@ -541,6 +541,7 @@ namespace DSPSeedScanner.Plugin
             descriptor.isPeaceMode = request.CombatMode == CombatMode.Peace;
             descriptor.combatSettings.initialColonize = (float)request.InitialColonize;
             descriptor.combatSettings.maxDensity = (float)request.MaxDensity;
+            descriptor.starNameLCID = request.StarNameLcid;
             return descriptor;
         }
 
@@ -555,6 +556,7 @@ namespace DSPSeedScanner.Plugin
                 (typeof(GalaxyData), "stars", MemberTypes.Field),
                 (typeof(GalaxyData), "starCount", MemberTypes.Field),
                 (typeof(GameDesc), "savedThemeIds", MemberTypes.Field),
+                (typeof(GameDesc), "starNameLCID", MemberTypes.Field),
                 (typeof(CombatSettings), "initialColonize", MemberTypes.Field),
                 (typeof(CombatSettings), "maxDensity", MemberTypes.Field),
                 (typeof(StarData), "planets", MemberTypes.Field),

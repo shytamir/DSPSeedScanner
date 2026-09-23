@@ -20,6 +20,7 @@ public sealed class GameDesc
     public Version creationVersion;
     public int galaxySeed;
     public int starCount;
+    public int starNameLCID;
     public float resourceMultiplier;
     public bool isPeaceMode;
     public CombatSettings combatSettings;

@@ -29,6 +29,14 @@ oil distributions recorded in the [predicate catalogue](specification/PREDICATE-
 The initial sandbox build could not read Windows SDK discovery metadata;
 the build with normal SDK access passed without a source workaround.
 
+The naming/cache checkpoint additionally passed 96 Runtime checks (including
+exact LCID identity, request mismatch rejection, cache round-trip and
+Peace/Combat reuse, fresh/same-mode/switch-back labels, pending-work replacement
+and preview exit/re-entry). Core remained 16/16. Release solution, game-linked
+Plugin and hosted-reference Plugin builds passed with zero warnings/errors.
+These deterministic naming fixtures exercise lifecycle and cache behavior;
+native label parity is a separate runtime check.
+
 The preceding updated-game private-player investigation covered 25 native
 versus worker targets spanning algorithms 1-13, 24 settings comparisons and
 success/cancellation/failure state restoration. Its evidence remains under

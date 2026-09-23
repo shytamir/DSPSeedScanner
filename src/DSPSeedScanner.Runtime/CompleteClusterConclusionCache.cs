@@ -93,6 +93,7 @@ namespace DSPSeedScanner.Runtime
             Add(value, "creation-version", galaxy.CreationVersion);
             Add(value, "galaxy-seed", galaxy.GalaxySeed.ToString(CultureInfo.InvariantCulture));
             Add(value, "star-count", galaxy.RequestedStarCount.ToString(CultureInfo.InvariantCulture));
+            Add(value, "star-name-lcid", identity.StarNameLcid.ToString(CultureInfo.InvariantCulture));
             Add(value, "resource-multiplier", DecimalValue(identity.ResourceMultiplier));
             Add(value, "combat-settings", identity.CombatSettingsKey);
             Add(value, "initial-colonize", DecimalValue(identity.InitialColonize));
@@ -534,7 +535,8 @@ namespace DSPSeedScanner.Runtime
                 source.CombatSettingsKey,
                 StringComparison.Ordinal) &&
             active.InitialColonize == source.InitialColonize &&
-            active.MaxDensity == source.MaxDensity;
+            active.MaxDensity == source.MaxDensity &&
+            active.StarNameLcid == source.StarNameLcid;
 
         private static bool IsCurrentReport(
             PreviewGenerationIdentity identity,
@@ -617,7 +619,8 @@ namespace DSPSeedScanner.Runtime
                 sourceMode,
                 key.Identity.CombatSettingsKey,
                 key.Identity.InitialColonize,
-                key.Identity.MaxDensity);
+                key.Identity.MaxDensity,
+                key.Identity.StarNameLcid);
             int expectedPlanets = Positive(reader.ReadInt32(), 4096, "planet count");
             int reportCount = Positive(reader.ReadInt32(), MaximumReports, "report count");
             var reports = new List<ConclusionReport>(reportCount);

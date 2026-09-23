@@ -153,6 +153,8 @@ namespace DSPSeedScanner.Runtime
             {
                 int threadId = Thread.CurrentThread.ManagedThreadId;
                 trace.Add("request:thread=" + threadId);
+                trace.Add("request:star-name-lcid=" +
+                    request.StarNameLcid.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 if (threadId != gateway.MainThreadId)
                 {
                     status = RuntimeScanStatus.Incompatible;

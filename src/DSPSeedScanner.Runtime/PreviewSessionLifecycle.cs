@@ -12,7 +12,8 @@ namespace DSPSeedScanner.Runtime
             CombatMode combatMode,
             string combatSettingsKey,
             decimal initialColonize = 1m,
-            decimal maxDensity = 1m)
+            decimal maxDensity = 1m,
+            int starNameLcid = 0)
         {
             GalaxyIdentity = galaxy ?? throw new ArgumentNullException(nameof(galaxy));
             if (resourceMultiplier <= 0)
@@ -38,6 +39,7 @@ namespace DSPSeedScanner.Runtime
             CombatSettingsKey = combatSettingsKey;
             InitialColonize = initialColonize;
             MaxDensity = maxDensity;
+            StarNameLcid = starNameLcid;
         }
 
         public GenerationIdentity GalaxyIdentity { get; }
@@ -46,6 +48,7 @@ namespace DSPSeedScanner.Runtime
         public string CombatSettingsKey { get; }
         public decimal InitialColonize { get; }
         public decimal MaxDensity { get; }
+        public int StarNameLcid { get; }
 
         public bool Equals(PreviewGenerationIdentity? other)
         {
@@ -55,7 +58,8 @@ namespace DSPSeedScanner.Runtime
                 CombatMode == other.CombatMode &&
                 String.Equals(CombatSettingsKey, other.CombatSettingsKey, StringComparison.Ordinal) &&
                 InitialColonize == other.InitialColonize &&
-                MaxDensity == other.MaxDensity;
+                MaxDensity == other.MaxDensity &&
+                StarNameLcid == other.StarNameLcid;
         }
 
         public override bool Equals(object? obj) => Equals(obj as PreviewGenerationIdentity);
@@ -70,6 +74,7 @@ namespace DSPSeedScanner.Runtime
                 hash = (hash * 397) ^ StringComparer.Ordinal.GetHashCode(CombatSettingsKey);
                 hash = (hash * 397) ^ InitialColonize.GetHashCode();
                 hash = (hash * 397) ^ MaxDensity.GetHashCode();
+                hash = (hash * 397) ^ StarNameLcid.GetHashCode();
                 return hash;
             }
         }
