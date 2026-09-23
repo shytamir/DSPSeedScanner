@@ -81,11 +81,12 @@ hashes matched the validated candidate. The prior `1.4.114` DLLs and a before/
 after hash manifest are retained in `before-installed-1.4.119/` under the shared
 update directory. No configuration or cache purge was performed.
 
-Installed BepInEx startup, the actual New Game UI, Chinese interface rendering,
-resolution confirmation and owner acceptance are not established by these
-checks. The owner-controlled recipe is in the
+These automated checks do not establish installed BepInEx startup, the actual
+New Game UI, Chinese interface rendering or resolution confirmation.
+The owner-controlled recipe is in the
 [scope document](management/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance);
-its execution and acceptance state belong only in [PROJECT.md](PROJECT.md).
+The owner's reported execution results and acceptance are recorded only in
+[PROJECT.md](PROJECT.md).
 
 The preceding updated-game private-player investigation covered 25 native
 versus worker targets spanning algorithms 1-13, 24 settings comparisons and

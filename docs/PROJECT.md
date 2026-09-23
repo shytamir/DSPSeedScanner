@@ -5,27 +5,23 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Implementation technically validated; awaiting owner
-acceptance of installed candidate **1.4.119**. On 2026-09-23 the
-owner accepted the [DSP 0.10.35.29057 scope](management/GAME-UPDATE-0.10.35.29057.md)
-and authorized implementation through the owner-acceptance handoff, with
-bounded commits and pushes to `main`, each accompanied by an update here.
+**Current status:** Maintenance mode. The
+[DSP 0.10.35.29057 scope](management/GAME-UPDATE-0.10.35.29057.md) is complete.
+On 2026-09-23 the owner confirmed that installed candidate **1.4.119** passed
+all owner validations and granted acceptance. No outstanding finding was
+reported. Implementation, technical validation and owner acceptance are closed.
 
 **Published baseline:** The owner published package **1.4.114**
 on 2026-09-19 to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
 and [GitHub release/tag 1.4](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.4).
 Both publication artifacts matched the verified package hash recorded below.
 
-**Current phase:** Owner-controlled installed New Game acceptance. The code,
-bounded native integration checks and package validation are complete.
+**Current phase:** None. Candidate publication remains a separate owner decision.
 
-**Next action:** Owner checks fresh/cache behavior, English/Chinese native
-naming and a toggle during scanning, Peace/Combat, preview exit/re-entry and
-resolution confirmation, then supplies acceptance or findings. The candidate
-is installed and the previous scanner DLLs are backed up. The agent has not
-launched the installed game or performed its UI checks. Owner acceptance and
-release publication remain separate; publication is not authorized. Saves and
-started games remain outside scope. Older requests and archives do not activate work.
+**Next action:** Await explicit release direction or new work. Keep the accepted
+`1.4.119` candidate identity distinct from later documentation builds. This
+closeout does not authorize publication, further game/environment changes or
+save access. Older requests and archives do not activate work.
 
 ## DSP 0.10.35.29057 work state
 
@@ -38,11 +34,11 @@ The approved starting source is `51c3a447d7802dbe90a7eaf1935ac87c54db2fa5`.
 | Scope approval | Accepted by the owner on 2026-09-23; scope and management commit `7c8e42e` pushed to `main` before implementation; hosted run 117 passed. |
 | Stories 1-2: runtime identity and calibration | Pushed in `e79029d`; hosted run 118 passed. Technically complete: exact native assembly/method hashes, definition 0.6.0 and four bands updated. Release solution/game-linked Plugin builds passed with zero warnings/errors; Core 16/16 and Runtime 95/95 passed; compiled evaluator reproduced the retained 96-seed oil distributions. Evidence: [conformance](CONFORMANCE.md#dsp-0103529057-evidence) and [predicate catalogue](specification/PREDICATE-RANGE-VALIDATION.md). |
 | Story 3: naming and cache | Pushed in `13f33bd`; hosted run 119 passed. Exact LCID propagation, session/request equality, canonical cache separation and source identity retained. Core 16/16 and Runtime 96/96 passed; Release solution, game-linked Plugin and hosted-reference Plugin builds passed with zero warnings/errors. Native integration passed as recorded below. |
-| Story 4: integration and candidate | Technical work complete: production native checks passed 15 naming cases, four fresh/cache baselines (852 planets), Chinese fresh/reuse (207 planets), cancellation/failure/restoration and full presentation parity. Exact candidate DLLs passed a focused repeat (414 planets), existing package validators and installed-file hash verification. [Conformance evidence](CONFORMANCE.md#dsp-0103529057-evidence) records provenance and limits. Installed-game UI acceptance remains pending in the next row. |
-| Owner acceptance | Handoff ready; candidate 1.4.119 installed. The owner confirmed they will run the scope's [New Game checks](management/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance). No installed startup, visual check or owner acceptance is claimed. Awaiting the results. |
+| Story 4: integration and candidate | Complete. Production native checks passed 15 naming cases, four fresh/cache baselines (852 planets), Chinese fresh/reuse (207 planets), cancellation/failure/restoration and full presentation parity. Exact candidate DLLs passed a focused repeat (414 planets), existing package validators and installed-file hash verification. Evidence and handoff were pushed in `97818fc`; [conformance](CONFORMANCE.md#dsp-0103529057-evidence) records provenance and limits. Owner acceptance below closes the installed-game gate. |
+| Owner acceptance | Passed on 2026-09-23 for installed candidate 1.4.119. After confirming they would run the scope's [New Game checks](management/GAME-UPDATE-0.10.35.29057.md#owner-controlled-game-acceptance), the owner reported: "Owner acceptance passed on all validations." This covers installed startup, fresh/cache behavior, English/Chinese naming and pending toggles, Peace/Combat, preview exit/re-entry and resolution confirmation. These are owner-reported results, not agent-operated UI checks. |
 | Publication | Not authorized by this implementation request. |
 
-**Owner candidate:** `1.4.119` from
+**Accepted candidate:** `1.4.119` from
 `13f33bdeeeffc17c6719006d42216a3fb9223d5c`,
 [hosted run 119](https://github.com/shytamir/DSPSeedScanner/actions/runs/35921054961).
 ZIP SHA-256:
