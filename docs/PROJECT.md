@@ -5,23 +5,36 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Maintenance mode. The
-[DSP 0.10.35.29057 scope](management/GAME-UPDATE-0.10.35.29057.md) is complete.
-On 2026-09-23 the owner confirmed that installed candidate **1.4.119** passed
-all owner validations and granted acceptance. No outstanding finding was
-reported. Implementation, technical validation and owner acceptance are closed.
+**Current status:** Preparing the `1.5` minor-version promotion authorized by
+the owner on 2026-09-23, including pushes to `main` and verification of the
+produced Actions package. The
+[DSP 0.10.35.29057 scope](management/GAME-UPDATE-0.10.35.29057.md) remains
+complete and owner-accepted for installed candidate **1.4.119**; no outstanding
+finding was reported.
 
 **Published baseline:** The owner published package **1.4.114**
 on 2026-09-19 to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
 and [GitHub release/tag 1.4](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.4).
 Both publication artifacts matched the verified package hash recorded below.
 
-**Current phase:** None. Candidate publication remains a separate owner decision.
+**Current phase:** Version promotion and Actions artifact verification.
 
-**Next action:** Await explicit release direction or new work. Keep the accepted
-`1.4.119` candidate identity distinct from later documentation builds. This
-closeout does not authorize publication, further game/environment changes or
-save access. Older requests and archives do not activate work.
+**Next action:** Verify the generated `1.5` package, plugin, assembly/file and
+diagnostic versions against the [package contract](THUNDERSTORE-PACKAGE.md),
+then record the exact artifact and validation here. Publication remains a
+separate owner decision. The installed, owner-accepted `1.4.119` identity is
+retained; no further game/environment changes or save access are authorized.
+Older requests and archives do not activate work.
+
+## 1.5 version promotion
+
+The owner requested a minor increment from `1.4` to `1.5` on 2026-09-23.
+`VERSION` selects the new line and checked-in plugin defaults use `1.5.0`;
+Actions continues to supply the patch number and commit-qualified diagnostic
+label. Product behavior, conclusion definitions and cache schema are unchanged
+by this promotion. Local version-generation checks and the game-linked Release
+plugin build passed with zero warnings/errors. Verification of the resulting
+hosted artifact is pending.
 
 ## DSP 0.10.35.29057 work state
 
