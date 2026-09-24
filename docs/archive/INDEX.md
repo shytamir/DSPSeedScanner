@@ -18,6 +18,8 @@ roadmap and execution restrictions.
 
 ## Archived documents
 
+- [Unverified-game-identity story](UNVERIFIED-GAME-IDENTITY.md): Value, bounded
+  scope, definition of done and exclusions for advisory scanning.
 - [DSP 0.10.35.29057 scope](GAME-UPDATE-0.10.35.29057.md): Historical runtime
   identity, calibration, naming/cache behavior and validation requirements.
 - [Panel improvement roadmap](PANEL-IMPROVEMENT-ROADMAP.md): Historical epics,

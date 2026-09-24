@@ -1,6 +1,8 @@
 # Continue scanning after game updates
 
 [PROJECT.md](../PROJECT.md) owns authorization, work status and acceptance.
+This document preserves the story's requirements; current behavior is defined
+in the [identity contract](../specification/GENERATION-IDENTITY.md#failure-behavior).
 
 ## User story and value
 

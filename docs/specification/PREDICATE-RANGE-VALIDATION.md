@@ -271,9 +271,11 @@ The definition rests on these four points:
 4. the three deferred strength components remain **unknown** until later
    evidence establishes defensible ranges.
 
-Definition `0.5.0` introduced the panel predicates above; `0.6.0` retains them
-and recalibrates the four affected starter bands for the updated game. Original cohort
-evidence remains attributable to its earlier numeric premises. A changed endpoint, direction,
+Definition `0.5.0` introduced the panel predicates above; `0.6.0` retained them
+and recalibrated the four affected starter bands for the updated game.
+Definition `0.7.0` retains those bands and permits provisional evaluation on
+unverified game identities. Original cohort evidence remains attributable to
+its earlier numeric premises. A changed endpoint, direction,
 predicate, role, or outcome requires a new minor candidate. Editorial
 corrections alone increment the patch candidate.
 

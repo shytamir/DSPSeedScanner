@@ -9,8 +9,6 @@ authority for project steering and all current and historical work status.
   blockers, and current and historical dispositions.
 - [Roadmap placeholder](management/ROADMAP.md): Location for a future
   owner-authorized plan and links to the historical panel work.
-- [Unverified-game-identity story](management/UNVERIFIED-GAME-IDENTITY.md):
-  Value, bounded scope, definition of done and exclusions for advisory scanning.
 - [Feature-request register](management/FEATURE-REQUESTS.md): Request scope,
   rationale, and evaluation criteria.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Engineering
@@ -53,6 +51,8 @@ authority for project steering and all current and historical work status.
 ## Archive
 
 - [Archive index](archive/INDEX.md): Navigation for historical scope and evidence.
+- [Unverified-game-identity story](archive/UNVERIFIED-GAME-IDENTITY.md):
+  Value, bounded scope, definition of done and exclusions for advisory scanning.
 - [DSP 0.10.35.29057 scope](archive/GAME-UPDATE-0.10.35.29057.md): Historical
   runtime identity, calibration, naming/cache behavior and validation requirements.
 - [Panel improvement roadmap](archive/PANEL-IMPROVEMENT-ROADMAP.md): Historical

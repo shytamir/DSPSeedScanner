@@ -179,7 +179,7 @@ The product must not use `GameDesc.clusterString`, `clusterStringLong`, or
 the runtime implementation and ordered theme catalogue, quantize the resource
 multiplier, and compress combat settings into a derived difficulty number.
 
-A future normalized identity should therefore contain:
+The normalized identity must therefore contain:
 
 1. a runtime compatibility fingerprint;
 2. seed, requested star count, and galaxy algorithm;

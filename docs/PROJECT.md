@@ -5,31 +5,34 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** The owner-authorized
-[unverified-game-identity story](management/UNVERIFIED-GAME-IDENTITY.md)
-is implemented and technically validated, ready for owner review on `main`.
-On 2026-09-24 the owner authorized the story, implementation and push, including
-red borders and red warnings on unverified result panels. Owner acceptance and
-publication remain pending. The earlier
-[DSP 0.10.35.29057 scope](archive/GAME-UPDATE-0.10.35.29057.md), owner
-acceptance, minor-version promotion and `1.5` publication are complete.
+**Current status:** Maintenance mode. On 2026-09-24 the owner requested
+closeout after delivery of unverified-identity scanning on `main`. The hotfix
+identity update and advisory-scanning story are closed; no story, review gate
+or release task remains active. Their scope and evidence are retained below.
 
-**Published baseline:** The owner published package **1.5.123**
+**Last verified published baseline:** The owner published package **1.5.123**
 on 2026-09-24 (Europe/Madrid) to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
 and [GitHub release/tag 1.5](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.5).
-Both public downloads match the verified package hash recorded below.
+Both public downloads matched the verified package hash recorded below.
+Publication of the subsequent hotfix and advisory-scanning changes has not
+been reported or verified; this closeout does not change the release record.
 
-**Current phase:** Owner review of unverified-identity scanning.
+**Current phase:** None.
 
-**Next action:** The owner reviews the completed change on `main`.
-Agent-operated deployment, publication, game/environment changes and save
-access are outside this scope. Published and previously accepted artifact
-identities remain historical evidence; no new owner acceptance is implied.
+**Next action:** Await an explicit owner request. The roadmap remains a
+placeholder and the inactive backlog below is unchanged. Deployment,
+publication, game/environment changes and save access require separate scope.
 
 ## Unverified-identity scanning
 
-The bounded story is technically complete. Identity drift is advisory;
-applicable conclusions use current evidence and the retained ranges. Both
+The [bounded story](archive/UNVERIFIED-GAME-IDENTITY.md) was implemented and
+pushed to `main` in `ad635f8`. The owner authorized its scope, implementation
+and push on 2026-09-24, including red borders and red warning text, then
+requested management closeout and a return to maintenance mode that day.
+This closes the work without asserting an installed-game test or publication.
+
+Identity drift is advisory; applicable conclusions use current evidence and
+the retained ranges. Both
 result panels show a persistent red warning and border for an unverified
 version or fingerprint, including on cache hits. Actual identity, request
 consistency, settings/coverage limits and runtime failure handling remain in
@@ -40,8 +43,10 @@ Release solution and game-linked plugin builds passed with zero warnings/errors.
 Core checks passed 16/16 and Runtime checks passed 98/98. The focused
 [conformance record](CONFORMANCE.md#unverified-identity-scanning) describes
 version/fingerprint drift, cache isolation, panel notice lifecycle and limits.
+Hosted [CI run 36060827247](https://github.com/shytamir/DSPSeedScanner/actions/runs/36060827247)
+passed for `ad635f8`, including build-artifact and Thunderstore-package checks.
 No installed-game visual test, native sweep, deployment or publication was
-performed. Technical completion does not constitute owner acceptance.
+performed for this story. No owner in-game test result was reported at closeout.
 
 ## DSP 0.10.35.29088 hotfix
 
@@ -63,8 +68,10 @@ records provenance and limits. Native scans, recalibration and exhaustive
 testing were outside that task. Owner acceptance/publication had not been
 reported before the unverified-identity story began.
 
-The owner authorized commit and push to `main`; acceptance and publication
-remain owner-controlled. Read-only inspection found installed plugin
+The owner authorized commit and push to `main`. The later advisory-scanning
+story superseded the version-rejection behavior, and the owner requested
+maintenance closeout for the delivered work. Read-only inspection during the
+hotfix task found installed plugin
 `1.5.123.03e1971`; it was not replaced by the local build.
 
 ## 1.5 release history
@@ -244,10 +251,11 @@ decision and corresponding scope-document change.
 
 ## Management and documentation
 
-The [archived game-update plan](archive/GAME-UPDATE-0.10.35.29057.md) preserves
-the requirements of the delivered update. The
+The [archived advisory-scanning story](archive/UNVERIFIED-GAME-IDENTITY.md)
+and [game-update plan](archive/GAME-UPDATE-0.10.35.29057.md) preserve
+the requirements of the delivered changes. The
 [roadmap placeholder](management/ROADMAP.md) remains available for future
-owner-authorized work. Neither contains independent state tracking. The
+owner-authorized work. These documents contain no independent state tracking. The
 [archived panel roadmap](archive/PANEL-IMPROVEMENT-ROADMAP.md),
 [owner findings](archive/PANEL-VALIDATION-FINDINGS.md) and
 [preview recipe](archive/PANEL-PREVIEW-CHECK.md) preserve historical scope and
@@ -255,7 +263,7 @@ evidence, not instructions to resume the work.
 
 The [feature-request register](management/FEATURE-REQUESTS.md) and
 [technical-debt register](management/TECHNICAL-DEBT.md) describe older requests
-and obligations. Their dispositions below are unchanged; the game-update work
+and obligations. Their dispositions below are unchanged; this closeout
 does not activate them. The [documentation index](INDEX.md) links current contracts
 and historical records.
 

@@ -153,10 +153,12 @@ In the IMPL-08 probe, any exact identity mismatch, missing required member,
 other plugin, preloader assembly, or changed generation-method digest was
 rejected before evaluation. The later 1.0 coexistence correction retained
 those observed values as cache identity but stopped treating plugin presence
-or generation changes as incompatibility. Unsupported game versions and
-missing required members remain rejected; runtime failures and incomplete
-evidence still publish no complete result. The accepted isolated probes do not
-prove compatibility with every plugin combination.
+or generation changes as incompatibility. That policy still rejected
+unsupported game versions and missing required members. The current
+[identity policy](specification/GENERATION-IDENTITY.md#failure-behavior)
+makes version drift advisory while retaining required-member checks;
+runtime failures and incomplete evidence still publish no complete result.
+The isolated probes do not prove compatibility with every plugin combination.
 
 ## Validation layers
 
