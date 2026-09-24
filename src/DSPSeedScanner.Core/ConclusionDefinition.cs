@@ -41,17 +41,17 @@ namespace DSPSeedScanner.Core
     {
         public const string ContractVersion = "0.1.0";
         public const string DefinitionVersion = "0.6.0";
-        public const string ReferenceGameVersion = "0.10.35.29057";
+        public const string ReferenceGameVersion = "0.10.35.29088";
         public const int ReferenceGalaxyAlgorithm = 20_200_403;
         public const int ReferenceStarCount = 64;
         public const string ReferenceAssemblySha256 =
-            "E75D3FE4B6A9CA822766189F826BA3A8348DFB7E301AA37FF6779DB29A83FD8D";
+            "C43A484F6ADF8A9E4B956156047070891B46860D5B5C707BA1377B6A2AF25732";
         public const string ReferenceGenerationMethodIlSha256 =
-            "DAA3676DB1CCE742391387A75B8BCECCD02AEC0197A7C0BFF00A5022DB0B665E";
+            "8E2B97B2C37DD9A3E1E441B0FCE0FE6ADAAAF8FF84EFF00A9F69E9CCEDE257ED";
         public const string ReferenceOrderedThemeIds =
             "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25";
         public const string ReferenceCombatSettingsKey =
-            "GameDesc.SetForNewGame:0.10.35.29057";
+            "GameDesc.SetForNewGame:0.10.35.29088";
 
         public static readonly IReadOnlyList<string> GasProductIds = Array.AsReadOnly(
             new[] { "deuterium", "fire-ice", "hydrogen" });

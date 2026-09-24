@@ -53,7 +53,7 @@ game folder.
 
 ## Compatibility
 
-DSP Seed Scanner supports Dyson Sphere Program `0.10.35.29057`. Other game
+DSP Seed Scanner supports Dyson Sphere Program `0.10.35.29088`. Other game
 versions are reported as unsupported. The scanner also stops if it cannot
 read the information it needs from the game.
 

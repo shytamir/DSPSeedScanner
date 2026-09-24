@@ -5,25 +5,48 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Maintenance mode. On 2026-09-24 the owner confirmed `1.5`
-tagging and store publication and requested closeout. The
+**Current status:** The identity-only support update for DSP `0.10.35.29088`
+is implemented and locally validated. On 2026-09-24 the owner requested
+delivery to `main` and will perform a rudimentary owner test before publication.
+Owner acceptance and hotfix publication are pending. The earlier
 [DSP 0.10.35.29057 scope](archive/GAME-UPDATE-0.10.35.29057.md), owner
-acceptance, minor-version promotion and publication are complete. No active
-story, validation gate or release work remains; no outstanding finding was
-reported.
+acceptance, minor-version promotion and `1.5` publication are complete.
 
 **Published baseline:** The owner published package **1.5.123**
 on 2026-09-24 (Europe/Madrid) to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
 and [GitHub release/tag 1.5](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.5).
 Both public downloads match the verified package hash recorded below.
 
-**Current phase:** None.
+**Current phase:** Hotfix owner validation.
 
-**Next action:** Await new owner-directed work. The published `1.5.123` package
-and installed, owner-accepted `1.4.119` candidate retain their recorded
-identities; later documentation builds do not replace them. No further
-game/environment changes or save access are authorized. Older requests and
-archives do not activate work.
+**Next action:** The owner will run a rudimentary test and publish the hotfix
+if it passes. The published `1.5.123` package and owner-accepted `1.4.119`
+candidate retain their recorded identities until superseded explicitly.
+Agent-operated deployment, publication, game/environment changes and save
+access are outside this handoff. Older requests and archives do not activate work.
+
+## DSP 0.10.35.29088 hotfix
+
+On 2026-09-24 the owner requested support for the new game identity only,
+stated that the hotfix changed nothing relevant to the scanner, and explicitly
+excluded exhaustive testing. No roadmap or broader compatibility investigation
+was required.
+
+The local implementation updates the game and creation/combat-setting version,
+native assembly hash and generation-method fingerprint. The existing rejection
+check now covers the preceding game version, and current support documentation
+matches the hotfix. Definition `0.6.0`, calibrated bands, cache schema and
+product behavior are retained.
+
+Technical validation passed: Release solution and installed-game-reference
+plugin builds had zero warnings/errors; Core checks passed 16/16 and Runtime
+checks passed 96/96. The bounded [identity check](CONFORMANCE.md#dsp-0103529088-identity-check)
+records provenance and limits. Native scans, recalibration and exhaustive
+testing remain outside this task. The owner's rudimentary test is pending.
+
+The owner authorized commit and push to `main`; acceptance and publication
+remain owner-controlled. Read-only inspection found installed plugin
+`1.5.123.03e1971`; it was not replaced by the local build.
 
 ## 1.5 release history
 

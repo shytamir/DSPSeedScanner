@@ -10,6 +10,26 @@ runtime. It establishes conformance for the presentation-neutral core only.
 Its evidence excludes product approval, package replacement, other game
 builds, and modded generators.
 
+## DSP 0.10.35.29088 identity check
+
+Read-only inspection on 2026-09-24 found DSP `0.10.35.29088` as the latest
+entry in the installed `Updates/Versions.txt`, with Steam build `25503975`.
+The original installed `Assembly-CSharp.dll` SHA-256 was
+`C43A484F6ADF8A9E4B956156047070891B46860D5B5C707BA1377B6A2AF25732`.
+Its combined generation-method SHA-256 was
+`8E2B97B2C37DD9A3E1E441B0FCE0FE6ADAAAF8FF84EFF00A9F69E9CCEDE257ED`.
+Capture used the original PE method bodies in production order: 948 bytes for
+`UniverseGen.CreateGalaxy`, then 161 for
+`PlanetData.RegenerateRawDataImmediately`, each preceded by its UTF-8
+`DeclaringType.MethodName\n` label.
+
+The identity-only source update passed Release solution and installed-game-
+reference plugin builds with zero warnings/errors, 16/16 Core checks and
+96/96 Runtime checks. These are compilation and deterministic checks, not
+native generation or gameplay validation. No calibration cohort, native scan
+or installed-game UI check was run for this hotfix; the dated evidence below
+retains its original runtime identity.
+
 ## DSP 0.10.35.29057 evidence
 
 The updated native assembly was rechecked on 2026-09-23 with SHA-256

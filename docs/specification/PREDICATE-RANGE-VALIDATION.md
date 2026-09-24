@@ -68,7 +68,7 @@ The repeated starter run's file SHA-256, including its non-contract timing
 column and added named cases, was
 `6F5CF7853D474E1ABC5F690A095F48584EECC2052A5D7E23D75A92ACE7DEB00F`.
 
-Definition `0.6.0` uses DSP `0.10.35.29057` with the same algorithm, ordered
+Definition `0.6.0` was calibrated on DSP `0.10.35.29057` with the same algorithm, ordered
 themes, 64 stars, 1x resources and default combat settings. The original
 cohorts were regenerated on 2026-09-23: all 518 preview rows retained their
 measured metrics, and two starter runs agreed excluding elapsed time. The
@@ -83,6 +83,9 @@ gives oil amount outcomes of 25 supports / 48 preference-sensitive / 23 limited
 and oil-well outcomes of 34 / 62 / 0. Both old oil bands instead give 96 supports.
 Raw evidence remains in the shared untracked
 `DSPSeedScanner-Update-0.10.35.29057` resource directory.
+
+The current [hotfix identity](GENERATION-IDENTITY.md#runtime-compatibility-identity)
+retains these bands; the cohorts were not regenerated for that identity update.
 
 Eight deliberately selected clusters were generated fully to challenge raw
 resource and rare-access behavior: `45772`, `73339583`, `96178012`,
