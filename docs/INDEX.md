@@ -9,6 +9,8 @@ authority for project steering and all current and historical work status.
   blockers, and current and historical dispositions.
 - [Roadmap placeholder](management/ROADMAP.md): Location for a future
   owner-authorized plan and links to the historical panel work.
+- [Unverified-game-identity story](management/UNVERIFIED-GAME-IDENTITY.md):
+  Value, bounded scope, definition of done and exclusions for advisory scanning.
 - [Feature-request register](management/FEATURE-REQUESTS.md): Request scope,
   rationale, and evaluation criteria.
 - [Technical debt register](management/TECHNICAL-DEBT.md): Engineering
@@ -35,7 +37,7 @@ authority for project steering and all current and historical work status.
 - [Seed conclusion contract](specification/CONCLUSION-CONTRACT.md): Neutral
   outcome semantics, supported contexts, tradeoffs, and declined claims.
 - [Predicate and validation catalogue](specification/PREDICATE-RANGE-VALIDATION.md):
-  Definition `0.6.0`, thresholds, settings scopes, and validation cases.
+  Definition `0.7.0`, thresholds, settings scopes, and validation cases.
 - [Scanner-core implementation boundary](specification/IMPLEMENTATION-PLANNING-BOUNDARY.md):
   Historical planning scope, runtime gates, exclusions, and validation
   obligations for the scanner core.

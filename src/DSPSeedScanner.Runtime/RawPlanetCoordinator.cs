@@ -121,7 +121,7 @@ namespace DSPSeedScanner.Runtime
                     trace.Add("fingerprint:capture");
                     CompatibilityDecision compatibility = CompatibilityPolicy.Evaluate(fingerprint);
                     CompatibilityDecision requestCompatibility =
-                        CompatibilityPolicy.EvaluateRequest(request.Identity);
+                        CompatibilityPolicy.EvaluateRequest(request.Identity, fingerprint);
                     if (!compatibility.Supported)
                     {
                         status = RuntimeScanStatus.Incompatible;

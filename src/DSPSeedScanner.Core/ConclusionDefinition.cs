@@ -40,7 +40,7 @@ namespace DSPSeedScanner.Core
     public static class ConclusionDefinition
     {
         public const string ContractVersion = "0.1.0";
-        public const string DefinitionVersion = "0.6.0";
+        public const string DefinitionVersion = "0.7.0";
         public const string ReferenceGameVersion = "0.10.35.29088";
         public const int ReferenceGalaxyAlgorithm = 20_200_403;
         public const int ReferenceStarCount = 64;
@@ -51,7 +51,7 @@ namespace DSPSeedScanner.Core
         public const string ReferenceOrderedThemeIds =
             "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25";
         public const string ReferenceCombatSettingsKey =
-            "GameDesc.SetForNewGame:0.10.35.29088";
+            "preview-combat:initialColonize=1;maxDensity=1";
 
         public static readonly IReadOnlyList<string> GasProductIds = Array.AsReadOnly(
             new[] { "deuterium", "fire-ice", "hydrogen" });
@@ -100,22 +100,15 @@ namespace DSPSeedScanner.Core
         public static readonly AcceptedRange RareAccessDistance =
             new AcceptedRange(2.5m, 10m, ThresholdDirection.Decreasing, "light-years");
 
-        public static bool IsReferencePreviewIdentity(GenerationIdentity identity)
+        public static bool CanEvaluatePreviewRanges(GenerationIdentity identity)
         {
             if (identity == null)
                 throw new ArgumentNullException(nameof(identity));
 
-            return String.Equals(identity.GameVersion, ReferenceGameVersion,
-                       StringComparison.Ordinal) &&
-                   identity.GalaxyAlgorithm == ReferenceGalaxyAlgorithm &&
-                   String.Equals(identity.AssemblySha256, ReferenceAssemblySha256,
-                       StringComparison.Ordinal) &&
-                   String.Equals(identity.OrderedThemeIds, ReferenceOrderedThemeIds,
-                       StringComparison.Ordinal) &&
-                   String.Equals(identity.ScannerCompatibilityVersion, DefinitionVersion,
+            return String.Equals(identity.ScannerCompatibilityVersion, DefinitionVersion,
                        StringComparison.Ordinal) &&
                    identity.RequestedStarCount == ReferenceStarCount &&
-                   String.Equals(identity.CreationVersion, ReferenceGameVersion,
+                   String.Equals(identity.CreationVersion, identity.GameVersion,
                        StringComparison.Ordinal);
         }
 

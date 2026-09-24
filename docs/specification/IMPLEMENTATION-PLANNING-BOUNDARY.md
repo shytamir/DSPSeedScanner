@@ -9,6 +9,11 @@ implementation stories. It identified the smallest useful product contract,
 the constraints engineering had to preserve, and the evidence required before
 runtime-dependent code could be treated as production-ready.
 
+The original compatibility gates below predate advisory scanning. Current
+identity drift and provisional evaluation follow the
+[generation identity policy](GENERATION-IDENTITY.md#failure-behavior) and
+[conclusion contract](CONCLUSION-CONTRACT.md#evaluation-inputs).
+
 ## Readiness decision
 
 The accepted technical baseline is sufficient for a separate implementation

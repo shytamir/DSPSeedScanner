@@ -15,6 +15,8 @@ namespace DSPSeedScanner.Plugin
         private const float HeaderCellPadding = 2f;
         private const float TableRuleThickness = 1f;
         private const float ClusterTableTitleHeight = 28f;
+        private readonly PreviewCompatibilityWarningRenderer compatibilityWarning =
+            new PreviewCompatibilityWarningRenderer();
         private static readonly string[] HomeHeadings =
         {
             "Body",
@@ -182,6 +184,8 @@ namespace DSPSeedScanner.Plugin
                 titleStyle);
 
             float scrollY = y + 42f;
+            scrollY += compatibilityWarning.Draw(
+                bounds, x, scrollY, viewportWidth, document.CompatibilityNotice);
             float scrollHeight = bounds.Bottom - PreviewPanelLayout.DocumentPadding - scrollY;
             float contentWidth = viewportWidth - ScrollbarReserve;
             HomeSystemBodyTableRow[] homeRows = document.HomeSystem?.Bodies

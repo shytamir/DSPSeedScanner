@@ -4,7 +4,7 @@
 status, including historical dispositions. This document contains scope,
 requirements, or technical evidence; it does not track status.
 
-**Definition version:** `0.6.0`
+**Definition version:** `0.7.0`
 
 **Compatible conclusion contract:**
 [Seed Conclusion Contract](CONCLUSION-CONTRACT.md) `0.1.0`
@@ -87,6 +87,12 @@ Raw evidence remains in the shared untracked
 The current [hotfix identity](GENERATION-IDENTITY.md#runtime-compatibility-identity)
 retains these bands; the cohorts were not regenerated for that identity update.
 
+Definition `0.7.0` retains all bands and applies them provisionally to
+unverified runtime identities, with the persistent red notice and borders
+defined by the [identity policy](GENERATION-IDENTITY.md#failure-behavior).
+The existing 64-star and per-component resource-setting limits remain.
+This policy change is not new calibration evidence.
+
 Eight deliberately selected clusters were generated fully to challenge raw
 resource and rare-access behavior: `45772`, `73339583`, `96178012`,
 `48823053`, `16315224`, `12074390`, `82506644`, and `61571387`. That catalogue
@@ -132,9 +138,9 @@ All increasing ranges use the increasing rule above unless stated otherwise.
 | `FS-POWER.solar:<moon>` / `FS-POWER.wind:<moon>` | Each eligible sibling moon's ratio | `[0.4, 1.15]` independently | One/two siblings of the home moon with verified parent identity; no home-planet advice |
 | Rich Deuterium presentation | Nearest individual giant with rate >= 0.15/s | `[2.5, 10]` ly, decreasing | Conclusions have no distance cap; statistics alone retain <= 8.125 ly |
 | `FS-RESOURCES.common-total` | Sum of finite common deposits (iron, copper, silicon, titanium, stone, and coal) in the birth system | `[74,788,292, 105,667,431]` | Complete raw birth system; resource multiplier `1` only; oil flow remains a separate component |
-| `MF-ENERGY-SYSTEM.output` | Highest Dyson luminosity in the cluster | `[2.4489998817, 2.4900000095]` | Complete preview cluster; reference identity only |
-| `MF-ENERGY-SYSTEM.separation` | Highest Dyson luminosity divided by the second highest | `[1.1104599329, 1.2183275480]` | Complete preview cluster; reference identity only |
-| `MF-SPHERE-GEOMETRY.radius` | Native maximum sphere radius | `[76,200, 191,400]` meters | Display nearest candidates with luminosity >= 2.0; retain the existing reference-identity range scope |
+| `MF-ENERGY-SYSTEM.output` | Highest Dyson luminosity in the cluster | `[2.4489998817, 2.4900000095]` | Complete 64-star preview; provisional on unverified identities |
+| `MF-ENERGY-SYSTEM.separation` | Highest Dyson luminosity divided by the second highest | `[1.1104599329, 1.2183275480]` | Complete 64-star preview; provisional on unverified identities |
+| `MF-SPHERE-GEOMETRY.radius` | Native maximum sphere radius | `[76,200, 191,400]` meters | Display nearest candidates with luminosity >= 2.0; retain the 64-star range scope |
 | `MF-RESOURCE-SYSTEM.rare` | System totals: Spiniform > 900,000; Grating > 600,000; Organic presence | `[2.5, 10]` ly, decreasing | Nearest qualifying system per resource; combine descriptions sharing a system; no theme requirement |
 | `MF-RESOURCE-SYSTEM.plentiful` | At least three finite resource totals each > 40 million | `[2.5, 10]` ly, decreasing | Nearest three qualifying systems; split deposits count, oil does not |
 | `CX-GROUPING.distance` | Distance between the starter anchor and, or between, independently supported roles | `[2.5, 10]` light-years, decreasing | Complete role evidence; all role subjects must be known |
@@ -163,7 +169,8 @@ described as ore. No component cancels another.
 | Coal | `[9,539,996, 10,938,129]` | `[13, 15]` |
 | Oil | `[1,419,033, 1,511,204]` | `[20, 22]` |
 
-These ranges apply only to the reference identity and multiplier `1`. SPEC-02
+These ranges apply only at 64 stars and multiplier `1`, provisionally when the
+runtime identity is unverified. SPEC-02
 confirmed for a controlled seed that resource multipliers changed amounts but
 not vein positions, nodes, or groups. That single-seed result is insufficient
 to publish cross-setting ranges, so other multipliers remain **unknown** in
@@ -230,7 +237,8 @@ questions as test inputs, not either tool's generator, labels, or thresholds.
 | Seed `96178012` | Starter common total supports, while its fully generated cluster total was lower than the other selected full-cluster cases. Preserve the early strength and long-horizon **unknown**; do not infer or score a reversal. |
 | Complete preview with one required raw planet omitted | Preview-only families remain eligible. Every conclusion depending on the omitted raw scope is **unknown**. |
 | Cancellation or raw-generation failure naming a seed and stage | Dependent conclusions are **unknown**; completed unrelated evidence remains attributable and cannot substitute for the missing scope. |
-| Unsupported DSP version, changed member, absent `RandomTable` preparation, or failed derivation check | Every dependent conclusion is **unknown** with a compatibility diagnostic. No cached or approximate result is presented as current evidence. |
+| Unverified DSP version or runtime fingerprint | Evaluate complete current evidence with existing rules and applicable settings; retain actual identity and show the persistent red notice and panel borders. |
+| Missing required member, absent `RandomTable` preparation, or failed derivation check | Every dependent conclusion is **unknown** with a compatibility diagnostic. No cached or approximate result is presented as current evidence. |
 | Optional preference at `L`, inside `(L,U)`, at `U`, or outside the range | The neutral result follows the stored evidence and full range. An in-range value only explains it; an out-of-range value is reported as not applied. |
 
 ## Prohibited implementations exposed by the cases

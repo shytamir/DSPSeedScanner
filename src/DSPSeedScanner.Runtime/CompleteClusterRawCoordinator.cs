@@ -249,7 +249,7 @@ namespace DSPSeedScanner.Runtime
                 trace.Add("fingerprint:capture");
                 CompatibilityDecision compatibility = CompatibilityPolicy.Evaluate(fingerprint);
                 CompatibilityDecision requestCompatibility =
-                    CompatibilityPolicy.EvaluateRequest(request);
+                    CompatibilityPolicy.EvaluateRequest(request, fingerprint);
                 if (!compatibility.Supported)
                 {
                     Finish(RuntimeScanStatus.Incompatible, compatibility.Code, compatibility.Message);

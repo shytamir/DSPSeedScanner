@@ -23,7 +23,9 @@ namespace DSPSeedScanner.Runtime.Tests
                 ("home topology verifies only the home planet parent", HomeTopologyVerifiesOnlyHomePlanetParent),
                 ("system candidates are bounded deterministic and owned", SystemCandidatesAreBoundedDeterministicAndOwned),
                 ("incomplete system candidate evidence stays unknown", IncompleteSystemCandidateEvidenceStaysUnknown),
-                ("unsupported game identity rejects safely", UnsupportedGameIdentityRejectsSafely),
+                ("unverified game identities remain usable and identifiable", UnverifiedGameIdentitiesRemainUsable),
+                ("unverified results retain notices and isolated caches", UnverifiedResultsRetainNoticesAndCaches),
+                ("unverified identities retain failure and settings boundaries", UnverifiedIdentitiesRetainBoundaries),
                 ("missing members reject while plugins coexist", MissingMembersRejectWhilePluginsCoexist),
                 ("generation changes coexist and remain identified", GenerationChangesCoexistAndRemainIdentified),
                 ("runtime filesystem context follows the active process", RuntimeFilesystemContextFollowsActiveProcess),
@@ -448,12 +450,178 @@ namespace DSPSeedScanner.Runtime.Tests
             }
         }
 
-        private static void UnsupportedGameIdentityRejectsSafely()
+        private static void UnverifiedGameIdentitiesRemainUsable()
         {
             True(CompatibilityPolicy.Evaluate(Fingerprint()).Supported);
-            AssertRejected(Fingerprint(gameVersion: "0.10.35.29057"), "game-version-mismatch");
-            AssertRejected(Fingerprint(gameVersion: "0.10.34.0"), "game-version-mismatch");
-            True(CompatibilityPolicy.Evaluate(Fingerprint(assembly: "MODIFIED")).Supported);
+            True(CompatibilityPolicy.UnverifiedNotice(Fingerprint()) == null);
+            foreach (string version in new[] { "0.10.35.29057", "0.10.36.30000" })
+            {
+                RuntimeFingerprint fingerprint = Fingerprint(gameVersion: version);
+                True(CompatibilityPolicy.Evaluate(fingerprint).Supported);
+                True(CompatibilityPolicy.UnverifiedNotice(fingerprint)!.Contains(version));
+                var request = Request(gameVersion: version);
+                Equal(RuntimeScanStatus.Success, new PreviewScanCoordinator(
+                    new FakeGateway { Fingerprint = fingerprint }).TryScan(request, CancellationToken.None).Status);
+                Equal(RuntimeScanStatus.Success, new RawPlanetCoordinator(
+                    new FakeRawGateway { Fingerprint = fingerprint }).TryGenerate(
+                        new RawPlanetRequest(request, 103, 1), CancellationToken.None).Status);
+                Equal(RuntimeScanStatus.Success, new BirthSystemRawCoordinator(
+                    new FakeBirthGateway { CapturedFingerprint = fingerprint }).TryGenerate(
+                        request, CancellationToken.None).Status);
+            }
+            AssertRejected(Fingerprint(scannerCompatibility: "0.6.0"), "scanner-compatibility-mismatch");
+            AssertRejected(Fingerprint(scannerContract: "obsolete"), "scanner-contract-mismatch");
+        }
+
+        private static void UnverifiedResultsRetainNoticesAndCaches()
+        {
+            WithTemporaryDirectory(path =>
+            {
+                var preview = new FakeGateway();
+                var raw = new FakeCompleteClusterGateway();
+                var gate = new RuntimeOperationGate();
+                using var resolver = new PreviewResolutionCoordinator(
+                    new PreviewSessionLifecycle(), new PreviewScanCoordinator(preview, gate),
+                    new CompleteClusterRawCoordinator(raw, gate), new CompleteClusterConclusionCache(path));
+                var panel = new PreviewPanelController();
+                var statistics = new PreviewStatisticsPanelController();
+                string[]? baseline = null;
+                long sequence = 0;
+                PreviewResolutionAttempt? previous = null;
+                foreach (RuntimeFingerprint fingerprint in new[]
+                {
+                    Fingerprint(),
+                    Fingerprint(gameVersion: "0.10.36.30000", assembly: "NEW-ASSEMBLY"),
+                    Fingerprint(assembly: "CHANGED-SAME-VERSION"),
+                    Fingerprint(methodIl: "CHANGED-IL"),
+                    Fingerprint(algorithm: 20200404),
+                    Fingerprint(themes: ConclusionDefinition.ReferenceOrderedThemeIds.Split(',').Reverse())
+                })
+                {
+                    preview.Fingerprint = fingerprint;
+                    raw.CapturedFingerprint = fingerprint;
+                    var identity = PreviewIdentity(16_315_224, fingerprint: fingerprint);
+                    var request = Request(gameVersion: fingerprint.GameVersion);
+                    int previousScans = raw.GenerateCalls;
+                    resolver.ObserveCompletedLoad(++sequence, identity, request);
+                    PreviewResolutionAttempt fresh = resolver.CurrentPublishedAttempt!;
+                    Equal(PreviewResolutionState.Scanning, fresh.State);
+                    panel.BeginSession(fresh.Session.SessionId, PreviewPanelCorner.BottomRight, 0);
+                    statistics.BeginSession(fresh.Session);
+                    True(panel.Update(fresh, PreviewPanelCorner.BottomRight, 0));
+                    True(statistics.Update(fresh));
+                    string? notice = CompatibilityPolicy.UnverifiedNotice(fingerprint);
+                    Equal(notice, panel.Current.CompatibilityNotice);
+                    Equal(notice, statistics.Current?.CompatibilityNotice);
+                    if (baseline != null)
+                    {
+                        True(notice != null);
+                        True(notice!.Contains("results may be inaccurate"));
+                        True(notice.Contains("Reference DSP " + ConclusionDefinition.ReferenceGameVersion));
+                    }
+                    while (!fresh.IsTerminal) resolver.AdvanceCurrent();
+                    Equal(PreviewResolutionState.Complete, fresh.State);
+                    True(fresh.CacheStored);
+                    Equal(previousScans + 1, raw.GenerateCalls);
+                    True(fresh.HomeSystemResources != null && fresh.ClusterResources != null);
+                    True(fresh.PreviewReports.Concat(fresh.CompleteReports).All(report =>
+                        report.Identity.GameVersion == fingerprint.GameVersion &&
+                        report.Identity.AssemblySha256 == fingerprint.AssemblySha256 &&
+                        report.Identity.CreationVersion == fingerprint.GameVersion));
+                    string[] outcomes = fresh.PreviewReports.Concat(fresh.CompleteReports)
+                        .Select(report => report.ConclusionId + "|" + report.Outcome + "|" + report.DecisiveFact?.Value)
+                        .ToArray();
+                    baseline ??= outcomes;
+                    True(baseline.SequenceEqual(outcomes));
+
+                    resolver.ObserveCompletedLoad(++sequence, identity, request);
+                    PreviewResolutionAttempt cached = resolver.CurrentPublishedAttempt!;
+                    Equal(PreviewResolutionState.Cached, cached.State);
+                    Equal(previousScans + 1, raw.GenerateCalls);
+                    panel.BeginSession(cached.Session.SessionId, PreviewPanelCorner.BottomRight, 0);
+                    statistics.BeginSession(cached.Session);
+                    True(panel.Update(cached, PreviewPanelCorner.BottomRight, 0));
+                    True(statistics.Update(cached));
+                    Equal(notice, panel.Current.CompatibilityNotice);
+                    Equal(notice, statistics.Current?.CompatibilityNotice);
+                    True(statistics.Current?.HomeSystemResources != null);
+                    True(baseline.SequenceEqual(cached.PreviewReports.Concat(cached.CompleteReports)
+                        .Select(report => report.ConclusionId + "|" + report.Outcome + "|" + report.DecisiveFact?.Value)));
+                    previous = cached;
+                }
+                preview.Fingerprint = Fingerprint();
+                raw.CapturedFingerprint = Fingerprint();
+                resolver.ObserveCompletedLoad(++sequence, PreviewIdentity(16_315_224), Request());
+                PreviewResolutionAttempt verified = resolver.CurrentPublishedAttempt!;
+                Equal(PreviewResolutionState.Cached, verified.State);
+                panel.BeginSession(verified.Session.SessionId, PreviewPanelCorner.BottomRight, 0);
+                statistics.BeginSession(verified.Session);
+                True(panel.Update(verified, PreviewPanelCorner.BottomRight, 0));
+                True(statistics.Update(verified));
+                True(panel.Current.CompatibilityNotice == null);
+                True(statistics.Current?.CompatibilityNotice == null);
+                False(panel.Update(previous!, PreviewPanelCorner.BottomRight, 0));
+                False(statistics.Update(previous!));
+                resolver.ExitPreview();
+                panel.HideCurrent();
+                statistics.HideCurrent();
+                False(panel.Current.Visible);
+                True(panel.Current.CompatibilityNotice == null && statistics.Current == null);
+            });
+        }
+
+        private static void UnverifiedIdentitiesRetainBoundaries()
+        {
+            const string version = "0.10.36.30000";
+            RuntimeFingerprint fingerprint = Fingerprint(gameVersion: version);
+            var request = Request(gameVersion: version);
+            var missing = new FakeGateway { Fingerprint = Fingerprint(gameVersion: version, members: false) };
+            Equal(RuntimeScanStatus.Incompatible, new PreviewScanCoordinator(missing)
+                .TryScan(request, CancellationToken.None).Status);
+            Equal(0, missing.GenerateCalls);
+            var mismatched = new FakeCompleteClusterGateway { CapturedFingerprint = fingerprint };
+            Equal(RuntimeScanStatus.Incompatible, new CompleteClusterRawCoordinator(mismatched)
+                .TryGenerate(Request(), CancellationToken.None).Status);
+            Equal(0, mismatched.GenerateCalls);
+            var failed = new FakeCompleteClusterGateway
+            {
+                CapturedFingerprint = fingerprint, FailingPlanetId = 102
+            };
+            CompleteClusterRawResult failure = new CompleteClusterRawCoordinator(failed)
+                .TryGenerate(request, CancellationToken.None);
+            Equal(RuntimeScanStatus.Failed, failure.Status);
+            Equal(0, failure.Reports.Count);
+            True(failure.StateRestored);
+            using var cancelled = new CancellationTokenSource();
+            CompleteClusterRawResult cancellation = new CompleteClusterRawCoordinator(
+                new FakeCompleteClusterGateway
+                {
+                    CapturedFingerprint = fingerprint,
+                    OnPlanet = () => cancelled.Cancel()
+                }).TryGenerate(request, cancelled.Token);
+            Equal(RuntimeScanStatus.Cancelled, cancellation.Status);
+            Equal(0, cancellation.Reports.Count);
+            True(cancellation.StateRestored);
+            var incomplete = new FakeGateway { Fingerprint = fingerprint, Snapshot = Snapshot(32) };
+            RuntimeScanResult incompleteResult = new PreviewScanCoordinator(incomplete)
+                .TryScan(request, CancellationToken.None);
+            Equal(RuntimeScanStatus.Failed, incompleteResult.Status);
+            Equal("generated-star-count-mismatch", incompleteResult.Code);
+            Equal(0, incompleteResult.Reports.Count);
+            var thirtyTwo = new PreviewScanRequest(request.GalaxySeed, 32, version, 1m,
+                CombatMode.Combat, ConclusionDefinition.ReferenceCombatSettingsKey);
+            RuntimeScanResult bounded = new PreviewScanCoordinator(incomplete)
+                .TryScan(thirtyTwo, CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, bounded.Status);
+            Equal(ComponentOutcome.Unknown, bounded.Reports.Single(report => report.ConclusionId == "FS-POWER.solar").Outcome);
+            CompleteClusterRawResult resources = new CompleteClusterRawCoordinator(
+                new FakeCompleteClusterGateway { CapturedFingerprint = fingerprint }).TryGenerate(
+                    Request(resourceMultiplier: 0.5m, gameVersion: version), CancellationToken.None);
+            Equal(RuntimeScanStatus.Success, resources.Status);
+            True(resources.Reports.Any(report => report.ConclusionId.StartsWith("FS-RESOURCES.amount:", StringComparison.Ordinal)));
+            True(resources.Reports.Where(report => report.ConclusionId.StartsWith("FS-RESOURCES.amount:", StringComparison.Ordinal))
+                .All(report => report.Outcome == ComponentOutcome.Unknown));
+            Equal("preview-combat:initialColonize=1;maxDensity=1", request.CombatSettingsKey);
         }
 
         private static void MissingMembersRejectWhilePluginsCoexist()
@@ -5388,12 +5556,13 @@ namespace DSPSeedScanner.Runtime.Tests
             CombatMode combatMode = CombatMode.Combat,
             decimal initialColonize = 1m,
             decimal maxDensity = 1m,
-            int starNameLcid = 0)
+            int starNameLcid = 0,
+            string? gameVersion = null)
         {
             return new PreviewScanRequest(
                 16_315_224,
                 ConclusionDefinition.ReferenceStarCount,
-                ConclusionDefinition.ReferenceGameVersion,
+                gameVersion ?? ConclusionDefinition.ReferenceGameVersion,
                 resourceMultiplier,
                 combatMode,
                 PreviewScanRequest.CombatSettingsKeyFor(initialColonize, maxDensity),
@@ -5592,17 +5761,19 @@ namespace DSPSeedScanner.Runtime.Tests
             CombatMode combatMode = CombatMode.Combat,
             decimal initialColonize = 1m,
             decimal maxDensity = 1m,
-            int starNameLcid = 0)
+            int starNameLcid = 0,
+            RuntimeFingerprint? fingerprint = null)
         {
+            fingerprint ??= Fingerprint();
             var galaxy = new GenerationIdentity(
-                ConclusionDefinition.ReferenceGameVersion,
-                ConclusionDefinition.ReferenceGalaxyAlgorithm,
-                ConclusionDefinition.ReferenceAssemblySha256,
-                ConclusionDefinition.ReferenceOrderedThemeIds,
-                ConclusionDefinition.DefinitionVersion,
+                fingerprint.GameVersion,
+                fingerprint.GalaxyAlgorithm,
+                fingerprint.AssemblySha256,
+                fingerprint.OrderedThemeIdsKey,
+                fingerprint.ScannerCompatibilityVersion,
                 seed,
                 ConclusionDefinition.ReferenceStarCount,
-                ConclusionDefinition.ReferenceGameVersion);
+                fingerprint.GameVersion);
             return new PreviewGenerationIdentity(
                 galaxy,
                 resourceMultiplier,
@@ -5991,6 +6162,7 @@ namespace DSPSeedScanner.Runtime.Tests
 
         private sealed class FakeBirthGateway : IRuntimeBirthSystemRawGateway
         {
+            public RuntimeFingerprint CapturedFingerprint { get; set; } = Fingerprint();
             public int? FailingPlanetId { get; set; }
             public Action? OnGenerate { get; set; }
             public int GenerateCalls { get; private set; }
@@ -5999,7 +6171,7 @@ namespace DSPSeedScanner.Runtime.Tests
             public string StateMarker { get; set; } = "original";
             public int MainThreadId => Thread.CurrentThread.ManagedThreadId;
 
-            public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) => Fingerprint();
+            public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) => CapturedFingerprint;
 
             public RuntimeStateLease CaptureState()
             {
@@ -6064,6 +6236,7 @@ namespace DSPSeedScanner.Runtime.Tests
 
         private sealed class FakeCompleteClusterGateway : IRuntimeCompleteClusterRawGateway
         {
+            public RuntimeFingerprint CapturedFingerprint { get; set; } = Fingerprint();
             public int? FailingPlanetId { get; set; }
             public Exception? GenerationFailure { get; set; }
             public Action? OnPlanet { get; set; }
@@ -6079,7 +6252,7 @@ namespace DSPSeedScanner.Runtime.Tests
             public string StateMarker { get; set; } = "original";
             public int MainThreadId => Thread.CurrentThread.ManagedThreadId;
 
-            public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) => Fingerprint();
+            public RuntimeFingerprint CaptureFingerprint(PreviewScanRequest request) => CapturedFingerprint;
 
             public RuntimeStateLease CaptureState()
             {

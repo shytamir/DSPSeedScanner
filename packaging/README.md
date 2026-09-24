@@ -53,9 +53,16 @@ game folder.
 
 ## Compatibility
 
-DSP Seed Scanner supports Dyson Sphere Program `0.10.35.29088`. Other game
-versions are reported as unsupported. The scanner also stops if it cannot
-read the information it needs from the game.
+DSP Seed Scanner's reference game version is `0.10.35.29088`. Other game
+versions can still be scanned. If the version or detected game identity
+differs from the reference, both result panels have a red border and a red
+warning showing the current and reference versions. Statistics come from
+your current game; conclusions use the scanner's existing rules and may be
+inaccurate after an update. The warning remains visible on cached results.
+
+The scanner still stops if required game information is missing, inconsistent
+or cannot be read, or if a scan fails. Results from different game identities
+have separate cache entries. No opt-in or confirmation is needed.
 
 Star and planet names follow the game's native naming option. Changing that
 option may trigger a fresh scan; returning to a previously scanned choice can

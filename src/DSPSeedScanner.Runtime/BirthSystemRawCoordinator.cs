@@ -69,7 +69,7 @@ namespace DSPSeedScanner.Runtime
                     }
                     else
                     {
-                        CompatibilityDecision requestCompatibility = CompatibilityPolicy.EvaluateRequest(request);
+                        CompatibilityDecision requestCompatibility = CompatibilityPolicy.EvaluateRequest(request, fingerprint);
                         if (!requestCompatibility.Supported)
                         {
                             status = RuntimeScanStatus.Incompatible;

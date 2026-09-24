@@ -10,6 +10,28 @@ runtime. It establishes conformance for the presentation-neutral core only.
 Its evidence excludes product approval, package replacement, other game
 builds, and modded generators.
 
+## Unverified-identity scanning
+
+Definition `0.7.0` retains the calibrated values and changes identity drift to
+an advisory. Release solution and installed-game-reference plugin builds passed
+with zero warnings/errors; Core checks passed 16/16 and Runtime checks 98/98.
+
+Focused deterministic cases exercise older/newer game versions across preview,
+single-planet and birth-system coordinators, and complete fresh/cache flows
+for changed version, assembly hash, method hash, algorithm and theme order.
+Identical fixture evidence retains identical conclusions and displays resource
+statistics under its actual identity. Each changed fingerprint triggers a fresh scan, while
+same-identity reloads reuse results with the notice intact. Both panel models
+retain notices through scanning/cache states, clear them on verified-session
+replacement/exit, and reject stale updates. Missing members, mismatched
+creation versions, failed/incomplete/cancelled scans, obsolete scanner definitions and
+existing star-count/resource-setting limits retain their failure boundaries.
+
+Source review and game-linked compilation cover the shared renderer's red
+border and red, wrapped warning above each scroll viewport. No installed-game
+visual check, native generation sweep or recalibration was performed; these
+checks do not establish arbitrary future-game compatibility or owner acceptance.
+
 ## DSP 0.10.35.29088 identity check
 
 Read-only inspection on 2026-09-24 found DSP `0.10.35.29088` as the latest

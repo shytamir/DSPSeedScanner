@@ -116,7 +116,7 @@ namespace DSPSeedScanner.Core
                 "maximumSolarRatio",
                 birth?.MaximumSolarRatio,
                 ConclusionDefinition.Solar,
-                ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity));
+                ConclusionDefinition.CanEvaluatePreviewRanges(evidence.Identity));
             AddRangeReport(
                 evidence,
                 reports,
@@ -127,7 +127,7 @@ namespace DSPSeedScanner.Core
                 "maximumWindRatio",
                 birth?.MaximumWindRatio,
                 ConclusionDefinition.Wind,
-                ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity));
+                ConclusionDefinition.CanEvaluatePreviewRanges(evidence.Identity));
 
             NormalizedHomePlanetTopology? topology = birth?.HomePlanetTopology;
             NormalizedBirthPlanetEvidence? home = birth?.BirthPlanets?.SingleOrDefault(
@@ -222,7 +222,7 @@ namespace DSPSeedScanner.Core
             ConclusionSubject subject = starter?.Subject ?? BirthSubject(evidence);
             DiagnosticCause? unavailable = UnavailableCause(evidence, coverage);
             bool acceptedSettings =
-                ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity) &&
+                ConclusionDefinition.CanEvaluatePreviewRanges(evidence.Identity) &&
                 evidence.Settings.ResourceMultiplier == 1m;
 
             StarterResourceMetric[] metrics = ConclusionDefinition.StarterTotalResourceIds
@@ -327,7 +327,7 @@ namespace DSPSeedScanner.Core
             ConclusionSubject subject = ranked.FirstOrDefault()?.Subject ?? evidence.ClusterSubject;
             decimal? maximum = allValuesPresent ? ranked[0].DysonLuminosity : null;
             bool acceptedIdentity =
-                ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity);
+                ConclusionDefinition.CanEvaluatePreviewRanges(evidence.Identity);
 
             AddRangeReport(
                 evidence,
@@ -368,7 +368,7 @@ namespace DSPSeedScanner.Core
                 EvidenceScope.ClusterSphereGeometry,
                 EvidenceStage.GalaxyPreview);
             bool acceptedIdentity =
-                ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity);
+                ConclusionDefinition.CanEvaluatePreviewRanges(evidence.Identity);
             NormalizedSystemEvidence[] radiusSystems = evidence.Systems
                 .Where(system => system.MaximumShellRadius.HasValue)
                 .OrderByDescending(system => system.MaximumShellRadius)
@@ -455,7 +455,7 @@ namespace DSPSeedScanner.Core
                 EvidenceStage.CompleteClusterRaw);
             DiagnosticCause? unavailable = UnavailableCause(evidence, coverage);
             bool acceptedSettings =
-                ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity) &&
+                ConclusionDefinition.CanEvaluatePreviewRanges(evidence.Identity) &&
                 evidence.Settings.ResourceMultiplier == 1m;
 
             if (evidence.RareResources.Count == 0)
@@ -733,7 +733,7 @@ namespace DSPSeedScanner.Core
                         "systemDistance",
                         distance?.LightYears,
                         ConclusionDefinition.CompactDistance,
-                        ConclusionDefinition.IsReferencePreviewIdentity(evidence.Identity),
+                        ConclusionDefinition.CanEvaluatePreviewRanges(evidence.Identity),
                         first.Report.ConclusionId + "," + second.Report.ConclusionId);
                 }
             }

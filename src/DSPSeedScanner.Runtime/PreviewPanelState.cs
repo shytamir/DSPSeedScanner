@@ -75,6 +75,7 @@ namespace DSPSeedScanner.Runtime
         public string Title { get; }
         public string Detail { get; }
         public char? Spinner { get; }
+        public string? CompatibilityNotice { get; internal set; }
 
         public static PreviewPanelView Hidden { get; } = new PreviewPanelView(
             false,
@@ -405,8 +406,8 @@ namespace DSPSeedScanner.Runtime
         private static string UnsupportedDetail(string? diagnosticCode) =>
             diagnosticCode switch
             {
-                "game-version-mismatch" or "request-identity-unsupported" =>
-                    "This DSP version is not supported",
+                "request-identity-unsupported" =>
+                    "The preview no longer matches the running game",
                 _ => "The scanner cannot read this game setup"
             };
 
@@ -457,6 +458,7 @@ namespace DSPSeedScanner.Runtime
                 corner,
                 spinnerStep,
                 attempt.Code);
+            Current.CompatibilityNotice = attempt.CompatibilityNotice;
             if (Conclusions == null ||
                 presentedState != attempt.State ||
                 presentedPreviewCount != attempt.PreviewReports.Count ||

@@ -49,8 +49,12 @@ retain display designations. A naming change starts a new scan if that exact
 input has no entry; switching back can reuse its earlier result. Even LCID
 values that currently produce equal names remain distinct inputs. The naming
 value survives source-identity reconstruction during Peace/Combat reuse.
-Definition `0.6.0` and the added canonical key field separate older entries;
-the binary payload remains schema `13`. No blanket cache deletion is needed.
+Definition `0.7.0` separates entries created before provisional evaluation of
+unverified identities. The binary payload remains schema `13`; no blanket
+cache deletion is needed. Unverified scans use their actual full identity,
+and a changed game version or fingerprint cannot reuse a different identity's
+entry. The compatibility warning is recomputed from the live fingerprint on
+every preview load, including cache hits; it is not stored as rendered text.
 
 Partial, failed, cancelled, incompatible, corrupt, oversized, or obsolete
 entries are cache misses. Each entry carries a payload checksum; corrupt or

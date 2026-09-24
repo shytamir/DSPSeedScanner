@@ -5,6 +5,12 @@ describes the factual table presentation contract.
 
 ## Home system
 
+When the current game identity is unverified, both result panels have a red
+border and persistent red warning above the scrolling content. The warning
+names current/reference DSP versions and states that results may be
+inaccurate. It remains on cached results and clears with the session. Numeric
+statistics continue to describe the actual current runtime evidence.
+
 Oil is the planet's total native rate with two decimals in `/s`, followed by
 the existing wells count. Sum native amounts before applying the captured
 `VeinData.oilSpeedMultiplier`; use the native float and ties-to-even display

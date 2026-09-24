@@ -5,10 +5,12 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** The identity-only support update for DSP `0.10.35.29088`
-is implemented and locally validated. On 2026-09-24 the owner requested
-delivery to `main` and will perform a rudimentary owner test before publication.
-Owner acceptance and hotfix publication are pending. The earlier
+**Current status:** The owner-authorized
+[unverified-game-identity story](management/UNVERIFIED-GAME-IDENTITY.md)
+is implemented and technically validated, ready for owner review on `main`.
+On 2026-09-24 the owner authorized the story, implementation and push, including
+red borders and red warnings on unverified result panels. Owner acceptance and
+publication remain pending. The earlier
 [DSP 0.10.35.29057 scope](archive/GAME-UPDATE-0.10.35.29057.md), owner
 acceptance, minor-version promotion and `1.5` publication are complete.
 
@@ -17,13 +19,29 @@ on 2026-09-24 (Europe/Madrid) to [Thunderstore](https://thunderstore.io/c/dyson-
 and [GitHub release/tag 1.5](https://github.com/shytamir/DSPSeedScanner/releases/tag/1.5).
 Both public downloads match the verified package hash recorded below.
 
-**Current phase:** Hotfix owner validation.
+**Current phase:** Owner review of unverified-identity scanning.
 
-**Next action:** The owner will run a rudimentary test and publish the hotfix
-if it passes. The published `1.5.123` package and owner-accepted `1.4.119`
-candidate retain their recorded identities until superseded explicitly.
+**Next action:** The owner reviews the completed change on `main`.
 Agent-operated deployment, publication, game/environment changes and save
-access are outside this handoff. Older requests and archives do not activate work.
+access are outside this scope. Published and previously accepted artifact
+identities remain historical evidence; no new owner acceptance is implied.
+
+## Unverified-identity scanning
+
+The bounded story is technically complete. Identity drift is advisory;
+applicable conclusions use current evidence and the retained ranges. Both
+result panels show a persistent red warning and border for an unverified
+version or fingerprint, including on cache hits. Actual identity, request
+consistency, settings/coverage limits and runtime failure handling remain in
+force. Definition `0.7.0` separates older cached evaluations; schema `13`
+and all calibrated thresholds are unchanged.
+
+Release solution and game-linked plugin builds passed with zero warnings/errors.
+Core checks passed 16/16 and Runtime checks passed 98/98. The focused
+[conformance record](CONFORMANCE.md#unverified-identity-scanning) describes
+version/fingerprint drift, cache isolation, panel notice lifecycle and limits.
+No installed-game visual test, native sweep, deployment or publication was
+performed. Technical completion does not constitute owner acceptance.
 
 ## DSP 0.10.35.29088 hotfix
 
@@ -32,17 +50,18 @@ stated that the hotfix changed nothing relevant to the scanner, and explicitly
 excluded exhaustive testing. No roadmap or broader compatibility investigation
 was required.
 
-The local implementation updates the game and creation/combat-setting version,
-native assembly hash and generation-method fingerprint. The existing rejection
-check now covers the preceding game version, and current support documentation
-matches the hotfix. Definition `0.6.0`, calibrated bands, cache schema and
-product behavior are retained.
+Commit `bc9c06a`, pushed to `main`, updated the game and creation/combat-setting
+version, native assembly hash and generation-method fingerprint. Its rejection
+check covered the preceding game version, and support documentation matched
+the hotfix. Definition `0.6.0`, calibrated bands, cache schema and product
+behavior were retained by that update.
 
 Technical validation passed: Release solution and installed-game-reference
 plugin builds had zero warnings/errors; Core checks passed 16/16 and Runtime
 checks passed 96/96. The bounded [identity check](CONFORMANCE.md#dsp-0103529088-identity-check)
 records provenance and limits. Native scans, recalibration and exhaustive
-testing remain outside this task. The owner's rudimentary test is pending.
+testing were outside that task. Owner acceptance/publication had not been
+reported before the unverified-identity story began.
 
 The owner authorized commit and push to `main`; acceptance and publication
 remain owner-controlled. Read-only inspection found installed plugin
@@ -134,8 +153,10 @@ context-specific conclusions and does not define a universally best seed.
   settings.
 - Community material and prior tools may identify player questions and test
   cases, but cannot override runtime-confirmed behavior.
-- Unsupported compatibility, incomplete coverage, or unavailable evidence
-  produces an explicit unknown rather than an approximation.
+- Missing required runtime support, incomplete coverage, or unavailable
+  evidence produces an explicit unknown rather than an approximation.
+  Unverified game identities permit provisional evaluation with a persistent
+  red warning and red panel borders; no missing evidence is fabricated.
 - Raw vein positions may use deterministic invariant-decimal normalization of
   DSP's single-precision values; preserving the source floating-point bit
   pattern is not required by the active conclusion contract.
@@ -207,8 +228,8 @@ The accepted semantics and thresholds are maintained in the
 - Co-installed BepInEx plugins and preloader assemblies do not by themselves
   make the scanner unsupported, including when they alter generation. Their
   inventory and the observed assembly, algorithm, catalogue, and generation-
-  method identity remain part of the cache key. Unsupported game versions,
-  missing required members, incomplete evidence, and runtime failures still
+  method identity remain part of the cache key. Version/fingerprint drift is
+  advisory; missing required members, incomplete evidence, and runtime failures still
   fail closed. Plugin interactions are an accepted compatibility risk rather
   than a reason to require an isolated installation.
 

@@ -1489,7 +1489,8 @@ namespace DSPSeedScanner.Runtime
             ClusterResourceStatistics? clusterResources,
             NearbyDeuteriumGasGiantSelection? nearbyDeuteriumGasGiant,
             NotableStarStatistics? notableStars,
-            PreviewClusterStatistics cluster)
+            PreviewClusterStatistics cluster,
+            string? compatibilityNotice = null)
         {
             if (sessionId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(sessionId));
@@ -1510,6 +1511,7 @@ namespace DSPSeedScanner.Runtime
             NearbyDeuteriumRow = nearbyDeuteriumGasGiant?.ProjectTableRow();
             NotableStars = notableStars;
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            CompatibilityNotice = compatibilityNotice;
         }
 
         public long SessionId { get; }
@@ -1521,6 +1523,7 @@ namespace DSPSeedScanner.Runtime
         public NearbyDeuteriumTableRow? NearbyDeuteriumRow { get; }
         public NotableStarStatistics? NotableStars { get; }
         public PreviewClusterStatistics Cluster { get; }
+        public string? CompatibilityNotice { get; }
     }
 
     public static class PreviewIdentityPresentation
@@ -1603,7 +1606,8 @@ namespace DSPSeedScanner.Runtime
                 attempt.ClusterResources,
                 attempt.NearbyDeuteriumGasGiant,
                 attempt.NotableStars,
-                cluster);
+                cluster,
+                attempt.CompatibilityNotice);
             return true;
         }
 

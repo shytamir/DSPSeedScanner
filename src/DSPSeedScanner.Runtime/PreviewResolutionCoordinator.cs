@@ -37,6 +37,7 @@ namespace DSPSeedScanner.Runtime
         public PreviewResolutionState State { get; internal set; }
         public string Code { get; internal set; }
         public string Message { get; internal set; }
+        public string? CompatibilityNotice { get; internal set; }
         public IReadOnlyList<ConclusionReport> PreviewReports => previewReports.AsReadOnly();
         public IReadOnlyList<ConclusionReport> CompleteReports => completeReports.AsReadOnly();
         public IReadOnlyList<RuntimeSystemDisplay> SystemDisplays =>
@@ -222,6 +223,7 @@ namespace DSPSeedScanner.Runtime
                 return transition;
             }
 
+            currentAttempt.CompatibilityNotice = CompatibilityPolicy.UnverifiedNotice(preview.Fingerprint);
             if (cache.TryRead(identity, preview.Fingerprint, out CachedCompleteClusterConclusions? hit) &&
                 hit != null)
             {

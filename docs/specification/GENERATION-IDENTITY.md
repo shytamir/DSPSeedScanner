@@ -193,12 +193,28 @@ displayed alongside this identity but must not replace it.
 
 ## Failure behavior
 
-Generation must be rejected as unsupported rather than silently reused when:
+An unrecognized game version, assembly or generation-method digest, algorithm,
+or ordered theme catalogue is advisory. The scanner attempts generation with
+the actual runtime identity and evaluates complete evidence with the existing
+rules. These provisional results do not establish compatibility or renewed
+calibration. Both panels show a persistent red warning and red border; the
+warning names current/reference versions and remains visible on cache hits.
+The reference identity above produces no notice. Loaded plugin or patcher
+presence alone does not add a notice.
 
-- the DSP build or generation catalogue is not recognized;
-- the DSP game version is unsupported or a required runtime member is missing;
+Generation must still fail explicitly when:
+
+- a required runtime member is missing or scanner contracts disagree;
+- the request creation version does not match the running game version;
 - required resource or combat inputs are unavailable;
-- evidence from different generation stages is compared as if equivalent.
+- evidence is invalid, incomplete, or from an incompatible stage; or
+- runtime generation fails.
+
+Runtime and creation versions are never replaced with the reference version.
+Default combat inputs use the same value-based key as other combat settings:
+`preview-combat:initialColonize=1;maxDensity=1`. The game version remains a
+separate identity field. Star-count, resource-setting and coverage limits on
+conclusions remain in force.
 
 Loaded plugin and preloader inventories remain part of the cache identity but
 their presence or detected generation changes do not reject a scan. The

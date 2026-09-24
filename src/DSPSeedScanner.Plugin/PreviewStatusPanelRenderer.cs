@@ -12,6 +12,8 @@ namespace DSPSeedScanner.Plugin
         private const float ColumnGap = 12f;
         private const float ScrollbarReserve = 18f;
         private const float CardGap = 10f;
+        private readonly PreviewCompatibilityWarningRenderer compatibilityWarning =
+            new PreviewCompatibilityWarningRenderer();
 
         private GUIStyle? titleStyle;
         private GUIStyle? detailStyle;
@@ -43,10 +45,10 @@ namespace DSPSeedScanner.Plugin
                 scrollSessionId = view.SessionId;
                 scrollPosition = Vector2.zero;
             }
-            if (conclusions != null && conclusions.ImmediateGroups
+            if (conclusions != null && (view.CompatibilityNotice != null || conclusions.ImmediateGroups
                 .Concat(conclusions.DetailGroups)
                 .SelectMany(group => group.Cards)
-                .Any())
+                .Any()))
             {
                 DrawDocument(view, conclusions, screenWidth, screenHeight);
                 return;
@@ -179,6 +181,9 @@ namespace DSPSeedScanner.Plugin
                     detailStyle);
                 columnY += 24f;
             }
+
+            columnY += compatibilityWarning.Draw(
+                bounds, x, columnY, viewportWidth, view.CompatibilityNotice);
 
             foreach (PreviewConclusionColumn column in Enum.GetValues(
                 typeof(PreviewConclusionColumn)))

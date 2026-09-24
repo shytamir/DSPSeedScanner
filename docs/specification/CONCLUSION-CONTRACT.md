@@ -57,7 +57,7 @@ developer guess.
 
 Neutral evaluation requires only authoritative product inputs:
 
-- the complete generation identity and supported DSP version;
+- the complete actual generation identity and usable runtime evidence;
 - all generation and combat settings that affect the evidence;
 - a complete New Game galaxy snapshot for preview conclusions;
 - exact generated coverage for conclusions that require raw evidence; and
@@ -66,6 +66,14 @@ Neutral evaluation requires only authoritative product inputs:
 The scanner evaluates every supported context that is applicable to those
 inputs. Contexts are product-owned interpretive lenses, not questions the
 player must construct.
+
+An unverified game identity may use the accepted rules and calibrated ranges
+to produce provisional conclusions. Both result panels must mark that state
+with a persistent red warning and red border identifying current/reference
+versions. This advisory is separate from outcome semantics: it does not alter
+thresholds, fill missing evidence or expand applicable resource/star-count
+settings. Exact runtime identity and cache separation are retained. See the
+[identity policy](GENERATION-IDENTITY.md#failure-behavior).
 
 ### Optional player influence
 
@@ -149,7 +157,8 @@ unsupported runtime members, or partial coverage forces every dependent family
 to **unknown**. Preview facts remain usable by preview families but cannot stand
 in for missing raw evidence.
 
-This version permits no probabilistic or graduated confidence label. An outcome
+The unverified-identity notice is not a probabilistic or graduated confidence
+score. An outcome
 other than **unknown** or **not applicable** requires an accepted runtime source,
 a versioned derivation when used, complete declared coverage, an accepted
 predicate, and an accepted preference range. Context dependence is represented

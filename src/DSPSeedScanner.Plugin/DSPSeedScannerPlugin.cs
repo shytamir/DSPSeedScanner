@@ -200,7 +200,8 @@ namespace DSPSeedScanner.Plugin
             statisticsPanelRenderer.Draw(
                 statisticsPanel,
                 ConfiguredPanelCorner(),
-                HasConclusionDocument(previewPanel.Conclusions),
+                previewPanel.Current.CompatibilityNotice != null ||
+                    HasConclusionDocument(previewPanel.Conclusions),
                 Screen.width,
                 Screen.height);
         }
