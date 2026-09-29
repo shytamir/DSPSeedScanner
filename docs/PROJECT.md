@@ -5,10 +5,11 @@ and status, including historical dispositions. Other documents define scope,
 contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
-**Current status:** Maintenance mode. On 2026-09-24 the owner requested
-closeout after delivery of unverified-identity scanning on `main`. The hotfix
-identity update and advisory-scanning story are closed; no story, review gate
-or release task remains active. Their scope and evidence are retained below.
+**Current status:** Maintenance mode. The reference game identity is
+`0.10.35.29104` following the owner-requested identity-only update on
+2026-09-29. The earlier hotfix and advisory-scanning work remain closed;
+no story, review gate or release task is active. Scope and evidence are
+retained below.
 
 **Last verified published baseline:** The owner published package **1.5.123**
 on 2026-09-24 (Europe/Madrid) to [Thunderstore](https://thunderstore.io/c/dyson-sphere-program/p/DSPSeedScanner/DSPSeedScanner/)
@@ -22,6 +23,25 @@ been reported or verified; this closeout does not change the release record.
 **Next action:** Await an explicit owner request. The roadmap remains a
 placeholder and the inactive backlog below is unchanged. Deployment,
 publication, game/environment changes and save access require separate scope.
+
+## DSP 0.10.35.29104 identity update
+
+On 2026-09-29 the owner requested the latest game version and hash references,
+documentation updates, and commit/push to `main`, with no scanning-logic
+changes. The preceding static comparison found no generation-code or required
+scanner-binding changes. This update changes the reference version, native
+assembly hash and generation-method fingerprint, and advances the existing
+older-version advisory fixture to 29088. Definition `0.7.0`, calibrated bands,
+cache schema `13` and advisory scanning remain unchanged.
+
+The bounded [identity check](CONFORMANCE.md#dsp-0103529104-identity-check)
+records provenance and limits. Release solution and installed-game-reference
+plugin builds passed with zero warnings/errors; Core checks passed 16/16 and
+Runtime checks passed 98/98. Current player and identity documentation matches
+the new reference; dated evidence and archives retain their original versions.
+The identity update is complete, with no new roadmap or active follow-up.
+No native scans, in-game owner acceptance, deployment or publication are
+claimed for this update; the last verified publication record above is unchanged.
 
 ## Unverified-identity scanning
 

@@ -53,7 +53,7 @@ game folder.
 
 ## Compatibility
 
-DSP Seed Scanner's reference game version is `0.10.35.29088`. Other game
+DSP Seed Scanner's reference game version is `0.10.35.29104`. Other game
 versions can still be scanned. If the version or detected game identity
 differs from the reference, both result panels have a red border and a red
 warning showing the current and reference versions. Statistics come from

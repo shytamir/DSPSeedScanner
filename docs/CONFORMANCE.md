@@ -10,6 +10,34 @@ runtime. It establishes conformance for the presentation-neutral core only.
 Its evidence excludes product approval, package replacement, other game
 builds, and modded generators.
 
+## DSP 0.10.35.29104 identity check
+
+Read-only inspection on 2026-09-29 found DSP `0.10.35.29104` as the latest
+entry in the installed `Updates/Versions.txt`, with Steam build `25599610`.
+The original installed `Assembly-CSharp.dll` SHA-256 is
+`6C122E5443E6843979B4064050DFCB5E0D75577A0B64F6AE4111290238B33C12`.
+Its combined generation-method SHA-256 is
+`4D122A47FB4B63D9B745725A8627751F4C3D0B9B11641829408C321FEB029847`.
+Capture reads the original PE method bodies in production order:
+`UniverseGen.CreateGalaxy`, then `PlanetData.RegenerateRawDataImmediately`,
+each preceded by its UTF-8 `DeclaringType.MethodName\n` label.
+
+The preceding full managed-assembly comparison against the retained 29088
+private runtime found unchanged normalized generation code and all 70 required
+scanner binding declarations. The private assembly matched its preparation
+manifest; a rename-only control accounted for its two metadata differences.
+Raw method fingerprints can change with metadata tokens even when the resolved
+instructions match. This static evidence does not verify asset catalogues or
+end-to-end generated output.
+
+The identity-only source update passed Release solution and installed-game-
+reference plugin builds with zero warnings/errors, 16/16 Core checks and
+98/98 Runtime checks. The existing advisory-version fixture now covers 29088
+as the preceding version. Definition `0.7.0`, cache schema `13`, calibrated
+bands and scanning behavior are unchanged. No native generation scan,
+recalibration, installed-game UI check or deployment was performed. Earlier
+evidence below retains its original runtime provenance.
+
 ## Unverified-identity scanning
 
 Definition `0.7.0` retains the calibrated values and changes identity drift to
