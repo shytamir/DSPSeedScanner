@@ -10,6 +10,37 @@ runtime. It establishes conformance for the presentation-neutral core only.
 Its evidence excludes product approval, package replacement, other game
 builds, and modded generators.
 
+## DSP 0.10.35.29131 identity check
+
+Read-only inspection on 2026-10-12 found DSP `0.10.35.29131` as the latest
+entry in the installed `Updates/Versions.txt`, with Steam build `25878145`.
+The original installed `Assembly-CSharp.dll` SHA-256 is
+`74AC6162CEF8394A6021C8475132CAE4DF4F840871A99E63CC7D2C8297661BC0`.
+Its combined generation-method SHA-256 is
+`714801188D1F7FCF2D79F7AD0DD88DE794DB73CCC1EFC041B76158571618B976`.
+Capture reads the original PE method bodies in production order:
+`UniverseGen.CreateGalaxy`, then `PlanetData.RegenerateRawDataImmediately`,
+each preceded by its UTF-8 `DeclaringType.MethodName\n` label.
+
+The preceding complete managed-assembly comparison against the original
+29104 assembly found 1,367 unchanged generation-related records and all
+70 required scanner binding declarations unchanged. Both assemblies matched
+their Steam manifest hashes. Raw method fingerprints can change with metadata
+tokens even when the resolved instructions match. Changed Unity asset
+containers were identified at file level; their internal data differences
+were not established. This evidence does not prove identical catalogue values
+or end-to-end seed outputs.
+
+The identity-only source update passed Release solution and installed-game-
+reference plugin builds with zero warnings/errors, 16/16 Core checks and
+98/98 Runtime checks. The existing advisory-version fixture now covers 29104
+as the preceding version. The initial sandbox build failed without source
+diagnostics; the same build succeeded with normal Windows SDK access.
+Definition `0.7.0`, cache schema `13`, calibrated bands and scanning behavior
+are unchanged. No native generation scan, recalibration, installed-game UI
+check or deployment was performed for the mod update. Earlier evidence below
+retains its original runtime provenance.
+
 ## DSP 0.10.35.29104 identity check
 
 Read-only inspection on 2026-09-29 found DSP `0.10.35.29104` as the latest

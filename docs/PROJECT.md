@@ -6,8 +6,8 @@ contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
 **Current status:** Maintenance mode. The reference game identity is
-`0.10.35.29104` following the owner-requested identity-only update on
-2026-09-29. The earlier hotfix and advisory-scanning work remain closed;
+`0.10.35.29131` following the owner-requested identity-only update on
+2026-10-12. The earlier hotfix and advisory-scanning work remain closed;
 no story, review gate or release task is active. Scope and evidence are
 retained below.
 
@@ -23,6 +23,29 @@ been reported or verified; this closeout does not change the release record.
 **Next action:** Await an explicit owner request. The roadmap remains a
 placeholder and the inactive backlog below is unchanged. Deployment,
 publication, game/environment changes and save access require separate scope.
+
+## DSP 0.10.35.29131 identity update
+
+On 2026-10-12 the owner requested reference support for DSP `0.10.35.29131`,
+matching documentation, commit/push to `main`, and a subsequent update to the
+separate personal Offline tool. The scope explicitly excludes scanning-logic
+changes and exhaustive testing. The prior comparison found unchanged
+generation code and required scanner bindings, with an explicit limit on
+uncompared asset contents.
+
+The mod update changes the reference version, native assembly hash and
+generation-method fingerprint, and advances the older-version advisory fixture
+to 29104. Definition `0.7.0`, calibrated bands, schema `13` and advisory scanning
+remain unchanged. Current player and identity references match the new version;
+dated evidence and archives preserve their original provenance.
+
+The bounded [identity check](CONFORMANCE.md#dsp-0103529131-identity-check)
+records Release solution and installed-game-reference plugin builds with zero
+warnings/errors, 16/16 Core checks and 98/98 Runtime checks. The mod identity
+update is complete, with no new roadmap or active mod follow-up. The Offline
+refresh is a separate local utility update, not a mod release. No native mod
+scan, in-game owner acceptance, deployment or publication is claimed; the last
+verified publication record above is unchanged.
 
 ## DSP 0.10.35.29104 identity update
 
