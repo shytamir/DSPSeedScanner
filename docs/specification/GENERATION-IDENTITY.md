@@ -6,7 +6,7 @@ requirements, or technical evidence; it does not track status.
 
 This contract defines the inputs that DSP Seed Scanner must retain when it
 claims that generated evidence can be reproduced. The current reference is
-DSP `0.10.35.29131`, examined on 2026-10-12. Dated observations below retain
+DSP `0.10.35.29145`, examined on 2026-10-14. Dated observations below retain
 their original runtime provenance.
 
 ## Contract
@@ -26,13 +26,13 @@ Every layer requires:
 - the scanner compatibility version and the presence of any mod or runtime
   patch capable of changing generation.
 
-The current reference is DSP `0.10.35.29131`, with the retained
+The current reference is DSP `0.10.35.29145`, with the retained
 `UniverseGen.algoVersion` `20200403` and ordered theme IDs `1` through `25`.
 The original `Assembly-CSharp.dll` SHA-256 is
-`74AC6162CEF8394A6021C8475132CAE4DF4F840871A99E63CC7D2C8297661BC0`.
+`B84B60DF5A24947A014801F23B9B85D1E77853F42A331918E2DC85B153E50527`.
 The combined method-body fingerprint is
-`714801188D1F7FCF2D79F7AD0DD88DE794DB73CCC1EFC041B76158571618B976`;
-[conformance](../CONFORMANCE.md#dsp-0103529131-identity-check) describes its capture
+`BDA9629AFE9A65C9E2D50D9AE366EB90E0BCEDBC99855E0781F1EDFE2236636C`;
+[conformance](../CONFORMANCE.md#dsp-0103529145-identity-check) describes its capture
 and the limits of the static comparison supporting this identity update.
 
 For the original 2026-08-11 installation these values were DSP `0.10.34.28529`, Steam

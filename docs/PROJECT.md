@@ -6,8 +6,8 @@ contracts, procedures, and technical evidence; they link here for authorization,
 progress, acceptance, closure, and release state.
 
 **Current status:** Maintenance mode. The reference game identity is
-`0.10.35.29131` following the owner-requested identity-only update on
-2026-10-12. The earlier hotfix and advisory-scanning work remain closed;
+`0.10.35.29145` following the owner-requested identity-only update on
+2026-10-14. The earlier hotfix and advisory-scanning work remain closed;
 no story, review gate or release task is active. Scope and evidence are
 retained below.
 
@@ -23,6 +23,21 @@ been reported or verified; this closeout does not change the release record.
 **Next action:** Await an explicit owner request. The roadmap remains a
 placeholder and the inactive backlog below is unchanged. Deployment,
 publication, game/environment changes and save access require separate scope.
+
+## DSP 0.10.35.29145 identity update
+
+On 2026-10-14 the owner requested acceptance of the new verified game identity
+following the complete static version comparison. The update changes only the
+reference version and two fingerprints, current documentation and the existing
+older-version advisory fixture (now 29131). Definition `0.7.0`, calibrated
+bands, cache schema `13` and scanning behavior remain unchanged.
+
+The [bounded identity check](CONFORMANCE.md#dsp-0103529145-identity-check)
+records successful Release solution and installed-game-reference plugin builds,
+16/16 Core checks and 98/98 Runtime checks. The update is complete and
+maintenance mode continues. The owner authorized commit and push to `main`
+on 2026-10-14 for their hotfix publication. No Offline-tool update, native scan,
+installed-game acceptance, deployment or publication was performed here.
 
 ## DSP 0.10.35.29131 identity update
 

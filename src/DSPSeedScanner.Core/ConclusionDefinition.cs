@@ -41,13 +41,13 @@ namespace DSPSeedScanner.Core
     {
         public const string ContractVersion = "0.1.0";
         public const string DefinitionVersion = "0.7.0";
-        public const string ReferenceGameVersion = "0.10.35.29131";
+        public const string ReferenceGameVersion = "0.10.35.29145";
         public const int ReferenceGalaxyAlgorithm = 20_200_403;
         public const int ReferenceStarCount = 64;
         public const string ReferenceAssemblySha256 =
-            "74AC6162CEF8394A6021C8475132CAE4DF4F840871A99E63CC7D2C8297661BC0";
+            "B84B60DF5A24947A014801F23B9B85D1E77853F42A331918E2DC85B153E50527";
         public const string ReferenceGenerationMethodIlSha256 =
-            "714801188D1F7FCF2D79F7AD0DD88DE794DB73CCC1EFC041B76158571618B976";
+            "BDA9629AFE9A65C9E2D50D9AE366EB90E0BCEDBC99855E0781F1EDFE2236636C";
         public const string ReferenceOrderedThemeIds =
             "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25";
         public const string ReferenceCombatSettingsKey =
