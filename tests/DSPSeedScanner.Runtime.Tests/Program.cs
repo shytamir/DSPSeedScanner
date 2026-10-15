@@ -454,7 +454,7 @@ namespace DSPSeedScanner.Runtime.Tests
         {
             True(CompatibilityPolicy.Evaluate(Fingerprint()).Supported);
             True(CompatibilityPolicy.UnverifiedNotice(Fingerprint()) == null);
-            foreach (string version in new[] { "0.10.35.29131", "0.10.36.30000" })
+            foreach (string version in new[] { "0.10.35.29145", "0.10.36.30000" })
             {
                 RuntimeFingerprint fingerprint = Fingerprint(gameVersion: version);
                 True(CompatibilityPolicy.Evaluate(fingerprint).Supported);

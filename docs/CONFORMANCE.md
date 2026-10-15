@@ -10,6 +10,34 @@ runtime. It establishes conformance for the presentation-neutral core only.
 Its evidence excludes product approval, package replacement, other game
 builds, and modded generators.
 
+## DSP 0.10.35.29151 identity check
+
+Read-only inspection on 2026-10-15 identified DSP `0.10.35.29151`, Steam build
+`25955035` and depot manifest `5442624927967180420`. The original installed
+`Assembly-CSharp.dll` SHA-256 is
+`EF314425DADE51F529F184F07BE136CD3C2660A6A81515603C7226FBE7AB1D8C`.
+Its combined generation-method SHA-256 is
+`D05539563D788C8271EDD11B52FBCEFE99F40C62E054D4623C4903964E8BAFC3`.
+Capture reads the original PE method bodies in production order:
+`UniverseGen.CreateGalaxy`, then `PlanetData.RegenerateRawDataImmediately`,
+each preceded by its UTF-8 `DeclaringType.MethodName\n` label.
+
+The preceding static comparison accounted for all 572 files in both versions
+against their Steam manifests. Against 29145, all 1,367 generation-related
+records, 70 required scanner binding declarations and 25 decoded prototype
+tables were unchanged. The patch changes live-game spatial lookup data and
+queries, sandbox monitor synchronization and development components. The
+scanner's resolved generation instructions remain unchanged; raw method
+fingerprints differ with metadata tokens. This supports an identity-only
+update, not a claim of measured end-to-end generated-output equality.
+
+Release solution and installed-game-reference plugin builds passed with zero
+warnings/errors; Core checks passed 16/16 and Runtime checks passed 98/98.
+The existing advisory-version fixture covers 29145. Definition `0.7.0`, cache
+schema `13`, calibrated bands and scanning behavior are unchanged. No native
+scan, recalibration, exhaustive testing, installed-game UI check or deployment
+was performed.
+
 ## DSP 0.10.35.29145 identity check
 
 Read-only inspection on 2026-10-14 identified DSP `0.10.35.29145`, Steam build
